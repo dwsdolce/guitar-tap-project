@@ -1,7 +1,7 @@
 """Corpus playback report (Python engine) — replay every python-captured guitar WAV with
 the calibration named in its own measurement file, report winners vs saved + duplicate check."""
 import json, sys
-sys.path.insert(0, "/Users/dws/src/guitar_tap/src"); sys.path.insert(0, "/Users/dws/src/guitar_tap/src/guitar_tap")
+sys.path.insert(0, "../../../guitar_tap/src"); sys.path.insert(0, "../../../guitar_tap/src/guitar_tap")
 from models.tap_tone_analyzer import TapToneAnalyzer
 from models.measurement_type import MeasurementType
 from models.guitar_mode import GuitarMode

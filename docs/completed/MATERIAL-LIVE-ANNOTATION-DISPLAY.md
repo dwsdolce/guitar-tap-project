@@ -1,7 +1,7 @@
 # Material live-annotation display during capture/playback (the live material-annotation display + related)
 
 **Found 2026-07-17, root-caused + FIXED 2026-07-17 (user-verified same night; more testing tomorrow).**
-Repro: play `/Users/dws/Documents/GuitarTap/plate-umik-1-swift-mac-1784242582.wav` (Play-File) on Swift /
+Repro: play `plate-umik-1-swift-mac-1784242582.wav` (a local capture, via Play-File) on Swift /
 Python / web. All three produce the correct final peaks + table — every issue here was live-display-only.
 
 ## The bug (as reported)

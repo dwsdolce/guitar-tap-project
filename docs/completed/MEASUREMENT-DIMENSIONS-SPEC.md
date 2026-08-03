@@ -223,10 +223,10 @@ when the measurement is complete.
 brace"); committed `98e09ef`; builds clean macOS + iOS; full test suite green (462 tests / 101 suites).
 NEXT = mirror on Python, then web.*
 
-**➡️ NEXT TASK = PYTHON** (`/Users/dws/src/guitar_tap`). Mirror everything below (all ✅ on Swift) exactly:
+**➡️ NEXT TASK = PYTHON** (`guitar_tap`). Mirror everything below (all ✅ on Swift) exactly:
 the two-store Chunk B editable dims, the layout restructure, the frequency-band removal, and the
 Diagonal naming across every surface. Read the Swift files named in each bullet as the canonical source.
-Then repeat on web (`/Users/dws/src/GuitarTapWeb`). Chunk C (notes-on-load) + Chunk D (tests+docs) still
+Then repeat on web (`GuitarTapWeb`). Chunk C (notes-on-load) + Chunk D (tests+docs) still
 pending on all three.
 
 Swift files (this chunk, committed `98e09ef`): `Views/MaterialDimensionsEditor.swift` (new),
@@ -320,7 +320,7 @@ examples. **These analyzer status strings are additional naming surfaces to mirr
 
 ## 9. Implementation plan — Python (mirror of Swift, non-divergent)
 
-Python (`/Users/dws/src/guitar_tap`) currently sits at its **pre-Chunk-A** state and its structure
+Python (`guitar_tap`) currently sits at its **pre-Chunk-A** state and its structure
 diverges from Swift; the port must reproduce Swift's *design*, read from the Swift source as canonical,
 in PyQt idioms. Same chunked order as §8; build + full `pytest` + user review between chunks. Keep
 `@parity` tags + PARITY-MAP current.
@@ -414,7 +414,7 @@ transient runtime) → display strings safe to change. `PlateStiffnessPreset` �
 
 ## 10. Implementation plan — Web (mirror of Swift, non-divergent)
 
-Web (`/Users/dws/src/GuitarTapWeb`, React/TS) sits at its **pre-Chunk-A** state and is the **most
+Web (`GuitarTapWeb`, React/TS) sits at its **pre-Chunk-A** state and is the **most
 divergent** edition. Unlike Swift/Python — which already had a per-measurement snapshot the calc *could*
 read — the web has **no live Store B at all**: `MaterialResults` computes straight from the live
 `Settings`, and **load copies the snapshot's dims back into `Settings`** (`measurementToLiveMaterial` →

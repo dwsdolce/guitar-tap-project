@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
-import { RealtimeFFTAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/audio/realtimeFFTAnalyzer'
-import { TapToneAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/state/tapToneAnalyzer'
-import { decodeWav } from '/Users/dws/src/GuitarTapWeb/src/dsp/wav'
-import { parseCalibration } from '/Users/dws/src/GuitarTapWeb/src/dsp/calibration'
+import { RealtimeFFTAnalyzer } from '../../../GuitarTapWeb/src/audio/realtimeFFTAnalyzer'
+import { TapToneAnalyzer } from '../../../GuitarTapWeb/src/state/tapToneAnalyzer'
+import { decodeWav } from '../../../GuitarTapWeb/src/dsp/wav'
+import { parseCalibration } from '../../../GuitarTapWeb/src/dsp/calibration'
 const D = '../../Tests/AllPlatforms', STEM = 'dws-2024-umik-1-web-mac-1784225174'
 const m = JSON.parse(readFileSync(`${D}/${STEM}.guitartap`, 'utf8'))[0]
 function b64f32(s: string) { const b = Buffer.from(s, 'base64'); return new Float32Array(b.buffer, b.byteOffset, b.byteLength / 4) }

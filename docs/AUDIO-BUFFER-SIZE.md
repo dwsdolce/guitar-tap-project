@@ -138,6 +138,6 @@ a regression test consumes it, copied under the *same filename* in all three (cf
 
 | | fixture storage (only once a regression uses it) |
 |---|---|
-| Swift | `/Users/dws/src/GuitarTap/GuitarTapTests/` |
-| Python | `/Users/dws/src/guitar_tap/tests/` |
-| web | `/Users/dws/src/GuitarTapWeb/test/fixtures/` |
+| Swift | `GuitarTap/GuitarTapTests/` |
+| Python | `guitar_tap/tests/` |
+| web | `GuitarTapWeb/test/fixtures/` |

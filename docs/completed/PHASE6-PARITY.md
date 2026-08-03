@@ -4,8 +4,8 @@
 doc): export PNG + PDF (single + saved-comparison), Play-File through the live pipeline +
 headless regression harness, device picker + calibration import, Pause/Cancel tap controls,
 draggable annotations + Reset Labels, per-capture "Dump Capture Audio". Canonical references:
-Swift `GuitarTap` (`/Users/dws/src/GuitarTap`) leads on both algorithm and UX; Python
-`guitar_tap` (`/Users/dws/src/guitar_tap`) is the mirror. Replicate by reading the source.
+Swift `GuitarTap` (`GuitarTap`) leads on both algorithm and UX; Python
+`guitar_tap` (`guitar_tap`) is the mirror. Replicate by reading the source.
 
 ## Goal
 Close the remaining gaps so the web reaches **feature parity** with the Swift/Python apps:

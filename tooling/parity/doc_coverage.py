@@ -44,10 +44,11 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Repo roots (absolute — this review spans three sibling repos).
-SWIFT_ROOT = Path("/Users/dws/src/GuitarTap")
-PYTHON_ROOT = Path("/Users/dws/src/guitar_tap")
-WEB_ROOT = Path("/Users/dws/src/GuitarTapWeb/src")
+# Repo roots — the three code repos sit as siblings of this hub (…/tooling/parity → hub → src).
+SRC = Path(__file__).resolve().parents[2].parent
+SWIFT_ROOT = SRC / "GuitarTap"
+PYTHON_ROOT = SRC / "guitar_tap"
+WEB_ROOT = SRC / "GuitarTapWeb" / "src"
 
 PARITY_RE = re.compile(r"@parity\s+([a-z0-9][a-z0-9/_-]*)")
 

@@ -1,6 +1,6 @@
 # Fingerprint the replayed frozen spectrum (Python). Independent of findPeaks.
 import sys
-sys.path.insert(0,"/Users/dws/src/guitar_tap/src"); sys.path.insert(0,"/Users/dws/src/guitar_tap/src/guitar_tap")
+sys.path.insert(0,"../../../guitar_tap/src"); sys.path.insert(0,"../../../guitar_tap/src/guitar_tap")
 from models.tap_tone_analyzer import TapToneAnalyzer
 from models.measurement_type import MeasurementType
 D="../../Tests/AllPlatforms"; STEM="dws-2024-umik-1-python-mac-1784225140"

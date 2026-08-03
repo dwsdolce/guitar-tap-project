@@ -88,7 +88,7 @@ record the rate, and warn at load time when the current setup differs.
 
 ## Per-platform work
 
-### 1. Swift — `/Users/dws/src/GuitarTap` (canonical, first)
+### 1. Swift — `GuitarTap` (canonical, first)
 - **Model:** add `sampleRate: Double?` to `TapToneMeasurement` provenance block;
   CodingKeys + `decodeIfPresent`/`encodeIfPresent` (canonical JSON shape).
 - **Save:** populate from the analyzer's actual capture rate.
@@ -102,7 +102,7 @@ record the rate, and warn at load time when the current setup differs.
 - **Docs/manual:** macOS Audio MIDI Setup + *why it matters* (results match the
   reference apps / intended resolution at the recorded rate).
 
-### 2. Python — `/Users/dws/src/guitar_tap` (mirror)
+### 2. Python — `guitar_tap` (mirror)
 - **Model + serialization:** mirror the field, matching Swift's JSON encoding
   (numeric; respect the f32/int conventions already used for floats).
 - **Load/match:** mirror the tiered warning (+ calibration check).
@@ -111,7 +111,7 @@ record the rate, and warn at load time when the current setup differs.
   `for_testing(sample_rate=48000)`.
 - **Docs:** mirror.
 
-### 3. Web — `/Users/dws/src/GuitarTapWeb` (Phase 4, last)
+### 3. Web — `GuitarTapWeb` (Phase 4, last)
 - When `.guitartap` read/write lands: include `sampleRate` in the model +
   (de)serialization (parity with Swift JSON; missing → `undefined`).
 - Implement the same tiered load-time warning (mic → calibration/rate) in the load flow.

@@ -5,7 +5,7 @@ port of the peak-lifecycle rework. **Swift is canonical**; this doc replays the 
 **port ledgers** into the web app, one phase at a time — the Python doc is a second reference (it hit
 the same phases and recorded ledger corrections + view-sync gaps that often apply here too).
 
-Web repo: `/Users/dws/src/GuitarTapWeb` (this repo). Stack: **TypeScript + React + Vite + Vitest**.
+Web repo: `GuitarTapWeb` (this repo). Stack: **TypeScript + React + Vite + Vitest**.
 DSP in `src/dsp/` (`peaks.ts`, `classify.ts`, `guitarModes.ts`, `analysisQuality.ts`); the measurement
 model in `src/measurement/` (`types.ts`, `decode.ts`, `encode.ts`, `fromLive.ts`); UI state + wiring in
 `src/App.tsx` (+ hooks); presentation in `src/presentation/`. Tests in `test/*.test.ts` (one per slug).
@@ -68,7 +68,7 @@ recompute.)
 
 ## Porting discipline
 
-1. **Read the corresponding Swift change FIRST** (`git show <phase-hash>` in `/Users/dws/src/GuitarTap`
+1. **Read the corresponding Swift change FIRST** (`git show <phase-hash>` in `GuitarTap`
    + the surrounding source), then the Python port (for its ledger corrections + view-sync notes), then
    do the web one **non-divergently** — model behaviour, structure, and naming as close to Swift as
    possible.
@@ -78,7 +78,7 @@ recompute.)
 3. **Diverge ONLY where React/TS forces it** — chiefly the VIEW/STATE layer (`App.tsx` hooks/derived
    state vs SwiftUI `@Published`). Name divergences explicitly; don't invent web-only shapes.
 4. **Per phase:** implement the Rule → create the counterpart tests (the slug the Swift ledger names,
-   as `test/<slug>.test.ts`) → update `@parity` tags → `python3 /Users/dws/src/GuitarTap/Tooling/parity/gen_parity_map.py --check`
+   as `test/<slug>.test.ts`) → update `@parity` tags → `python3 GuitarTap/Tooling/parity/gen_parity_map.py --check`
    (zero new orphans; currently **79 groups**) → the web peak-fixture regression + `parity-oracle.json`
    **unmoved** (`test/peak-fixture-regression.test.ts` — the web analogue of the Swift/Python golden).
    A phase is ported when its tests pass — not when the code "looks like" the Swift.

@@ -1,12 +1,12 @@
 // Corpus playback report (web engine) — replay every web-captured guitar WAV with the
 // calibration named in its own measurement file; report winners vs saved + duplicate check.
 import { readFileSync } from 'node:fs'
-import { RealtimeFFTAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/audio/realtimeFFTAnalyzer'
-import { TapToneAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/state/tapToneAnalyzer'
-import { decodeWav } from '/Users/dws/src/GuitarTapWeb/src/dsp/wav'
-import { findPeaks } from '/Users/dws/src/GuitarTapWeb/src/dsp/peaks'
-import { resolvedModePeaks } from '/Users/dws/src/GuitarTapWeb/src/dsp/classify'
-import { parseCalibration } from '/Users/dws/src/GuitarTapWeb/src/dsp/calibration'
+import { RealtimeFFTAnalyzer } from '../../../GuitarTapWeb/src/audio/realtimeFFTAnalyzer'
+import { TapToneAnalyzer } from '../../../GuitarTapWeb/src/state/tapToneAnalyzer'
+import { decodeWav } from '../../../GuitarTapWeb/src/dsp/wav'
+import { findPeaks } from '../../../GuitarTapWeb/src/dsp/peaks'
+import { resolvedModePeaks } from '../../../GuitarTapWeb/src/dsp/classify'
+import { parseCalibration } from '../../../GuitarTapWeb/src/dsp/calibration'
 
 const D = '../../Tests/AllPlatforms'
 const CAL = '../../Tests/7108913.txt'

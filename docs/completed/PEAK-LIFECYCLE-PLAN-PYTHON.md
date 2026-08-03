@@ -4,7 +4,7 @@ Companion to `PEAK-LIFECYCLE-PLAN-SWIFT.md`. Tracks the Python port of the peak-
 rework. **Swift is canonical**; this doc replays the Swift plan's per-phase **port ledgers**
 into Python, one phase at a time.
 
-Python repo: `/Users/dws/src/guitar_tap` (lowercase; NOT the Swift `GuitarTap`). Mirror file split:
+Python repo: `guitar_tap` (lowercase; NOT the Swift `GuitarTap`). Mirror file split:
 `src/guitar_tap/models/tap_tone_analyzer*.py`, `guitar_mode.py`, `tap_tone_measurement.py`, …
 
 ---

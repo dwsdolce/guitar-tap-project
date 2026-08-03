@@ -1,8 +1,8 @@
 # Phase 1 Inventory — Spec Extracted From Swift
 
 The contract the web port is measured against. Every value below is sourced
-from the **canonical Swift** code at `/Users/dws/src/GuitarTap`, cross-checked
-against the **Python mirror** at `/Users/dws/src/guitar_tap`. Citations are
+from the **canonical Swift** code at `GuitarTap`, cross-checked
+against the **Python mirror** at `guitar_tap`. Citations are
 `path:line` relative to each repo's root. The parity bar (see `PLAN.md`):
 numeric outputs to 2–3 dp, categorical outputs exact, `.guitartap` round-trip
 preserving both.

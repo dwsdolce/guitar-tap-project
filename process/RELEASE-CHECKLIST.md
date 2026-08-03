@@ -24,7 +24,7 @@ numbers differ across repos — that is expected.
 - [ ] Decide the new **marketing version** `X.Y.Z` (identical across all four surfaces).
 - [ ] Each repo clean and on `main`.
 
-## 1. Swift — Mac/iOS → App Store  *(`/Users/dws/src/GuitarTap`)*
+## 1. Swift — Mac/iOS → App Store  *(`GuitarTap`)*
 
 ### 1a. Version + code *(always)*
 - [ ] Bump `MARKETING_VERSION` in **both** places in `GuitarTap.xcodeproj/project.pbxproj` (Debug + Release).
@@ -46,7 +46,7 @@ numbers differ across repos — that is expected.
 - [ ] After approval, **Release** the version (manually, or automatic if configured).
 - [ ] Tag the shipped commit and push: `git tag X.Y.Z && git push origin X.Y.Z` — bare marketing version, matching the existing `1.0.1` tag on `dwsdolce/GuitarTap`. Provenance only (the App Store doesn't consume it, unlike the Python tag); tag the commit that actually shipped, after any re-submission.
 
-## 2. Python → GitHub  *(`/Users/dws/src/guitar_tap`)*
+## 2. Python → GitHub  *(`guitar_tap`)*
 - [ ] Bump `src/guitar_tap/version` to `X.Y.Z`.
 - [ ] Edit the single source `docs/ReleaseNotes.md`: **freeze** the current top section (swap its `{{build}}`/`{{since}}` placeholders for the literals it shipped as), then add a **new top section** for `X.Y.Z` — the prose plus the placeholder header (`## Version {{version}} · Build {{build}}` / `### What's New Since Build {{since}}`). No build numbers are typed for the new release; they're stamped at build.
 - [ ] **Commit now** (version + notes source). Build number = commit count, so commit *before* building, and build all three installers from this **same commit** or their `.<build>` suffixes diverge. (Committing rolls the count forward — fine, nothing manual changes after.)
@@ -58,7 +58,7 @@ numbers differ across repos — that is expected.
 - [ ] Attach 6 assets: `.dmg`, `.exe`, `.AppImage`, `ReleaseNotes-X.Y.Z-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf`.
 - [ ] **Publish as a full release** (not draft / pre-release) or `/releases/latest` and the updater ignore it.
 
-## 3. Web app → `…/guitar_tap/guitar_tap_web/`  *(`/Users/dws/src/GuitarTapWeb`)*
+## 3. Web app → `…/guitar_tap/guitar_tap_web/`  *(`GuitarTapWeb`)*
 - [ ] Bump `version` in `package.json`.
 - [ ] Prepend the new entry to `RELEASES` in `src/components/ReleaseNotes.tsx` with `build: __APP_BUILD__` (the newest entry auto-matches the deployed build). **Freeze the previous top entry** to the literal build number it shipped as.
 - [ ] `npm run typecheck && npm test && npm run lint` — all green.
@@ -69,7 +69,7 @@ numbers differ across repos — that is expected.
 - [ ] Confirm a matching `GuitarTap-User-Manual-X.Y.Z.html` exists on the server (the app links to it by version).
 - [ ] Tag the deployed commit and push: `git tag X.Y.Z && git push origin X.Y.Z` — bare marketing version, matching the existing `1.0.1` tag on `dwsdolce/GuitarTapWeb`. Provenance: marks exactly what is live at `…/guitar_tap_web/`.
 
-## 4. Marketing website → `…/guitar_tap/`  *(`/Users/dws/src/guitar_tap_website` — its own repo `dwsdolce/guitar_tap_website`; see its `DEPLOY.md`)*
+## 4. Marketing website → `…/guitar_tap/`  *(`guitar_tap_website` — its own repo `dwsdolce/guitar_tap_website`; see its `DEPLOY.md`)*
 - [ ] Edit the version banner: `index.html` (~line 122, `Guitar Tap X.Y.Z is now available`) — the only hand-edited version string.
 - [ ] Overwrite the two **stable-named** release-notes PDFs (the links never change, the contents do):
   - [ ] `releases/GuitarTap-Swift-Release-Notes.pdf` ← latest Swift cumulative PDF (GuitarTap repo)

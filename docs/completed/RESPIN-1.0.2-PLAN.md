@@ -193,18 +193,18 @@ _Model helpers on `TapToneMeasurement`; save persists full set for material; loa
 
 ## CURRENT TREE STATE — ✅ SUPERSEDED (historical pre-implementation snapshot; everything below is now implemented + committed on all three, kept for the audit trail)
 
-**Swift (`/Users/dws/src/GuitarTap`), build 398, all UNCOMMITTED:**
+**Swift (`GuitarTap`), build 398, all UNCOMMITTED:**
 - MTDBG instrumentation (Logging.swift flag; TapToneAnalyzer.swift didSet; Control.swift helper+calls;
   SpectrumCapture.swift call; MeasurementManagement.swift call) — **REMOVE in Step 0.**
 - `@parity model/quality-colors` comment in MaterialProperties.swift — **commit in Step 3.**
 - Regenerated PARITY-MAP.md / parity-index.json / TEST-COVERAGE.md + Quick-Start PDF (build artifact).
 - ⚠ `git status` FIRST at implementation time — do not trust this list blindly.
 
-**Python (`/Users/dws/src/guitar_tap`), build 440:** HEAD `22207df` already has the multitap-material
+**Python (`guitar_tap`), build 440:** HEAD `22207df` already has the multitap-material
 results fix + Details type fix + PDF matte + `@parity` comment (all committed). Working tree should be
 clean; verify.
 
-**Web (`/Users/dws/src/GuitarTapWeb`), build 112:** HEAD `ec10ced`. Uncommitted = the Development/*.md
+**Web (`GuitarTapWeb`), build 112:** HEAD `ec10ced`. Uncommitted = the Development/*.md
 doc updates from this investigation (STATUS, IPAD-PLATE-PDF-SELECTION, RESPIN plan, etc.). No web source
 changes pending.
 

@@ -1,9 +1,9 @@
 // Two questions: (1) is REPLAY deterministic vs itself? (2) does replay match the SAVED live capture?
 import { readFileSync } from 'node:fs'
-import { RealtimeFFTAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/audio/realtimeFFTAnalyzer'
-import { TapToneAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/state/tapToneAnalyzer'
-import { decodeWav } from '/Users/dws/src/GuitarTapWeb/src/dsp/wav'
-import { parseCalibration } from '/Users/dws/src/GuitarTapWeb/src/dsp/calibration'
+import { RealtimeFFTAnalyzer } from '../../../GuitarTapWeb/src/audio/realtimeFFTAnalyzer'
+import { TapToneAnalyzer } from '../../../GuitarTapWeb/src/state/tapToneAnalyzer'
+import { decodeWav } from '../../../GuitarTapWeb/src/dsp/wav'
+import { parseCalibration } from '../../../GuitarTapWeb/src/dsp/calibration'
 
 const D = '../../Tests/AllPlatforms'
 const STEM = 'dws-2024-umik-1-web-mac-1784225174'
