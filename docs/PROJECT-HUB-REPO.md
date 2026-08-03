@@ -134,7 +134,9 @@ Turns the settled design into steps. Do it as one focused effort so the cut-over
   workflow targets one repo, so it's pointed at `guitar-tap-project` with filter `is:issue`; platform-repo
   issues are added by hand on triage — matches the low community-intake volume. Add more auto-add workflows
   later if fuller automation is wanted.)*
-- [ ] (Optional) Add a bug-report Issue template in each code repo so community intake is well-formed.
+- [x] Bug-report Issue template added to **`guitar_tap`** (`.github/ISSUE_TEMPLATE/bug_report.yml`, a GitHub
+  Issue Form tailored to the Python app — version, OS, install method, mic/interface, repro). Swift + web
+  deferred until they go public.
 
 **3. Import the project documents (fresh history)** — organized into three top-level buckets, all lowercase:
 `docs/` (project docs — STATUS, specs, work docs, `completed/` archive, `images/`, the investigation-bundled
