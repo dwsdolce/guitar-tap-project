@@ -143,8 +143,9 @@ Turns the settled design into steps. Do it as one focused effort so the cut-over
 - [x] Copy the project docs into the hub: from `GuitarTapWeb/Development/` (everything except the web dev
   `README.md`) and from the Swift repo (`RELEASE-CHECKLIST.md`, `TEST-COVERAGE.md`, the parity system).
   `WEB-UI-GUIDELINES.md` came too — on review it's a port-era project doc, not standing dev guidance.
-- [ ] One **"import" commit** recording each doc's **source repo + commit SHA** for provenance
-  (`GuitarTapWeb` `0dda10f`, `GuitarTap` `9c84a8a`; note STATUS/this-spec carry uncommitted working-tree edits).
+- [x] Import committed (`3398509`) + pushed. Provenance (source repo + HEAD) recorded here since the commit
+  message is brief: `GuitarTapWeb` `0dda10f`, `GuitarTap` `9c84a8a` (STATUS/this-spec carried uncommitted
+  working-tree edits at import).
 - [x] Fix relative links inside the moved docs (STATUS `Completed/`→`completed/` + location refs;
   `DEV-DOC-STANDARD` tool paths; one `MATERIAL-MULTITAP` cross-ref). *Tooling-doc paths (`Tooling/`→`tooling/`
   in `PARITY-MAP.md`/`TEST-COVERAGE.md`/parity `README`) are regenerated in step 4 — not hand-fixed.*
