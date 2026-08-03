@@ -121,7 +121,5 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_wi10_qtimer_slots.py` | python |
 | `GuitarTapTests/ExportDirectoryTests.swift` | swift |
 | `GuitarTapTests/SpectrumViewGestureTests.swift` | swift |
-| `Development/playback-validation/swift/PeakPlaybackReportTests.swift` | web |
-| `Development/playback-validation/swift/PeakSpectrumFingerprintTests.swift` | web |
 | `src/components/ReleaseNotes.tsx` | web |
 | `test/menu-placement.test.ts` | web |

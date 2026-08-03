@@ -1305,14 +1305,6 @@
     },
     {
       "repo": "web",
-      "path": "Development/playback-validation/swift/PeakPlaybackReportTests.swift"
-    },
-    {
-      "repo": "web",
-      "path": "Development/playback-validation/swift/PeakSpectrumFingerprintTests.swift"
-    },
-    {
-      "repo": "web",
       "path": "src/components/ReleaseNotes.tsx"
     },
     {

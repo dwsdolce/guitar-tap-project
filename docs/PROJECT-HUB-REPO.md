@@ -182,8 +182,12 @@ Turns the settled design into steps. Do it as one focused effort so the cut-over
   the pre-Issues Done log is frozen in `STATUS.md`. (If an in-repo roadmap is ever wanted, generate it from
   `gh issue list` — don't hand-maintain it.)
 
-**6. Cut over the source repos** *(only after the hub copies are verified)*
-- [ ] Remove the migrated project docs from `GuitarTapWeb` and the Swift repo; update any pointer from a repo
-  `README`/`CLAUDE.md`/memory to the hub location.
-- [ ] Note: removing tracked docs is a commit, so it **rolls that repo's build number** — batch it with a
-  release or land it when no build is pending (see the build-number rule in `RELEASE-CHECKLIST.md`).
+**6. Cut over the source repos** ✅ *(hub copies verified; `--check` clean)*
+- [x] Removed the migrated docs: the entire `GuitarTapWeb/Development/` (72 files) and the Swift repo's
+  `PARITY-MAP.md` / `parity-index.json` / `TEST-COVERAGE.md` / `Tooling/parity/` / `Documentation/RELEASE-CHECKLIST.md`.
+  Fixed the web `README.md` pointers to the hub (no `CLAUDE.md` anywhere). Removing web `playback-validation/`
+  dropped its two `@parity none` entries from the map — regenerated, `--check` clean, no orphans.
+- [x] Build-number note stands: these are commits that roll each repo's build number — no pending release, so fine.
+
+**Standup complete** — the hub is stood up (steps 1–6). Remaining follow-ups are tracked separately
+(memory-pointer cleanup; the sync-tooling consolidation folds into Issue #10).
