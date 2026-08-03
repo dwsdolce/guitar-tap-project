@@ -10,7 +10,6 @@ Project documentation for **Guitar Tap** — the cross-platform tap-tone analyze
 - [`INVENTORY.md`](INVENTORY.md) — the spec extracted from canonical Swift; the contract the port is measured against.
 - [`PLAN.md`](PLAN.md) — overall migration plan & parity bar.
 - [`WEB-UI-GUIDELINES.md`](WEB-UI-GUIDELINES.md) — how the desktop/mobile UI translates to the web (port-era).
-- [`PROJECT-HUB-REPO.md`](PROJECT-HUB-REPO.md) — the hub's own design + standup checklist.
 
 ## Open-item detail docs (each linked from its Issue)
 - [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
@@ -25,5 +24,5 @@ Project documentation for **Guitar Tap** — the cross-platform tap-tone analyze
 
 ## Elsewhere in the hub
 - [`../tooling/`](../tooling/) — the parity system (`PARITY-MAP.md`, `parity-index.json`, `parity-oracle.json`, the generators) + [`TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md).
-- [`../process/`](../process/) — how-to docs: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`.
+- [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 - [`images/`](images/), [`playback-validation/`](playback-validation/) — screenshots + the playback-validation harness.

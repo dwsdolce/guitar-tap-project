@@ -1,6 +1,10 @@
 # Project hub repo — spec
 
-**Status:** 📋 SPEC (2026-08-01). Item 5 in STATUS. Design settled (see Decisions); no repo created yet.
+**Status:** ✅ Standup complete + **ARCHIVED** (2026-08-03). Historical record of the hub standup — purpose,
+decisions, and the step 1–6 checklist. The two *living* conventions once written here — the **doc-placement
+rule** and the **bug intake/tracking model** — are now maintained as process docs:
+[`process/DOC-PLACEMENT.md`](../../process/DOC-PLACEMENT.md) and
+[`process/BUG-TRACKING.md`](../../process/BUG-TRACKING.md). Open follow-up (Swift/web templates) = issue #11.
 Supersedes the 2026-07-16 idea capture.
 
 ## Purpose
@@ -147,8 +151,8 @@ Turns the settled design into steps. Do it as one focused effort so the cut-over
 - [x] Bug-report Issue template + `config.yml` added to **`guitar_tap`** (`.github/ISSUE_TEMPLATE/` — a
   GitHub Issue Form tailored to the Python app: version, OS, install method, mic/interface, repro; `config.yml`
   disables blank issues + adds a support-email contact link).
-- [ ] Add the template (+ config) to **Swift + web** when those repos go public — deferred, *not* done: a
-  private repo can't take community issues. Rides with the open-sourcing (step 1 visibility).
+- [x] Swift + web templates → **migrated to issue #11** ("Open-source: make the repos public"), since they're
+  gated on those repos going public (a private repo can't take community issues). Tracked there, not here.
 
 **3. Import the project documents (fresh history)** — organized into three top-level buckets, all lowercase:
 `docs/` (project docs — STATUS, specs, work docs, `completed/` archive, `images/`, the investigation-bundled
