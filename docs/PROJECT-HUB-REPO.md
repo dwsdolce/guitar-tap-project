@@ -107,6 +107,13 @@ Store developer response — while the board stays the unified work list.
    load-bearing (planning/status, not code you `git blame`). A single "import" commit records each doc's
    source repo + commit SHA for provenance; deep history stays discoverable in the original repos. Mirrors
    the website extraction.
+5. **The oracle's canonical home is the hub** (`tooling/parity/parity-oracle.json`) — it's a cross-platform
+   numeric contract owned by no single edition, so it joins the map + coverage under one neutral roof. Each
+   repo still vendors a committed local copy for offline tests; `sync-oracle.sh` pulls this canonical file
+   (frictionless once the hub is public; the maintainer syncs by hand while private). **Caveat — the shared
+   oracle is only half-realized:** today only the web reads it while Swift/Python hardcode the same goldens,
+   and there is no real generator (values are hand-maintained). Finishing that is tracked as STATUS item 11,
+   *not* part of this hub standup.
 
 ## Non-goals / until it exists
 
@@ -155,8 +162,13 @@ Turns the settled design into steps. Do it as one focused effort so the cut-over
   in `PARITY-MAP.md`/`TEST-COVERAGE.md`/parity `README`) are regenerated in step 4 — not hand-fixed.*
 
 **4. Wire the parity tooling in the hub**
-- [ ] Make it run from the hub, checking the three code repos out as siblings.
-- [ ] Regenerate `PARITY-MAP.md` + coverage and **commit them** (artifacts are tracked).
+- [x] Make it run from the hub, checking the three code repos out as siblings (repo roots + output paths
+  repointed; added a `parity` skip so a code repo's tooling *copy* can't pollute the map). `--check` passes clean.
+- [x] Regenerate `PARITY-MAP.md` + coverage and **commit them** (verified: content was already current; the
+  refresh only lowercased the emitted `Tooling/`→`tooling/` paths).
+- [x] Relocated the **oracle** (`parity-oracle.json`) to the hub as canonical + repointed the web
+  `sync-oracle.sh`; corrected the parity docs (`PARITY-MAP`, `TEST-COVERAGE`, both READMEs) to the honest
+  state. Full oracle unification → STATUS item 11 (decision 5).
 
 **5. Migrate tracking**
 - [ ] Convert the current open (and deferred) STATUS items into hub Issues + board cards; point `STATUS.md`

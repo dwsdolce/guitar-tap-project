@@ -20,12 +20,13 @@ Status key: 🔴 blocker · 📋 open/queued · ⏳ code-written-not-verified ·
 | 2 | **Theme — Light/Dark/System** | 📋 Blocked on THEME-SPEC §8. Also owns the deferred colour-value/layer work. | [THEME-SPEC.md](THEME-SPEC.md) |
 | 3 | **Swift audio buffer size** (4800 frames, not the 1024 requested) | 🔶 Not blocking. **NEXT = iPad `buffer.frameLength` experiment**; do fix A first. | [AUDIO-BUFFER-SIZE.md](AUDIO-BUFFER-SIZE.md) · MATERIAL-MULTITAP §3 |
 | 4 | **Audio watchdog blind to a SILENT stream** | 🔶 Not blocking (self-recovers). Fix needs a signal-level criterion + design. | [AUDIO-WATCHDOG-SILENT-STREAM.md](AUDIO-WATCHDOG-SILENT-STREAM.md) |
-| 5 | **Project hub repo** (`guitar-tap-project`) | 📋 Spec settled (2026-08-01) — design decisions resolved; no repo created yet. | [PROJECT-HUB-REPO.md](PROJECT-HUB-REPO.md) |
+| 5 | **Project hub repo** (`guitar-tap-project`) | 🏗️ Standing up — steps 1–4 done (repo · labels+board · docs imported · parity tooling wired + oracle relocated). NEXT = migrate tracking (5), cut over the source repos (6). | [PROJECT-HUB-REPO.md](PROJECT-HUB-REPO.md) |
 | 6 | **Material multi-tap: Swift ~2 dB / sub-bin below Python/web** | 🔶 Not blocking. Same 4800-buffer cause as item 3 — resolve there. | MATERIAL-MULTITAP §3 |
 | 7 | **Results panel cross-platform consistency** | 📋 Post-release; presentation only (numbers correct). Spec against Swift first. | [RESULTS-PANEL-CONSISTENCY.md](RESULTS-PANEL-CONSISTENCY.md) |
 | 8 | **Replay does not bit-reproduce live capture** | 📋 Open. Replay reproduces closely but not bit-for-bit (~0.02 dB/bin); likely the same window-alignment family as items 3/6. Requirement (user): exact reproduction. | [PLAYBACK-BIT-IDENTITY.md](PLAYBACK-BIT-IDENTITY.md) |
 | 9 | **Python↔Swift test-fixture divergence (frozen-recalc)** | 📋 Open. Python drives real detection, Swift injects peaks — same slug, not true twins (`--check` verifies presence, not equivalence). Align fixture-for-fixture. | [FROZEN-RECALC-TEST-PARITY.md](FROZEN-RECALC-TEST-PARITY.md) |
 | 10 | **Saved Measurements — sort / reorder** | 🔶 Post-1.0.2. New feature (no ordering control today). Investigation done; write the spec, ship sort-button first, decide manual-reorder after. | [SAVED-MEASUREMENTS-ORDERING.md](SAVED-MEASUREMENTS-ORDERING.md) |
+| 11 | **Unify test goldens onto the shared oracle (all 3 suites)** | 📋 Open. Goldens are **triplicated** — Swift & Python hardcode them, only web reads the oracle. Unify all three onto `tooling/parity/parity-oracle.json` + build the Swift `GenerateParityOracle` generator (values are hand-maintained today). The unfinished half of the parity effort. | [../tooling/TEST-COVERAGE.md](../tooling/TEST-COVERAGE.md) · design [PHASE2-DSP-HARNESS §4](completed/PHASE2-DSP-HARNESS.md) |
 
 ## Done (for reference)
 

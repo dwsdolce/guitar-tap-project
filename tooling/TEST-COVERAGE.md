@@ -3,12 +3,11 @@
 **The living reference for how test coverage is tracked and verified across the three GuitarTap codebases.**
 It answers: *what is covered, on which platforms, and how do I check?*
 
-This doc lives in the **canonical Swift repo (`GuitarTap`)** — with the coverage database it describes
-(`PARITY-MAP.md`) and the tools you run to update it (`Tooling/parity/`). It is deliberately **not** kept with
-the per-project planning docs, which are transient (they get archived when a port's work is clean); coverage
-tooling + docs belong where the generated databases live and where you run them.
+This doc lives in the **project hub** (`guitar-tap-project`) — with the coverage database it describes
+(`parity/PARITY-MAP.md`) and the tools you run to update it (`parity/`). The whole parity system sits in one
+neutral place, not inside any one edition's repo.
 
-The three repos are siblings under one parent: **`GuitarTap`** (Swift, **canonical**) · **`guitar_tap`**
+The three code repos are siblings of the hub: **`GuitarTap`** (Swift, **canonical**) · **`guitar_tap`**
 (Python) · **`GuitarTapWeb`** (Web).
 
 ---
@@ -19,11 +18,11 @@ Anchored on **where the databases are stored and where the tools run**, not on w
 
 | Piece | Home | Why |
 |---|---|---|
-| `Tooling/parity/gen_parity_map.py`, `parity_lookup.py`, `README.md` | **`GuitarTap`** | the cross-repo dev tools; run from the canonical repo, which scans the siblings on disk |
-| `PARITY-MAP.md`, `parity-index.json` | **`GuitarTap`** (root) | the generated coverage database (the tools' output) |
-| `TEST-COVERAGE.md` *(this file)* | **`GuitarTap`** (root) | the coverage reference — co-located with the database + tools it documents |
-| `parity-oracle.json` + `sync-oracle.sh` | **per repo** (web: `GuitarTapWeb/test/fixtures/` + `tooling/`) | the numeric-golden fixture is per-repo *by design* — one published URL, each consumer keeps a local copy ("no repo needs a sibling on disk"). Only the **web** pulls: Python's `tests/parity-oracle.json` **is** the published source, and Swift hardcodes its goldens. |
-| project/planning docs (STATUS, phase logs) | each repo's own working dir (e.g. `GuitarTapWeb/Development/`) | transient — archived when the port is clean; not a home for coverage infra |
+| `parity/gen_parity_map.py`, `parity_lookup.py`, `README.md` | **hub** `tooling/` | the cross-repo dev tools; run from the hub, which scans the three sibling code repos on disk |
+| `parity/PARITY-MAP.md`, `parity/parity-index.json` | **hub** `tooling/` | the generated coverage database (the tools' output) |
+| `TEST-COVERAGE.md` *(this file)* | **hub** `tooling/` | the coverage reference — co-located with the database + tools it documents |
+| `parity/parity-oracle.json` | **hub** `tooling/` (canonical) | the shared numeric-golden contract. ⚠️ **Only the web currently consumes it** — Swift and Python still hardcode the same goldens in their own regression tests, so unifying all three onto this oracle is **tracked open work, not done**. Each consumer keeps a committed local copy so tests run offline; `sync-oracle.sh` pulls this canonical file. |
+| project/planning docs (STATUS, phase logs) | **hub** `docs/` | the neutral home for project docs (formerly in `GuitarTapWeb/Development/`) |
 
 ---
 
@@ -43,7 +42,7 @@ machine-checkable.
 
 Every mirrored source or test file carries one `@parity <slug>` comment — a stable, area-namespaced kebab slug
 that is the **join key** across repos (files sharing a slug are the same logical unit). Full tag reference +
-rationale: **`Tooling/parity/README.md`**.
+rationale: **`tooling/parity/README.md`**.
 
 - **Impl groups** — `dsp/…`, `audio/…`, `state/…`, `model/…`, `view/…` — the implementation units.
 - **Test groups** — `test/…` — a test suite. The slug is the same on each platform (e.g. `test/gated-fft` =
@@ -76,11 +75,11 @@ All commands run from **this repo** (`GuitarTap`); the generator auto-discovers 
 `PARITY_SWIFT` / `PARITY_PYTHON` / `PARITY_WEB`).
 
 ```
-python3 Tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json + this doc's coverage block
-python3 Tooling/parity/gen_parity_map.py --check    # gate: all three current + no orphan/malformed slugs (exit 1 on fail)
-python3 Tooling/parity/gen_parity_map.py --coverage # print the functional-block coverage report (read-only)
-python3 Tooling/parity/gen_parity_map.py --gaps     # report testable impl groups with NO test evidence
-python3 Tooling/parity/parity_lookup.py <slug>      # show a group's counterparts across repos
+python3 tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json + this doc's coverage block
+python3 tooling/parity/gen_parity_map.py --check    # gate: all three current + no orphan/malformed slugs (exit 1 on fail)
+python3 tooling/parity/gen_parity_map.py --coverage # print the functional-block coverage report (read-only)
+python3 tooling/parity/gen_parity_map.py --gaps     # report testable impl groups with NO test evidence
+python3 tooling/parity/parity_lookup.py <slug>      # show a group's counterparts across repos
 ```
 
 **The functional-block coverage report** (`--coverage`) answers "what fraction of the testable functional blocks
@@ -104,22 +103,26 @@ the doc can't go stale.
 
 ### The oracle (shared golden numbers)
 
-Numeric parity (FFT magnitudes, REG-* peak freq/mag/Q) is pinned by a shared **oracle**: published at one URL
-(currently the public Python repo's `tests/parity-oracle.json`), with each consumer keeping a committed local
-copy — **no repo needs a sibling on disk**. The web vendors its copy at `GuitarTapWeb/test/fixtures/parity-oracle.json`
-and pulls with `GuitarTapWeb/tooling/sync-oracle.sh` (`--check` = CI drift check); Swift/Python hardcode the same
-values as constants transcribed from the companion `.guitartap` files. The binding contract is the shared
-numbers at ±1 tolerance — the accepted design, deliberately not unified into one source.
+Numeric parity (FFT magnitudes, REG-* peak freq/mag/Q) is *meant* to be pinned by a **shared oracle** — one
+canonical file of expected values + tolerances that every suite tests against, so the goldens can't fragment
+into per-platform copies. That canonical file now lives in the hub: `tooling/parity/parity-oracle.json`.
+
+⚠️ **This is only half-realized.** Today only the **web** suite reads the oracle (vendored at
+`GuitarTapWeb/test/fixtures/parity-oracle.json`, pulled via `GuitarTapWeb/tooling/sync-oracle.sh`; `--check` =
+CI drift check). **Swift and Python still hardcode the same goldens** as constants in their own regression
+tests — so the numbers are triplicated, which is exactly the drift risk the oracle exists to remove. Unifying
+all three suites onto the shared oracle (plus a real `GenerateParityOracle` generator that stamps it from the
+Swift pipeline) is **tracked open work**, not the accepted end state.
 
 ---
 
 ## Current coverage state
 
 The block below is **generated from the `@parity`/`tests=` tags** — regenerate it with
-`python3 Tooling/parity/gen_parity_map.py` (view it on demand, without writing, via `--coverage`;
+`python3 tooling/parity/gen_parity_map.py` (view it on demand, without writing, via `--coverage`;
 `--check` fails if it has drifted from the tags). Do not hand-edit between the markers.
 
-<!-- COVERAGE:BEGIN — generated by Tooling/parity/gen_parity_map.py; do not hand-edit -->
+<!-- COVERAGE:BEGIN — generated by tooling/parity/gen_parity_map.py; do not hand-edit -->
 
 **Headline** — 86 parity groups · 11 platform-specific (`@parity none`) · 0 orphan slugs.
 
@@ -166,7 +169,7 @@ analysis-quality, the one real gap above.
 
 ## See also
 
-- **`Tooling/parity/README.md`** — the tag format + full command reference.
+- **`tooling/parity/README.md`** — the tag format + full command reference.
 - **`PARITY-MAP.md`** — the generated matrix (Ctrl-F any path to find its counterparts).
-- **`GuitarTapWeb/Development/6-TEST-NORMALIZATION.md`** — the project *history* of how the suites were normalized
+- **`../docs/completed/6-TEST-NORMALIZATION.md`** — the project *history* of how the suites were normalized
   to this state (phases 1–6). Transient — will be archived.

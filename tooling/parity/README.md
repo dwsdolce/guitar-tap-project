@@ -35,12 +35,12 @@ paired tests, and this column shows which rows actually have that proof.
 ## Commands
 
 ```
-python3 Tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json + TEST-COVERAGE.md's coverage block
-python3 Tooling/parity/gen_parity_map.py --check    # CI: verify all three are current + no orphan/malformed slugs
-python3 Tooling/parity/gen_parity_map.py --coverage # print the functional-block coverage report (read-only)
-python3 Tooling/parity/gen_parity_map.py --gaps     # report testable impl groups with NO test evidence
-python3 Tooling/parity/parity_lookup.py classify    # show a group's counterparts (any column)
-python3 Tooling/parity/parity_lookup.py . --sort=web    # browse everything, sorted by web path
+python3 tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json + TEST-COVERAGE.md's coverage block
+python3 tooling/parity/gen_parity_map.py --check    # CI: verify all three are current + no orphan/malformed slugs
+python3 tooling/parity/gen_parity_map.py --coverage # print the functional-block coverage report (read-only)
+python3 tooling/parity/gen_parity_map.py --gaps     # report testable impl groups with NO test evidence
+python3 tooling/parity/parity_lookup.py classify    # show a group's counterparts (any column)
+python3 tooling/parity/parity_lookup.py . --sort=web    # browse everything, sorted by web path
 ```
 
 `--coverage` prints the **functional-block coverage report** — of the testable blocks, how many are
@@ -56,21 +56,21 @@ candidate for a test back-fill or a documented, justified gap. Two "missing-cove
 checks together: `--check` = *missing on some* platforms (orphan slugs); `--gaps` =
 *missing on all* (no test evidence).
 
-## Outputs (committed here, in the canonical repo)
+## Outputs (committed here, in the hub)
 
 - `PARITY-MAP.md` — single self-contained table; Ctrl-F any path to find its counterparts.
 - `parity-index.json` — the database the lookup utility reads.
 
-Repo roots default to this repo plus its siblings `guitar_tap` and `GuitarTapWeb`
-under the same parent; override with `PARITY_SWIFT` / `PARITY_PYTHON` / `PARITY_WEB`.
+Repo roots default to the three code repos (`GuitarTap`, `guitar_tap`, `GuitarTapWeb`)
+as siblings of this hub; override with `PARITY_SWIFT` / `PARITY_PYTHON` / `PARITY_WEB`.
 
 ## Workflow
 
 Change/add/move a mirrored file → add or adjust its `@parity` tag in the same diff →
 run the generator → commit the updated `PARITY-MAP.md` + `parity-index.json`. `--check`
 fails if the committed map drifts or a slug lands in only one repo (a typo, or something
-that should be `@parity none`). Design rationale: `GuitarTapWeb/PHASE6-PARITY.md` § 6-MAP.
+that should be `@parity none`). Design rationale: `../../docs/completed/PHASE6-PARITY.md` § 6-MAP.
 
 The living **coverage reference** (the `@parity` system, equivalence levels, the
 change-all-three rule, the gates, current gaps/reverse-gaps, and the full layout of where
-every coverage artifact lives) is **`../../TEST-COVERAGE.md`** at the canonical repo root.
+every coverage artifact lives) is **`../TEST-COVERAGE.md`** (in the hub's `tooling/`).
