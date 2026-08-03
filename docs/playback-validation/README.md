@@ -12,7 +12,7 @@ WAV corpus, and are diagnostics, not regressions. Run them by hand when revalida
 
 ## Corpus (source of truth — not copied here)
 
-All WAV + `.guitartap` pairs live in `/Users/dws/src/GuitarTap/Tests/All Platforms/`. Every script
+All WAV + `.guitartap` pairs live in `../../Tests/AllPlatforms/`. Every script
 reads from there directly, so nothing here duplicates the audio. Ten guitar files: 6 Swift
 (mac/iPad/iPhone × single+3-tap), 2 Python, 2 web. Each is replayed with the calibration named in
 its own file (`7108913` for eight; the two iPhone files were captured **uncalibrated** — cal=None).

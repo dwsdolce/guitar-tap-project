@@ -6,8 +6,8 @@ from models.tap_tone_analyzer import TapToneAnalyzer
 from models.measurement_type import MeasurementType
 from models.guitar_mode import GuitarMode
 
-D = "/Users/dws/src/GuitarTap/Tests/All Platforms"
-CAL = "/Users/dws/src/GuitarTap/Tests/7108913.txt"
+D = "../../Tests/AllPlatforms"
+CAL = "../../Tests/7108913.txt"
 ref = json.load(open("/private/tmp/claude-501/-Users-dws-src-GuitarTapWeb/0cf0989c-33d7-43de-8dfd-b5bc591c0172/scratchpad/ref_winners.json"))
 FILES = [s for s in ref if "python" in s]
 PROX = 2.0

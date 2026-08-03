@@ -132,7 +132,7 @@ cadence-independent algorithm. Green playback tests and a wrong live number coex
 disappear — the numbers above are recorded here precisely because the files won't survive.
 
 **The recording to use is run 2** (matched settings + calibration). The user saves the final sets to
-**`/Users/dws/src/GuitarTap/Tests/`** — that folder is **not** fixture storage, just where saved
+the hub's **`Tests/`** — that folder is **not** fixture storage, just where saved
 measurement sets live. **Fixture storage is per implementation**, and a recording only moves there once
 a regression test consumes it, copied under the *same filename* in all three (cf. `Recording 5.wav`):
 

@@ -8,8 +8,8 @@ import { findPeaks } from '/Users/dws/src/GuitarTapWeb/src/dsp/peaks'
 import { resolvedModePeaks } from '/Users/dws/src/GuitarTapWeb/src/dsp/classify'
 import { parseCalibration } from '/Users/dws/src/GuitarTapWeb/src/dsp/calibration'
 
-const D = '/Users/dws/src/GuitarTap/Tests/All Platforms'
-const CAL = '/Users/dws/src/GuitarTap/Tests/7108913.txt'
+const D = '../../Tests/AllPlatforms'
+const CAL = '../../Tests/7108913.txt'
 const ref = JSON.parse(readFileSync('/private/tmp/claude-501/-Users-dws-src-GuitarTapWeb/0cf0989c-33d7-43de-8dfd-b5bc591c0172/scratchpad/ref_winners.json', 'utf8'))
 const FILES = Object.keys(ref).filter((s) => s.includes('web')).sort()
 const PROX = 2

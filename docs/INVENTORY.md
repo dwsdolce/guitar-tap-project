@@ -658,8 +658,8 @@ by hand from the matching `.guitartap` + the running app), not read at runtime.
 Swift: `GuitarTapTests/<file>`; Python mirror: `guitar_tap/tests/<file>` (same
 recordings). `DSPTests`, `PeakFindingTests`, `TapDetectionTests`,
 `ButtonEnablementTests`, `GatedFFTParityTests` use **synthetic in-memory
-signals**, not WAVs. A large `.guitartap` corpus under
-`GuitarTap/Tests/` (O'Brien/, Plate/, Brace/, …) is **provenance only — not
+signals**, not WAVs. A large `.guitartap` corpus under the hub's
+`Tests/` (O'Brien/, Plate/, Brace/, …) is **provenance only — not
 loaded by tests**.
 
 **[x] Expected-value oracle (the Phase-2 parity targets):** hardcoded inline,

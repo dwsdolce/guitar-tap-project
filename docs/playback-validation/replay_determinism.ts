@@ -5,12 +5,12 @@ import { TapToneAnalyzer } from '/Users/dws/src/GuitarTapWeb/src/state/tapToneAn
 import { decodeWav } from '/Users/dws/src/GuitarTapWeb/src/dsp/wav'
 import { parseCalibration } from '/Users/dws/src/GuitarTapWeb/src/dsp/calibration'
 
-const D = '/Users/dws/src/GuitarTap/Tests/All Platforms'
+const D = '../../Tests/AllPlatforms'
 const STEM = 'dws-2024-umik-1-web-mac-1784225174'
 const m = JSON.parse(readFileSync(`${D}/${STEM}.guitartap`, 'utf8'))[0]
 function b64f32(s: string) { const b = Buffer.from(s, 'base64'); return new Float32Array(b.buffer, b.byteOffset, b.byteLength / 4) }
 const savedMags = b64f32(m.spectrumSnapshot.magnitudesData)
-const cal = parseCalibration(readFileSync('/Users/dws/src/GuitarTap/Tests/7108913.txt', 'utf8'))
+const cal = parseCalibration(readFileSync('../../Tests/7108913.txt', 'utf8'))
 
 async function replay(): Promise<number[]> {
   const wav = decodeWav(new Uint8Array(readFileSync(`${D}/${STEM}.wav`)), { downmix: true })
