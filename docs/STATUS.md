@@ -1,36 +1,13 @@
-# STATUS — What's Left
+# STATUS — retired (open work moved to GitHub Issues)
 
-**Single source of truth for open work.** If it isn't listed under "Open work" it's done or out of
-scope. This file is a **status index, not a log** — one line per item: state, next action, pointer.
-The detail lives in each item's linked doc.
+**Open work is tracked in [GitHub Issues](https://github.com/dwsdolce/guitar-tap-project/issues) + the
+"Guitar Tap" Projects board — not here.** Each Issue links its detail doc; see [README.md](README.md) for the
+doc index. This file now keeps only the **frozen historical done log** below (superseded by closed Issues as
+of 2026-08-03 — hub standup step 5).
 
-_Last updated: 2026-08-01. **1.0.2 has shipped across all four surfaces** (Mac/iOS in final App Store
-publish); the release-process tooling and the marketing-website extraction are complete (see Done).
-Completed detail docs are archived in [completed/](completed/). Open items are tracked below._
+## Done (frozen — pre-Issues audit trail)
 
-## Open work
-
-Status key: 🔴 blocker · 📋 open/queued · ⏳ code-written-not-verified · 🔶 deferred (not blocking) · ⏸️ parked behind a blocker.
-
-**▶ Next up:** **9** align the frozen-recalc paired tests. No open item blocks 1.0.2.
-
-| # | Item | State — next action | Detail |
-|---|---|---|---|
-| 1 | **Architectural-parity restructure** (view layer) | 📋 Write the spec first to size it; no code yet. Lands the 2 parked test items. | [RESTRUCTURE-NOTES.md](RESTRUCTURE-NOTES.md) |
-| 2 | **Theme — Light/Dark/System** | 📋 Blocked on THEME-SPEC §8. Also owns the deferred colour-value/layer work. | [THEME-SPEC.md](THEME-SPEC.md) |
-| 3 | **Swift audio buffer size** (4800 frames, not the 1024 requested) | 🔶 Not blocking. **NEXT = iPad `buffer.frameLength` experiment**; do fix A first. | [AUDIO-BUFFER-SIZE.md](AUDIO-BUFFER-SIZE.md) · MATERIAL-MULTITAP §3 |
-| 4 | **Audio watchdog blind to a SILENT stream** | 🔶 Not blocking (self-recovers). Fix needs a signal-level criterion + design. | [AUDIO-WATCHDOG-SILENT-STREAM.md](AUDIO-WATCHDOG-SILENT-STREAM.md) |
-| 5 | **Project hub repo** (`guitar-tap-project`) | 🏗️ Standing up — steps 1–4 done (repo · labels+board · docs imported · parity tooling wired + oracle relocated). NEXT = migrate tracking (5), cut over the source repos (6). | [PROJECT-HUB-REPO.md](PROJECT-HUB-REPO.md) |
-| 6 | **Material multi-tap: Swift ~2 dB / sub-bin below Python/web** | 🔶 Not blocking. Same 4800-buffer cause as item 3 — resolve there. | MATERIAL-MULTITAP §3 |
-| 7 | **Results panel cross-platform consistency** | 📋 Post-release; presentation only (numbers correct). Spec against Swift first. | [RESULTS-PANEL-CONSISTENCY.md](RESULTS-PANEL-CONSISTENCY.md) |
-| 8 | **Replay does not bit-reproduce live capture** | 📋 Open. Replay reproduces closely but not bit-for-bit (~0.02 dB/bin); likely the same window-alignment family as items 3/6. Requirement (user): exact reproduction. | [PLAYBACK-BIT-IDENTITY.md](PLAYBACK-BIT-IDENTITY.md) |
-| 9 | **Python↔Swift test-fixture divergence (frozen-recalc)** | 📋 Open. Python drives real detection, Swift injects peaks — same slug, not true twins (`--check` verifies presence, not equivalence). Align fixture-for-fixture. | [FROZEN-RECALC-TEST-PARITY.md](FROZEN-RECALC-TEST-PARITY.md) |
-| 10 | **Saved Measurements — sort / reorder** | 🔶 Post-1.0.2. New feature (no ordering control today). Investigation done; write the spec, ship sort-button first, decide manual-reorder after. | [SAVED-MEASUREMENTS-ORDERING.md](SAVED-MEASUREMENTS-ORDERING.md) |
-| 11 | **Unify test goldens onto the shared oracle (all 3 suites)** | 📋 Open. Goldens are **triplicated** — Swift & Python hardcode them, only web reads the oracle. Unify all three onto `tooling/parity/parity-oracle.json` + build the Swift `GenerateParityOracle` generator (values are hand-maintained today). The unfinished half of the parity effort. | [../tooling/TEST-COVERAGE.md](../tooling/TEST-COVERAGE.md) · design [PHASE2-DSP-HARNESS §4](completed/PHASE2-DSP-HARNESS.md) |
-
-## Done (for reference)
-
-Audit trail, not a to-do list.
+Audit trail, not a to-do list. Historical record through 2026-08-03; newer completions are closed Issues.
 
 - **Swift release-process finalization + 1.0.2 shipped** ✅ DONE (2026-08-01). Swift now mirrors Python's release-notes auto-stamping (build-less `Documentation/ReleaseNotes.md` + `generate-release-notes.sh` run from the macOS build) with a generated-docs gitignore clean slate; the User Manual HTML is **self-contained** (images embedded → older versions never drift). Marketing website extracted to its own repo `guitar_tap_website`; Swift `Website/` removed. **1.0.2 shipped across all 4 surfaces** — every repo committed + tagged `1.0.2` (Swift tag on the shipped build-455 commit), web app + site cPanel-deployed, Python GitHub Release created, App Store in final publish. Runbook: [RELEASE-CHECKLIST.md](../process/RELEASE-CHECKLIST.md). | *(no doc)*
 
@@ -89,65 +66,3 @@ Audit trail, not a to-do list.
   relative noise-floor detector had never run in file playback; OUT-5 resolved by deletion.
 - **Phases 2–5 + all of Phase 6**; Task 1/2 comment-&-doc-parity review; Material Results phased display
   (2026-07-08).
-
-## Doc map — what each project doc is
-
-**Open-work detail docs**
-| Doc | Item | Purpose |
-|---|---|---|
-| [RESTRUCTURE-NOTES.md](RESTRUCTURE-NOTES.md) | Architectural-parity restructure | view-layer restructure — raw material; spec still to be written |
-| [THEME-SPEC.md](THEME-SPEC.md) | Theme | Light/Dark/System theme spec — blocked on §8 |
-| [AUDIO-BUFFER-SIZE.md](AUDIO-BUFFER-SIZE.md) | Swift audio buffer size | Swift's 4800-frame buffer (not 1024) → 3 symptoms; fixes A/B/C |
-| [AUDIO-WATCHDOG-SILENT-STREAM.md](AUDIO-WATCHDOG-SILENT-STREAM.md) | Audio watchdog | watchdog blind to a stream of digital silence |
-| [PROJECT-HUB-REPO.md](PROJECT-HUB-REPO.md) | Project hub repo | spec: `guitar-tap-project` for project docs + cross-repo issue tracking |
-| [MATERIAL-MULTITAP-DISCREPANCIES.md](MATERIAL-MULTITAP-DISCREPANCIES.md) | Swift audio buffer size, Material multi-tap | multi-tap material analysis: buffer per-tap divergence, Gore-thickness validation |
-| [PLAYBACK-BIT-IDENTITY.md](PLAYBACK-BIT-IDENTITY.md) | Playback bit-identity | replay ≠ live capture by ~0.02 dB (pre-existing capture-path gap); proven independent of the peak fix; re-run harness in playback-validation/ |
-| [FROZEN-RECALC-TEST-PARITY.md](FROZEN-RECALC-TEST-PARITY.md) | frozen-recalc test divergence | Python drives real detection, Swift injects peaks — align the paired tests fixture-for-fixture |
-| [RESULTS-PANEL-CONSISTENCY.md](RESULTS-PANEL-CONSISTENCY.md) | Results panel consistency | live Analysis Results panel — cross-platform divergences (screenshots in `images/`); §3 Gore nesting, §7 spacing |
-| [SAVED-MEASUREMENTS-ORDERING.md](SAVED-MEASUREMENTS-ORDERING.md) | Saved Measurements sort/reorder | new feature — sort button and/or manual drag-reorder for the Saved Measurements list; investigation + sizing captured, spec still to write |
-
-**Reference** (living — consult, don't complete)
-| Doc | Purpose |
-|---|---|
-| [INVENTORY.md](INVENTORY.md) | the spec extracted from canonical Swift — the contract the port is measured against |
-| [PLAN.md](PLAN.md) | overall migration plan & parity bar |
-| [DEV-DOC-STANDARD.md](../process/DEV-DOC-STANDARD.md) | comment/doc conventions |
-| [WEB-UI-GUIDELINES.md](WEB-UI-GUIDELINES.md) | how the desktop/mobile UI translates to the web |
-| [TEST-COVERAGE.md](../tooling/TEST-COVERAGE.md) | living cross-platform test-coverage reference (with the parity tooling + `PARITY-MAP.md`) |
-| [PARITY-MAP.md](../tooling/parity/PARITY-MAP.md) | the generated cross-platform coverage matrix (regen via `tooling/parity/gen_parity_map.py`) |
-
-**History** (done — audit trail)
-| Doc | Purpose |
-|---|---|
-| [MEASUREMENT-DIMENSIONS-SPEC.md](completed/MEASUREMENT-DIMENSIONS-SPEC.md) | material measurement dimensions — two-store model (Settings template vs per-measurement Store B, edited in the Analysis Results); Diagonal (fL/fC/fLC) naming + toggle rename; notes-on-load; §12 type-from-snapshot; shared validated-number-field widget (3-way parity) — ✅ done all 3 (2026-07-30) + docs (manual/Help/1.0.2 release notes) |
-| [CALIBRATION-DEVICE-STATE-SPEC.md](completed/CALIBRATION-DEVICE-STATE-SPEC.md) | Python single-source device+calibration fix — one device key + one restore path (F1), unified `CalibrationStorage` QSettings scope + migration (F4), macOS `os._exit` quit-deadlock fix — ✅ done + committed `5fdd8fd`; Swift/web already correct |
-| [NUMERIC-PRECISION-SPEC.md](completed/NUMERIC-PRECISION-SPEC.md) | one precision `P` per field across input/storage/display (all 3); Swift pre-display keystroke veto (`ValidatedNumberField`); `test/field-precision` parity suite — ✅ done + committed all 3 (2026-07-27) |
-| [RESPIN-1.0.2-PLAN.md](completed/RESPIN-1.0.2-PLAN.md) | the 1.0.2 respin plan — all steps (0–7) done + committed on all 3; debug stripped; shipping is the user's call (item closed) |
-| [SOAK-STRESS-HARNESS.md](completed/SOAK-STRESS-HARNESS.md) | cross-platform soak/stress dev tool (item 12) — ✅ done + run-reviewed (web 200, Python 1000 on Windows + overnight, Swift ASan) |
-| [DEINIT-CRASH-INVESTIGATION.md](completed/DEINIT-CRASH-INVESTIGATION.md) | Swift `TapToneAnalyzer.deinit` parallel-teardown crash — ✅ RESOLVED (off-main teardown of the `@MainActor` analyzer; fix = default the test target to `MainActor`) |
-| [WEB-CHART-INTERACTION-BUGS.md](completed/WEB-CHART-INTERACTION-BUGS.md) | the 3 web chart-interaction gaps vs Swift/Python — all ✅ done (Bugs 1–2 in the RB work, Bug 3 dot↔row highlight `084599f`) |
-| [PEAK-MIN-SEMANTICS.md](completed/PEAK-MIN-SEMANTICS.md) | Peak Min semantics — full-set save (Option 4) + selection persistence (Option 1) + manual/doc correction; wand vs Re-analyze clarified — ✅ done (ships with the respin) |
-| [DOT-ANNOTATION-PARITY.md](completed/DOT-ANNOTATION-PARITY.md) | dot vs annotation lists — items 1–2 ✅ done + user-verified (web dots onto the shared rule; `view/dot-layer` group all 3); item 3 absorbed into the peak-lifecycle work (done) |
-| [IPAD-PLATE-PDF-SELECTION.md](completed/IPAD-PLATE-PDF-SELECTION.md) | the iPad selection-corruption bug: investigation, Heisenbug, fix (✅ done; ships with the respin) |
-| [WEB-PDF-MATERIAL-LAYOUT.md](completed/WEB-PDF-MATERIAL-LAYOUT.md) | web material PDF fixes A–L + the Swift/Python chart defects M–O (✅ done) |
-| [PYTHON-MULTITAP-MATERIAL-RESULTS.md](completed/PYTHON-MULTITAP-MATERIAL-RESULTS.md) | Python results one-phase-lag bug + fix (✅ done) |
-| [ANALYSIS-QUALITY-MODECOLOR-CLEANUP.md](completed/ANALYSIS-QUALITY-MODECOLOR-CLEANUP.md) | analysis-quality/mode-colour/quality-colour parity + tests (✅ done) |
-| [MATERIAL-LIVE-ANNOTATION-DISPLAY.md](completed/MATERIAL-LIVE-ANNOTATION-DISPLAY.md) | live material annotation display (item 12R) + the web threshold-meter finding — both ✅ done (the latter a dev-only StrictMode engine leak) |
-| [FILE-PATHS-AND-NAMES-SPEC.md](completed/FILE-PATHS-AND-NAMES-SPEC.md) | file-paths/names audit → 1.0.2 — ✅ all 8 steps committed |
-| [DECAY-AUDIO-CLOCK-FIX.md](completed/DECAY-AUDIO-CLOCK-FIX.md) | ring-out measured in audio time — ✅ done |
-| [PLATFORM-PARITY-GAPS.md](completed/PLATFORM-PARITY-GAPS.md) | Task 4 OUT-1…OUT-5 — ✅ all done |
-| [OUT-4-DETECTION-SPEC.md](completed/OUT-4-DETECTION-SPEC.md) | OUT-4 spec + noisy-fixture design — ✅ done |
-| [PHASE6-PARITY.md](completed/PHASE6-PARITY.md) | Phase 6 parity backlog — ✅ complete |
-| [6-TEST-NORMALIZATION.md](completed/6-TEST-NORMALIZATION.md) | 6-TEST normalization — ✅ complete (Phases 1–6) |
-| [LOG-FREQ-REMOVAL.md](completed/LOG-FREQ-REMOVAL.md) | removed the dead log-frequency axis — ✅ done |
-| [TAPTONEANALYZER-CONSOLIDATION.md](completed/TAPTONEANALYZER-CONSOLIDATION.md) | Phase 6-3c analyzer/device split — ✅ done |
-| [STATUS-STATE-MACHINE.md](completed/STATUS-STATE-MACHINE.md) | status state-machine alignment — ✅ done |
-| [REVIEW-TRACKER.md](completed/REVIEW-TRACKER.md) | Task 1/2 doc-review tracker (done) + spun-out effort specs |
-| [REVIEW-FINDINGS.md](completed/REVIEW-FINDINGS.md) | behavioural gaps found during the doc review |
-| [PHASE2-DSP-HARNESS.md](completed/PHASE2-DSP-HARNESS.md) · [PHASE3-UI.md](completed/PHASE3-UI.md) · [PHASE4-PERSISTENCE.md](completed/PHASE4-PERSISTENCE.md) | phase specs — done |
-| [MATERIAL-RESULTS-PHASED-DISPLAY.md](completed/MATERIAL-RESULTS-PHASED-DISPLAY.md) · [MEASUREMENT-DETAILS-CONSISTENCY.md](completed/MEASUREMENT-DETAILS-CONSISTENCY.md) · [DATE-TIME-FORMAT-CONSISTENCY.md](completed/DATE-TIME-FORMAT-CONSISTENCY.md) | consistency specs — implemented all 3 |
-| [SAMPLE-RATE-PLAN.md](completed/SAMPLE-RATE-PLAN.md) | capture sample-rate recording — ✅ complete |
-| [PEAK-FINDING-DUPLICATE-PEAKS.md](completed/PEAK-FINDING-DUPLICATE-PEAKS.md) | core `findPeaks` duplicate-peak defect, all 3 — ✅ fixed + committed (ships with the respin) |
-| [PEAK-LIFECYCLE-SPEC.md](completed/PEAK-LIFECYCLE-SPEC.md) · [PEAK-LIFECYCLE-GAP-SWIFT.md](completed/PEAK-LIFECYCLE-GAP-SWIFT.md) · [PEAK-LIFECYCLE-PLAN-SWIFT.md](completed/PEAK-LIFECYCLE-PLAN-SWIFT.md) · [PEAK-LIFECYCLE-PLAN-PYTHON.md](completed/PEAK-LIFECYCLE-PLAN-PYTHON.md) · [PEAK-LIFECYCLE-PLAN-WEB.md](completed/PEAK-LIFECYCLE-PLAN-WEB.md) | peak-lifecycle rework — spec + gap audit + per-platform plans — ✅ done all 3 (soak/stress harness lives on as item 12) |
-| [PEAK-SELECTION-SURVIVES-SLIDER.md](completed/PEAK-SELECTION-SURVIVES-SLIDER.md) | the originating deselect-vs-Peak-Min bug — superseded by the lifecycle spec; kept for the root-cause trail |
-| [OVERRIDE-MARKER-CONSISTENCY.md](completed/OVERRIDE-MARKER-CONSISTENCY.md) | overridden mode = italic + ` *` everywhere — ✅ complete + user-verified all 3 |

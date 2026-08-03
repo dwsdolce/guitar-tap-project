@@ -89,11 +89,14 @@ Store developer response — while the board stays the unified work list.
 
 ## Project tracking
 
-- `STATUS.md` moves to the hub as the neutral open-work index (it already tracks all platforms; the
-  status-is-status-not-detail and closeout conventions carry over unchanged).
-- Pair it with a **GitHub Project** board that spans all repos, so in-flight work is visible across editions.
-- Items 4 and 5 (and any future cross-repo item) become Issues once the hub exists; `STATUS.md` stays the
-  human-readable index that points at them.
+- Open work is tracked in **GitHub Issues** + the **Guitar Tap** Projects board — the single source of truth.
+  (Resolved during step 5: the earlier idea of keeping a hand-maintained `STATUS.md` index alongside the
+  Issues was dropped — two hand-synced trackers drift, the same anti-pattern the parity oracle removes.)
+- The board (columns / fields) is the roadmap view; each Issue links its `docs/` detail doc; `docs/README.md`
+  indexes the reference + detail docs. `STATUS.md` is retired to a pointer holding the frozen pre-Issues
+  Done log.
+- If an in-repo markdown roadmap is ever wanted, **generate** it from `gh issue list` (like `PARITY-MAP.md`
+  from tags) — never hand-maintain it in parallel.
 
 ## Decisions
 
@@ -171,8 +174,13 @@ Turns the settled design into steps. Do it as one focused effort so the cut-over
   state. Full oracle unification → STATUS item 11 (decision 5).
 
 **5. Migrate tracking**
-- [ ] Convert the current open (and deferred) STATUS items into hub Issues + board cards; point `STATUS.md`
-  (now in the hub) at them.
+- [x] Created 10 hub Issues (#1–#10) from the open STATUS items — labeled (platform + `bug`/`enhancement`/
+  `infrastructure` + `src:dev`), each linking its `docs/` detail doc; the board auto-adds them. Item 5 (this
+  standup) stays out — it's the meta-project.
+- [x] **STATUS.md retired to a pointer** (not hand-synced with the Issues — that would reintroduce the
+  drift we removed). GH Issues + board = the single source of truth; the doc index moved to `docs/README.md`;
+  the pre-Issues Done log is frozen in `STATUS.md`. (If an in-repo roadmap is ever wanted, generate it from
+  `gh issue list` — don't hand-maintain it.)
 
 **6. Cut over the source repos** *(only after the hub copies are verified)*
 - [ ] Remove the migrated project docs from `GuitarTapWeb` and the Swift repo; update any pointer from a repo
