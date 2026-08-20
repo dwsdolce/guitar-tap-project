@@ -14,6 +14,28 @@ The runbook for shipping a release. Four surfaces across three repos, all steps 
 that commit, and keep each release-notes filename equal to the commit count you actually ship. Build
 numbers differ across repos — that is expected.
 
+**The release-identity guard (read once):** all three code repos now *refuse to run or build* while
+the tree still claims to be a release that has already shipped. Two conditions — the version names an
+already-tagged release, and the newest tag has no frozen release-notes entry — both triggered by
+**HEAD having moved past the last release tag**. Both are reported together, and there is deliberately
+**no override**.
+
+| Repo | Guard | Fires on |
+|---|---|---|
+| `GuitarTap` | `Tooling/check-release-ready.sh` | every Xcode build (first run-script phase, before compiling) + `Distribution/build_mac` |
+| `guitar_tap` | `src/guitar_tap/_release_guard.py` | `python -m guitar_tap` + every `packaging/build_*` |
+| `GuitarTapWeb` | `tooling/check-release-ready.sh` | `npm run dev` / `npm run build` / `npm run preview` |
+
+`guitar_tap_website` has no guard — nothing there derives a version from a build; its banner is a
+hand-edited string.
+
+**What this changes in this runbook:** the version bump and the notes roll-over are **no longer
+release-day steps**. The guard forces them on the *first commit after the previous release* (§6), so
+by the time you ship `X.Y.Z` the version is already `X.Y.Z` and the notes already carry an `X.Y.Z`
+section. Release day is about **filling in the prose**, not creating the section — creating it again
+leaves an empty duplicate. Nothing fires at the tag itself, so rebuilding, re-notarising or
+redeploying the release you just cut still works.
+
 > **Uploads to both `dolcesfogato.com` paths are done by hand via cPanel's File Manager** (no script,
 > no CI). Tip: upload a **zip** of the folder and use File Manager → _Extract_ in place, so the swap is
 > effectively atomic; then delete stale hashed assets left from the previous build.
@@ -21,13 +43,14 @@ numbers differ across repos — that is expected.
 ---
 
 ## 0. Before you start
-- [ ] Decide the new **marketing version** `X.Y.Z` (identical across all four surfaces).
+- [ ] The **marketing version** `X.Y.Z` was chosen at the start of this cycle (§6) and is already set in all three code repos, identically. Changing it now means re-bumping all three before anything will build.
 - [ ] Each repo clean and on `main`.
+- [ ] Each repo's release guard passes (see §6 for the three commands) — if one blocks, the cycle-start roll was never done.
 
 ## 1. Swift — Mac/iOS → App Store  *(`GuitarTap`)*
 
 ### 1a. Version + code *(always)*
-- [ ] Bump `MARKETING_VERSION` in **both** places in `GuitarTap.xcodeproj/project.pbxproj` (Debug + Release).
+- [ ] `MARKETING_VERSION` should **already** be `X.Y.Z` in both places in `GuitarTap.xcodeproj/project.pbxproj` (Debug + Release) — rolled at the start of this cycle (§6). Confirm it; bump here only if you are changing the planned number.
 - [ ] Land all app code for the release.
 
 ### 1b. Build & upload for testing *(optional — TestFlight / review)*
@@ -36,7 +59,7 @@ numbers differ across repos — that is expected.
 - [ ] No App Store release notes are required just to upload or test a build.
 
 ### 1c. Publish a public release *(only when shipping)*
-- [ ] Update the build-less notes source `Documentation/ReleaseNotes.md`: **freeze** the current top section to its shipped literals, then add a **new top section** for `X.Y.Z` (prose + the `{{version}}/{{build}}/{{since}}` placeholder header). Build the **UserManual** target/scheme for the manual (needs `.venv` + WeasyPrint + `brew install pango`). *(The macOS build auto-stamps the release-notes PDF and regenerates the Quick-Start via `generate-help.sh` → `generate-release-notes.sh` — plain pandoc, all gitignored, nothing typed or committed.)*
+- [ ] Finish the **existing** top section of the build-less notes source `Documentation/ReleaseNotes.md`: its `{{version}}/{{build}}/{{since}}` placeholder header is already there from §6 — replace the `TODO(X.Y.Z)` marker with this release's user-facing prose. **Do not add another section**; the freeze + fresh-section step already happened at cycle start. Build the **UserManual** target/scheme for the manual (needs `.venv` + WeasyPrint + `brew install pango`). *(The macOS build auto-stamps the release-notes PDF and regenerates the Quick-Start via `generate-help.sh` → `generate-release-notes.sh` — plain pandoc, all gitignored, nothing typed or committed.)*
 - [ ] **Commit the code + notes source** — this is the commit you ship (generated docs are gitignored).
 - [ ] Xcode → **Archive** this final commit → Organizer → validate → **Upload**. Confirm `CFBundleVersion` (= `git rev-list --count HEAD`) **==** the `<build>` in the release-notes filename.
 - [ ] In **App Store Connect** → the app's new version:
@@ -47,8 +70,8 @@ numbers differ across repos — that is expected.
 - [ ] Tag the shipped commit and push: `git tag X.Y.Z && git push origin X.Y.Z` — bare marketing version, matching the existing `1.0.1` tag on `dwsdolce/GuitarTap`. Provenance only (the App Store doesn't consume it, unlike the Python tag); tag the commit that actually shipped, after any re-submission.
 
 ## 2. Python → GitHub  *(`guitar_tap`)*
-- [ ] Bump `src/guitar_tap/version` to `X.Y.Z`.
-- [ ] Edit the single source `docs/ReleaseNotes.md`: **freeze** the current top section (swap its `{{build}}`/`{{since}}` placeholders for the literals it shipped as), then add a **new top section** for `X.Y.Z` — the prose plus the placeholder header (`## Version {{version}} · Build {{build}}` / `### What's New Since Build {{since}}`). No build numbers are typed for the new release; they're stamped at build.
+- [ ] `src/guitar_tap/version` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
+- [ ] Finish the **existing** top section of the single source `docs/ReleaseNotes.md`: the placeholder header (`## Version {{version}} · Build {{build}}` / `### What's New Since Build {{since}}`) is already there from §6 — replace the `TODO(X.Y.Z)` marker with this release's prose. **Do not add another section.** No build numbers are typed for the new release; they're stamped at build.
 - [ ] **Commit now** (version + notes source). Build number = commit count, so commit *before* building, and build all three installers from this **same commit** or their `.<build>` suffixes diverge. (Committing rolls the count forward — fine, nothing manual changes after.)
 - [ ] Build installers (each on its own OS):
   - [ ] macOS: `./packaging/build_mac` → `Guitar_Tap_VX.Y.Z.dmg` **plus** the stamped Quick-Start + release-notes PDFs, in one step *(codesign + notarize + staple; needs `notarytool-profile`, `create-dmg`, pandoc + LaTeX, WeasyPrint + Pango)*. Validate the PDFs first if you like — `./packaging/generate_release_notes.sh` and `./packaging/generate_guide.sh` run standalone.
@@ -59,8 +82,8 @@ numbers differ across repos — that is expected.
 - [ ] **Publish as a full release** (not draft / pre-release) or `/releases/latest` and the updater ignore it.
 
 ## 3. Web app → `…/guitar_tap/guitar_tap_web/`  *(`GuitarTapWeb`)*
-- [ ] Bump `version` in `package.json`.
-- [ ] Prepend the new entry to `RELEASES` in `src/components/ReleaseNotes.tsx` with `build: __APP_BUILD__` (the newest entry auto-matches the deployed build). **Freeze the previous top entry** to the literal build number it shipped as.
+- [ ] `version` in `package.json` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
+- [ ] Fill in the **existing** top entry of `RELEASES` in `src/components/ReleaseNotes.tsx` — it is already the `X.Y.Z` entry with `build: __APP_BUILD__` and empty `groups` from §6; write this release's groups/items and delete the `TODO(X.Y.Z)` marker. **Do not prepend another entry**, and leave the pinned literal builds on the older entries alone.
 - [ ] `npm run typecheck && npm test && npm run lint` — all green.
 - [ ] Commit. *(No build number to set by hand — the newest entry's `__APP_BUILD__` resolves at build time, so it is safe to roll the commit count forward right up to the deploy build.)*
 - [ ] `npm run build`; smoke-test with `npm run preview`.
@@ -85,11 +108,29 @@ numbers differ across repos — that is expected.
 - [ ] **Site:** banner, both release-notes PDFs, and the manual all show the new version.
 - [ ] **App Store:** track review status; marketing URL resolves.
 
+## 6. Start the next cycle *(do this immediately after tagging)*
+
+The **first commit after a release** makes all three code repos refuse to run or build — that is the
+guard doing its job, but discover it deliberately here rather than mid-task three days later. Roll
+all three now, in one sitting:
+
+- [ ] **Swift** (`GuitarTap`): bump `MARKETING_VERSION` (both configs). In `Documentation/ReleaseNotes.md`, **freeze** the shipped top section to its literals — `## Version X.Y.Z · Build <n>` / `### What's New Since Build <prev>`, both from `git rev-list --count <tag>` — then add a fresh `{{placeholder}}` section carrying a `TODO(<next>)` marker.
+- [ ] **Python** (`guitar_tap`): bump `src/guitar_tap/version`. Same freeze + fresh placeholder section in `docs/ReleaseNotes.md`.
+- [ ] **Web** (`GuitarTapWeb`): bump `version` in `package.json`. In `src/components/ReleaseNotes.tsx`, **pin** the shipped top entry to the literal build it went out as (`git rev-list --count <tag>`), then prepend a new entry with `build: __APP_BUILD__`, `since: '<prev>'`, `groups: []` and a `TODO(<next>)` marker.
+- [ ] Confirm each tree is unblocked — all three exit 0:
+  - `GuitarTap`: `./Tooling/check-release-ready.sh`
+  - `guitar_tap`: `python3 src/guitar_tap/_release_guard.py`
+  - `GuitarTapWeb`: `./tooling/check-release-ready.sh`
+- [ ] Commit the three rolls. (Each rolls its repo's build number — expected; nothing baked depends on it yet this early in a cycle.)
+
 ## Gotchas / notes
 - **Per-repo build numbers** differ across surfaces — expected, not a bug.
 - **Python build number is fully automatic**: `version_build` is gitignored (build scripts regenerate it; `_version.py` resolves it live from git when run from source, so testing shows the right build with no script/wrapper). Release-notes build numbers are stamped by `generate_release_notes.sh` from the source `docs/ReleaseNotes.md` placeholders — never typed. The generated docs (`ReleaseNotes-*.md/.pdf`, the Quick-Start `.html/.pdf`) are gitignored too — regenerated each build, distributed on the website + GitHub releases — so `build_mac` leaves a clean `git status`. Only sources are tracked (`docs/ReleaseNotes.md`, `views/help_view.py`).
-- **Swift docs are automatic too** (mirrors Python): release notes stamp from `Documentation/ReleaseNotes.md` via `generate-release-notes.sh`, run from `generate-help.sh` on the macOS build (best-effort — skips if pandoc/tag missing or the version is already tagged). Quick-Start, manual, and release-notes outputs are all gitignored; sources tracked are `Documentation/ReleaseNotes.md`, `GuitarTap/Views/HelpView.swift`, the manual `Documentation/Manual/ch*.md`.
-- **Web release notes build auto-binds**: the newest `RELEASES` entry uses `build: __APP_BUILD__`, so it always equals the deployed About line — nothing to set by hand. When adding a NEWER version, give it `__APP_BUILD__` and freeze the prior top entry to its literal shipped build.
+- **Swift docs are automatic too** (mirrors Python): release notes stamp from `Documentation/ReleaseNotes.md` via `generate-release-notes.sh`, run from `generate-help.sh` on the macOS build (best-effort — skips if pandoc/tag missing or the version is already tagged; the release guard is the hard backstop, so a silent skip can no longer hide a stale version). Quick-Start, manual, and release-notes outputs are all gitignored; sources tracked are `Documentation/ReleaseNotes.md`, `GuitarTap/Views/HelpView.swift`, the manual `Documentation/Manual/ch*.md`.
+- **Web release notes build auto-binds**: the newest `RELEASES` entry uses `build: __APP_BUILD__`, so it always equals the deployed About line — nothing to set by hand. When adding a NEWER version, give it `__APP_BUILD__` and freeze the prior top entry to its literal shipped build. The guard enforces exactly this: it blocks when the newest entry is still the shipped tag, and when more than one entry carries `build: __APP_BUILD__` (a shipped entry that still auto-binds silently re-labels itself every build).
+- **The guard skips what it cannot judge** — a frozen PyInstaller bundle, a tree with no git repository, or a repository with no tags. A released app can therefore never refuse to start over this, and a fresh clone still builds. It *does* cover git worktrees.
+- **Tests are deliberately unguarded** — the version means nothing to them. `pytest` and `npm test` run regardless. The exception is Swift: `xcodebuild test` builds the app target first, so it hits the guard anyway; there is no way to run Swift tests without building the app.
+- **Xcode surfaces the guard as clickable issues** — it writes `error:` lines to stdout (the only form Xcode promotes to the Issue navigator; a phase failing on stderr shows nothing but an exit code), with the notes error anchored to `Documentation/ReleaseNotes.md:5`. Run from a terminal it prints the full explanation instead.
 - **Stale service worker (web):** `autoUpdate` means a returning visitor may need one reload before the new build takes; always hard-reload to verify a deploy, don't conclude from a first load.
 - **One-time tooling per build machine:**
   - Swift docs: pango + WeasyPrint venv, pandoc, basictex.
