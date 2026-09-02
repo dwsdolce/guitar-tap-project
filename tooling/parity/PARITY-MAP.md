@@ -21,6 +21,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 |---|---|---|---|---|
 | `audio/realtime-analyzer` | `GuitarTap/Models/RealtimeFFTAnalyzer.swift` | `src/guitar_tap/models/realtime_fft_analyzer.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/tap-analyzer` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/dsp/guitarFFT.ts`<br>`src/state/tapToneAnalyzer.ts` | tests |
+| `dead-input-threshold` | `GuitarTapTests/DeadInputThresholdTests.swift` | `tests/test_dead_input_threshold.py` | `src/audio/deadInput.ts`<br>`test/dead-input-threshold.test.ts` | review only |
 | `dsp/analysis-quality` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/dsp/analysisQuality.ts` | tests |
 | `dsp/calibration` | `GuitarTap/Models/MicrophoneCalibration.swift` | `src/guitar_tap/models/microphone_calibration.py` | `src/dsp/calibration.ts` | tests |
 | `dsp/decay` | `GuitarTap/Models/TapToneAnalyzer+DecayTracking.swift` | `src/guitar_tap/models/tap_tone_analyzer_decay_tracking.py` | `src/dsp/decay.ts` | tests |

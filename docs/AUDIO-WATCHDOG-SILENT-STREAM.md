@@ -1,7 +1,10 @@
 # Audio watchdog — blind to a stream that delivers SILENCE
 
-**Status:** 📋 OPEN — found 2026-07-16 during 1.0.2 testing (web). **Not blocking 1.0.2** (self-recovers,
-needs a contending app, corrupts no measurement). No code written.
+**Status:** ⏳ CODE WRITTEN ON ALL THREE, NOT YET USER-VERIFIED (2026-08-22) — see
+"Implementation" at the end. Found 2026-07-16 during 1.0.2 testing (web); **recurred on macOS/Swift
+2026-08-21** during a class (idle between taps, and again after wake-from-sleep), which is what
+prompted the fix. Was not blocking 1.0.2 (self-recovers, needs a contending app, corrupts no
+measurement).
 **Scope:** **CONFIRMED on all three** (2026-07-16, incident 3 below) — they share the stamp-on-arrival
 watchdog design ([[project_buffer_delivery_watchdog]], added 2026-06-29).
 
@@ -85,3 +88,53 @@ concern, so it needs either a fake stream that emits zeros or a live check.
 
 It self-recovers, it needs another application contending for the device, and it never produces a *wrong*
 measurement — it produces *no* measurement, visibly. The user-visible harm is confusion, not bad data.
+
+---
+
+## Implementation (2026-08-22) — ⏳ not yet user-verified
+
+Built to this doc's design. Where the code diverged from a first attempt, this doc's field
+evidence is what corrected it.
+
+**The criterion.** A second liveness stamp, refreshed only by chunks whose **RMS** exceeds
+**1e-5 (-100 dBFS)**; no signal for **15 s** while running trips it. RMS, not peak, on all three —
+the floor/peak figures above are RMS-based, and peak ≥ RMS would otherwise give the ports different
+sensitivities.
+
+**Why the threshold sits at the bottom of the headroom, not the middle.** A first cut used
+-120 dBFS on the assumption that a dead stream delivers digital zero. This doc's incident 2 refutes
+that — the values were *changing* below -100 dBFS, so a -120 dBFS threshold would have been cleared
+by the dead stream and **would never have fired**. Corrected to -100 dBFS. It was then also tempting
+to use the middle of the 30 dB headroom (-90 dBFS), but the **UMIK-1 is an unusually quiet
+microphone and can sit near -90 dBFS in a silent room** (user, 2026-08-22) — that would call a quiet
+workshop a dead input and restart the engine mid-measurement. The asymmetry decides it: a missed
+detection costs one more watchdog cycle; a false positive interrupts real work.
+
+**Surfacing, as this doc asked.** `inputAppearsDead` is published to the status line as
+**"⚠ No audio input — check the microphone connection"**, resolved through a single
+precedence point (dead input > clipping > the analyzer's own message) so the two overrides cannot
+fight or leave a stale warning. This matters most for incident 3: a device-level failure **cannot**
+be fixed by restarting the engine — it needed a USB re-enumeration — so recovery exhausts its six
+attempts and stops, and the status line is then the only thing standing between the user and an app
+that looks alive while deaf.
+
+**Also added on Swift**, from the 2026-08-21 recurrence: an `AVAudioEngineConfigurationChange`
+observer (there was none anywhere in the app) that rebuilds the engine through the hardened restart
+path, and `logAudioRouteDiagnostics()` — the AUHAL's bound device vs the selected device, the
+device's `IsAlive`, and AUHAL `IsRunning` — logged at the moment a wedge is detected, to separate
+"the device vanished" from "the device is fine but the stream is dead".
+
+**Web**: `track.onmute` was a deliberate no-op whose comment assumed a mute stops delivery. It does
+not — a muted `MediaStreamTrack` keeps feeding zeros — so the delivery watchdog never fires. It now
+back-dates the signal clock by half the window (a transient mute self-resolves; a persistent one
+trips the watchdog) and `onunmute` resets it.
+
+**Tests** (`@parity dead-input-threshold`, all three): the calibration table is pinned —
+0 / -120 / -100 dBFS read as dead; **-95 and -90 dBFS read as ALIVE** (the quiet-UMIK-1 regression);
+-70 / -63 / -20 dBFS read as alive; the threshold must keep ≥10 dB of margin under -90 dBFS; and the
+dwell must exceed the delivery threshold. As this doc predicted, the `dsp/`-level suites can't see
+the engine concern, so the criterion was extracted to a testable unit rather than tested through a
+live stream.
+
+**Not done:** verification by running. The 2026-08-21 class session ran clean with none of the new
+detectors firing, so the fix is so far unexercised — absence of the failure, not proof of the cure.

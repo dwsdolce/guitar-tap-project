@@ -36,6 +36,21 @@
       "equivalence": "tests"
     },
     {
+      "slug": "dead-input-threshold",
+      "swift": [
+        "GuitarTapTests/DeadInputThresholdTests.swift"
+      ],
+      "python": [
+        "tests/test_dead_input_threshold.py"
+      ],
+      "web": [
+        "src/audio/deadInput.ts",
+        "test/dead-input-threshold.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "dsp/analysis-quality",
       "swift": [
         "GuitarTap/Views/Utilities/Extensions.swift"
