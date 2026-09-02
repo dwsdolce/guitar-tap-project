@@ -36,11 +36,13 @@
       "equivalence": "tests"
     },
     {
-      "slug": "dead-input-threshold",
+      "slug": "dead-input",
       "swift": [
+        "GuitarTap/Models/DeadInput.swift",
         "GuitarTapTests/DeadInputThresholdTests.swift"
       ],
       "python": [
+        "src/guitar_tap/models/dead_input.py",
         "tests/test_dead_input_threshold.py"
       ],
       "web": [
