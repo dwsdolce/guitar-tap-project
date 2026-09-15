@@ -20,8 +20,8 @@ import sys
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve()
-SWIFT_ROOT = SCRIPT.parents[2]
-INDEX_JSON = SWIFT_ROOT / "parity-index.json"
+SELF_DIR = SCRIPT.parent
+INDEX_JSON = SELF_DIR / "parity-index.json"         # tooling/parity/parity-index.json, beside gen_parity_map.py's output
 PLATFORMS = ("swift", "python", "web")
 
 
