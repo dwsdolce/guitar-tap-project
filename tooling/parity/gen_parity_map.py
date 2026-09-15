@@ -139,7 +139,9 @@ def scan_repo(repo: str, root: Path) -> list[Tag]:
                 continue
             if "@parity" not in text:
                 continue
-            rel = str(fpath.relative_to(root))
+            # as_posix(), not str(): on Windows str() yields backslashes, so the generated map and index
+            # differ from the committed (forward-slash) ones and --check reports them stale on every run.
+            rel = fpath.relative_to(root).as_posix()
             for i, line in enumerate(text.splitlines(), 1):
                 for m in TAG_RE.finditer(line):
                     tags.append(Tag(repo, rel, m.group(1), i, parse_attrs(m.group(2))))
@@ -482,14 +484,16 @@ def cmd_coverage() -> int:
 
 def cmd_generate() -> int:
     groups, platform_specific, problems = collect()
-    MAP_MD.write_text(render_markdown(groups, platform_specific), encoding="utf-8")
-    INDEX_JSON.write_text(render_json(groups, platform_specific), encoding="utf-8")
+    # newline="\n": these files are LF in the repository and in every working copy (.gitattributes), and
+    # Python's text mode would otherwise write CRLF on Windows.
+    MAP_MD.write_text(render_markdown(groups, platform_specific), encoding="utf-8", newline="\n")
+    INDEX_JSON.write_text(render_json(groups, platform_specific), encoding="utf-8", newline="\n")
     print(f"wrote {MAP_MD.relative_to(HUB_ROOT)} and {INDEX_JSON.relative_to(HUB_ROOT)}: "
           f"{len(groups)} groups, {len(platform_specific)} platform-specific.")
     if COVERAGE_MD.exists():
         current, wanted = coverage_doc_status(groups, platform_specific, problems)
         if wanted != current:
-            COVERAGE_MD.write_text(wanted, encoding="utf-8")
+            COVERAGE_MD.write_text(wanted, encoding="utf-8", newline="\n")
             print(f"refreshed coverage block in {COVERAGE_MD.relative_to(HUB_ROOT)}.")
     if problems:
         print(f"{len(problems)} problem(s):", file=sys.stderr)
