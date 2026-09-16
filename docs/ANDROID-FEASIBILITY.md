@@ -1,19 +1,33 @@
-# GuitarTap Android — Phase 0 Feasibility Record
+# GuitarTap Android — Phase 0 Record
 
-The go/no-go record for [ANDROID-PLAN.md](ANDROID-PLAN.md) Phase 0. **Status: in progress (2026-09-15).** The
-automated checks are done; the guitar comparison needs someone to tap the instrument.
+What [ANDROID-PLAN.md](ANDROID-PLAN.md) Phase 0 asked, and what came back. **Status: answered enough to
+build (2026-09-16).**
 
 **Spike:** `feasibility/` in the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid)
-repo (see its README). App ID `com.dolcesfogato.guitartap.feasibility`.
+repo (see its README). App ID `com.dolcesfogato.guitartap.feasibility`. It stays as a measuring instrument
+for Phase 3, not as a gate.
 
-## The decision this feeds
+## The two questions
 
-**Go** if, on the same reference guitar:
-- (a) the Android spike's Air/Top/Back frequencies fall within the tap-to-tap spread of (c) the Swift
-  iPhone/iPad build, **and**
-- (a) is clearly better than (b) the web app in Chrome on the same Android device.
+| | Question | Answer |
+|---|---|---|
+| 1 | Can the app capture usable audio? | ✅ **yes** — §2 |
+| 2 | Can a USB measurement mic be used? | **pending** — needs a UMIK-1 plugged into the tablet; see §3 |
 
-If (b) is already within the bar, reopen the WebView option before building a native edition.
+Question 2 decides whether USB mic support ships in the first release, not whether the port happens.
+
+**Everything else is development work.** An earlier draft of this record set a go/no-go on comparing
+Air/Top/Back against Swift on a real guitar, with per-source tap statistics. That was wrong twice over:
+
+- **No other edition was gated that way.** Swift, Python and web were each built first and compared
+  afterwards — `Tests/AllPlatforms/` was captured 2026-07-30 as a pre-ship gate for 1.0.2, not a
+  prerequisite for writing any of them. Android's corpus capture belongs in the same place, at release.
+- **A poor result wouldn't have stopped anything.** Every plate and brace capture in that corpus used a
+  UMIK-1 (one Linux run excepted), so a weak built-in mic means "use a measurement mic for plates", as on
+  every other platform.
+
+The gate that *does* have precedent — numeric agreement with the oracle, which is what the web port's
+Phase 2 required — was met before any instrument was tapped (§1).
 
 ## 1. Is the Kotlin analysis a faithful port? — ✅ yes
 
@@ -108,7 +122,7 @@ What it shows:
   anything into it; it isn't in the plan's source order regardless.
 - **None of the three planned sources filters out 20–60 Hz** (all within 3 dB of UNPROCESSED). That is the
   precondition for fLC. It does **not** give the capsule's absolute response at 35 Hz, because the room sound
-  isn't calibrated; the plate test (§3 step 5) is still the real answer.
+  isn't calibrated — that shows up in the corpus capture at release time, as for every other edition.
 
 ### Findings so far
 
@@ -116,7 +130,8 @@ What it shows:
    from the bottom mic with no reported effects, ~24 dB below the other sources, with the flattest top end.
    **The plan's fallback order is not an edge case**, and recording the source used in each measurement is
    justified.
-2. **The low end is unknown where it matters most.** The lowest measurement Guitar Tap makes is the plate
+2. **The low end is uncharacterised below 80 Hz — a device property, not a blocker.** The lowest measurement
+   Guitar Tap makes is the plate
    **fLC at ~35 Hz** (34–37 Hz across the `Tests/AllPlatforms` corpus; the analysis range starts at 30 Hz).
    The mic reports −2 dB at 80 Hz and −1.3 dB at 100 Hz, which is fine for the guitar Air mode (~85–130 Hz).
    But **the reported curve stops at 80 Hz, so it says nothing about 30–60 Hz**, where MEMS capsules and input
@@ -127,9 +142,11 @@ What it shows:
    - **Frequency bias:** fLC is broad (Q ≈ 6, ~6 Hz wide), so a steep slope across it tilts the
      interpolated vertex upward.
 
-   fLC is measured successfully on every existing platform, so this is a question about **Android
-   hardware**, not the method. The survey shows none of the planned sources filters 20–60 Hz; the plate
-   test in §3 answers whether the capsule itself reaches 35 Hz.
+   fLC is measured successfully on every existing platform, so this is a question about **this tablet's
+   capsule**, not the method. The survey shows none of the planned sources filters 20–60 Hz, which is the
+   part the software controls. Whether the capsule itself reaches 35 Hz shows up in the corpus capture at
+   release — and if it falls short, the answer is a USB measurement mic, which is what every corpus plate
+   and brace capture used anyway.
 3. **Silencing is detectable directly.** Launched onto a locked screen, every source was silenced:
    `AudioRecordingConfiguration.isClientSilenced() == true`, and samples were exactly zero. That validates the
    plan's extra watchdog signal (Phase 3). It also means an app capture must never be tested with the screen
@@ -138,65 +155,51 @@ What it shows:
    `bottom` microphone.
 5. **UNPROCESSED is ~24 dB quieter than every other source.** Tap levels and peak magnitudes in dBFS will
    sit correspondingly lower. The default tap threshold (−40 dBFS) and Peak Min (−60 dB), tuned on the
-   existing platforms, may be too high for it. Watch the level meter during the guitar test; if it matters,
-   the real app needs per-source (or measured) level handling. This is a new item for the plan.
+   existing platforms, may be too high for it. Carried into Phase 3 as a design note, not an open question.
 
-## 3. Still to measure (needs the guitar)
+## 3. The one check still open: a USB measurement mic
 
-Use the same reference guitar, tap point and tap strength throughout. Keep the device at a fixed distance,
-with the tablet's bottom edge toward the soundhole for Android. Take 10 taps per row.
+Plug a UMIK-1 into the tablet (USB-C) with the spike's Diagnostics tab open, which logs every input device
+as it attaches. Two minutes, no instrument needed:
 
-1. ✅ **Source survey with sound present** — done 2026-09-15; results in §2. A rerun would settle the
-   VOICE_PERFORMANCE low-frequency anomaly (optional).
-2. **Android spike, per source.** Measure tab, label `<guitar>`, guitar type as appropriate, *Record session
-   WAV* on. For each of UNPROCESSED, VOICE_RECOGNITION and MIC: Start → 10 taps → Stop. Export CSV + summary
-   at the end. Statistics are grouped per source automatically.
-3. **Web in Chrome on the same tablet:** the live app, guitar mode, number of taps 10. Save or export the
-   result.
-4. **Swift on iPhone or iPad:** guitar mode, number of taps 10. Save or export the `.guitartap` / PDF.
-5. **Plate fLC (~35 Hz), the low-frequency bar.** Use the corpus reference plate (fL 67 / fC 117 / fLC 36 Hz
-   on UMIK-1). With the spike recording (source UNPROCESSED, then MIC), run a full plate session: several L,
-   C and FLC taps, with pauses between phases. Replay each session WAV through the Swift app's Play File
-   (Material Plate, measure fLC) and compare fL/fC/fLC with the reference values and with a Swift
-   iPhone/iPad measurement of the same plate. If the tablet's built-in mic loses or shifts fLC, repeat with
-   the UMIK-1 on the tablet: that decides whether Android needs a USB mic for plates.
-6. **Optional:** a UMIK-1 over USB-C. Plug it in with the Diagnostics tab open, which logs the device id and
-   name on attach. Unplug and replug to check the name is stable. Select it as the input device and repeat
-   step 2 for one source.
-7. **Cross-check:** replay one spike session WAV through the Swift app (Play File, guitar, 10 taps). Its
-   result should equal the spike's own power-averaged result, confirming the capture — not the port — is
-   what's being measured.
+- Does it appear as `TYPE_USB_DEVICE`, and what is its `productName`?
+- Is that name (and the id) the same after unplug/replug? Phase 3 needs a stable key to attach per-device
+  calibration to.
+- Select it as the input device on the Measure tab and confirm capture starts and the level meter moves.
 
-Pull the Android results:
+If it works, USB mic support is in scope for the first release. If it doesn't, the port proceeds with the
+built-in mic and USB support becomes a later question — the way the Python edition shipped before its own
+device handling was settled.
+
+**Optional, whenever convenient and blocking nothing:** tap a guitar once with the spike and check Air/Top/
+Back land where you expect them. That is a sanity check on the audio path, not a gate. The real
+instrument-to-instrument comparison is the corpus capture at release time (Phase 6), the same check every
+other edition went through for 1.0.2.
+
+Pull whatever the spike wrote:
 
 ```bash
-MSYS_NO_PATHCONV=1 adb -s HA2KFBS4 pull /sdcard/Android/data/com.dolcesfogato.guitartap.feasibility/files/ \
-  ~/src/GuitarTapAndroid/feasibility/results/tb305fu/
+MSYS_NO_PATHCONV=1 adb -s HA2KFBS4 pull /sdcard/Android/data/com.dolcesfogato.guitartap.feasibility/files/   ~/src/GuitarTapAndroid/feasibility/results/tb305fu/
 ```
-
-### Results (to fill in)
-
-Mean ± SD over 10 taps; the spread is the SD.
-
-| Row | Air Hz | Top Hz | Back Hz | Air dB | Notes |
-|---|---|---|---|---|---|
-| (c) Swift iPhone/iPad | | | | | |
-| (a) Android UNPROCESSED | | | | | |
-| (a) Android VOICE_RECOGNITION | | | | | |
-| (a) Android MIC | | | | | |
-| (b) Web / Chrome on tablet | | | | | |
-| (a) Android + UMIK-1 | | | | | |
-
-Plate, reference values fL 67 / fC 117 / fLC 36 Hz (UMIK-1). Spike rows are session WAVs replayed through
-Swift Play File.
-
-| Row | fL Hz | fC Hz | fLC Hz | fLC dB | Notes |
-|---|---|---|---|---|---|
-| Swift iPhone/iPad (note the mic) | | | | | |
-| Android UNPROCESSED, built-in mic | | | | | |
-| Android MIC, built-in mic | | | | | |
-| Android + UMIK-1 | | | | | |
 
 ## 4. Recommendation
 
-*Pending the measurements in §3.*
+**Build it.** Both things that could have made a native Android edition pointless are settled or harmless:
+
+- The Kotlin DSP already matches the parity oracle to 0.007 Hz and 0.003 dB (§1) — the same gate the web
+  port's Phase 2 had to pass.
+- The audio input path on the first device is clean (§2): float PCM at 48 kHz, unprocessed input honoured
+  even though it isn't advertised, no effects, and nothing filtering 20–60 Hz on the three sources the plan
+  uses.
+- The USB mic question (§3) shapes the first release's scope, not the decision.
+
+Carry these into Phase 3 rather than treating them as open risks:
+
+1. **`UNPROCESSED` runs ~24 dB quieter** than the other sources. The default tap threshold (−40 dBFS) and
+   Peak Min (−60 dB) are tuned for the other editions and will need attention.
+2. **Source and device are measurement metadata.** Record both with every measurement, as the sample rate
+   already is.
+3. **`isClientSilenced` is a direct signal** for the dead-input watchdog — Android silences capture for an
+   app that isn't in the foreground, which reads as pure digital silence.
+4. **Not every device advertises `UNPROCESSED`** (this one doesn't, yet honours it), so the fallback ladder
+   is load-bearing, not decoration.

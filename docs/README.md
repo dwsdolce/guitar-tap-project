@@ -12,8 +12,8 @@ Project documentation for **Guitar Tap** — the cross-platform tap-tone analyze
 - [`WEB-UI-GUIDELINES.md`](WEB-UI-GUIDELINES.md) — how the desktop/mobile UI translates to the web (port-era).
 
 ## Proposals (not yet an Issue)
-- [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin) edition: phased port plan, Phase 0 go/no-go spike first
-- [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: device matrix, measurements, go/no-go recommendation
+- [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin) edition: phased port plan and architecture decisions
+- [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
 
 ## Open-item detail docs (each linked from its Issue)
 - [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)

@@ -1,9 +1,9 @@
 # GuitarTap Android — Port Plan
 
-**Status:** draft for review (2026-09-15). No Issue yet. Phase 0 is a go/no-go spike; nothing after it
-starts until Phase 0 reports. **Phase 0 in progress** — the spike app is in `feasibility/` of the private
-[GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) repo; results so far in
-[ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md).
+**Status:** draft for review (2026-09-16). No Issue yet. Phase 0 is down to two yes/no checks: audio capture
+is answered (yes), the USB mic one is outstanding and blocks nothing. Findings in
+[ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md); the throwaway spike that answered them is in
+`feasibility/` of the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) repo.
 
 ## Scope
 
@@ -37,12 +37,12 @@ the same `.guitartap` file:
   exactly.
 - **File round-trip:** a `.guitartap` written by Android reads identically in Swift, Python and web, and the
   reverse.
-- **Live-capture bar (new, Android-specific):** tapping the same instrument, Android's resonance
-  frequencies fall within the tap-to-tap spread of the Swift iPhone/iPad build. This compares separate
-  recordings, not the same audio, so it is a physical-repeatability bar, not an oracle bar. Phase 0
-  measures what that spread is.
-
 Not bit-identical floating point, for the reasons PLAN.md gives.
+
+That is the whole bar, and it is the same one the other three editions meet. **There is no extra
+live-capture bar for Android.** An earlier draft invented one ("within the tap-to-tap spread of Swift on
+iPhone"), which had no precedent: real-instrument agreement is checked once per release through
+`Tests/AllPlatforms/`, for every edition alike.
 
 ## Target Devices
 
@@ -79,7 +79,8 @@ Not bit-identical floating point, for the reasons PLAN.md gives.
    Not Oboe/AAudio:
    - Guitar Tap analyses the signal, it doesn't monitor it, so low latency buys nothing.
    - `AudioRecord` keeps the app free of NDK/C++ code, and so of Play's 16 KB page-alignment rule.
-   - Revisit only if Phase 0 shows `AudioRecord` can't get unprocessed input.
+   - Phase 0 confirmed `AudioRecord` gets unprocessed input on the first device; revisit only if another
+     device proves otherwise.
 
    Source selection, in order:
    1. `UNPROCESSED`, when `AudioManager.getProperty(PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED)` is true.
@@ -114,36 +115,26 @@ Not bit-identical floating point, for the reasons PLAN.md gives.
 
 ## Phased Plan
 
-### Phase 0 — Feasibility spike (go / no-go)
+### Phase 0 — Two yes/no checks, then build
 
-A throwaway Kotlin app that answers the questions this plan rests on, before any investment in the real
-port. Measure on the user's Android device(s):
+Two things could have made a native Android edition pointless. Everything else is development work, and is
+verified the way the web port was: against the oracle and the shared fixtures as the code is written.
 
-- **Input path:**
-  - Is `UNPROCESSED` supported?
-  - What sample rate and buffer size are actually delivered?
-  - Does `AudioRecordingConfiguration` report any effects on the active client?
-- **Low-frequency response down to 30 Hz.** The lowest measurement is the plate fLC at ~35 Hz, which every
-  existing platform measures successfully. Check it from `MicrophoneInfo.getFrequencyResponse()` where
-  reported (often not below 80–100 Hz), then with a real plate session, not only the guitar Air mode
-  (~85–130 Hz).
-- **USB mic:** does a UMIK-1 appear as `TYPE_USB_DEVICE`? Can `setPreferredDevice` select it? What is its
-  `productName`, and is that name stable across unplug/replug?
-- **The comparison that decides the project:** tap one reference guitar, and a plate if possible, 10+ times
-  with each of:
-  - (a) the spike, which ports the guitar tap path (FFT, detection, capture, peaks, classification) and
-    records every session as a float32 WAV. Plate/brace are measured by replaying those WAVs through the
-    existing apps' Play File, rather than porting the gated path for a throwaway.
-  - (b) the live web app in Chrome on the same phone
-  - (c) the Swift iPhone or iPad build
+1. **Can the app capture usable audio?** — ✅ **yes.** `AudioRecord` delivers float PCM at 48 kHz from a
+   selectable source with no effects applied; nothing filters 20–60 Hz on the sources the plan uses.
+2. **Can a USB measurement mic be used?** — **pending.** Does a UMIK-1 enumerate as `TYPE_USB_DEVICE` and
+   can `setPreferredDevice` pin it? This decides whether USB mic support ships in the first release, not
+   whether the port happens.
 
-  Record Air/Top/Back frequencies and magnitudes and the spread of each.
+Findings and device data: [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md). The throwaway spike that
+answered check 1 stays in `GuitarTapAndroid/feasibility/` as a measuring instrument for Phase 3.
 
-**Output:** [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md), holding the device matrix, the numbers, and a
-recommendation.
-
-**Go if** (a) meets the live-capture bar against (c) *and* is clearly better than (b). If (b) is already
-within the bar, reopen the WebView option before building a native edition.
+**Deliberately NOT a gate:** comparing Air/Top/Back against Swift on a real instrument. The other editions
+were built first and compared afterwards — `Tests/AllPlatforms/` was captured 2026-07-30 as a pre-ship gate
+for 1.0.2, not a prerequisite for writing any of them. Android does the same: the corpus capture belongs to
+the release checklist (Phase 7), not to the start. Nor would a poor result stop the port: every plate and
+brace capture in the corpus was made with a UMIK-1 on every platform but one, so "this tablet's built-in mic
+is weak at 35 Hz" would mean "use a measurement mic", exactly as elsewhere.
 
 ### Phase 1 — Contract refresh + tooling generalisation
 
@@ -230,11 +221,13 @@ Mirror `RealtimeFFTAnalyzer` + its extensions (`DeviceManagement`, `EngineContro
     cooldown.
   - Guitar captures fftSize samples; plate/brace capture 500 ms, with the FFT input at 400 ms.
   - Main-thread fallback seeding with Swift's timeouts.
-- **Device management** (`AudioDeviceCallback`):
+- **Device management** (`AudioDeviceCallback`) — this is where the two questions Phase 0 left open get
+  settled, as development work rather than as a gate: the source-selection ladder above, and whether a
+  UMIK-1 enumerates and can be pinned.
   - Enumerate input devices; auto-select a newly attached external mic; fall back when the active one is
     removed.
   - **Stable device key:** `AudioDeviceInfo.getId()` is *not* stable across replug. Derive the key from
-    type + `productName` (+ `address`) — the Phase 0 findings settle the exact recipe.
+    type + `productName` (+ `address`); the USB check in ANDROID-FEASIBILITY §3 settles the exact recipe.
   - One identity, one writer, one restore path ([CALIBRATION-DEVICE-STATE-SPEC](completed/CALIBRATION-DEVICE-STATE-SPEC.md)).
   - Per-device calibration map, with the load-without-resaving guard.
 - **Watchdog / dead input:**
@@ -320,7 +313,11 @@ through all four editions.
   Dokka builds clean.
 - [TEST-COVERAGE.md](../tooling/TEST-COVERAGE.md) updated.
 - A soak/stress harness on Android, like the other three editions.
-- Captures from Android devices added to `Tests/AllPlatforms/`.
+- **Corpus capture — the pre-ship comparison, at the end, as for every other edition.** The standard six
+  (guitar 1-tap and 3-tap, plate, plate 3-tap, brace, brace 3-tap) recorded on Android, named to the corpus
+  convention, added to `Tests/AllPlatforms/`, and compared with `guitartap_matrix.py`. The range column is
+  the bar; the existing spread is ~1.6 Hz on brace fL and ~2.4 Hz on plate fLC. This is what
+  `Tests/AllPlatforms/` was made for in the 1.0.2 cycle.
 - **User manual** (shared source in `GuitarTap/Documentation/Manual`) gains Android wording:
   - installing
   - microphone permission
@@ -368,11 +365,12 @@ Swift keeps changing while Android is being built.
 ## Key Technical Risks
 
 1. **Built-in mic low-frequency roll-off on Android hardware.** The analysis must reach the plate fLC
-   (~35 Hz; range starts at 30 Hz), which the existing platforms measure successfully. Android MEMS
-   capsules and HAL input filters vary by device, and a roll-off below ~60 Hz can hide the (quiet) fLC or
-   bias its broad peak upward. Unprocessed input doesn't fix a capsule's physics. Phase 0 measures it with a
-   plate session. Mitigations if a device falls short: recommend a USB mic for plates; show the active
-   source/device in Metrics.
+   (~35 Hz; range starts at 30 Hz). Android MEMS capsules and HAL input filters vary by device, and a
+   roll-off below ~60 Hz can hide the (quiet) fLC or bias its broad peak upward; unprocessed input doesn't
+   fix a capsule's physics. This is a **device** property, not a project risk: every plate and brace capture
+   in `Tests/AllPlatforms/` was made with a UMIK-1 (one Linux run excepted), so a weak built-in mic means
+   "use a measurement mic for plates", as on every other platform. Mitigations: show the active
+   source/device in Metrics, and save it with the measurement.
 2. **OEMs that ignore or don't offer `UNPROCESSED`.** The fallback `VOICE_RECOGNITION` is usually
    AGC-free, but that is not guaranteed. Record the source used in every measurement so a suspect file can
    be explained later. Build a device matrix from Phase 0 onward.
