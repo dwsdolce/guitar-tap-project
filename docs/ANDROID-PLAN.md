@@ -38,6 +38,7 @@ the same `.guitartap` file:
   exactly.
 - **File round-trip:** a `.guitartap` written by Android reads identically in Swift, Python and web, and the
   reverse.
+
 Not bit-identical floating point, for the reasons PLAN.md gives.
 
 That is the whole bar, and it is the same one the other three editions meet. **There is no extra
@@ -47,10 +48,16 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
 
 ## Target Devices
 
-- **Primary:** Android phones, portrait and landscape.
-- **Secondary:** Android tablets. A wide window gets the iPad regular-width layout.
-- **Measurement mics:** the built-in mic, plus USB-C audio-class mics (UMIK-1 with a `.cal` file).
-  USB support varies by device and is confirmed per device, not assumed.
+- **Primary: Android tablets** (decided 2026-09-16). The app suits a tablet far better than a phone — the
+  spectrum chart, the results panel and the measurements library all want the width, which is why the iPad
+  regular-width layout is the rich one. It is also the only Android hardware being bought for this project.
+- **Secondary:** Android phones, portrait and landscape. Built and kept working, but **verified on the
+  emulator**: no Android phone is being acquired for testing, so phone layouts are never run-reviewed on
+  real hardware. Say so when a phone-specific bug is reported.
+- **Measurement mics:** the built-in mic; USB-C audio-class mics (UMIK-1 with a `.cal` file) where the
+  device supports them. USB support varies by device and is confirmed per device, not assumed — the first
+  test tablet does not enumerate a UMIK-1 at all (ANDROID-FEASIBILITY §3), so the built-in mic is the
+  baseline the first release must work well with.
 - **SDK levels:**
   - `targetSdk`/`compileSdk` 36, matching Palmas.
   - `minSdk` **28** proposed. 28 adds `AudioRecord.getActiveMicrophones()`, whose `MicrophoneInfo` reports
@@ -107,8 +114,10 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
    exception** to decision 1, tagged in the code.
 10. **Layout: follow the iOS branches, explicitly.** Swift has ~155 `#if os` / size-class / `UIDevice`
     branches across 30 files:
-    - Compact width ↔ iPhone (`standardVerticalLayout`, `phoneLandscapeLayout`).
-    - Expanded width ↔ iPad regular (`iPadHorizontalLayout`).
+    - **Expanded width ↔ iPad regular (`iPadHorizontalLayout`) — the primary layout**, since tablets are the
+      primary target. Results inline at 360–480 pt, as on iPad.
+    - Compact width ↔ iPhone (`standardVerticalLayout`, `phoneLandscapeLayout`), built and kept correct but
+      emulator-verified only.
     - Medium width: decide in Phase 4.
 
     Resolve each branch on its own merits, and never inherit the choice from Python or web. Python copying
@@ -283,9 +292,10 @@ About 41 Swift view files (~17.9k lines) map to composables of the same names:
   Hardware-keyboard shortcuts on tablets are a later nice-to-have.
 
 **Gate:**
-- A run-review, side by side with Swift on iPhone and iPad, of guitar, plate and brace measurements from
-  start to finish.
-- The review covers compact, landscape and expanded layouts, and dark mode.
+- A run-review **on the tablet**, side by side with Swift on iPad, of guitar, plate and brace measurements
+  from start to finish. That is the primary target and the only Android hardware on hand.
+- The review covers expanded and landscape layouts and dark mode on the device; the compact/phone layout is
+  checked on the emulator, which is honest about what it can show — layout and flow, not feel or audio.
 - A green suite is not a run-review.
 
 ### Phase 5 — Persistence & export
@@ -343,7 +353,7 @@ keystore handling, AAB via `bundleRelease`. Reuse it rather than re-deriving it.
 - **Release guard:** a Gradle task run before compiling that matches the other repos' release-identity
   guards (blocks the build when HEAD is past the last tag and the version or notes are stale).
 - **Play Console:**
-  - Store listing and screenshots (phone + tablet).
+  - Store listing and screenshots (tablet first, since that is the primary target; phone from the emulator).
   - Data safety form: records audio; no data is collected or shared; all processing on the device.
   - A privacy policy URL.
   - Tracks: internal → closed → production. If the developer account is subject to Play's closed-testing
@@ -379,7 +389,7 @@ Swift keeps changing while Android is being built.
    AGC-free, but that is not guaranteed. Record the source used in every measurement so a suspect file can
    be explained later. Build a device matrix from Phase 0 onward.
 3. **USB mic behaviour varies by device.** Whether the native rate is delivered or resampled, and whether
-   the device can be pinned with `setPreferredDevice`, must be checked per phone. Calibration also depends
+   the device can be pinned with `setPreferredDevice`, must be checked per device. Calibration also depends
    on a stable device key (decision in Phase 3).
 4. **Fragile threading carried over from Swift.** Several level-crossing fields are shared across threads
    without locks in Swift, and switching the RMS path to a synchronous main-thread hop deadlocked there
