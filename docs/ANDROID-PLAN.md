@@ -1,7 +1,8 @@
 # GuitarTap Android — Port Plan
 
-**Status:** draft for review (2026-09-16). No Issue yet. Phase 0 is down to two yes/no checks: audio capture
-is answered (yes), the USB mic one is outstanding and blocks nothing. Findings in
+**Status:** draft for review (2026-09-16). No Issue yet. Phase 0's two yes/no checks are both answered:
+audio capture yes, USB measurement mic **no on the first tablet** (it never enumerates; a USB SSD does) —
+which scopes the first release rather than blocking the port. Findings in
 [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md); the throwaway spike that answered them is in
 `feasibility/` of the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) repo.
 
@@ -122,9 +123,10 @@ verified the way the web port was: against the oracle and the shared fixtures as
 
 1. **Can the app capture usable audio?** — ✅ **yes.** `AudioRecord` delivers float PCM at 48 kHz from a
    selectable source with no effects applied; nothing filters 20–60 Hz on the sources the plan uses.
-2. **Can a USB measurement mic be used?** — **pending.** Does a UMIK-1 enumerate as `TYPE_USB_DEVICE` and
-   can `setPreferredDevice` pin it? This decides whether USB mic support ships in the first release, not
-   whether the port happens.
+2. **Can a USB measurement mic be used?** — ❌ **not on the Lenovo TB305FU.** A UMIK-1 takes power but never
+   enumerates, while a USB SSD on the same cable does; the tablet is in host mode throughout. So the first
+   release targets the built-in mic. The device layer is still built in Phase 3 and verified on other
+   hardware when there is some — this is one tablet's USB host stack, not a statement about Android.
 
 Findings and device data: [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md). The throwaway spike that
 answered check 1 stays in `GuitarTapAndroid/feasibility/` as a measuring instrument for Phase 3.
@@ -221,9 +223,11 @@ Mirror `RealtimeFFTAnalyzer` + its extensions (`DeviceManagement`, `EngineContro
     cooldown.
   - Guitar captures fftSize samples; plate/brace capture 500 ms, with the FFT input at 400 ms.
   - Main-thread fallback seeding with Swift's timeouts.
-- **Device management** (`AudioDeviceCallback`) — this is where the two questions Phase 0 left open get
-  settled, as development work rather than as a gate: the source-selection ladder above, and whether a
-  UMIK-1 enumerates and can be pinned.
+- **Device management** (`AudioDeviceCallback`) — built here as development work: the source-selection
+  ladder above, plus USB device handling. Note that the first test tablet never enumerates a UMIK-1
+  (ANDROID-FEASIBILITY §3), so the USB path has to be written against the API and verified on other
+  hardware. Make the device picker state plainly what it can see, so a user whose device has the same
+  limitation blames the right component.
   - Enumerate input devices; auto-select a newly attached external mic; fall back when the active one is
     removed.
   - **Stable device key:** `AudioDeviceInfo.getId()` is *not* stable across replug. Derive the key from

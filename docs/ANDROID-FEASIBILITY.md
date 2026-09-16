@@ -12,9 +12,11 @@ for Phase 3, not as a gate.
 | | Question | Answer |
 |---|---|---|
 | 1 | Can the app capture usable audio? | ✅ **yes** — §2 |
-| 2 | Can a USB measurement mic be used? | **pending** — needs a UMIK-1 plugged into the tablet; see §3 |
+| 2 | Can a USB measurement mic be used? | ❌ **not on this tablet** — a UMIK-1 never enumerates; §3 |
 
-Question 2 decides whether USB mic support ships in the first release, not whether the port happens.
+Question 2 decides whether USB mic support ships in the first release, not whether the port happens — and
+the answer is about this tablet's USB host stack, not about Android. The first release targets the built-in
+mic; USB support is still designed in Phase 3 and verified on other hardware when there is some.
 
 **Everything else is development work.** An earlier draft of this record set a go/no-go on comparing
 Air/Top/Back against Swift on a real guitar, with per-source tap statistics. That was wrong twice over:
@@ -66,7 +68,7 @@ canonical Swift app with Play File.
 | Delivered rate (default request) | 48000, `bufferSizeInFrames` 48000 |
 | Routing by source | UNPROCESSED / VOICE_RECOGNITION / MIC / VOICE_PERFORMANCE / VOICE_COMMUNICATION → `bottom` mic; CAMCORDER → `back` mic |
 | Effects Android reports | none on any source **except** VOICE_COMMUNICATION (Acoustic Echo Canceler + Noise Suppression) |
-| USB measurement mic | not yet tested |
+| USB measurement mic | **does not enumerate** (UMIK-1; a USB SSD does) — §3 |
 
 Probe and survey reports: `GuitarTapAndroid/feasibility/results/tb305fu/reports/`.
 
@@ -157,30 +159,57 @@ What it shows:
    sit correspondingly lower. The default tap threshold (−40 dBFS) and Peak Min (−60 dB), tuned on the
    existing platforms, may be too high for it. Carried into Phase 3 as a design note, not an open question.
 
-## 3. The one check still open: a USB measurement mic
+## 3. Can a USB measurement mic be used? - NO on this tablet (2026-09-16)
 
-Plug a UMIK-1 into the tablet (USB-C) with the spike's Diagnostics tab open, which logs every input device
-as it attaches. Two minutes, no instrument needed:
+A miniDSP **UMIK-1** (USB-C, `VID_2752 / PID_0007`) does not enumerate on the Lenovo TB305FU. It draws
+power - its indicator lights - but no USB device ever appears on the bus.
 
-- Does it appear as `TYPE_USB_DEVICE`, and what is its `productName`?
-- Is that name (and the id) the same after unplug/replug? Phase 3 needs a stable key to attach per-device
-  calibration to.
-- Select it as the input device on the Measure tab and confirm capture starts and the level meter moves.
+| Test | Result |
+|---|---|
+| Mic + cable on an iPad | works |
+| Mic + cable on the Windows PC | works: composite device, audio interface (MI_00) + HID (MI_03) |
+| **Samsung T7 SSD on the tablet, same cable** | **enumerates** - `04e8:4001`, 500 mA |
+| Mic on the tablet, hot-plugged (several attempts) | powered, **never enumerates** |
+| Mic attached across a full reboot | same - nothing on the bus after boot |
 
-If it works, USB mic support is in scope for the first release. If it doesn't, the port proceeds with the
-built-in mic and USB support becomes a later question — the way the Python edition shipped before its own
-device handling was settled.
+The tablet's side of the handshake is correct throughout: `current_mode=dfp`, `data_role=host`,
+`power_role=source`, MediaTek `otgenable=y`, controller `cmode=1` (host), role switch `host`, no USB
+data-signaling restriction, battery 93 %. `/sys/bus/usb/devices/` holds only the root hub
+(`1d6b:0002 MUSB HDRC host driver`), and `dumpsys usb` keeps `kernel_state=DISCONNECTED` with
+`audio_accessory_connected=false`. Enumeration never starts; this is not Android rejecting a device it saw.
 
-**Optional, whenever convenient and blocking nothing:** tap a guitar once with the spike and check Air/Top/
-Back land where you expect them. That is a sanity check on the audio path, not a gate. The real
-instrument-to-instrument comparison is the corpus capture at release time (Phase 6), the same check every
-other edition went through for 1.0.2.
+So it is not the cable, not the mic, not power, and not host mode in general - the SSD proves all four. It
+is this controller failing to bring up this device. A plausible reason, **untested**, is that MediaTek's
+MUSB host is unreliable with a directly attached low/full-speed composite device, where a mass-storage
+device at high/super speed is fine; a plain USB 2.0 hub in between is the usual workaround. No hub was
+available to try, and `dmesg` is closed on a production build, so the kernel's own account of the failure
+is out of reach.
 
-Pull whatever the spike wrote:
+### What this means
+
+- **It does not block the port.** The first release targets the built-in mic, which is what the survey in
+  §2 characterised.
+- **USB support is still designed in Phase 3** (device enumeration, `setPreferredDevice`, per-device
+  calibration keyed on a stable identity) - it simply cannot be *verified* on this tablet.
+- **The open question moves to hardware, not software:** try a second Android device, and try a USB hub.
+  Until one of those works, treat "USB measurement mic on Android" as unproven rather than unsupported.
+- **Worth surfacing in the app:** if a user plugs in a measurement mic and nothing appears in the device
+  list, the cause may be their device's USB host stack, not Guitar Tap. The Settings device picker should
+  say plainly what it can see.
+
+### Working with the tablet over Wi-Fi
+
+The tablet has one USB-C port, so a USB mic and a USB cable to the PC are mutually exclusive. `adb pair`
+over wireless debugging failed repeatedly here ("protocol fault"), but plain `adb connect` works without
+pairing, because this PC's adb key was already authorised during the earlier cable session:
 
 ```bash
-MSYS_NO_PATHCONV=1 adb -s HA2KFBS4 pull /sdcard/Android/data/com.dolcesfogato.guitartap.feasibility/files/   ~/src/GuitarTapAndroid/feasibility/results/tb305fu/
+adb mdns services                      # find adb-<serial> _adb-tls-connect._tcp <ip>:<port>
+adb connect <ip>:<port>
 ```
+
+Wireless debugging switches itself off on reboot, and the port changes every time it is re-enabled, so
+rediscover with `adb mdns services` after each boot.
 
 ## 4. Recommendation
 
@@ -191,7 +220,10 @@ MSYS_NO_PATHCONV=1 adb -s HA2KFBS4 pull /sdcard/Android/data/com.dolcesfogato.gu
 - The audio input path on the first device is clean (§2): float PCM at 48 kHz, unprocessed input honoured
   even though it isn't advertised, no effects, and nothing filtering 20–60 Hz on the three sources the plan
   uses.
-- The USB mic question (§3) shapes the first release's scope, not the decision.
+- The USB mic question (§3) came back **no on this tablet**, which shapes the first release's scope rather
+  than the decision: ship with the built-in mic, design the device layer anyway, and verify USB on other
+  hardware. Guitar Air modes sit at 85–130 Hz where this tablet's capsule is within 2 dB; plate fLC at
+  ~35 Hz is the measurement most likely to want a measurement mic, and that is where the limitation bites.
 
 Carry these into Phase 3 rather than treating them as open risks:
 
