@@ -1,6 +1,6 @@
 # GuitarTap comparison matrix
 
-Source: `GuitarTap/Tests/AllPlatforms` · 42 file(s) · 6 sample(s).
+Source: `Tests/AllPlatforms` · 42 file(s) · 6 sample(s).
 Frequencies in Hz (1 dp); dimensions as stored (mm); density g/cm³; `f_vs` is the derived effective panel stiffness (preset value, or customPlateStiffness when preset = Custom). The **range** column is max − min across the numeric cells (cross-capture spread).
 
 ### brace  —  Material (Brace)

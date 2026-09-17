@@ -4,7 +4,7 @@ doc_coverage.py — cross-platform documentation-coverage triage for the comment
 
 Purpose
 -------
-Answer, mechanically, "do the three platforms document the same symbols?" for each
+Answer, mechanically, "do the editions document the same symbols?" for each
 `@parity` slug. It does NOT judge doc *depth* (prose quality) — a human read still owns
 that — but it reliably catches the *missing-entirely* class of drift (e.g. WEB-MTC-1,
 where the web component + its exports carried no TSDoc while Swift/Python were fully
@@ -19,6 +19,9 @@ Per file it finds declared symbols and whether each carries a doc comment:
   - TS/TSX: top-level export/const/function/interface/type/class; documented = a
             `/** ... */` TSDoc block above it (a plain `//` comment counts as
             "comment-only", NOT documented — the standard requires TSDoc).
+  - Kotlin: top-level fun / val / var / class / object / interface / enum class /
+            typealias; documented = a `/** ... */` KDoc block above it. Kotlin is public
+            by default, so `private`/`internal` mark the internal (informational) set.
 
 Grouping
 --------
@@ -28,7 +31,8 @@ in the review memory); such files are marked `[multi]`.
 
 Output
 ------
-A per-slug table (swift | python | web coverage) with a GAP flag when a platform lags,
+A per-slug table (one column per active edition — see platforms.py) with a GAP flag when
+one lags,
 followed by the undocumented symbol names for every flagged slug.
 
 Usage
@@ -44,11 +48,14 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Repo roots — the three code repos sit as siblings of this hub (…/tooling/parity → hub → src).
-SRC = Path(__file__).resolve().parents[2].parent
-SWIFT_ROOT = SRC / "GuitarTap"
-PYTHON_ROOT = SRC / "guitar_tap"
-WEB_ROOT = SRC / "GuitarTapWeb" / "src"
+# Editions, repo roots and doc styles all come from platforms.py — the one place they are
+# declared. Columns are rendered for active editions only, so a declared-but-unstarted edition
+# adds nothing to the table until its first @parity tag lands.
+import platforms
+
+SRC = platforms.SRC
+ACTIVE = platforms.active()
+PLATFORM_KEYS = tuple(p.key for p in ACTIVE)
 
 PARITY_RE = re.compile(r"@parity\s+([a-z0-9][a-z0-9/_-]*)")
 
@@ -283,6 +290,65 @@ def analyze_ts(text: str):
     return total, documented, undoc, internal
 
 
+KT_DECL = re.compile(
+    r"^(?P<indent>\s*)"
+    r"(?:public\s+|internal\s+|private\s+|protected\s+)?"
+    r"(?:abstract\s+|sealed\s+|open\s+|final\s+|data\s+|value\s+|inline\s+|suspend\s+)*"
+    r"(?P<kind>fun|val|var|class|object|interface|enum\s+class|typealias)\s+"
+    r"(?:<[^>]*>\s*)?"
+    r"(?P<name>[A-Za-z_]\w*)"
+)
+
+
+def analyze_kotlin(text: str):
+    """Kotlin/KDoc counterpart of analyze_ts: top-level declarations, /** */ above them.
+
+    Kotlin declarations are public by default, so the *absence* of a visibility keyword means
+    public — the opposite of TypeScript, where `export` is explicit. `private`/`internal`
+    declarations are counted as internal (informational), matching how Swift `private` and
+    Python `_name` are treated.
+    """
+    lines = text.splitlines()
+    total = documented = 0
+    undoc: list[str] = []
+    internal: list[str] = []
+    for i, line in enumerate(lines):
+        m = KT_DECL.match(line)
+        if not m:
+            continue
+        if len(m.group("indent")) > 0:      # top-level only
+            continue
+        name = m.group("name")
+        stripped = line.lstrip()
+        is_internal = stripped.startswith(("private ", "internal "))
+        # Walk upward past // comments (incl. @parity) and blanks, and past annotations.
+        j = i - 1
+        has_kdoc = False
+        has_line_comment = False
+        while j >= 0:
+            t = lines[j].strip()
+            if t == "" or t.startswith("@"):
+                j -= 1
+                continue
+            if t.startswith("//"):
+                has_line_comment = True
+                j -= 1
+                continue
+            if t.endswith("*/"):
+                has_kdoc = t.startswith("*") or "/**" in t or True
+            break
+        if is_internal:
+            if not has_kdoc:
+                internal.append(name + (" (//-only)" if has_line_comment else ""))
+            continue
+        total += 1
+        if has_kdoc:
+            documented += 1
+        else:
+            undoc.append(name + (" (//-only)" if has_line_comment else ""))
+    return total, documented, undoc, internal
+
+
 # --------------------------------------------------------------------------- #
 # File discovery
 # --------------------------------------------------------------------------- #
@@ -308,12 +374,13 @@ def scan(root: Path, glob: str, lang: str) -> list[FileReport]:
         if slug is None:
             continue
         rep = FileReport(lang=lang, path=path, slug=slug, multi=multi)
-        if lang == "swift":
-            rep.total, rep.documented, rep.undoc, rep.internal_undoc = analyze_swift(text)
-        elif lang == "python":
-            rep.total, rep.documented, rep.undoc, rep.internal_undoc = analyze_python(text)
-        else:
-            rep.total, rep.documented, rep.undoc, rep.internal_undoc = analyze_ts(text)
+        analyzer = {
+            "docc": analyze_swift,
+            "docstring": analyze_python,
+            "tsdoc": analyze_ts,
+            "kdoc": analyze_kotlin,
+        }[platforms.BY_KEY[lang].doc_style]
+        rep.total, rep.documented, rep.undoc, rep.internal_undoc = analyzer(text)
         reports.append(rep)
     return reports
 
@@ -333,36 +400,44 @@ def cell(reps: list[FileReport]) -> str:
 
 
 def main() -> int:
+    # The table uses non-ASCII markers (◄ GAP, —). A Windows console is cp1252 by default and
+    # raises UnicodeEncodeError on them, which used to kill the run the moment a gap was flagged.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     flags = {a for a in sys.argv[1:] if a.startswith("--")}
     prefix = args[0] if args else ""
     list_all = "--list-undoc" in flags
 
-    all_reports = (
-        scan(SWIFT_ROOT, "*.swift", "swift")
-        + scan(PYTHON_ROOT, "*.py", "python")
-        + scan(WEB_ROOT, "*.ts", "web")
-        + scan(WEB_ROOT, "*.tsx", "web")
-    )
+    all_reports: list[FileReport] = []
+    for plat in ACTIVE:
+        root = plat.root / plat.doc_root if plat.doc_root else plat.root
+        for ext in sorted(plat.exts):
+            if ext == ".css":
+                continue                      # stylesheets carry no documentable symbols
+            all_reports += scan(root, f"*{ext}", plat.key)
 
     slugs: dict[str, dict[str, list[FileReport]]] = {}
     for r in all_reports:
         if not r.slug.startswith(prefix):
             continue
-        slugs.setdefault(r.slug, {"swift": [], "python": [], "web": []})[r.lang].append(r)
+        slugs.setdefault(r.slug, {k: [] for k in PLATFORM_KEYS})[r.lang].append(r)
 
     print(f"\nDoc-coverage triage  ({prefix or 'all slugs'})")
     print("  documented / total of the PUBLIC/EXPORTED surface (criterion 1; TS=% with TSDoc).")
     print("  Internal helpers (Swift private / Python _name / TS non-export) are excluded from")
     print("  the gate — see --list-undoc for them. * = a file hosts >1 slug.\n")
-    print(f"  {'SLUG':<28} {'SWIFT':<17}{'PYTHON':<17}{'WEB':<17} GAP")
-    print("  " + "-" * 80)
+    heads = "".join(f"{platforms.BY_KEY[k].label.upper():<17}" for k in PLATFORM_KEYS)
+    print(f"  {'SLUG':<28} {heads} GAP")
+    print("  " + "-" * (30 + 17 * len(PLATFORM_KEYS)))
 
     flagged: list[str] = []
     for slug in sorted(slugs):
         by = slugs[slug]
         pcts = []
-        for lang in ("swift", "python", "web"):
+        for lang in PLATFORM_KEYS:
             reps = by[lang]
             if reps and sum(r.total for r in reps):
                 pcts.append(100.0 * sum(r.documented for r in reps) / sum(r.total for r in reps))
@@ -372,8 +447,7 @@ def main() -> int:
             if lo < 90 or (hi - lo) >= 20:
                 gap = "◄ GAP"
                 flagged.append(slug)
-        row = (f"  {slug:<28} "
-               f"{cell(by['swift'])}{cell(by['python'])}{cell(by['web'])} {gap}")
+        row = f"  {slug:<28} " + "".join(cell(by[k]) for k in PLATFORM_KEYS) + f" {gap}"
         print(row)
 
     # Undocumented-symbol detail for flagged slugs (or all, with --list-undoc).
@@ -382,7 +456,7 @@ def main() -> int:
         print("\n  Undocumented symbols" + (" (all)" if list_all else " (flagged slugs)") + ":")
         for slug in detail_slugs:
             by = slugs[slug]
-            for lang in ("swift", "python", "web"):
+            for lang in PLATFORM_KEYS:
                 for r in by[lang]:
                     if r.undoc:
                         rel = r.path.name

@@ -10,7 +10,7 @@ care which platform the match came from.
     python3 parity_lookup.py gated-fft --sort=web
     python3 parity_lookup.py .           # list everything (sorted)
 
---sort picks the browse order (slug|swift|python|web); default is slug.
+--sort picks the browse order (slug, or any edition key from platforms.py); default is slug.
 """
 from __future__ import annotations
 
@@ -19,10 +19,14 @@ import json
 import sys
 from pathlib import Path
 
+import platforms
+
 SCRIPT = Path(__file__).resolve()
 SELF_DIR = SCRIPT.parent
 INDEX_JSON = SELF_DIR / "parity-index.json"         # tooling/parity/parity-index.json, beside gen_parity_map.py's output
-PLATFORMS = ("swift", "python", "web")
+# Editions come from platforms.py; the index only carries keys for the ones that were active
+# when it was generated, so read the record rather than assuming a fixed set.
+PLATFORMS = platforms.KEYS
 
 
 def load() -> dict:
@@ -67,6 +71,8 @@ def main() -> int:
     for g in hits:
         print(g["slug"])
         for plat in PLATFORMS:
+            if plat not in g:
+                continue          # edition not yet active when the index was generated
             print(f"  {plat:7} {fmt(g.get(plat) or [])}")
     print(f"\n{len(hits)} group(s).")
     return 0

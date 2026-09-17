@@ -30,14 +30,30 @@ import os
 import sys
 from pathlib import Path
 
-DEFAULT_DIR = str(Path(__file__).resolve().parent.parent / "Tests" / "AllPlatforms")
+HUB_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DIR = str(HUB_ROOT / "Tests" / "AllPlatforms")
 
-PLATFORMS = ["swift", "python", "web"]
-DEVICES = ["mac", "ipad", "iphone", "pc", "linux"]
+
+def _rel_to_hub(d) -> str:
+    """Path as written into the generated matrix: hub-relative when it sits inside the hub.
+
+    The matrix is committed, so an absolute path would leak one machine's layout and churn the
+    diff for everyone else.
+    """
+    try:
+        return Path(d).resolve().relative_to(HUB_ROOT).as_posix()
+    except ValueError:
+        return str(d)
+
+# Editions, in column order, and the device tokens each may carry in a capture filename. Kept in
+# step with tooling/parity/platforms.py (the declaration the parity tools read); this tool needs
+# only the filename tokens, so it holds its own short list rather than importing across the tree.
+PLATFORMS = ["swift", "python", "web", "android"]
+DEVICES = ["mac", "ipad", "iphone", "pc", "linux", "tablet", "phone"]
 # Microphone token embedded in the sample name. Stripped from the grouping key so every mic for a
 # sample shares one table (shown instead as a "Microphone" row); listed longest-first so a multi-token
 # mic like "umik-1" is matched before any shorter token.
-MICS = ["umik-1", "default"]
+MICS = ["umik-1", "snowball", "default"]
 
 # Swift PlateStiffnessPreset.value (raw rawValue name -> f_vs). "Custom" defers to customPlateStiffness.
 STIFFNESS_VALUE = {
@@ -311,7 +327,7 @@ def main(argv=None):
     body = [
         "# GuitarTap comparison matrix",
         "",
-        f"Source: `{d}` · {len(files)} file(s) · {len(samples)} sample(s).",
+        f"Source: `{_rel_to_hub(d)}` · {len(files)} file(s) · {len(samples)} sample(s).",
         "Frequencies in Hz (1 dp); dimensions as stored (mm); density g/cm³; `f_vs` is the derived "
         "effective panel stiffness (preset value, or customPlateStiffness when preset = Custom). "
         "The **range** column is max − min across the numeric cells (cross-capture spread).",
@@ -329,7 +345,9 @@ def main(argv=None):
     if problems:
         body += ["## Files that could not be parsed", ""] + [f"- {p}" for p in problems] + [""]
 
-    out_path.write_text("\n".join(body), encoding="utf-8")
+    # LF output: the matrix is committed, and every working copy is LF (.gitattributes);
+    # Python text mode would otherwise write CRLF on Windows.
+    out_path.write_text("\n".join(body), encoding="utf-8", newline="\n")
     print(f"wrote {out_path}  ({len(files)} files, {len(samples)} samples"
           + (f", {len(problems)} problem(s)" if problems else "") + ")")
     return 0
