@@ -1,8 +1,8 @@
 # GuitarTap Android — Port Plan
 
 **Status:** draft for review (2026-09-16). No Issue yet. Phase 0's two yes/no checks are both answered:
-audio capture yes, USB measurement mic **no on the first tablet** (it never enumerates; a USB SSD does) —
-which scopes the first release rather than blocking the port. Findings in
+audio capture yes, USB measurement mic yes **through a USB hub** (a UMIK-1 is a full-speed device and this
+tablet's controller will not bring one up when attached directly). Findings in
 [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md); the throwaway spike that answered them is in
 `feasibility/` of the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) repo.
 
@@ -54,10 +54,10 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
 - **Secondary:** Android phones, portrait and landscape. Built and kept working, but **verified on the
   emulator**: no Android phone is being acquired for testing, so phone layouts are never run-reviewed on
   real hardware. Say so when a phone-specific bug is reported.
-- **Measurement mics:** the built-in mic; USB-C audio-class mics (UMIK-1 with a `.cal` file) where the
-  device supports them. USB support varies by device and is confirmed per device, not assumed — the first
-  test tablet does not enumerate a UMIK-1 at all (ANDROID-FEASIBILITY §3), so the built-in mic is the
-  baseline the first release must work well with.
+- **Measurement mics:** the built-in mic, plus USB-C audio-class mics (UMIK-1 with a `.cal` file). USB
+  support varies by device and is confirmed per device, not assumed: the first test tablet needs a USB 2.0
+  hub in between, because it will not enumerate a full-speed device attached directly
+  (ANDROID-FEASIBILITY §3). Both paths ship.
 - **SDK levels:**
   - `targetSdk`/`compileSdk` 36, matching Palmas.
   - `minSdk` **28** proposed. 28 adds `AudioRecord.getActiveMicrophones()`, whose `MicrophoneInfo` reports
@@ -132,10 +132,12 @@ verified the way the web port was: against the oracle and the shared fixtures as
 
 1. **Can the app capture usable audio?** — ✅ **yes.** `AudioRecord` delivers float PCM at 48 kHz from a
    selectable source with no effects applied; nothing filters 20–60 Hz on the sources the plan uses.
-2. **Can a USB measurement mic be used?** — ❌ **not on the Lenovo TB305FU.** A UMIK-1 takes power but never
-   enumerates, while a USB SSD on the same cable does; the tablet is in host mode throughout. So the first
-   release targets the built-in mic. The device layer is still built in Phase 3 and verified on other
-   hardware when there is some — this is one tablet's USB host stack, not a statement about Android.
+2. **Can a USB measurement mic be used?** — ✅ **yes, through a USB 2.0 hub.** A UMIK-1 attached directly to
+   the Lenovo TB305FU takes power but never enumerates; through a hub it enumerates at `speed=12`
+   (full speed), Android routes recording to it automatically, and the spike captured 48 kHz mono float
+   from it with no effects. A directly attached USB SSD works, being high speed — so this is MediaTek's
+   MUSB host declining a directly attached full-speed device, and the hub supplies the missing transaction
+   translator.
 
 Findings and device data: [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md). The throwaway spike that
 answered check 1 stays in `GuitarTapAndroid/feasibility/` as a measuring instrument for Phase 3.
@@ -233,10 +235,11 @@ Mirror `RealtimeFFTAnalyzer` + its extensions (`DeviceManagement`, `EngineContro
   - Guitar captures fftSize samples; plate/brace capture 500 ms, with the FFT input at 400 ms.
   - Main-thread fallback seeding with Swift's timeouts.
 - **Device management** (`AudioDeviceCallback`) — built here as development work: the source-selection
-  ladder above, plus USB device handling. Note that the first test tablet never enumerates a UMIK-1
-  (ANDROID-FEASIBILITY §3), so the USB path has to be written against the API and verified on other
-  hardware. Make the device picker state plainly what it can see, so a user whose device has the same
-  limitation blames the right component.
+  ladder above, plus USB device handling, which is verifiable on the test tablet through a hub
+  (ANDROID-FEASIBILITY §3). Android auto-routes capture to an attached USB mic, so the picker's job is to
+  make the active device visible and overridable. When no USB input appears, say so plainly and mention
+  that some devices only enumerate a measurement mic through a hub — a silent direct connection is exactly
+  the failure a luthier would blame on Guitar Tap.
   - Enumerate input devices; auto-select a newly attached external mic; fall back when the active one is
     removed.
   - **Stable device key:** `AudioDeviceInfo.getId()` is *not* stable across replug. Derive the key from
@@ -388,9 +391,11 @@ Swift keeps changing while Android is being built.
 2. **OEMs that ignore or don't offer `UNPROCESSED`.** The fallback `VOICE_RECOGNITION` is usually
    AGC-free, but that is not guaranteed. Record the source used in every measurement so a suspect file can
    be explained later. Build a device matrix from Phase 0 onward.
-3. **USB mic behaviour varies by device.** Whether the native rate is delivered or resampled, and whether
-   the device can be pinned with `setPreferredDevice`, must be checked per device. Calibration also depends
-   on a stable device key (decision in Phase 3).
+3. **USB mic behaviour varies by device.** Whether the native rate is delivered or resampled, whether the
+   device can be pinned with `setPreferredDevice`, and whether it enumerates at all when attached directly
+   (the test tablet needs a hub for a full-speed mic) must be checked per device. Calibration also depends
+   on a stable device key: `getId()` is per-attachment, so identity comes from type + `productName`
+   (+ `address`, e.g. `card=1;device=0`).
 4. **Fragile threading carried over from Swift.** Several level-crossing fields are shared across threads
    without locks in Swift, and switching the RMS path to a synchronous main-thread hop deadlocked there
    before. On Android, keep audio-thread state confined to the audio thread and hand values to the analyzer

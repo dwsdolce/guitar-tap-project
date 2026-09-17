@@ -12,11 +12,11 @@ for Phase 3, not as a gate.
 | | Question | Answer |
 |---|---|---|
 | 1 | Can the app capture usable audio? | ✅ **yes** — §2 |
-| 2 | Can a USB measurement mic be used? | ❌ **not on this tablet** — a UMIK-1 never enumerates; §3 |
+| 2 | Can a USB measurement mic be used? | ✅ **yes, through a USB hub** — not when attached directly; §3 |
 
-Question 2 decides whether USB mic support ships in the first release, not whether the port happens — and
-the answer is about this tablet's USB host stack, not about Android. The first release targets the built-in
-mic; USB support is still designed in Phase 3 and verified on other hardware when there is some.
+Question 2 decides whether USB mic support ships in the first release, not whether the port happens. On
+this tablet a UMIK-1 works through a cheap USB 2.0 hub but not attached directly — a quirk of the tablet's
+controller with full-speed devices, now measured rather than guessed (§3).
 
 **Everything else is development work.** An earlier draft of this record set a go/no-go on comparing
 Air/Top/Back against Swift on a real guitar, with per-source tap statistics. That was wrong twice over:
@@ -68,7 +68,7 @@ canonical Swift app with Play File.
 | Delivered rate (default request) | 48000, `bufferSizeInFrames` 48000 |
 | Routing by source | UNPROCESSED / VOICE_RECOGNITION / MIC / VOICE_PERFORMANCE / VOICE_COMMUNICATION → `bottom` mic; CAMCORDER → `back` mic |
 | Effects Android reports | none on any source **except** VOICE_COMMUNICATION (Acoustic Echo Canceler + Noise Suppression) |
-| USB measurement mic | **does not enumerate** (UMIK-1; a USB SSD does) — §3 |
+| USB measurement mic | works **through a USB 2.0 hub**; fails attached directly (UMIK-1 is full-speed) — §3 |
 
 Probe and survey reports: `GuitarTapAndroid/feasibility/results/tb305fu/reports/`.
 
@@ -159,43 +159,59 @@ What it shows:
    sit correspondingly lower. The default tap threshold (−40 dBFS) and Peak Min (−60 dB), tuned on the
    existing platforms, may be too high for it. Carried into Phase 3 as a design note, not an open question.
 
-## 3. Can a USB measurement mic be used? - NO on this tablet (2026-09-16)
+## 3. Can a USB measurement mic be used? - YES, through a hub (2026-09-16)
 
-A miniDSP **UMIK-1** (USB-C, `VID_2752 / PID_0007`) does not enumerate on the Lenovo TB305FU. It draws
-power - its indicator lights - but no USB device ever appears on the bus.
+A miniDSP **UMIK-1** (`VID_2752 / PID_0007`) works on the Lenovo TB305FU **when attached through a USB 2.0
+hub**, and never works attached directly.
 
-| Test | Result |
+| Attachment | Result |
 |---|---|
-| Mic + cable on an iPad | works |
-| Mic + cable on the Windows PC | works: composite device, audio interface (MI_00) + HID (MI_03) |
-| **Samsung T7 SSD on the tablet, same cable** | **enumerates** - `04e8:4001`, 500 mA |
-| Mic on the tablet, hot-plugged (several attempts) | powered, **never enumerates** |
-| Mic attached across a full reboot | same - nothing on the bus after boot |
+| Mic straight into the tablet's USB-C port | powered (LED on), **never enumerates** - bus shows only the root hub, hot-plugged or across a reboot |
+| Mic through a USB 2.0 hub | **enumerates and records** |
+| Samsung T7 SSD straight into the tablet, same cable | enumerates (`04e8:4001`, 500 mA) |
+| Mic + cable on an iPad / on the Windows PC | works |
 
-The tablet's side of the handshake is correct throughout: `current_mode=dfp`, `data_role=host`,
-`power_role=source`, MediaTek `otgenable=y`, controller `cmode=1` (host), role switch `host`, no USB
-data-signaling restriction, battery 93 %. `/sys/bus/usb/devices/` holds only the root hub
-(`1d6b:0002 MUSB HDRC host driver`), and `dumpsys usb` keeps `kernel_state=DISCONNECTED` with
-`audio_accessory_connected=false`. Enumeration never starts; this is not Android rejecting a device it saw.
+### Why: the mic is a full-speed device
 
-So it is not the cable, not the mic, not power, and not host mode in general - the SSD proves all four. It
-is this controller failing to bring up this device. A plausible reason, **untested**, is that MediaTek's
-MUSB host is unreliable with a directly attached low/full-speed composite device, where a mass-storage
-device at high/super speed is fine; a plain USB 2.0 hub in between is the usual workaround. No hub was
-available to try, and `dmesg` is closed on a production build, so the kernel's own account of the failure
-is out of reach.
+Through the hub the kernel reports it plainly:
+
+```
+05e3:0608 'USB2.0 Hub'                     speed=480
+2752:0007 'Umik-1  Gain: 18dB'  speed=12   power=100mA
+```
+
+**`speed=12` - 12 Mbps, USB full speed.** The SSD that worked directly is high/super speed. MediaTek's MUSB
+host does not bring up a directly attached full-speed device here; a hub carries it because the hub provides
+the transaction translator. That also explains why power, cable and mic all tested fine individually while
+the combination failed.
+
+Throughout the direct-attachment failures the tablet's own side was correct - `current_mode=dfp`,
+`data_role=host`, `power_role=source`, `otgenable=y`, controller `cmode=1`, role switch `host`, no USB
+data-signaling restriction - and `/sys/bus/usb/devices/` held only the root hub, so enumeration never
+started. `dmesg` is closed on a production build, so the kernel's own account is out of reach.
+
+### What works, measured
+
+With the hub in place the whole path is live, with no code change:
+
+- Android exposes it: `USB-Audio - Umik-1  Gain: 18dB`, `card=1;device=0`, `type=USB_DEVICE`, id 29.
+- **Android auto-routes recording to it** - the spike asked for no preferred device and
+  `AudioRecord.getRoutedDevice()` reported the UMIK-1.
+- Capture: 48 kHz mono float, `silenced=false`, `clientEffects=[]`, `deviceEffects=[]`.
+- An 8-second session recorded real room noise through it (RMS -68.9 dBFS, peak -53.3 dBFS) - a plausible
+  quiet-room level for a low-sensitivity measurement mic, and certainly not digital silence.
+- `MicrophoneInfo` reports no sensitivity or frequency response for it, unlike the built-in capsules. The
+  `.cal` file remains the only source of correction data, as on every other edition.
 
 ### What this means
 
-- **It does not block the port.** The first release targets the built-in mic, which is what the survey in
-  §2 characterised.
-- **USB support is still designed in Phase 3** (device enumeration, `setPreferredDevice`, per-device
-  calibration keyed on a stable identity) - it simply cannot be *verified* on this tablet.
-- **The open question moves to hardware, not software:** try a second Android device, and try a USB hub.
-  Until one of those works, treat "USB measurement mic on Android" as unproven rather than unsupported.
-- **Worth surfacing in the app:** if a user plugs in a measurement mic and nothing appears in the device
-  list, the cause may be their device's USB host stack, not Guitar Tap. The Settings device picker should
-  say plainly what it can see.
+- **USB measurement mics are in scope for the first release.** The plate/brace workflow, which uses a UMIK-1
+  on every other platform, is available on Android too.
+- **Tell the user when a hub is needed.** A direct connection that silently does nothing is exactly the
+  failure a luthier would blame on Guitar Tap. If no input device appears, the app should say that some
+  devices only enumerate a measurement mic through a powered hub.
+- **Phase 3 still needs a stable device key**: `AudioDeviceInfo.getId()` is per-attachment, so identity must
+  come from type + `productName` (+ `address`, here `card=1;device=0`).
 
 ### Working with the tablet over Wi-Fi
 
@@ -220,10 +236,10 @@ rediscover with `adb mdns services` after each boot.
 - The audio input path on the first device is clean (§2): float PCM at 48 kHz, unprocessed input honoured
   even though it isn't advertised, no effects, and nothing filtering 20–60 Hz on the three sources the plan
   uses.
-- The USB mic question (§3) came back **no on this tablet**, which shapes the first release's scope rather
-  than the decision: ship with the built-in mic, design the device layer anyway, and verify USB on other
-  hardware. Guitar Air modes sit at 85–130 Hz where this tablet's capsule is within 2 dB; plate fLC at
-  ~35 Hz is the measurement most likely to want a measurement mic, and that is where the limitation bites.
+- The USB mic question (§3) came back **yes, through a hub**, measured end to end: Android routes to the
+  UMIK-1 and the spike records from it at 48 kHz with no effects. So the plate/brace workflow — which uses a
+  measurement mic on every other platform — is available on Android, with a hub as the documented
+  requirement on this tablet.
 
 Carry these into Phase 3 rather than treating them as open risks:
 
