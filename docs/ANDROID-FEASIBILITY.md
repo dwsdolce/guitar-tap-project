@@ -210,8 +210,19 @@ With the hub in place the whole path is live, with no code change:
 - **Tell the user when a hub is needed.** A direct connection that silently does nothing is exactly the
   failure a luthier would blame on Guitar Tap. If no input device appears, the app should say that some
   devices only enumerate a measurement mic through a powered hub.
-- **Phase 3 still needs a stable device key**: `AudioDeviceInfo.getId()` is per-attachment, so identity must
-  come from type + `productName` (+ `address`, here `card=1;device=0`).
+- **Phase 3 still needs a stable device key, and the measurement confirms which fields to use.** Across one
+  unplug/replug of the mic:
+
+  | Field | Before | After |
+  |---|---|---|
+  | `AudioDeviceInfo.getId()` | 29 | **40** — changed |
+  | `productName` | `USB-Audio - Umik-1  Gain: 18dB` | unchanged |
+  | `address` | `card=1;device=0` | unchanged |
+
+  So the key is type + `productName` (+ `address`). Note `address` is the ALSA card index, which is stable
+  for a single USB audio device but would move if a second one were attached, so `productName` is the part
+  to lean on. The USB device also advertises its own capabilities — rates 8/16/32/44.1/48 kHz, 1–2
+  channels, encodings 2/4/21 — unlike the built-in capsules.
 
 ### Working with the tablet over Wi-Fi
 
