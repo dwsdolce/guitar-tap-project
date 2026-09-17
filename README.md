@@ -3,8 +3,10 @@
 The home for everything about the **Guitar Tap** project that isn't the code itself: the roadmap, the
 shared specifications, the parity system, the release runbook, and cross-repo bug tracking.
 
-Guitar Tap is tap-tone analysis for luthiers, built as **one design implemented across three editions**
-(Swift is canonical; Python and web mirror it), plus a marketing site.
+Guitar Tap is tap-tone analysis for luthiers, built as **one design implemented across several editions**
+(Swift is canonical; Python and web mirror it), plus a marketing site. A fourth, Android, is proposed —
+see `docs/ANDROID-PLAN.md`. The editions are declared for the tooling in
+`tooling/parity/platforms.py`.
 
 ## Repositories
 
@@ -13,6 +15,7 @@ Guitar Tap is tap-tone analysis for luthiers, built as **one design implemented 
 | [GuitarTap](https://github.com/dwsdolce/GuitarTap) | Swift — macOS / iOS (canonical) |
 | [guitar_tap](https://github.com/dwsdolce/guitar_tap) | Python — Windows / macOS / Linux |
 | [GuitarTapWeb](https://github.com/dwsdolce/GuitarTapWeb) | Web app (PWA) |
+| [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) | Android — Kotlin/Compose (**proposed**; private, holds the Phase 0 spike) |
 | [guitar_tap_website](https://github.com/dwsdolce/guitar_tap_website) | Marketing site |
 | **guitar-tap-project** (this repo) | Project docs, roadmap, parity, cross-repo issues |
 

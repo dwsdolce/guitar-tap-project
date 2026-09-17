@@ -23,8 +23,13 @@ in one place; talk to each user where they reached you.
   only time a GitHub-sourced bug is deliberately re-filed in the hub.
 
 ## Conventions (every tracked item)
-- **Platform labels** `swift` / `python` / `web` / `all-three`.
-- **Source labels** `src:dev` / `src:github` / `src:email` / `src:appstore`.
+- **Platform labels** `swift` / `python` / `web` / `android` / `all-editions`.
+  `all-editions` replaces the old `all-three`, which counted a number that is no longer fixed;
+  the editions themselves are declared in `tooling/parity/platforms.py`. An Android report should
+  also name the device and Android version — the hardware varies far more than on the other
+  editions (see [ANDROID-FEASIBILITY.md](../docs/ANDROID-FEASIBILITY.md) for what that cost
+  already).
+- **Source labels** `src:dev` / `src:github` / `src:email` / `src:appstore` / `src:play` (a Google Play review or Play Console report, once Android ships).
 - **Type** `bug` (application defect) / `enhancement` (user-facing) / `infrastructure` (dev-facing: tests,
   tooling, parity, build, refactors — composes with the others; e.g. a test-suite bug is `bug` + `infrastructure`).
 - **`needs-verification`** encodes the standing rule that nothing is done until the user has *run* it.

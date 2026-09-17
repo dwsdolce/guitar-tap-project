@@ -13,6 +13,9 @@ Swift **GuitarTap** is canonical. Its `///` DocC comments are the reference for 
 *content*. Verify Swift is accurate first, then bring Python and web into line.
 
 ## Per-language doc format (generator-friendly)
+
+The editions themselves are declared in `tooling/parity/platforms.py`, including which doc style
+each uses; `doc_coverage.py` reads that table.
 - **Swift** — `///` DocC: type/file `# Title` + `## Algorithm Overview`, and
   `- Parameter` / `- Returns`. Already established; the job is to verify accuracy.
 - **Python** — module + class + method **docstrings** mirroring the Swift doc text,
@@ -21,6 +24,10 @@ Swift **GuitarTap** is canonical. Its `///` DocC comments are the reference for 
   shared conceptual content (Algorithm Overview + formulas), plus `@param` /
   `@returns` on each method. **Fuller detail** — see the reference file
   `src/dsp/pitch.ts`.
+- **Android (Kotlin)** — **KDoc** `/** */` on every public declaration (Kotlin is public by
+  default, so the absence of a visibility keyword *is* the public surface), carrying the same
+  conceptual content, with `@param` / `@return`. Close with `Mirrors Swift <Symbol>.` as Python
+  does. Dokka is the doc-build gate, the counterpart of DocC and typedoc.
 
 ## Shared vs. native
 The conceptual content — what it does, why, the algorithm, the formulas — reads the
@@ -46,6 +53,7 @@ is the authoritative correctness check — run these and require a clean result:
 - **Web** — `npx typedoc` (config in `typedoc.json`, `emit: none`). Catches broken `{@link}`s.
   Genuinely-internal types go in `intentionallyNotExported`.
 - **Python** — no doc build/linker; its cross-refs are human-verified prose.
+- **Android** — `./gradlew dokkaHtml` (once the real app exists) is the equivalent gate.
 
 ## Depth
 Scale with the code: rich for algorithmic/DSP core (overview + formulas + params);
