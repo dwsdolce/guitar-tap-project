@@ -1,7 +1,7 @@
 # GuitarTap Android — Phase 0 Record
 
-What [ANDROID-PLAN.md](ANDROID-PLAN.md) Phase 0 asked, and what came back. **Status: answered enough to
-build (2026-09-16).**
+What [ANDROID-PLAN.md](ANDROID-PLAN.md) Phase 0 asked, and what came back. **Status: Phase 0 complete
+(2026-09-16).** Both questions are answered yes, with working hardware in hand.
 
 **Spike:** `feasibility/` in the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid)
 repo (see its README). App ID `com.dolcesfogato.guitartap.feasibility`. It stays as a measuring instrument
@@ -68,7 +68,7 @@ canonical Swift app with Play File.
 | Delivered rate (default request) | 48000, `bufferSizeInFrames` 48000 |
 | Routing by source | UNPROCESSED / VOICE_RECOGNITION / MIC / VOICE_PERFORMANCE / VOICE_COMMUNICATION → `bottom` mic; CAMCORDER → `back` mic |
 | Effects Android reports | none on any source **except** VOICE_COMMUNICATION (Acoustic Echo Canceler + Noise Suppression) |
-| USB measurement mic | works **through a USB 2.0 hub**; fails attached directly (UMIK-1 is full-speed) — §3 |
+| USB measurement mic | works **through a USB 2.0 hub**; fails attached directly. Verified with a UMIK-1 and a Blue Snowball, both full-speed — §3 |
 
 Probe and survey reports: `GuitarTapAndroid/feasibility/results/tb305fu/reports/`.
 
@@ -202,6 +202,19 @@ With the hub in place the whole path is live, with no code change:
   quiet-room level for a low-sensitivity measurement mic, and certainly not digital silence.
 - `MicrophoneInfo` reports no sensitivity or frequency response for it, unlike the built-in capsules. The
   `.cal` file remains the only source of correction data, as on every other edition.
+
+### A second USB mic, same story
+
+A **Blue Snowball** (`0d8c:0005`) behaves identically: `speed=12` (full speed), invisible attached directly,
+fine through the hub. Android exposed it as `USB-Audio - Blue Snowball` (`card=1;device=0`, id 66),
+auto-routed capture to it, and the spike recorded 48 kHz mono float with no effects — about 8.5 dB hotter
+than the UMIK-1 on the same source, as a condenser would be.
+
+Two full-speed mics failing directly and working through a hub is the pattern, not a one-device accident.
+For Guitar Tap's purposes the Snowball is a usable input for **frequencies and Q**, which are properties of
+the instrument; anything in dB (Peak Min, tap-tone ratio, material magnitudes) still wants the UMIK-1 and
+its `.cal` file, and fLC at ~35 Hz sits below the Snowball's usual rated range. That is the same
+mic-versus-measurement-mic distinction as on every other edition, with nothing Android-specific about it.
 
 ### What this means
 

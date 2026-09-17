@@ -1,8 +1,9 @@
 # GuitarTap Android — Port Plan
 
-**Status:** draft for review (2026-09-16). No Issue yet. Phase 0's two yes/no checks are both answered:
-audio capture yes, USB measurement mic yes **through a USB hub** (a UMIK-1 is a full-speed device and this
-tablet's controller will not bring one up when attached directly). Findings in
+**Status:** draft for review (2026-09-16). No Issue yet. **Phase 0 is complete**: audio capture yes, USB
+measurement mic yes **through a USB hub** (full-speed mics — a UMIK-1 and a Blue Snowball — will not come up
+attached directly to this tablet's controller). The hardware does the job; what remains is the decision to
+commit to a fourth edition, then Phase 1. Findings in
 [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md); the throwaway spike that answered them is in
 `feasibility/` of the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) repo.
 
@@ -125,7 +126,7 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
 
 ## Phased Plan
 
-### Phase 0 — Two yes/no checks, then build
+### Phase 0 — Two yes/no checks, then build ✅ COMPLETE (2026-09-16)
 
 Two things could have made a native Android edition pointless. Everything else is development work, and is
 verified the way the web port was: against the oracle and the shared fixtures as the code is written.
@@ -135,9 +136,9 @@ verified the way the web port was: against the oracle and the shared fixtures as
 2. **Can a USB measurement mic be used?** — ✅ **yes, through a USB 2.0 hub.** A UMIK-1 attached directly to
    the Lenovo TB305FU takes power but never enumerates; through a hub it enumerates at `speed=12`
    (full speed), Android routes recording to it automatically, and the spike captured 48 kHz mono float
-   from it with no effects. A directly attached USB SSD works, being high speed — so this is MediaTek's
-   MUSB host declining a directly attached full-speed device, and the hub supplies the missing transaction
-   translator.
+   from it with no effects. A Blue Snowball behaves the same way, and a directly attached USB SSD works,
+   being high speed — so this is MediaTek's MUSB host declining a directly attached full-speed device, and
+   the hub supplies the missing transaction translator.
 
 Findings and device data: [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md). The throwaway spike that
 answered check 1 stays in `GuitarTapAndroid/feasibility/` as a measuring instrument for Phase 3.
