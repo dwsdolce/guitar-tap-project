@@ -124,6 +124,77 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
     Resolve each branch on its own merits, and never inherit the choice from Python or web. Python copying
     the wrong gate (`compactStatusBar` vs `fullStatusBar`) is a recorded parity bug.
 
+## Prerequisites — which open Issues to finish first
+
+The filter is not "which issues are important" but **does Android copy it, or does Android
+multiply it?** Every unfinished cross-cutting item becomes a four-edition job the moment Android
+exists, and anything that changes canonical Swift gets ported twice if the port starts first.
+
+### Finish before Android code starts (Phases 2–3)
+
+| Issue | Why it gates the port |
+|---|---|
+| **#10 Unify test goldens onto the shared oracle** | The highest-leverage one. Only the web reads `parity-oracle.json` today; Swift and Python hardcode the same numbers. Phase 2 needs goldens: do this first and Android consumes one source; skip it and Android becomes a **fourth** hardcoded copy, and a fourth suite to update on every change. |
+| **#5 Material multi-tap: Swift ~2 dB / sub-bin below Python/web** | A numeric disagreement between editions, in the code Android mirrors. Until it is settled, "canonical" is ambiguous exactly where Android's material path would be validated. |
+| **#8 Python↔Swift fixture divergence (frozen-recalc)** | Android ports the tests and the fixtures. Porting against fixtures that already disagree is how a day disappears into a phantom bug. |
+
+### Finish before the Android UI (Phase 4)
+
+| Issue | Why |
+|---|---|
+| **#2 Theme — Light / Dark / System** | THEME-SPEC is PROPOSED with open decisions in §8 (light chrome, light gradient). [ANDROID-UI-GUIDELINES](ANDROID-UI-GUIDELINES.md) encodes the spec's exact hex values, so those decisions should be made by the spec rather than accidentally by whichever edition implements first. |
+| **#6 Results panel cross-platform consistency** | Presentation-only, but it is the panel Android copies. Settle it once rather than porting the disagreement and then fixing it in four places. |
+
+### Not blocking
+
+- **#1 Architectural-parity restructure (view layer)** — see below; Android is already on the
+  target side of it.
+- **#3 Swift audio buffer (4800 frames)** — Android re-chunks to 1024 from day one, so it is not
+  waiting on this. Worth landing fix A before the Android corpus capture in Phase 6, so both are
+  on the same chunk grid.
+- **#4 silent-stream watchdog** and **#7 replay bit-identity** — Android may *resolve* these
+  rather than wait: it can force a silenced stream on demand (background the app, which Android
+  silences and reports through `isClientSilenced`), and its 1024 re-chunking removes one
+  suspected cause of the ~0.02 dB replay difference.
+- **#12 TEST-PLAN.md rewrite** — stale and Swift-centric; rewrite it once as a four-edition
+  document instead of doing tri-platform now and redoing it.
+- **#9 Saved Measurements sort**, **#11 open-source the repos** — orthogonal. #9 is additive:
+  before Android it is three implementations, after it is four.
+
+### Why #1 does not gate the port
+
+The model layers across the three editions were made consistent through a lot of deliberate
+work. **The view layer is the part that never converged**, for two reasons that have nothing to
+do with Android: Qt is imperative where SwiftUI and React are declarative, and the Python code
+predates the Swift app — it grew from an older version and was never fully reorganised to match
+once Swift became canonical. That history is why view-layer "equivalence" is hard to assert, and
+why the parity map is honest about `view/*` groups being **review only**.
+
+Android changes none of that, and is not blocked by it:
+
+- **Android can mirror Swift's view structure from the first commit — but being declarative is
+  not what makes that happen.** The web was declarative (React) and greenfield too, and it still
+  diverged: one Swift view became several components, and peak-selection state settled in the
+  view rather than the analyzer. The framework neither caused nor prevented that; the decisions
+  taken during the port did. What is different for Android is only that the failure mode is
+  known in advance and the rules are stated up front — one Kotlin file per Swift view file,
+  `@parity` tags and Swift/Python test names from the first commit (the web added tags in Phase 6,
+  after its structure had set), and `TapToneAnalyzer` owning measurement state. Those rules are
+  [Architecture Decisions 1–2](#architecture-decisions-decided-up-front--each-is-a-lesson-the-web-port-paid-for);
+  if they are not held to, Android will diverge exactly as the web did, and no framework choice
+  will prevent it.
+- **On the one item that is really a model question, Swift is already the target.** P3 in
+  [RESTRUCTURE-NOTES](RESTRUCTURE-NOTES.md) moves peak-selection and annotation ownership onto
+  the analyzer *with Swift's by-frequency preservation* — because `TapToneAnalyzer` already owns
+  that subsystem in Swift and the web keeps it view-side. Android mirroring Swift lands on the
+  target by construction. When P3 ships, the two parked test suites go from 3-way to 4-way, with
+  Android needing no rework.
+- **Expect asymmetry in the map, and do not read it as a defect.** Once Android matches Swift's
+  view structure, some `view/*` groups will pair Swift and Android neatly while Python's
+  counterpart is shaped differently. That is the pre-existing Qt/legacy divergence becoming
+  visible, not something the Android port introduced. The map asserts co-location; behaviour is
+  proven by the tests and by run-review.
+
 ## Phased Plan
 
 ### Phase 0 — Two yes/no checks, then build ✅ COMPLETE (2026-09-16)

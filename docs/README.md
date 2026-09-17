@@ -14,6 +14,8 @@ Project documentation for **Guitar Tap** — the cross-platform tap-tone analyze
 ## Proposals (not yet an Issue)
 - [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin) edition: phased port plan and architecture decisions
 - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
+- [`PHASE1-PORT-PREP.md`](PHASE1-PORT-PREP.md) — Phase 1 record: INVENTORY audit findings, parity-tooling generalisation, fixture drift check
+- [`ANDROID-UI-GUIDELINES.md`](ANDROID-UI-GUIDELINES.md) — how the Swift UI translates to Android (tablet-first)
 
 ## Open-item detail docs (each linked from its Issue)
 - [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)

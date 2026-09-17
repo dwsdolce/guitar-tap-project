@@ -70,7 +70,8 @@ canonical Swift app with Play File.
 | Effects Android reports | none on any source **except** VOICE_COMMUNICATION (Acoustic Echo Canceler + Noise Suppression) |
 | USB measurement mic | works **through a USB 2.0 hub**; fails attached directly. Verified with a UMIK-1 and a Blue Snowball, both full-speed — §3 |
 
-Probe and survey reports: `GuitarTapAndroid/feasibility/results/tb305fu/reports/`.
+Probe and survey reports: `GuitarTapAndroid/feasibility/results/tb305fu/` — curated to one file per
+distinct finding, with a `README.md` there saying which report backs which claim.
 
 ### Source survey — TB305FU, 2026-09-15 15:19 (`survey-1789510787.txt`)
 
@@ -119,9 +120,17 @@ What it shows:
   at 60–150 Hz, which would take out fLC and threaten Air. CAMCORDER also moves to the back mic, so its
   low-frequency loss may be the capsule's porting rather than a filter. It is out either way. The plan's
   "never VOICE_COMMUNICATION" stands.
-- **VOICE_PERFORMANCE is unexplained:** +10.7 dB at 20–60 Hz vs UNPROCESSED, and the highest gain. It may be a
-  bass-shaping path, or a low-frequency disturbance during its 3 s slot. **Rerun the survey** before reading
-  anything into it; it isn't in the plan's source order regardless.
+- **VOICE_PERFORMANCE passes more low end than UNPROCESSED — and it reproduces.** +10.7 dB at 20–60 Hz in
+  this run, and **+14.7 dB in a second survey** (`survey-1789576041.txt`, taken in a quieter room after the
+  Welch normalisation was fixed, so its absolute levels are directly readable). Two runs, two room
+  conditions, two normalisations, same result: this is a property of that capture path, not a disturbance
+  during one 3 s slot. It is still **not** in the plan's source order — the path is undocumented, its gain
+  is the highest of all sources, and nothing says what else it shapes — but it is worth a look if a device
+  is ever found whose `UNPROCESSED` or `VOICE_RECOGNITION` path turns out to be low-cut.
+- **Only that comparison survived the rerun.** Every other source's low-band shape moved by 8–17 dB between
+  the two surveys, because the room, not the device, supplies the 20–60 Hz content: in the quieter second
+  run those bands are the noise floor for most sources. Comparisons **within** one survey are meaningful;
+  absolute low-frequency numbers across surveys are not.
 - **None of the three planned sources filters out 20–60 Hz** (all within 3 dB of UNPROCESSED). That is the
   precondition for fLC. It does **not** give the capsule's absolute response at 35 Hz, because the room sound
   isn't calibrated — that shows up in the corpus capture at release time, as for every other edition.
