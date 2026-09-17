@@ -1,9 +1,10 @@
 # GuitarTap Android — Port Plan
 
 **Status:** draft for review (2026-09-16). No Issue yet. **Phase 0 is complete**: audio capture yes, USB
-measurement mic yes **through a USB hub** (full-speed mics — a UMIK-1 and a Blue Snowball — will not come up
-attached directly to this tablet's controller). The hardware does the job; what remains is the decision to
-commit to a fourth edition, then Phase 1. Findings in
+measurement mic yes — a Blue Snowball attaches directly, a UMIK-1 needs any USB 2.0 hub in between
+(powered or not; the cause is unknown and two explanations have already been refuted, see
+ANDROID-FEASIBILITY §3). The hardware does the job; what remains is
+the decision to commit to a fourth edition, then Phase 1. Findings in
 [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md); the throwaway spike that answered them is in
 `feasibility/` of the private [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) repo.
 
@@ -56,9 +57,10 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
   emulator**: no Android phone is being acquired for testing, so phone layouts are never run-reviewed on
   real hardware. Say so when a phone-specific bug is reported.
 - **Measurement mics:** the built-in mic, plus USB-C audio-class mics (UMIK-1 with a `.cal` file). USB
-  support varies by device and is confirmed per device, not assumed: the first test tablet needs a USB 2.0
-  hub in between, because it will not enumerate a full-speed device attached directly
-  (ANDROID-FEASIBILITY §3). Both paths ship.
+  support varies by **device and mic combination**, and is confirmed per pairing, not assumed: on the first
+  test tablet a Blue Snowball attaches directly while a UMIK-1 only enumerates through a USB 2.0 hub — any
+  hub, powered or not — with no descriptor difference to predict it (ANDROID-FEASIBILITY §3). Both paths
+  ship, and the UI must make a mic that fails to appear diagnosable.
 - **SDK levels:**
   - `targetSdk`/`compileSdk` 36, matching Palmas.
   - `minSdk` **28** proposed. 28 adds `AudioRecord.getActiveMicrophones()`, whose `MicrophoneInfo` reports
@@ -96,8 +98,12 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
    2. `VOICE_RECOGNITION`, which is specified as AGC-free.
    3. `MIC`.
 
-   **Never** `VOICE_COMMUNICATION`, which enables echo cancellation and noise suppression. The source in
-   use is shown in Metrics and saved with the measurement, as the sample rate is.
+   **Never** `VOICE_COMMUNICATION`, which enables echo cancellation and noise suppression — verified to
+   do so **even when a USB mic is attached**. **Never `CAMCORDER` either**: on the test tablet it ignored
+   an attached UMIK-1 and routed to the built-in back mic, which would have a user measuring the wrong
+   microphone without knowing (ANDROID-FEASIBILITY §3). The source in use, **and the device actually
+   routed to**, are shown in Metrics and saved with the measurement, as the sample rate is —
+   `getRoutedDevice()` is checked after start rather than assuming the request was honoured.
 5. **Re-chunk to exactly 1024 samples, from day one.** Android buffer sizes vary by device. Swift on macOS
    actually receives 4800-frame buffers, which quantizes ring-out to 100 ms
    ([AUDIO-BUFFER-SIZE](AUDIO-BUFFER-SIZE.md) — still open on Swift). Android fixes this at the source, so
@@ -204,12 +210,12 @@ verified the way the web port was: against the oracle and the shared fixtures as
 
 1. **Can the app capture usable audio?** — ✅ **yes.** `AudioRecord` delivers float PCM at 48 kHz from a
    selectable source with no effects applied; nothing filters 20–60 Hz on the sources the plan uses.
-2. **Can a USB measurement mic be used?** — ✅ **yes, through a USB 2.0 hub.** A UMIK-1 attached directly to
-   the Lenovo TB305FU takes power but never enumerates; through a hub it enumerates at `speed=12`
-   (full speed), Android routes recording to it automatically, and the spike captured 48 kHz mono float
-   from it with no effects. A Blue Snowball behaves the same way, and a directly attached USB SSD works,
-   being high speed — so this is MediaTek's MUSB host declining a directly attached full-speed device, and
-   the hub supplies the missing transaction translator.
+2. **Can a USB measurement mic be used?** — ✅ **yes.** A Blue Snowball attaches directly to the Lenovo
+   TB305FU and records; a UMIK-1 takes power but never enumerates directly, and needs a USB 2.0 hub. Both
+   are full-speed composite audio+HID devices declaring 100 mA, so nothing in the descriptors predicts the
+   difference, and the hub does not need external power — which rules out both the speed and the current
+   explanations. The cause is open; it does not block the port. Android auto-routes capture to whichever
+   is attached, at 48 kHz with no effects.
 
 Findings and device data: [ANDROID-FEASIBILITY.md](ANDROID-FEASIBILITY.md). The throwaway spike that
 answered check 1 stays in `GuitarTapAndroid/feasibility/` as a measuring instrument for Phase 3.
@@ -465,8 +471,8 @@ Swift keeps changing while Android is being built.
    be explained later. Build a device matrix from Phase 0 onward.
 3. **USB mic behaviour varies by device.** Whether the native rate is delivered or resampled, whether the
    device can be pinned with `setPreferredDevice`, and whether it enumerates at all when attached directly
-   (the test tablet needs a hub for a full-speed mic) must be checked per device. Calibration also depends
-   on a stable device key: `getId()` is per-attachment, so identity comes from type + `productName`
+   (on the test tablet a Snowball does and a UMIK-1 does not) must be checked per device **and mic**.
+   Calibration also depends on a stable device key: `getId()` is per-attachment, so identity comes from type + `productName`
    (+ `address`, e.g. `card=1;device=0`).
 4. **Fragile threading carried over from Swift.** Several level-crossing fields are shared across threads
    without locks in Swift, and switching the RMS path to a synchronous main-thread hop deadlocked there

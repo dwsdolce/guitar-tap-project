@@ -12,11 +12,12 @@ for Phase 3, not as a gate.
 | | Question | Answer |
 |---|---|---|
 | 1 | Can the app capture usable audio? | ✅ **yes** — §2 |
-| 2 | Can a USB measurement mic be used? | ✅ **yes, through a USB hub** — not when attached directly; §3 |
+| 2 | Can a USB measurement mic be used? | ✅ **yes** — a Blue Snowball directly; a UMIK-1 needs a hub; §3 |
 
 Question 2 decides whether USB mic support ships in the first release, not whether the port happens. On
-this tablet a UMIK-1 works through a cheap USB 2.0 hub but not attached directly — a quirk of the tablet's
-controller with full-speed devices, now measured rather than guessed (§3).
+this tablet a UMIK-1 works through a cheap USB 2.0 hub but not attached directly, while a Blue Snowball
+works either way. The kernel never sees a connect interrupt for the UMIK-1 attached directly; speed and
+power draw were both offered as explanations and both refuted (§3).
 
 **Everything else is development work.** An earlier draft of this record set a go/no-go on comparing
 Air/Top/Back against Swift on a real guitar, with per-source tap statistics. That was wrong twice over:
@@ -68,7 +69,7 @@ canonical Swift app with Play File.
 | Delivered rate (default request) | 48000, `bufferSizeInFrames` 48000 |
 | Routing by source | UNPROCESSED / VOICE_RECOGNITION / MIC / VOICE_PERFORMANCE / VOICE_COMMUNICATION → `bottom` mic; CAMCORDER → `back` mic |
 | Effects Android reports | none on any source **except** VOICE_COMMUNICATION (Acoustic Echo Canceler + Noise Suppression) |
-| USB measurement mic | works **through a USB 2.0 hub**; fails attached directly. Verified with a UMIK-1 and a Blue Snowball, both full-speed — §3 |
+| USB measurement mic | UMIK-1: only **through a USB 2.0 hub**. Blue Snowball: **directly or through a hub**. Same speed, class and declared power — §3 |
 
 Probe and survey reports: `GuitarTapAndroid/feasibility/results/tb305fu/` — curated to one file per
 distinct finding, with a `README.md` there saying which report backs which claim.
@@ -168,36 +169,60 @@ What it shows:
    sit correspondingly lower. The default tap threshold (−40 dBFS) and Peak Min (−60 dB), tuned on the
    existing platforms, may be too high for it. Carried into Phase 3 as a design note, not an open question.
 
-## 3. Can a USB measurement mic be used? - YES, through a hub (2026-09-16)
+## 3. Can a USB measurement mic be used? - YES; one of the two mics needs a hub
 
-A miniDSP **UMIK-1** (`VID_2752 / PID_0007`) works on the Lenovo TB305FU **when attached through a USB 2.0
-hub**, and never works attached directly.
+USB measurement mics work on the Lenovo TB305FU. **Which attachment works depends on the mic**, which is
+the finding worth carrying forward.
 
 | Attachment | Result |
 |---|---|
-| Mic straight into the tablet's USB-C port | powered (LED on), **never enumerates** - bus shows only the root hub, hot-plugged or across a reboot |
-| Mic through a USB 2.0 hub | **enumerates and records** |
+| **Blue Snowball** straight into the tablet's USB-C port | **enumerates and records** (2026-09-17) |
+| **UMIK-1** straight into the same port | powered (LED on), **never enumerates** - bus shows only the root hub, hot-plugged or across a reboot |
+| Either mic through a USB 2.0 hub, **powered or not** | enumerates and records |
 | Samsung T7 SSD straight into the tablet, same cable | enumerates (`04e8:4001`, 500 mA) |
-| Mic + cable on an iPad / on the Windows PC | works |
+| UMIK-1 + cable on an iPad / on the Windows PC | works |
 
-### Why: the mic is a full-speed device
+### Why: unknown, and two confident explanations have already failed
 
-Through the hub the kernel reports it plainly:
+This section has now been wrong twice, so it records behaviour and stops there.
 
-```
-05e3:0608 'USB2.0 Hub'                     speed=480
-2752:0007 'Umik-1  Gain: 18dB'  speed=12   power=100mA
-```
+| Explanation | Status |
+|---|---|
+| "MediaTek's controller cannot enumerate a directly attached **full-speed** device" | **Refuted 2026-09-17** — a Blue Snowball, `speed=12`, enumerates directly and records. |
+| "The tablet's OTG supply is too small for the UMIK-1; the **powered** hub lends it current" | **Refuted 2026-09-17** — the UMIK-1 also works through the same hub with its power adapter **unplugged**. A bus-powered hub draws from the very port that is supposedly too weak, and consumes ~100 mA of its own; if current were the constraint, inserting one would make things worse. |
 
-**`speed=12` - 12 Mbps, USB full speed.** The SSD that worked directly is high/super speed. MediaTek's MUSB
-host does not bring up a directly attached full-speed device here; a hub carries it because the hub provides
-the transaction translator. That also explains why power, cable and mic all tested fine individually while
-the combination failed.
+What is actually established:
 
-Throughout the direct-attachment failures the tablet's own side was correct - `current_mode=dfp`,
-`data_role=host`, `power_role=source`, `otgenable=y`, controller `cmode=1`, role switch `host`, no USB
-data-signaling restriction - and `/sys/bus/usb/devices/` held only the root hub, so enumeration never
-started. `dmesg` is closed on a production build, so the kernel's own account is out of reach.
+| Attachment | UMIK-1 | Blue Snowball |
+|---|---|---|
+| Direct into the tablet's USB-C port | **never enumerates** (repeated attempts, and across a reboot) | works |
+| Through a USB 2.0 hub, hub powered | works | works |
+| Through the same hub, **no external power** | **works** | not tested |
+
+The two mics are indistinguishable where the system can see them: both `speed=12`, USB 1.10, device
+class 00, composite audio-control + audio-streaming + HID, `bMaxPower` 100 mA. A directly attached
+USB SSD works too, so the port's data path is sound.
+
+**The kernel's account, obtained 2026-09-17.** `dmesg` is closed on a production build, but
+`adb bugreport` carries a `KERNEL LOG (dmesg)` section, and it shows exactly where the attach dies:
+
+    musb_start … add softconn          ← host armed
+    (Snowball / hub)  MUSB_INTR_CONNECT 154-172 ms later → device enumerates
+    (UMIK-1)          no connect interrupt, ever
+
+`musb` waits for `MUSB_INTR_CONNECT`, raised when a device asserts its D+ pull-up. For the UMIK-1 it
+never arrives, so the host sits armed and idle and nothing above it hears about a device. Type-C
+attach, VBUS, the OTG role switch and the host start are identical in the working and failing cases.
+**Cable polarity is excluded**: the UMIK-1 fails at both orientations.
+
+The leading explanation is a race rather than a defect: the host is not started until ~170 ms after
+VBUS, and a simple fast device may assert its pull-up before anything is listening, if this
+controller latches the transition rather than the steady line state. A hub works for both mics
+because the hub's own silicon detects connects on its downstream ports.
+
+Full extract and the predicted test (bring the port into host mode with a passive OTG adapter, *then*
+attach the mic) are in `GuitarTapAndroid/feasibility/results/tb305fu/usb-enumeration-kernel-log.md`.
+None of it is needed to write the app — the guidance is the same either way.
 
 ### What works, measured
 
@@ -212,18 +237,51 @@ With the hub in place the whole path is live, with no code change:
 - `MicrophoneInfo` reports no sensitivity or frequency response for it, unlike the built-in capsules. The
   `.cal` file remains the only source of correction data, as on every other edition.
 
-### A second USB mic, same story
+### The second mic behaves differently, which is the point
 
-A **Blue Snowball** (`0d8c:0005`) behaves identically: `speed=12` (full speed), invisible attached directly,
-fine through the hub. Android exposed it as `USB-Audio - Blue Snowball` (`card=1;device=0`, id 66),
-auto-routed capture to it, and the spike recorded 48 kHz mono float with no effects — about 8.5 dB hotter
-than the UMIK-1 on the same source, as a condenser would be.
+A **Blue Snowball** (`0d8c:0005`) works **both ways** — directly and through the hub. Android
+exposes it as `USB-Audio - Blue Snowball` (`card=1;device=0`), auto-routes capture to it, and the
+spike records 48 kHz mono float with no effects, about 8.5 dB hotter than the UMIK-1 on the same
+source, as a condenser would be — though that figure carries a caveat: the Snowball's three-position
+switch (cardioid / cardioid −10 dB / omni) was not recorded for that run. The switch is analogue and
+invisible over USB, so it has to be noted by hand; the 2026-09-17 runs were in position 1, cardioid
+with no pad.
 
-Two full-speed mics failing directly and working through a hub is the pattern, not a one-device accident.
-For Guitar Tap's purposes the Snowball is a usable input for **frequencies and Q**, which are properties of
-the instrument; anything in dB (Peak Min, tap-tone ratio, material magnitudes) still wants the UMIK-1 and
-its `.cal` file, and fLC at ~35 Hz sits below the Snowball's usual rated range. That is the same
-mic-versus-measurement-mic distinction as on every other edition, with nothing Android-specific about it.
+For Guitar Tap's purposes the Snowball is a usable input for **frequencies and Q**, which are
+properties of the instrument. Anything in dB — Peak Min, the tap-tone ratio, material magnitudes —
+still wants the UMIK-1 and its `.cal` file, and fLC at ~35 Hz sits below the Snowball's usual rated
+range. That is the same mic-versus-measurement-mic distinction as on every other edition, with
+nothing Android-specific about it.
+
+### Source selection still matters when a USB mic is attached (2026-09-17)
+
+Two source surveys with a USB mic attached, so all six sources faced the same device: the UMIK-1
+through the hub (`survey-1789666912.txt`) and a **directly attached** Blue Snowball
+(`survey-1789667129.txt`). The findings below come from the routing and effects the system reports,
+not from levels:
+
+- **`CAMCORDER` ignores the USB mic — on both mics.** Every other source routed to the USB device
+  (`id=114` for the UMIK-1, `id=139` for the Snowball); CAMCORDER routed to
+  `id=17 BUILTIN_MIC "back"` both times. A user on that source would be measuring the tablet's own
+  capsule while believing they were using their measurement mic — silently, with plausible-looking
+  numbers. Reproduced on two different mics, so it is a property of the source, not of one device.
+- **`VOICE_COMMUNICATION` still applies effects over USB**: `clientEffects=[Acoustic Echo Canceler,
+  Noise Suppression]`. The plan's "never VOICE_COMMUNICATION" is not only a built-in-mic rule.
+
+Broadband levels also differ across sources on the same USB device, and **differ differently per
+device**: on the UMIK-1, `MIC` and `UNPROCESSED` came in equal (−43.1 vs −43.2 dBFS), while on the
+Snowball `MIC` sat **20 dB lower** than `UNPROCESSED` (−87.8 vs −67.6). If that holds, picking the
+"wrong" source costs 20 dB of headroom on some mics and nothing on others.
+
+**Treat the level and per-band numbers in both surveys as indicative only.** Each source gets a
+single 3 s slot against an imperfect noise source, so a 20 dB gap deserves a re-test before it is
+built on, and per-band shapes are not quotable at all — VOICE_RECOGNITION's 20–60 Hz band sits 15 dB
+above its neighbours in the UMIK-1 run, which looks like a disturbance rather than a property.
+
+**For Phase 3:** keep the source ladder for USB devices, not just the built-in mic; never offer
+CAMCORDER; and **verify `getRoutedDevice()` after starting** rather than trusting the selection —
+the app already logs it, and it should be surfaced in Metrics, because a source silently choosing a
+different microphone is exactly the failure a luthier cannot see in the numbers.
 
 ### What this means
 
@@ -231,7 +289,10 @@ mic-versus-measurement-mic distinction as on every other edition, with nothing A
   on every other platform, is available on Android too.
 - **Tell the user when a hub is needed.** A direct connection that silently does nothing is exactly the
   failure a luthier would blame on Guitar Tap. If no input device appears, the app should say that some
-  devices only enumerate a measurement mic through a powered hub.
+  device-and-mic combinations only work through a hub — any USB 2.0 hub, which need not be powered —
+  and note that another mic working directly proves nothing about the one that does not. This tablet
+  is the existence proof: a Snowball attaches directly, a UMIK-1 does not, and their descriptors are
+  indistinguishable.
 - **Phase 3 still needs a stable device key, and the measurement confirms which fields to use.** Across one
   unplug/replug of the mic:
 
