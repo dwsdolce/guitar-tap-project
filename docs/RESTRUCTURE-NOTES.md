@@ -140,6 +140,79 @@ peaks the file format stores.
 `plate-umik-1-3-tap-swift-ipad-…` (the corrupt-aggregate heal) and the brace fixtures on all three
 platforms, byte-comparing saved output before/after.
 
+## Measured status of the Python alignment (2026-09-16)
+
+Taken from `parity-index.json` plus the files themselves, to replace an impression ("about half
+done") with something checkable. Per area, how many groups carry each edition, and how often the
+Python filename mirrors the Swift one:
+
+| area | groups | swift | python | web | python filename mirrors swift |
+|---|---|---|---|---|---|
+| dsp | 14 | 14 | 14 | 14 | 11/14 |
+| model | 8 | 8 | 8 | 7 | **8/8** |
+| state | 4 | 4 | 4 | 4 | **4/4** |
+| audio | 2 | 2 | 2 | 2 | 1/2 |
+| util / dead-input | 2 | 2 | 2 | 2 | 2/2 |
+| **view** | **20** | 20 | 20 | 18 | **13/20** |
+| test | 37 | 37 | 36 | 35 | n/a — `XxxTests.swift` vs `test_xxx.py` is convention, not drift |
+
+**The model layer is done and the view layer is where it stops** — which matches the history: the
+models were deliberately aligned, while the Python views grew from the pre-Swift version and were
+never fully reorganised once Swift became canonical.
+
+The remaining view work is concentrated in **two files**, not spread across twenty:
+
+- `views/tap_tone_analysis_view.py` — **7,462 lines**, carrying six slugs: `view/main`,
+  `view/guitar-summary`, `view/material-results`, `view/material-instructions`, `view/settings`
+  and `state/button-enablement`. In Swift those are separate files (`TapToneAnalysisView`,
+  `TapAnalysisResultsView` at 1,302 lines, `TapSettingsView` at 272, plus the `+SpectrumViews`
+  extension).
+- `views/fft_canvas.py` — 1,910 lines, carrying `view/spectrum-chart` and `view/dot-layer`,
+  against Swift's `SpectrumView` (1,319) and its extensions.
+
+Two files are **destinations that were named for their Swift counterparts and never filled** —
+the names are right, the migration is what is outstanding:
+
+- `views/spectrum_view.py` — a 20-line stub that documents the `FftCanvas` mapping and
+  re-exports it. The destination for Swift's `SpectrumView` + `+ChartContent`; the chart code
+  still lives in `fft_canvas.py`.
+- `views/tap_analysis_results_view.py` (1,997 lines) — the destination for Swift's
+  `TapAnalysisResultsView`. Today it holds the measurement **persistence** functions
+  (`save_all_measurements` / `load_all_measurements` over `saved_measurements.json`) while the
+  results panel itself is still inside `tap_tone_analysis_view.py`. Those persistence functions
+  have a home of their own waiting too: `models/tap_tone_analyzer_measurement_management.py`
+  (1,246 lines, mirroring Swift `TapToneAnalyzer+MeasurementManagement`) already **calls into
+  this view module** for disk I/O, which is the inversion Swift does not have.
+
+So each of the two is one move in, one move out:
+
+| Move | From | To |
+|---|---|---|
+| Results panel (`view/guitar-summary`, `view/material-results`) | `views/tap_tone_analysis_view.py` | `views/tap_analysis_results_view.py` |
+| Settings (`view/settings`) | `views/tap_tone_analysis_view.py` | a `tap_settings_view.py`, as Swift has |
+| Chart + dot layer (`view/spectrum-chart`, `view/dot-layer`) | `views/fft_canvas.py` | `views/spectrum_view.py` |
+| Persistence (`save_all_measurements` / `load_all_measurements`) | `views/tap_analysis_results_view.py` | `models/tap_tone_analyzer_measurement_management.py` |
+
+Each move carries its `@parity` tag with it, so the map reports progress as it happens: a
+completed move turns a monolith cell into a file whose name matches the Swift one.
+
+So "about half done" is fair, and specific: the **skeleton is right** — the destinations exist
+and carry the Swift names — while the code and the tags still sit in the two monoliths. The work
+is delivering on the names, not reconsidering them.
+
+### What this means for the Android port
+
+Nothing blocking (see [ANDROID-PLAN.md](ANDROID-PLAN.md) § Prerequisites). Two consequences
+worth expecting:
+
+- Once Android mirrors Swift's view files, several `view/*` groups will pair Swift and Android
+  one-to-one while the Python cell points at a monolith. That is this backlog becoming visible,
+  not an Android defect.
+- Each Swift view that Python still concentrates is a place where the Android port has no Python
+  reference to check itself against. Swift is canonical there, and the web is the second opinion.
+
+---
+
 ## Open questions for the spec (later)
 - Which fan-outs earn their keep vs. should consolidate? (case-by-case, not a blanket rule)
 - Does consolidating hurt React testability enough to matter here? (probably not — DSP is already
