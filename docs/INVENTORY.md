@@ -1,20 +1,32 @@
 # Phase 1 Inventory — Spec Extracted From Swift
 
-The contract the web port is measured against. Every value below is sourced
-from the **canonical Swift** code at `GuitarTap`, cross-checked
-against the **Python mirror** at `guitar_tap`. Citations are
-`path:line` relative to each repo's root. The parity bar (see `PLAN.md`):
-numeric outputs to 2–3 dp, categorical outputs exact, `.guitartap` round-trip
-preserving both.
+The contract every port is measured against. Every value below is sourced from the
+**canonical Swift** code at `GuitarTap`, cross-checked against the **Python mirror**
+at `guitar_tap`. The parity bar (see `PLAN.md`): numeric outputs to 2–3 dp,
+categorical outputs exact, `.guitartap` round-trip preserving both.
 
-> **Status:** Phase 1 complete (2026-06-21); completeness audit 2026-06-22 added
-> the **Mode Classification**, **Pitch**, and **Material Property Formulas**
-> sections (categorical/numeric specs that were referenced but not pinned) and
-> folded the `.guitartap` serialization details (float32 scalars, top-level-only
-> `modeLabel`, annotation nil-vs-empty) into the File Format section. Confirmed
-> against current Swift. Swift/Python divergences are flagged inline as
-> **⚠ DIVERGENCE** — places the web port must make a deliberate choice (default:
-> match Swift).
+**Citations are file paths and symbol names, not line numbers.** They used to be
+`path:line`, and by the 2026-09-16 audit every single one had rotted — off by 60 to 300
+lines — while the values they pointed at were still right. A stale line number is worse
+than none: it sends a reader to the wrong place and quietly undermines trust in the rest
+of the document. Find the symbol; the parity map (`tooling/parity/PARITY-MAP.md`) gives
+its counterpart in each edition.
+
+> **Status:** Phase 1 complete (2026-06-21); completeness audit 2026-06-22 added the
+> **Mode Classification**, **Pitch**, and **Material Property Formulas** sections and
+> folded the `.guitartap` serialization details into the File Format section.
+>
+> **Refreshed 2026-09-16** against current Swift, as Phase 1 of the Android port
+> ([ANDROID-PLAN.md](ANDROID-PLAN.md)). That audit found the numeric core intact — FFT
+> sizes, detection constants, onset alignment, gated window, material formulas and pitch
+> all still match — and four real drifts, now corrected: the **flamenco Top/Back bands**,
+> the **peak-picking algorithm** (rewritten by the duplicate-peak fix), **Peak Min
+> semantics** (a display projection over a −100 dB full set, not a detection gate), and
+> two missing `.guitartap` keys. Sections marked **[added 2026-09-16]** cover behaviour
+> that existed in Swift but had never been written down.
+>
+> Swift/Python divergences are flagged inline as **⚠ DIVERGENCE** — places a port must
+> make a deliberate choice (default: match Swift).
 
 ---
 
@@ -23,44 +35,44 @@ preserving both.
 - **[x] Sample rate — device-dependent, read at runtime. Never hardcode.**
   The analyzer reads the hardware rate after the engine starts:
   `actualSampleRate = hardwareFormat.sampleRate`
-  (`GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift:262`). On macOS it
+  (`GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift`). On macOS it
   forces the AUHAL to the input device's *native* nominal rate via
   `kAudioDevicePropertyNominalSampleRate` to stop the aggregate device
-  resampling to the output rate (`…+EngineControl.swift:194-227`). Rates seen in
+  resampling to the output rate (`…+EngineControl.swift`). Rates seen in
   practice: **48000 Hz** (modern default, UMIK-1) and **44100 Hz** (older
   built-in mics). `mpmSampleRate` defaults to 48000 when unset
-  (`TapToneAnalyzer.swift:1030`). Python reads `int(stream.samplerate)` at
-  runtime (`realtime_fft_analyzer_device_management.py:102`).
+  (`TapToneAnalyzer.swift`). Python reads `int(stream.samplerate)` at
+  runtime (`realtime_fft_analyzer_device_management.py`).
   → Web: treat as a runtime value from the live `AudioContext`/track, per
   `PLAN.md` risk #1.
 - **[x] Channel count — always mono (channel 0 only).** Tap forced to 1 channel:
   `effectiveChannelCount: AVAudioChannelCount = 1`
-  (`…+EngineControl.swift:287`). Only `channelData[0]` is ever read
-  (`RealtimeFFTAnalyzer+FFTProcessing.swift:98-100`). Rationale in code: some
+  (`…+EngineControl.swift`). Only `channelData[0]` is ever read
+  (`RealtimeFFTAnalyzer+FFTProcessing.swift`). Rationale in code: some
   MacBooks report 3-channel arrays that make a multi-channel tap silently fail.
   Python opens the stream with `channels=1`
-  (`realtime_fft_analyzer_device_management.py:394`).
+  (`realtime_fft_analyzer_device_management.py`).
 - **[x] Engine buffer size — 1024 frames per callback.**
   `requestedBufferSize = min(fftSize, 1024)` → 1024
-  (`…+EngineControl.swift:307-308`, `installTap(bufferSize:)` at `:388`).
+  (`…+EngineControl.swift`, `installTap(bufferSize:)` at `:388`).
   ≈21 ms/chunk at 48 kHz (≈23 ms at 44.1 kHz). This 1024-sample granularity
   drives RMS/level metering and the level-crossing detector. Python uses
   PortAudio `blocksize=1024` for the live stream
-  (`realtime_fft_analyzer_device_management.py:397`).
+  (`realtime_fft_analyzer_device_management.py`).
 - **[x] Hop size between FFT analysis frames — equals fftSize (65536), 0%
   overlap.** `let hopSize = fftSize`, then `inputBuffer.removeFirst(hopSize)`
-  after each `fftSize` chunk (`…+FFTProcessing.swift:229,239-242`). Continuous
+  after each `fftSize` chunk (`…+FFTProcessing.swift`). Continuous
   frame rate = `sampleRate / fftSize`. This is distinct from the 1024-sample
   audio-callback hop used for metering.
 - **[x] Pre-processing — NONE.** No high-pass, no DC removal, no normalization.
-  Samples flow raw into the FFT buffer (`…+FFTProcessing.swift:112-226`); the
+  Samples flow raw into the FFT buffer (`…+FFTProcessing.swift`); the
   only per-chunk math is RMS metering (`vDSP_rmsqv`), peak-abs clip detection,
   and level-crossing. Mic-calibration corrections are added in the **dB domain
-  after** the FFT, not as pre-processing (`…+FFTProcessing.swift:341-343`).
+  after** the FFT, not as pre-processing (`…+FFTProcessing.swift`).
 - **[x] Input format — Float32, non-interleaved.** Tap format
-  `.pcmFormatFloat32, interleaved: false` (`…+EngineControl.swift:289-294`);
+  `.pcmFormatFloat32, interleaved: false` (`…+EngineControl.swift`);
   samples read directly as `Float`. File playback also reads mono Float32
-  (`mBitsPerChannel: 32`, `kAudioFormatFlagIsFloat`, `…+EngineControl.swift:746`).
+  (`mBitsPerChannel: 32`, `kAudioFormatFlagIsFloat`, `…+EngineControl.swift`).
 
 ---
 
@@ -73,76 +85,76 @@ identical confirmation logic but **do not share cleanup state**.
   `RealtimeFFTAnalyzer.processRawSamples`). Snapshots pre-roll and seeds/starts
   the gated capture *immediately* at the crossing, removing the Combine dispatch
   delay; auto-disarms after firing, re-armed by `TapToneAnalyzer`
-  (`RealtimeFFTAnalyzer+FFTProcessing.swift:161-195`).
+  (`RealtimeFFTAnalyzer+FFTProcessing.swift`).
 - **Path 2 — main-thread RMS** (`onRmsLevelChanged` → `detectTap` →
   `handleTapDetection`, driven by `$inputLevelDB`). Runs the hysteresis state
   machine, fires the tap event, drives status/decay/sequence logic
-  (`TapToneAnalyzer+TapDetection.swift:101-355`).
+  (`TapToneAnalyzer+TapDetection.swift`).
 - **Shared capture state** (`gatedCaptureActive`, `gatedAccumBuffer`,
   `lastLevelCrossingCaptureID`, clearing `isDetecting`) is reconciled in
   `finishGuitarGatedCapture`, **not** `handleTapDetection`
-  (`TapToneAnalyzer+SpectrumCapture.swift:609-619`). The audio-queue path never
+  (`TapToneAnalyzer+SpectrumCapture.swift`). The audio-queue path never
   touches `isDetecting`. (Matches memory `project_two_path_tap_detection.md`.)
 
 - **[x] Threshold values (dBFS):**
   - Level-crossing threshold `levelCrossingThreshold = -40`, kept synced to
-    `tapDetectionThreshold` (`RealtimeFFTAnalyzer.swift:394`; sync at
-    `TapToneAnalyzer.swift:1345`).
+    `tapDetectionThreshold` (`RealtimeFFTAnalyzer.swift`; sync at
+    `TapToneAnalyzer.swift`).
   - User-adjustable detection threshold default `-40.0`, range −80…−20
-    (`TapDisplaySettings.swift:550`).
+    (`TapDisplaySettings.swift`).
   - **Guitar (absolute):** rising = `tapDetectionThreshold`; falling =
-    `tapDetectionThreshold − 3.0` (`…+TapDetection.swift:172-173`).
+    `tapDetectionThreshold − 3.0` (`…+TapDetection.swift`).
   - **Plate/Brace (relative to noise-floor EMA):**
     `headroom = max(threshold − noiseFloor, 10.0)`; rising = `noiseFloor +
     headroom`; falling = `noiseFloor + max(headroom − 3.0, 4.0)`. EMA
     `noiseFloorAlpha = 0.05` (τ ≈ 190 ms), updated only while below threshold
-    (`…+TapDetection.swift:144-167`; `TapToneAnalyzer.swift:1111`).
+    (`…+TapDetection.swift`; `TapToneAnalyzer.swift`).
 - **[x] Confirmation window — 2 consecutive above-threshold chunks (~43 ms),
   NOT 3.** `levelCrossingConfirmationChunks: Int = 2`
-  (`RealtimeFFTAnalyzer.swift:453`); chunk = 1024 samples ≈ 21 ms at 48 kHz, so
+  (`RealtimeFFTAnalyzer.swift`); chunk = 1024 samples ≈ 21 ms at 48 kHz, so
   2 chunks ≈ 43 ms. Code comment: the brace fixture's real tap drops below
   threshold by chunk 3, so requiring 3 would reject it; the plate noise bump is
   single-chunk so 2 still rejects it. Both paths use this constant
-  (`…+FFTProcessing.swift:164-186`; `…+TapDetection.swift:248,266-273`).
-  Confirmed by `GuitarTapTests/TapDetectionTests.swift:78-94`.
+  (`…+FFTProcessing.swift`; `…+TapDetection.swift`).
+  Confirmed by `GuitarTapTests/TapDetectionTests.swift`.
   > ⚠ **Memory was wrong:** `project_level_crossing_confirmation.md` said
   > "3 consecutive (~64 ms)". Corrected to 2 (~43 ms).
 - **[x] Warm-up — 0.5 s** after start/resume; detection suppressed
-  (`TapToneAnalyzer.swift:1152`; `…+TapDetection.swift:180-185`). First frame
+  (`TapToneAnalyzer.swift`; `…+TapDetection.swift`). First frame
   after warm-up re-anchors `noiseFloorEstimate` and returns without detecting
-  (`…+TapDetection.swift:192-210`).
+  (`…+TapDetection.swift`).
 - **[x] Debounce / refractory — `tapCooldown = 0.5 s`** between detected taps
-  (vs `lastTapTime`) (`TapToneAnalyzer.swift:1142`; `…+TapDetection.swift:213`).
-  Confirmed `TapDetectionTests.swift:129`.
+  (vs `lastTapTime`) (`TapToneAnalyzer.swift`; `…+TapDetection.swift`).
+  Confirmed `TapDetectionTests.swift`.
 - **[x] Onset re-alignment (`alignCaptureToOnset`,
-  `TapToneAnalyzer+SpectrumCapture.swift:742-808`):**
+  `TapToneAnalyzer+SpectrumCapture.swift`):**
   1. Noise RMS from first `onsetNoiseEstimateSamples = 2048` samples
-     (`TapToneAnalyzer.swift:988`).
+     (`TapToneAnalyzer.swift`).
   2. Threshold = `max(noiseRMS × 10.0, 0.001)`
      (`onsetThresholdMultiplier=10.0`, `onsetMinThreshold=0.001`,
-     `TapToneAnalyzer.swift:993,997`).
+     `TapToneAnalyzer.swift`).
   3. Scan forward for first `|sample| > threshold` = onset.
-  4. Back up `onsetBackupSamples = 32` (`TapToneAnalyzer.swift:1001`).
+  4. Back up `onsetBackupSamples = 32` (`TapToneAnalyzer.swift`).
   5. Extract a `windowSize` window with onset placed at `preOnsetSamples =
      sampleRate × 0.100 s` of pre-onset silence (`preOnsetDuration=0.100`,
-     `TapToneAnalyzer.swift:984`); zero-pad as needed. If no onset found, return
+     `TapToneAnalyzer.swift`); zero-pad as needed. If no onset found, return
      the buffer unchanged.
   This makes the FFT input invariant to chunk-boundary alignment — which is why
   the 2-chunk trigger delay is invisible downstream (matches memory
   `project_level_crossing_confirmation.md`'s re-alignment claim).
-- **[x] Hysteresis state machine (`detectTap`, `…+TapDetection.swift:250-298`):**
+- **[x] Hysteresis state machine (`detectTap`, `…+TapDetection.swift`):**
   latched `isAboveThreshold`. Below→ requires `>= confirmTarget` consecutive
   above-rising to fire (sets `tapDetected`, `lastTapTime`, `tapPeakLevel`, calls
   `handleTapDetection`); falling below rising before confirm cancels the run.
 - **[x] Tap-sequence grouping.** `numberOfTaps` default 1 (guitar,
-  `TapToneAnalyzer.swift:236`). Each confirmed tap →
+  `TapToneAnalyzer.swift`). Each confirmed tap →
   `startGuitarGatedCapture()` → `finishGuitarGatedCapture` appends
   `(magnitudes, frequencies)` to `capturedTaps`, increments `currentTapCount`,
   re-arms via `scheduleGuitarReEnable` after `tapCooldown` until count reached;
   then `processMultipleTaps()` after `captureWindow = 0.2 s`
-  (`…+SpectrumCapture.swift:678-692`). Multi-tap averaging is **linear power
+  (`…+SpectrumCapture.swift`). Multi-tap averaging is **linear power
   domain**: `dB_avg = 10·log10(mean(10^(dB/10)))` bin-by-bin (`averageSpectra`
-  `…+SpectrumCapture.swift:1442-1482`), then a single peak-find on the average.
+  `…+SpectrumCapture.swift`), then a single peak-find on the average.
 
 ---
 
@@ -152,44 +164,44 @@ There are **two** gated paths: plate/brace (500 ms / 400 ms scheme) and guitar
 gated capture (full `fftSize`).
 
 - **[x] Capture buffer (plate/brace) — 500 ms.**
-  `gatedCaptureDuration = 0.500` (`TapToneAnalyzer.swift:968`);
+  `gatedCaptureDuration = 0.500` (`TapToneAnalyzer.swift`);
   `gatedCaptureSamples = Int(sampleRate × 0.500)` → 24000 @ 48 kHz
-  (`…+SpectrumCapture.swift:439`). Larger than the window to give onset-align
+  (`…+SpectrumCapture.swift`). Larger than the window to give onset-align
   headroom.
 - **[x] Aligned analysis window (plate/brace) — 400 ms.**
-  `gatedFFTWindowDuration = 0.400` (`TapToneAnalyzer.swift:975`);
+  `gatedFFTWindowDuration = 0.400` (`TapToneAnalyzer.swift`);
   `fftWindowSize = Int(sampleRate × 0.400)` → 19200 @ 48 kHz
-  (`…+SpectrumCapture.swift:835`). This is the actual input to `computeGatedFFT`.
+  (`…+SpectrumCapture.swift`). This is the actual input to `computeGatedFFT`.
   (Matches memory `project_gated_fft_algorithm_change.md`: 500 ms buffer /
   400 ms aligned window, current since 2026-05-14.)
 - **[x] Pre-roll ring buffer — 200 ms.** `preRollDuration = 0.200`
-  (`TapToneAnalyzer.swift:1082`) → 9600 @ 48 kHz; seeds the capture so the tap
+  (`TapToneAnalyzer.swift`) → 9600 @ 48 kHz; seeds the capture so the tap
   attack (which precedes the trigger) is included
-  (`…+SpectrumCapture.swift:217-221`).
+  (`…+SpectrumCapture.swift`).
 - **[x] Alignment rule — onset placed at `preOnsetSamples` (= 100 ms of
   pre-onset) inside the window.** Same `alignCaptureToOnset` as above; the
   400 ms window is extracted from the 500 ms capture so alignment never needs
-  back-padding (`…+SpectrumCapture.swift:835-840`).
+  back-padding (`…+SpectrumCapture.swift`).
 - **[x] Window function:**
   - **Plate/brace gated:** Hann, **`vDSP_HANN_DENORM`** (unit-peak,
     `w[n]=0.5(1−cos(2πn/N))`, peak 1.0 — matches numpy `np.hanning`; DENORM
     chosen deliberately to avoid a +4.26 dB inflation)
-    (`RealtimeFFTAnalyzer+FFTProcessing.swift:441-448`).
+    (`RealtimeFFTAnalyzer+FFTProcessing.swift`).
   - **Continuous/display AND guitar gated:** **rectangular** (all ones,
-    `vDSP_vfill 1.0`) (`RealtimeFFTAnalyzer.swift:639-647`).
+    `vDSP_vfill 1.0`) (`RealtimeFFTAnalyzer.swift`).
 - **[x] FFT size:**
   - **Plate/brace gated:** next power-of-two ≥ sample count, **capped at
     32768**, zero-padded. `nextPowerOfTwo(19200) = 32768`, so paddedSize = 32768,
     bin width = `sampleRate/32768` = 1.46484 Hz/bin @ 48 kHz
-    (`…+FFTProcessing.swift:415-416,486`). A fresh
+    (`…+FFTProcessing.swift`). A fresh
     `vDSP_DFT_zrop_CreateSetup` is created/destroyed per call.
   - **Guitar gated & continuous:** fixed **65536**, rectangular window;
     truncate/zero-pad to `fftSize` for bin-compatibility with live frames
-    (`…+SpectrumCapture.swift:634-649`; `RealtimeFFTAnalyzer.swift:188`).
+    (`…+SpectrumCapture.swift`; `RealtimeFFTAnalyzer.swift`).
 - **[x] Normalization — 1/N magnitude scaling, then dB re 1.0.** Real and imag
   parts scaled by `1.0/N` (N = padded or fftSize) before `vDSP_zvabs`, then
   `vDSP_vdbcon` ref=1.0 (amplitude dB = `20·log10(mag)`). dB floor differs:
-  continuous initialized to −100, gated to −160 (`…+FFTProcessing.swift:302-311,
+  continuous initialized to −100, gated to −160 (`…+FFTProcessing.swift,
   474-483`).
 
 > ⚠ **DIVERGENCE:** Swift's **continuous** path runs a 65536-point rectangular
@@ -203,47 +215,75 @@ gated capture (full `fftSize`).
 
 - **[x] Library — Apple Accelerate vDSP real-to-complex DFT
   (`vDSP_DFT_zrop`).** Setup once via `vDSP_DFT_zrop_CreateSetup(.FORWARD)`,
-  reused, destroyed in `deinit` (`RealtimeFFTAnalyzer.swift:192,628-632`);
+  reused, destroyed in `deinit` (`RealtimeFFTAnalyzer.swift`);
   executed with `vDSP_DFT_Execute` on split-complex buffers
-  (`…+FFTProcessing.swift:289`). Gated path makes a separate temporary setup
-  per call (`…+FFTProcessing.swift:418-426`).
+  (`…+FFTProcessing.swift`). Gated path makes a separate temporary setup
+  per call (`…+FFTProcessing.swift`).
   → Web (`PLAN.md` open Q): a JS FFT will diverge in the last bits; parity bar
   is categorical-exact, not bit-exact.
 - **[x] Real vs complex — real input, packed `zrop`.** Input length `fftSize`
   deinterleaved: even idx → real, odd → imag, each length `fftSize/2`
-  (`…+FFTProcessing.swift:277-284`). Output magnitude/freq arrays length
+  (`…+FFTProcessing.swift`). Output magnitude/freq arrays length
   `fftSize/2`.
 - **[x] Magnitude (not power) convention.** `1/N`-scaled split-complex →
-  `vDSP_zvabs` modulus (`…+FFTProcessing.swift:302-305`).
+  `vDSP_zvabs` modulus (`…+FFTProcessing.swift`).
 - **[x] dB reference & floor.** `vDSP_vdbcon` ref = **1.0** (dBFS, amplitude
   `20·log10`). Floor: continuous −100, gated −160
-  (`…+FFTProcessing.swift:309,481`). Display default range −100…0 dB
-  (`TapDisplaySettings.swift:414,417`). Mic-calibration added in dB after
+  (`…+FFTProcessing.swift`). Display default range −100…0 dB
+  (`TapDisplaySettings.swift`). Mic-calibration added in dB after
   conversion.
 - **[x] Bin → Hz mapping.** `frequency[i] = i · (sampleRate / fftSize)`, length
   `fftSize/2`; DC = bin 0. Nyquist not emitted as a separate bin (loop is
   `0..<fftSize/2`). Sub-bin accuracy for peaks only, via parabolic interpolation
-  (below) (`…+FFTProcessing.swift:17-25`).
-- **[x] Peak-picking (`findPeaks`, `TapToneAnalyzer+PeakAnalysis.swift:364-541`).**
-  Local-max window **±5 bins** (`windowSize = 5`); a bin must strictly exceed
-  all 10 neighbors and be `> threshold` (`peakMinOverride ?? peakMinThreshold`;
-  plate/brace pass an adaptive override = **median** of in-range magnitudes,
-  `…+PeakAnalysis.swift:95-105`). Algorithm:
-  - **Pass 1 — known guitar modes** (Air/Top/Back/Dipole/Ring/Upper), scanned
-    low→high; per mode keep the strongest in-range local max; de-dupe winners
-    within `peakProximityHz = 2.0 Hz` of an already-claimed mode.
-  - **Pass 2 — inter-mode / unknown peaks** outside all known mode ranges.
-  - **Assemble:** one slot per detected mode + all remaining candidates by
-    descending magnitude, **no count limit**; return sorted by magnitude DESC.
-  - **Parabolic interpolation** (`…+PeakAnalysis.swift:794-812`):
-    `δ = 0.5(α−γ)/(α−2β+γ)`, `f = f_bin + δ·Δf`, `A = β − 0.25(α−γ)δ`;
-    guards: raw bin at array edges or `|denom| ≤ 1e-6` (flat top); δ ∈ (−0.5,0.5).
-  - **Q / −3 dB bandwidth** (`…+PeakAnalysis.swift:834-863`): walk outward until
-    mag ≤ `peakMag − 3.0 dB`; `Q = f_center / (f_upper − f_lower)`.
-  - **Duplicate removal:** peaks within 2.0 Hz collapse to the louder one.
-  - **Gated capture extra filter:** candidates with **Q < 3.0** (`minQ`)
-    rejected as impact thuds (`…+SpectrumCapture.swift:1052-1060`).
-  Confirmed by `PeakFindingTests.swift:79-88,143-151`, `DSPTests.swift:76-215`.
+  (below) (`…+FFTProcessing.swift`).
+- **[x] Peak-picking (`findPeaks`, `TapToneAnalyzer+PeakAnalysis.swift`).**
+  **One mode-blind sweep, ascending frequency.** Each bin in the analysis range is
+  visited once and mints at most one peak:
+  - a bin qualifies if `magnitude > effectiveThreshold` and it strictly exceeds all 10
+    neighbours in a **±5-bin** window (`windowSize = 5`);
+  - `effectiveThreshold = peakMinOverride ?? peakMinThreshold` — see the Peak Min note
+    below, which is the whole story for guitar captures;
+  - **duplicate removal:** interpolated vertices within `peakProximityHz = 2.0 Hz`
+    collapse to the louder one;
+  - returns peaks sorted by **descending magnitude**, with no count limit.
+
+  **Detection knows nothing about guitar modes.** Mode assignment belongs to
+  `classifyAll` (next section), which operates on the returned list. This is
+  load-bearing, not incidental: the previous implementation iterated the mode bands as
+  its outer loop, and because Top and Back overlap on every guitar type, a bin inside
+  the overlap was scanned twice and minted two peaks with two identities. The assembly
+  step reconciled two independently de-duplicated lists by id and let the twin survive,
+  so **every guitar capture on every platform saved one duplicated peak** until it was
+  fixed (`completed/PEAK-FINDING-DUPLICATE-PEAKS.md`). Do not reintroduce band
+  awareness here.
+
+  > **Corrected 2026-09-16.** This section described the old two-pass, mode-band
+  > algorithm (pass 1 known modes, pass 2 inter-mode peaks, one slot per mode). That
+  > algorithm no longer exists.
+
+  - **Parabolic interpolation:** `δ = 0.5(α−γ)/(α−2β+γ)`, `f = f_bin + δ·Δf`,
+    `A = β − 0.25(α−γ)δ`; guards: raw bin at array edges or `|denom| ≤ 1e-6` (flat top);
+    δ ∈ (−0.5, 0.5).
+  - **Q / −3 dB bandwidth:** walk outward until mag ≤ `peakMag − 3.0 dB`;
+    `Q = f_center / (f_upper − f_lower)`.
+  - **Gated capture extra filter:** candidates with **Q < 3.0** (`minQ`) are rejected as
+    impact thuds (`TapToneAnalyzer+SpectrumCapture.swift`).
+
+- **[x] Peak Min is a display projection, not a detection gate. [added 2026-09-16]**
+  Every guitar capture — live, frozen, averaged and gated — calls `findPeaks` with
+  `peakMinOverride: TapToneAnalyzer.peakDetectionFloor` = **−100 dB**, the floor of the
+  Peak Min slider. The analyzer therefore holds **two** sets:
+  - `allPeaks` — the durable full set down to −100 dB, saved to the file;
+  - `peaksAbovePeakMin` — the projection at the current Peak Min, recomputed whenever
+    the slider moves, and what the results table, chart dots and annotations show.
+
+  Consequences a port must reproduce: lowering Peak Min on a **loaded** measurement
+  reveals peaks that were never displayed (a faint Air, for instance) without
+  re-running detection; peak identity, selection and annotation offsets survive slider
+  moves because they are resolved against `allPeaks`; and plate/brace remain the one
+  case that passes a genuinely adaptive override (the **median** of in-range
+  magnitudes). Full semantics: `completed/PEAK-MIN-SEMANTICS.md`,
+  `completed/PEAK-LIFECYCLE-SPEC.md`.
 
 ---
 
@@ -255,28 +295,34 @@ export `modeLabel` **and** which peaks Pass-1 peak-picking claims —
 Python `guitar_mode.py` / `guitar_type.py` (same bands, verified).
 
 - **[x] Mode bands per guitar type** (`GuitarType.modeRanges`,
-  `GuitarType.swift:65-105`). Inclusive `ClosedRange<Float>`, Hz. **Bands overlap
+  `GuitarType.swift`). Inclusive `ClosedRange<Float>`, Hz. **Bands overlap
   by design** (Top vs Back especially) — that's why `classifyAll` exists instead
   of independent per-peak classification:
 
   | Mode   | Classical  | Flamenco   | Acoustic   | Generic    |
   |--------|------------|------------|------------|------------|
   | Air    | 80–110     | 85–115     | 90–120     | 70–135     |
-  | Top    | 170–230    | 190–250    | 150–210    | 140–260    |
-  | Back   | 190–280    | 180–240    | 210–290    | 180–300    |
+  | Top    | 170–230    | 180–220    | 150–210    | 140–260    |
+  | Back   | 190–280    | 200–250    | 210–290    | 180–300    |
   | Dipole | 330–430    | 350–450    | 360–460    | 310–460    |
   | Ring   | 580–820    | 600–850    | 620–880    | 580–880    |
   | Upper  | 820–20000  | 850–20000  | 880–20000  | 880–20000  |
 
+  > **Corrected 2026-09-16.** Flamenco read Top 190–250 / Back 180–240, which put Back
+  > *below* Top — impossible for `classifyAll`, whose Back claim is constrained to
+  > `> claimedTop + 1.0 Hz`. Swift has Top 180–220 / Back 200–250 (overlapping on
+  > 200–220, like every other type). A port that had trusted the old table would have
+  > produced different categorical mode assignments on flamenco guitars.
+
   Mode display/raw names: `"Air (Helmholtz)"`, `"Top"`, `"Back"`, `"Dipole"`,
-  `"Ring Mode"`, `"Upper Modes"`, `"Unknown"` (`GuitarMode.swift:51-73`).
+  `"Ring Mode"`, `"Upper Modes"`, `"Unknown"` (`GuitarMode.swift`).
   `currentCases` order = [air, top, back, dipole, ringMode, upperModes, unknown].
-- **[x] `classify(frequency, guitarType)`** (`GuitarMode.swift:123-135`): switch
+- **[x] `classify(frequency, guitarType)`** (`GuitarMode.swift`): switch
   testing bands in case order **Air→Top→Back→Dipole→Ring→Upper**; first
   containing band wins (so in a Top/Back overlap a bare lookup returns Top); no
   match → `.unknown`.
 - **[x] `classifyAll(peaks, guitarType)` — the context-aware claimer used for
-  export labels** (`GuitarMode.swift:160-217`):
+  export labels** (`GuitarMode.swift`):
   1. Sort modes by `lowerBound` for this guitar type, ascending.
   2. Per mode in that order, claim the **strongest (max-magnitude) not-yet-claimed
      peak** with `freq ∈ [effectiveLowerBound, band.upper]`. `effectiveLowerBound`
@@ -295,13 +341,13 @@ Python `guitar_mode.py` / `guitar_type.py` (same bands, verified).
 
 12-tone equal temperament, **A4 = 440 Hz**, computed in **`Double`** (not Float).
 Swift `Pitch.swift`; Python `pitch.py` (`Pitch(a4=440.0)`,
-`tap_tone_analyzer.py:213`). Stored on each peak as
+`tap_tone_analyzer.py`). Stored on each peak as
 `pitchNote`/`pitchCents`/`pitchFrequency`.
 
 - **[x] Anchor:** `c0 = a4 · 2^(−4.75)` (4 octaves + 9 semitones below A4)
-  (`Pitch.swift:51`).
+  (`Pitch.swift`).
 - **[x] Nearest note:** `h = Int(round(12 · log2(f / c0)))`; `octave = h / 12`,
-  `note = h % 12` (`Pitch.swift:76-81`). Names
+  `note = h % 12` (`Pitch.swift`). Names
   `["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]`.
 - **[x] Note frequency:** `f(note, octave) = c0 · 2^(note/12) · 2^octave`.
 - **[x] Cents:** `cents = 1200 · log2(f_measured / f_nearestNote)` (negative = flat).
@@ -312,25 +358,25 @@ Swift `Pitch.swift`; Python `pitch.py` (`Pitch(a4=440.0)`,
 ## Settings That Used to Be Configurable (hardcoded constants)
 
 - **[x] Hysteresis margin = `3.0` dB** — `hysteresisMargin: Float = 3.0`
-  (`TapToneAnalyzer.swift:290`). This is a **tap-detection** parameter (not
+  (`TapToneAnalyzer.swift`). This is a **tap-detection** parameter (not
   peak-picking): after a tap, level must fall ≥3 dB below the threshold before
   re-triggering. Code comment: "Hardcoded constant — no longer user-configurable."
   > Clarifies memory: the `=3` "hysteresis" is the **dB falling margin**, not a
   > peak count. Don't conflate with `levelCrossingConfirmationChunks = 2`.
 - **[x] Max peaks = all (no limit)** — `findPeaks` appends all remaining
   candidates by descending magnitude with no cap
-  (`…+PeakAnalysis.swift:533-540`).
+  (`…+PeakAnalysis.swift`).
 - **[x] Other hardcoded DSP constants:**
-  - Peak local-max window ±5 bins (`…+PeakAnalysis.swift:368`).
+  - Peak local-max window ±5 bins (`…+PeakAnalysis.swift`).
   - Peak proximity / dup tolerance `peakProximityHz = 2.0 Hz`
-    (`TapToneAnalyzer.swift:1120`).
-  - −3 dB bandwidth offset `3.0 dB` (`…+PeakAnalysis.swift:835`).
-  - Minimum Q (gated) `minQ = 3.0` (`…+SpectrumCapture.swift:1057`).
-  - Parabolic flat-top guard `1e-6` (`…+PeakAnalysis.swift:803`).
-  - dB floors: continuous −100, gated −160 (`…+FFTProcessing.swift:309,481`).
-  - Level-crossing confirmation = 2 chunks (`RealtimeFFTAnalyzer.swift:453`).
+    (`TapToneAnalyzer.swift`).
+  - −3 dB bandwidth offset `3.0 dB` (`…+PeakAnalysis.swift`).
+  - Minimum Q (gated) `minQ = 3.0` (`…+SpectrumCapture.swift`).
+  - Parabolic flat-top guard `1e-6` (`…+PeakAnalysis.swift`).
+  - dB floors: continuous −100, gated −160 (`…+FFTProcessing.swift`).
+  - Level-crossing confirmation = 2 chunks (`RealtimeFFTAnalyzer.swift`).
   - Clip hold 1.5 s; clip detect at sample `|x| ≥ 0.99` or RMS ≥ 0 dBFS
-    (`RealtimeFFTAnalyzer.swift:257`; `…+FFTProcessing.swift:136`).
+    (`RealtimeFFTAnalyzer.swift`; `…+FFTProcessing.swift`).
 - **Still user-configurable** (defaults in `TapDisplaySettings.swift`): analysis
   range 30–2000 Hz, `peakMinThreshold = −60 dB`, `tapDetectionThreshold = −40
   dB`, per-type display ranges, dB range −100…0.
@@ -345,27 +391,27 @@ Swift `Pitch.swift`; Python `pitch.py` (`Pitch(a4=440.0)`,
     [waitingForFlcTap → capturingFlc → reviewingFlc →] complete`. Each
     `reviewing*` allows **Accept** (advance) / **Redo** (re-capture, truncate
     session buffer). FLC only when `measureFlc == true` (default false)
-    (`MaterialTapPhase.swift:16-31`; `TapToneAnalyzer+Control.swift:338-379`).
+    (`MaterialTapPhase.swift`; `TapToneAnalyzer+Control.swift`).
   - **Brace (1 tap):** `notStarted → capturingLongitudinal → complete`
-    (`MaterialTapPhase.swift:33-39`).
+    (`MaterialTapPhase.swift`).
   - `totalPlateTaps`: brace = `numberOfTaps`; plate = `numberOfTaps × 2` (no
-    FLC) or `× 3` (FLC) (`…+TapDetection.swift:366-372`).
+    FLC) or `× 3` (FLC) (`…+TapDetection.swift`).
 - **[x] Session WAV capture.** Continuous accumulation into
   `sessionRecordingBuffer` per chunk while `isSessionRecording`; pause stops
   accumulation, redo truncates to a `sessionCheckpoints` checkpoint
-  (`…+SpectrumCapture.swift:227-229`; `…+Control.swift:235,342,443`). Saved via
+  (`…+SpectrumCapture.swift`; `…+Control.swift`). Saved via
   `finishSessionRecording(label:)` → `dumpCaptureWAV` **only when
   `TapDisplaySettings.dumpCaptureAudio` is on**. WAV: **mono, 32-bit IEEE float
   (fmt 3), hardware sample rate, 44-byte RIFF/WAVE header**
-  (`…+SpectrumCapture.swift:89-161`). Labels: `Plate_LC`, `Plate_LCF`, `Brace`,
+  (`…+SpectrumCapture.swift`). Labels: `Plate_LC`, `Plate_LCF`, `Brace`,
   `Guitar_Ntap`.
 - **[x] Onset alignment.** Same `alignCaptureToOnset`, window =
   `gatedFFTWindowDuration` (400 ms) from the 500 ms capture, onset at 100 ms
-  (`…+SpectrumCapture.swift:835-840`).
+  (`…+SpectrumCapture.swift`).
 - **[x] N-chunk gate.** Capture seeded by pre-roll (200 ms) → fills to
   `gatedCaptureSamples` (500 ms) → `finishGatedFFTCapture` aligns → Hann-windowed
   zero-padded `computeGatedFFT`. Safety timeout 2.0 s flushes a partial buffer.
-  Per-phase peak search windows (`…+SpectrumCapture.swift:857-889`): Brace
+  Per-phase peak search windows (`…+SpectrumCapture.swift`): Brace
   100–1200 Hz; Plate L 20–100 Hz; Plate C 40–220 Hz; Plate FLC 15–100 Hz;
   `preferLowestSignificant = true` for L and FLC. Dominant-peak selection:
   local maxima above median, HPS order-3, Q filter `minQ=3.0`, parabolic
@@ -374,7 +420,7 @@ Swift `Pitch.swift`; Python `pitch.py` (`Pitch(a4=440.0)`,
 - **[x] "Full-session regression."** `playFileForTesting(...)` plays one
   continuous WAV through the **exact production pipeline** at 1024-sample chunks
   and asserts detected peaks against reference fixtures
-  (`FilePlaybackRegressionTests.swift:177-194`).
+  (`FilePlaybackRegressionTests.swift`).
   > ✅ **VALID — verified 2026-06-22.** All four file-playback regressions
   > (REG-G1/G2 guitar, REG-B1 brace, REG-P1 plate) **pass in both Swift (Xcode)
   > and Python** against the same hardcoded constants, which reproduce to ~4 dp —
@@ -399,21 +445,21 @@ dimensions (mm→m: `/1000`), mass (g→kg: `/1000`), and fundamental frequencie
 are in the file.
 
 - **[x] Density:** `ρ = mass / (L·W·t)` kg/m³; `densityGPerCm3 = ρ / 1000`
-  (`MaterialProperties.swift:114-130`).
+  (`MaterialProperties.swift`).
 - **[x] Beam Young's modulus (Euler–Bernoulli free-free, `PlateProperties`):**
   `E_L = 48·π²·ρ·fL²·L⁴ / (22.37·t)²`; `E_C` = same with width W and fC
-  (`MaterialProperties.swift:202-226`). **βL² = 22.37 for PLATE.**
+  (`MaterialProperties.swift`). **βL² = 22.37 for PLATE.**
 - **⚠ [x] Brace uses a DIFFERENT constant: 22.37332** (more precise βL²) —
   `BraceProperties.youngsModulusLong = 48·π²·ρ·fL²·L⁴ / (22.37332·t)²`
-  (`MaterialProperties.swift:648-674`). **Swift and Python both** do plate=22.37 /
-  brace=22.37332 (Python `material_properties.py:343,620`) — consistent across
+  (`MaterialProperties.swift`). **Swift and Python both** do plate=22.37 /
+  brace=22.37332 (Python `material_properties.py`) — consistent across
   implementations; the web port must not collapse the two to one constant.
 - **[x] Gore plate moduli (Poisson-coupled, `PlateProperties`)** with `ν_CL=0.05`,
-  `ν_LC·ν_CL=0.02` (`MaterialProperties.swift:352-356`):
+  `ν_LC·ν_CL=0.02` (`MaterialProperties.swift`):
   - `Coef1 = (1 / ((π/2)²·(3/2)⁴))·12·(1−0.02)`
   - `E_L = Coef1·ρ·L⁴·fL²/t²`; `E_C = Coef1·ρ·W⁴·fC²/t²` (`…:395-414`)
   - `G_LC = (12/π²)·ρ·L²·W²·fLC²/t²` — **nil when FLC not tapped** (`…:422-432`)
-- **[x] Gore target thickness (Eq. 4.5-7, mm)** (`MaterialProperties.swift:460-489`):
+- **[x] Gore target thickness (Eq. 4.5-7, mm)** (`MaterialProperties.swift`):
   `Coef2 = π·√(12·(1−0.02)/126)`, `Coef3 = 4·0.05/7`, `Coef4 = 4·12·(1−0.02)/42`;
   body length `a`, width `b` (mm→m); moduli in GPa:
   - numerator = `Coef2 · f_vs · a² · √ρ`
@@ -421,17 +467,17 @@ are in the file.
     (G_LC→0 if no FLC; ≈5–7 % over-estimate)
   - `thickness_mm = numerator / √(denominator·1e9) · 1000`
   - `f_vs` presets: steel top 75, steel back 55, classical top 60, classical back 50.
-- **[x] Derived metrics** (`MaterialProperties.swift:228-316`): speed of sound
+- **[x] Derived metrics** (`MaterialProperties.swift`): speed of sound
   `c = √(E/ρ)`; `E_GPa = E/1e9`; specific modulus `= E_GPa / densityGPerCm3`;
   radiation ratio `= c/ρ`; anisotropy `E_C/E_L` and `E_L/E_C`.
 - **[x] Wood-quality label (categorical — must match exactly)** from specific
-  modulus (`WoodQuality.evaluate`, `MaterialProperties.swift:502-540`):
+  modulus (`WoodQuality.evaluate`, `MaterialProperties.swift`):
   - spruce long: ≥25 Excellent · ≥22 Very Good · ≥19 Good · ≥16 Fair · else Poor
   - spruce cross: ≥1.5 · ≥1.2 · ≥0.9 · ≥0.6
   - cedar long: ≥22 · ≥19 · ≥16 · ≥13 — cedar cross: ≥1.3 · ≥1.0 · ≥0.7 · ≥0.5
   - default (maple/rosewood/…): ≥20 · ≥16 · ≥12 · ≥8
   - overall = `0.7·long + 0.3·cross` numeric scores → ≥4.5 Excellent · ≥3.5 Very
-    Good · ≥2.5 Good · ≥1.5 Fair · else Poor (`MaterialProperties.swift:337-348`).
+    Good · ≥2.5 Good · ≥1.5 Fair · else Poor (`MaterialProperties.swift`).
 
 ---
 
@@ -441,20 +487,20 @@ are in the file.
 
 - **[x] Extension / type.** `.guitartap`; UTI
   `com.dolcesfogato.guitartap.measurement`, `exportedAs` in
-  `MeasurementsListView.swift:51`, registered in `Info.plist:30-52`. Conforms to
+  `MeasurementsListView.swift`, registered in `Info.plist:30-52`. Conforms to
   `public.json`; MIME `application/json`; importers accept `guitartap` + `json`.
   In-app bulk store is `saved_measurements.json`; a single export is
   `<name>.guitartap`.
 - **[x] Encoding.** Swift `JSONEncoder`, `dateEncodingStrategy = .iso8601`,
   `outputFormatting = [.prettyPrinted, .sortedKeys]`
-  (`TapToneAnalyzer+MeasurementManagement.swift:115-117`). **Top-level shape is a
+  (`TapToneAnalyzer+MeasurementManagement.swift`). **Top-level shape is a
   JSON array** `[TapToneMeasurement]` — an exported file is a one-element array
-  (`…+MeasurementManagement.swift:777`). Dates = ISO-8601 strings.
+  (`…+MeasurementManagement.swift`). Dates = ISO-8601 strings.
 - **[x] Spectrum float arrays are Base64 LE-float32, not JSON numbers.**
   `frequenciesData` / `magnitudesData` = raw little-endian IEEE-754 float32 bytes
-  Base64'd into JSON strings (`SpectrumSnapshot.swift:64-93`). Legacy plaintext
+  Base64'd into JSON strings (`SpectrumSnapshot.swift`). Legacy plaintext
   `frequencies`/`magnitudes` arrays accepted on decode only. Python packs
-  identically with `struct.pack("<{n}f")` (`spectrum_snapshot.py:187`).
+  identically with `struct.pack("<{n}f")` (`spectrum_snapshot.py`).
 - **[x] What's persisted.** Processed FFT spectra (Base64 float32), detected
   peaks (freq/mag/Q/bw/pitch + resolved `modeLabel`), chart axis ranges &
   display flags, analysis settings (tap/peak thresholds, numberOfTaps),
@@ -462,13 +508,13 @@ are in the file.
   (data-space Hz/dB offsets), peak selections (IDs + frequencies), per-peak mode
   overrides, mic/calibration provenance, comparison overlays, per-tap spectra.
   **Not persisted:** raw/time-domain audio, FFT phase, PNG/PDF artifacts
-  (`TapToneMeasurement.swift:23-28`).
+  (`TapToneMeasurement.swift`).
 - **[x] Versioning.** No explicit version field. Forward/back-compat via
   additive optionals + legacy-key fallbacks on decode (`measurementName` ⇐
   `tapLocation`; `peakMinThreshold` ⇐ `peakThreshold`; unknown enum strings →
-  safe defaults) (`TapToneMeasurement.swift:466-485`).
+  safe defaults) (`TapToneMeasurement.swift`).
 - **[x] `TapToneMeasurement` top-level keys** (custom `encode`/`init(from:)`,
-  `TapToneMeasurement.swift:460-597`; `encodeIfPresent` ⇒ nil → key omitted):
+  `TapToneMeasurement.swift`; `encodeIfPresent` ⇒ nil → key omitted):
   `id`(UUID str), `timestamp`(ISO-8601), `peaks`(array, see below),
   `decayTime`?, `measurementName`?, `notes`?, `spectrumSnapshot`?,
   `peakAnnotationOffsets`? (flat array `[uuidStr,{absFreqHz,absDB},…]`),
@@ -479,10 +525,19 @@ are in the file.
   `peakModeOverrides`?(flat array `[uuidStr, UserAssignedMode, …]`; each value
   `{type:"auto"}` or `{type:"assigned",label}`), `microphoneName`?,
   `microphoneUID`?, `calibrationName`?, `comparisonEntries`?, `tapEntries`?,
+  `sampleRate`? (Double — the capture rate, added so a loaded measurement can warn when
+  it was taken at a different rate; see `completed/SAMPLE-RATE-PLAN.md`),
+  `userModifiedSelection`? (Bool — whether the user has touched peak selection; absent in
+  legacy files, which default to manual so a reloaded auto measurement re-selects
+  revealed winners; see `completed/PEAK-MIN-SEMANTICS.md`),
   `measurementType`?/`guitarType`? (encode-only convenience, ignored on decode).
   *Swift serializes `[UUID:V]` dicts as a flat alternating array.*
+
+  > **Corrected 2026-09-16.** `sampleRate` and `userModifiedSelection` were missing from
+  > this list; both are written by current Swift, and a port that omitted them would
+  > lose the rate warning and re-select peaks the user had chosen by hand.
 - **[x] Peak export object** (`PeakExportCodingKeys`,
-  `TapToneMeasurement.swift:567-596`): `id`, `frequency`, `magnitude`,
+  `TapToneMeasurement.swift`): `id`, `frequency`, `magnitude`,
   `quality`(Q), `bandwidth`, `timestamp`, `pitchNote`?, `pitchCents`?,
   `pitchFrequency`?, `modeLabel` (**export-only** resolved label; ignored on
   decode). **`modeLabel` is injected ONLY into the top-level `peaks` array** — the
@@ -490,7 +545,7 @@ are in the file.
   Codable, which has no `modeLabel`. Python matches this via
   `ResonantPeak.to_dict(include_mode_label=False)` at those nested call sites
   (fixed 2026-06-21).
-- **[x] `SpectrumSnapshot`** (`SpectrumSnapshot.swift:40-93`):
+- **[x] `SpectrumSnapshot`** (`SpectrumSnapshot.swift`):
   `frequenciesData`/`magnitudesData` (Base64), `minFreq`/`maxFreq`/`minDB`/`maxDB`,
   `isLogarithmic`, `showUnknownModes`?, `guitarType`?, `measurementType`?,
   plate dims (`plateLength/Width/Thickness/Mass`), Gore body dims, plate stiffness
@@ -548,7 +603,7 @@ are in the file.
 All views bind to a single `TapToneAnalyzer` `ObservableObject`. Authoritative
 gates: `displayMode` (`.live`/`.frozen`/`.comparison`), `isDetecting`,
 `isMeasurementComplete`, `isDetectionPaused`, `materialTapPhase`, `numberOfTaps`,
-`tapProgress`, `savedMeasurements` (`TapToneAnalyzer.swift:334,635,643,874,881`).
+`tapProgress`, `savedMeasurements` (`TapToneAnalyzer.swift`).
 `MeasurementType` is the top mode: guitar (generic/acoustic/classical/flamenco,
 `.isGuitar`) vs material (plate/brace).
 
@@ -556,15 +611,15 @@ gates: `displayMode` (`.live`/`.frozen`/`.comparison`), `isDetecting`,
   - **Toolbar:** Auto-dB, Crosshair (iOS), Annotations (cycle; disabled if no
     peaks or in comparison), Save (disabled if no peaks & not comparison),
     Measurements, Results, Metrics, Settings, Play File
-    (`+Controls.swift:40-195`).
+    (`+Controls.swift`).
   - **Tap controls (dual-purpose during material review):** **New Tap** →
     `startTapSequence()`. **Pause/Resume** → during review = **Accept**
     (`acceptCurrentPhase`), else toggle pause. **Cancel** → during review =
     **Redo** (`redoCurrentPhase`), else `cancelTapSequence`. **Taps** stepper
     (1–10, disabled while a tap is in progress). **Threshold** −80…−20,
-    **Peak Min** −100…−20 (guitar only) (`+Controls.swift:620-727`).
+    **Peak Min** −100…−20 (guitar only) (`+Controls.swift`).
   - **Button-enablement rules (parity-pinned — port verbatim,
-    `TapToneAnalysisView.swift:196-232`):** *New Tap* disabled in comparison /
+    `TapToneAnalysisView.swift`):** *New Tap* disabled in comparison /
     FFT not running; guitar also disabled while detecting or no prior
     measurement; plate/brace otherwise always enabled. *Pause/Resume* enabled
     during review (=Accept) or if detecting/paused. *Cancel* enabled during
@@ -572,14 +627,14 @@ gates: `displayMode` (`.live`/`.frozen`/`.comparison`), `isDetecting`,
     numberOfTaps`; plate/brace during any active sequence. *Save* disabled if no
     peaks & not comparison. *Annotations* disabled if no peaks or comparison.
     (Pinned by `ButtonEnablementTests.swift`.)
-  - **Spectrum gating** (`+SpectrumViews.swift:65-89`): not-complete → live FFT;
+  - **Spectrum gating** (`+SpectrumViews.swift`): not-complete → live FFT;
     complete → frozen magnitudes; comparison → overlays only; material review →
     frozen phase overlays + annotations, live hidden.
   - **Exports** (`+Actions.swift`, `+Export.swift`): Spectrum PNG (off-screen
     `ImageRenderer`); Save Measurement; PDF (single / comparison / multi-tap);
     Play File loads WAV + optional calibration through the live pipeline.
 - **[x] Layout variants** (`+Layouts.swift`, selected at
-  `TapToneAnalysisView.swift:142-194`). **Breakpoints are SwiftUI size classes,
+  `TapToneAnalysisView.swift`). **Breakpoints are SwiftUI size classes,
   not pixel widths** → web: map *regular* → desktop/wide-tablet, *compact* →
   phone.
   - Desktop (macOS): `HSplitView` header → [spectrum+decay | results pane (if
@@ -598,7 +653,7 @@ gates: `displayMode` (`.live`/`.frozen`/`.comparison`), `isDetecting`,
   body dims, stiffness preset; brace: dims/mass; guitar: read-only mode-range
   table); **Advanced** (display freq/dB ranges, Show Unknown Modes [guitar],
   analysis range, Peak Detection Minimum [guitar only], Dump Capture Audio);
-  **About & Help**. **Apply contract** (`+Actions.swift:33-173`): "Done"
+  **About & Help**. **Apply contract** (`+Actions.swift`): "Done"
   validates/clamps (≥10 Hz / ≥10 dB separation), persists, returns one
   `measurementChanged` bool that triggers an analyzer reset **iff the type
   change crosses the guitar↔material boundary OR `measureFlc` changed**.
@@ -622,7 +677,7 @@ gates: `displayMode` (`.live`/`.frozen`/`.comparison`), `isDetecting`,
   Each `reviewing*` freezes the spectrum and offers Accept (Pause/Resume) / Redo
   (Cancel). Status bar: "Phase X/Y · Tap N/M" with animated `tapProgress`. Phase
   colors L=blue, C=orange, FLC=purple, complete=green
-  (`+SpectrumViews.swift:338-346`).
+  (`+SpectrumViews.swift`).
 - **[x] Supporting views.**
   - **SpectrumView** (`SpectrumView*.swift`): interactive FFT chart, linear/log
     freq, axis ranges persist across taps. Zoom (pinch by region / macOS
@@ -638,6 +693,67 @@ gates: `displayMode` (`.live`/`.frozen`/`.comparison`), `isDetecting`,
     Upper=gray, user-defined=teal; plate/brace L=blue/C=orange/FLC=purple.
   - **ComparisonResultsView / MultiTapComparisonResultsView:** read-only tables
     of Air/Top/Back per spectrum (≤5) / per tap + bold gold "Averaged" row.
+
+---
+
+## Behaviour That Was Never Written Down [added 2026-09-16]
+
+The 2026-09-16 audit found these in Swift with no counterpart in this document. Each is
+behaviour a port must reproduce, and each has bitten at least one edition already.
+
+- **[x] Ring-out / decay tracking** (`TapToneAnalyzer+DecayTracking.swift`). Guitar only.
+  The tap seeds tracking from the **peak-held** broadband level (`recentPeakLevelDB`, a
+  2.0 s latch), not the instantaneous level, because detection confirms a couple of chunks
+  after the strike. Decay is then measured **on the audio clock** — the timestamp travels
+  with each chunk — over a 3 s window against a 5 s history, requiring ≥10 samples, and
+  reports the time to fall `decayThreshold = 15 dB`. Quality thresholds are per
+  `GuitarType`. Measuring this on the wall clock produces plausible-looking wrong answers
+  whenever the audio thread and the main thread disagree, which is why it is pinned:
+  `completed/DECAY-AUDIO-CLOCK-FIX.md`.
+- **[x] Tap-tone ratio** (`TapToneMeasurement.swift`). `tapToneRatio = f_Top / f_Air`,
+  computed from the **definitive** peaks (selection- and override-aware), `nil` when
+  either mode is missing. Gore's ideal is ≈2.0. It is a headline number in the results
+  panel and the PDF, so a port that resolves it from raw detection order rather than the
+  definitive peaks will disagree with Swift the moment a user reassigns a mode.
+- **[x] Material multi-tap averages per phase** (`TapToneAnalyzer+SpectrumCapture.swift`).
+  Plate/brace accumulate `numberOfTaps` captures **per phase** (L, C, FLC), power-average
+  them, and run `findDominantPeak` on the averaged spectrum — the buffer clearing at each
+  phase boundary. Reading the peak off the last tap instead was a real bug in Swift and
+  Python, masked for months because the values are close: `completed/WEB-PDF-MATERIAL-LAYOUT.md`
+  and the 6k notes in the web playback tests.
+- **[x] Per-field numeric precision** (`FieldPrecision.swift`). One precision `P` per field
+  is the single source of truth for **input restriction, storage and display** — not a
+  display-time rounding. Swift enforces it with a pre-display keystroke veto, Python with a
+  `QValidator`, the web with a synchronous revert. Spec: `completed/NUMERIC-PRECISION-SPEC.md`.
+- **[x] Two-store material dimensions** (`MaterialMeasurementInputs.swift`). Settings hold
+  the **template** (Store A, defaults for the next measurement); each measurement carries
+  its own **snapshot** (Store B), seeded from settings at completion. Calculation, display,
+  PDF and save all read Store B, and §12 of the report derives the measurement type from
+  that snapshot. Treating settings as the live source makes a loaded measurement silently
+  re-calculate against today's defaults. Spec: `completed/MEASUREMENT-DIMENSIONS-SPEC.md`.
+- **[x] Dead-input watchdog** (`DeadInput.swift`, `RealtimeFFTAnalyzer+Watchdog.swift`).
+  Two distinct failures, checked at 1 Hz and suppressed during file playback, recovery, and
+  the first 4 s: **starved** — no buffers for > 2.5 s; **dead input** — buffers arriving on
+  schedule but none above `1e-5` RMS (−100 dBFS) for 15 s, which delivery-based watchdogs
+  cannot see. Recovery restarts with 0.5/1/2/4 s backoff, at most 6 attempts, then keeps
+  watching without restarting so the app heals itself when audio returns.
+  `AUDIO-WATCHDOG-SILENT-STREAM.md`.
+- **[x] Status messages are derived from state, and the warm-up is silent**
+  (`TapToneAnalyzer.swift`). `statusMessage` is computed at state transitions via
+  `tapPrompt()` / `guitarLoopStatus()`, with a clipping override on top. The 0.5 s
+  detection warm-up deliberately writes **no** message. Ports have twice drifted by
+  assembling status text in the view instead: `completed/STATUS-STATE-MACHINE.md`.
+- **[x] The noise-floor EMA runs *during* the warm-up** (`TapToneAnalyzer+TapDetection.swift`).
+  The warm-up gate sits **after** the EMA update, deliberately: the warm-up exists to let
+  the floor converge before any tap is judged, and the first frame after it re-anchors the
+  floor to real audio. Putting the gate first leaves the EMA at its seed value and silently
+  degrades the relative detector to the absolute one: `completed/OUT-4-DETECTION-SPEC.md`.
+- **[x] Load-time warning about capture conditions** (`completed/SAMPLE-RATE-PLAN.md`).
+  A measurement stores its microphone name, calibration name and `sampleRate`; on load, a
+  mismatch against the current setup is reported as **unknown impact**, naming what is and
+  is not affected (peak frequencies are essentially mic-independent; levels, the tap
+  threshold, marginal peak selection and faint peaks are not). It deliberately does not
+  assert that a mic is "not connected" — it cannot know that.
 
 ---
 
@@ -665,7 +781,7 @@ loaded by tests**.
 **[x] Expected-value oracle (the Phase-2 parity targets):** hardcoded inline,
 identical across Swift/Python.
 - REG-G1 (`Recording 5.wav`): Air/Top/Back freq+mag,
-  `FilePlaybackRegressionTests.swift:231-236` / `test_file_playback_regression.py:102`.
+  `FilePlaybackRegressionTests.swift` / `test_file_playback_regression.py`.
   Settings: `peakMinThreshold=-76`, `tapThreshold=-40`, FFT 65536.
 - REG-G2 (`Recording.wav`): averaged + per-tap table (8 taps),
   `…:301-318`.
