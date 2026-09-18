@@ -10,7 +10,7 @@ Windows/x86_64; Linux unminted, Kotlin does not exist. **Issue:** #10 (follow-on
 | Question | Did *this* edition on *this* machine change? | How far apart are the editions? |
 | Compared against | That configuration's own committed baseline | The oracle |
 | Healthy value | **Exactly zero.** Any movement is a defect. | Never zero. The question is how big is allowed. |
-| Bar today | zero — live in Swift only | 1 dB / 1 Hz / q 1 / ringOut 0.03 — live everywhere |
+| Bar today | **zero** — live in all editions | **0.02 Hz / 0.01 dB** — tightened 2026-09-18 on six configurations' evidence |
 | Status | live in all three (Python/web added 2026-09-18) | live, unchanged by this work |
 
 One number was doing both jobs, which is what let the Swift goldens drift up to
@@ -195,25 +195,93 @@ Still unminted: Linux for both editions, and Kotlin everywhere. Kotlin in partic
 different runtime and could behave unlike either, so no bar set now should be treated as
 final for it.
 
-### What it is not (measured, not assumed)
+### Where the edition difference comes from (traced 2026-09-18)
 
-The editions do not compute at the same precision: Swift's `computeGatedFFT` is `[Float]`
-end to end (`vDSP_DFT_zrop`, `vDSP_hann_window` are single-precision), Python pads into a
-`float64` array and runs a float64 FFT, and JavaScript has only doubles. That asymmetry
-is real and nobody chose it — each edition took its platform's idiomatic path.
+**The guitar capture window is onset-aligned in Swift and not in Python or web.**
 
-It is *not*, however, the explanation for the numbers above. Re-running the gated cases
-with the Python chain forced to single precision does not move them, and the gated-FFT
-delta is a near-constant ~1.7e-4 dB on every tone rather than the scattered, magnitude-
-dependent error precision loss would produce. A constant relative offset of ~2e-5 points
-instead at the window: Swift uses the *periodic* Hann `0.5(1 − cos(2πn/N))` and
-numpy/web the *symmetric* `0.5(1 − cos(2πn/(N−1)))`, a difference already documented in
-`RealtimeFFTAnalyzer+FFTProcessing.swift`.
+| | material capture | guitar capture |
+|---|---|---|
+| Swift | aligns | **aligns** |
+| Python | aligns | **`samples[:fft_size]`** |
+| web | aligns | **no alignment** |
 
-The 0.0076 Hz frequency delta comes through a different path (guitar FFT plus peak
-interpolation) and has **not** been attributed to anything yet. Both questions — whether
-the canonical edition should be the least precise one, and what actually produces that
-frequency delta — are open, and they are exactly what this measurement exists to surface.
+Swift's comment at that call site states the purpose: *align to the sample-level tap
+onset so that chunk-boundary differences don't shift the FFT input.* Two editions skip it
+on the guitar path, so they are not handed the same samples. That explains the shape of
+every measurement here — Python and web agree with each other to ~1e-14 (both lack it)
+and both differ from Swift on the **guitar** path by 0.0004–0.003 dB, while the material
+path, where all three align, differs only by ~0.0002–0.00035 dB, matching the separately
+identified periodic-vs-symmetric Hann window difference.
+
+Patching Python to align shrinks the per-tap back-peak deltas by 6–52% but does not close
+them, so at least one more difference remains in what reaches the aligner. This is the
+same family as issues #7 (replay ≠ live capture), #3 (Swift's 4800-frame buffer) and #5.
+
+**Why it surfaces as frequency rather than dB.** Peak frequency comes from a parabola
+through three dB bins, `shift = 0.5(l−r)/(l−2v+r)`. Guitar back modes are broad, so that
+denominator is small and the fit is ill-conditioned:
+
+| | curvature | sensitivity |
+|---|---|---|
+| back peaks | −0.39 to −0.61 dB | up to **−2.455 bins/dB** |
+| air peaks | −4.41 dB | −0.099 bins/dB |
+
+A 0.0042 dB difference in one neighbouring bin moves the peak 0.0076 Hz. All eight largest
+frequency deltas are back peaks; air and top are ~20× smaller. So **freqHz is not an
+independent measurement**: 0.01 dB × 2.455 bins/dB × 0.7324 Hz/bin = 0.018 Hz, which is
+the bar. Tighten the two together or not at all.
+
+Ruled out by measurement, not argument: float32 at the output stage moves the frequency by
+at most 3.2e-6 Hz (2392× too small), and the Hann window form cannot apply to the guitar
+path, which uses a rectangular window.
+
+**These bars therefore measure today's state, defects included.** When the alignment gap
+closes the editions should converge and the bars will become loose. A sudden jump in the
+headroom `parity-report.py` prints is the expected consequence and the signal to
+re-measure — not an anomaly. The same warning is carried in the oracle itself
+(`_toleranceProvenanceNote`), which is what a future session will actually open.
+
+## The tolerance decision (settled 2026-09-18)
+
+Two bars, and machines enter neither:
+
+* **Same machine, same edition: zero.** Nothing legitimately moves it.
+* **Different editions: 0.02 Hz / 0.01 dB** (plus gatedFftDb 0.001, q 1e-05, ringOutSec 1e-07).
+
+Evidence: six configurations across three operating systems and two architectures, worst
+measured 0.0076 Hz / 0.0030 dB, **identical to six significant figures on every one of
+them**. That last point is what justifies tightening — the edition difference is a
+property of the algorithms, not of the machines, so it does not wander. Checked against
+all six baselines before adopting: **0 values exceed the new bars**, margins 2.6× to 30×.
+
+Two consequences had to be handled in the same change or the tightening would have been
+quietly wrong:
+
+**`REG-P2`'s `magDb: 0.5` override is deleted.** It was written as a *tighter* bar than
+the old 1.0 global — the thing that catches a regression to reading the last tap instead
+of the averaged spectrum. Against a 0.01 global it inverts to **50× looser**, making the
+one case that exists to catch that regression the least protected in the suite. It is
+also unnecessary: REG-P2's real deltas are 0.000347 dB (29× inside the new global) and the
+regression it guards produces 0.81–2.62 dB, which the global catches with 81–262× margin.
+
+**The first mint gets its own bar** (`bootstrapTolerances`, holding the old 1 dB / 1 Hz).
+A new configuration has no prior, so the mint asks the only question available — are these
+numbers plausible against the oracle? That had been borrowing the parity number. At 0.01 dB
+it would block a port still being built from minting any baseline, leaving it with no
+zero-tolerance regression check at exactly the moment it most needs one. Failing parity is
+a finding to investigate; failing the first-mint bar means the numbers are garbage.
+
+The generator's tolerance handling changed with it: it rounded these blocks to five decimal
+places, which would have silently written `ringOutSec: 0`.
+
+### Not adopted: a cross-platform bit-identity gate
+
+Proposed in the Linux handoff, and the measurement behind it stands — within an edition,
+across machines, only five values have ever differed, all dB, all 1–2 ULP, worst 1.42e-14.
+It is not being added as a gate. Zero is not achievable there (NumPy's Linux wheel and its
+MSVC build carry different `log10` implementations, legitimately 1 ULP apart) and the spread
+is 2×10¹¹ times smaller than the edition difference it would share a budget with. The
+`PLATFORM:` lines in `parity-report.py` already surface it if it ever moves.
 
 ## Known gaps
 
