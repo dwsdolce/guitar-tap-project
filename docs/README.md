@@ -22,6 +22,7 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#8](https://github.com/dwsdolce/guitar-tap-project/issues/8) · [`FROZEN-RECALC-TEST-PARITY.md`](FROZEN-RECALC-TEST-PARITY.md) — Python↔Swift test-fixture divergence
 - [#6](https://github.com/dwsdolce/guitar-tap-project/issues/6) · [`RESULTS-PANEL-CONSISTENCY.md`](RESULTS-PANEL-CONSISTENCY.md) — Results panel cross-platform consistency
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
+- [#10](https://github.com/dwsdolce/guitar-tap-project/issues/10) · [`PARITY-AND-REGRESSION-BASELINES.md`](PARITY-AND-REGRESSION-BASELINES.md) — per-configuration baselines: zero-tolerance regression + measuring the parity bar
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#15](https://github.com/dwsdolce/guitar-tap-project/issues/15) · [`guitar_tap-manual-seo-handoff.md`](guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/` indexed as "Page with redirect"
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
@@ -29,12 +30,12 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
   - [`PHASE1-PORT-PREP.md`](PHASE1-PORT-PREP.md) — Phase 1 record: INVENTORY audit, parity-tooling generalisation, fixture drift check
   - Both are records of finished phases; they move to [`completed/`](completed/) with the plan when the port concludes.
 
-Two open Issues have no detail doc in `docs/`: [#10](https://github.com/dwsdolce/guitar-tap-project/issues/10)
-(oracle unification) points at [`../tooling/TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md) plus the archived
-design in [`completed/PHASE2-DSP-HARNESS.md`](completed/PHASE2-DSP-HARNESS.md), and
+#10's doc above covers only its follow-on work; the oracle unification itself still points at
+[`../tooling/TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md) and the archived design in
+[`completed/PHASE2-DSP-HARNESS.md`](completed/PHASE2-DSP-HARNESS.md). One open Issue has no detail doc at all:
 [#11](https://github.com/dwsdolce/guitar-tap-project/issues/11) (open-sourcing) points at the archived
 [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md). Deliberate — the design history really is
-finished — but an archive doing live duty is worth re-checking whenever either Issue moves.
+finished — but an archive doing live duty is worth re-checking whenever that Issue moves.
 
 ## Elsewhere in the hub
 - [`../tooling/`](../tooling/) — the parity system (`PARITY-MAP.md`, `parity-index.json`, `parity-oracle.json`, the generators) + [`TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md).
