@@ -1,7 +1,8 @@
 # Audio watchdog — blind to a stream that delivers SILENCE
 
-**Status:** ⏳ CODE WRITTEN ON ALL THREE, NOT YET USER-VERIFIED (2026-08-22) — see
-"Implementation" at the end. Found 2026-07-16 during 1.0.2 testing (web); **recurred on macOS/Swift
+**Status:** ✅ DONE — Issue #4 closed 2026-09-17; archived here 2026-09-18. Fixed on all three
+editions (Swift `61e8a5d`/`665125a`/`0fd11d4` · Python `ed9d953`/`8ff34ae`/`c74dde4` · web
+`3e9493a`/`54a9a25`/`c6bd36b`) — see "Implementation" at the end. Found 2026-07-16 during 1.0.2 testing (web); **recurred on macOS/Swift
 2026-08-21** during a class (idle between taps, and again after wake-from-sleep), which is what
 prompted the fix. Was not blocking 1.0.2 (self-recovers, needs a contending app, corrupts no
 measurement).

@@ -737,7 +737,7 @@ behaviour a port must reproduce, and each has bitten at least one edition alread
   schedule but none above `1e-5` RMS (−100 dBFS) for 15 s, which delivery-based watchdogs
   cannot see. Recovery restarts with 0.5/1/2/4 s backoff, at most 6 attempts, then keeps
   watching without restarting so the app heals itself when audio returns.
-  `AUDIO-WATCHDOG-SILENT-STREAM.md`.
+  `completed/AUDIO-WATCHDOG-SILENT-STREAM.md`.
 - **[x] Status messages are derived from state, and the warm-up is silent**
   (`TapToneAnalyzer.swift`). `statusMessage` is computed at state transitions via
   `tapPrompt()` / `guitarLoopStatus()`, with a clipping override on top. The 0.5 s

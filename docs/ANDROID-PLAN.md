@@ -259,8 +259,9 @@ Most of this pays off for all editions, not just Android.
   Android is its first consumer. Set `-text` in `.gitattributes`: the web's `text=auto` gives its JSON
   fixtures CRLF line endings, so they differ on disk from Swift/Python.
 - **Process docs:**
-  - [BUG-TRACKING](../process/BUG-TRACKING.md): add an `android` label, `all-three` → `all-editions`, and
-    `src:play` intake.
+  - [BUG-TRACKING](../process/BUG-TRACKING.md): ✅ done — the doc was updated during Phase 1, and the
+    GitHub labels caught up on 2026-09-18 (`android` and `src:play` created, `all-three` renamed to
+    `all-editions`, which kept it on the ten Issues already carrying it).
   - [DEV-DOC-STANDARD](../process/DEV-DOC-STANDARD.md): KDoc format, and Dokka as the doc-build
     correctness gate.
   - Hub [README](../README.md): the repo table.
@@ -480,7 +481,7 @@ Swift keeps changing while Android is being built.
    by message (a `Channel`/`StateFlow`), rather than copying the unsynchronised pattern.
 5. **Open Swift issues Android inherits:** replay ≠ live by ~0.02 dB
    ([PLAYBACK-BIT-IDENTITY](PLAYBACK-BIT-IDENTITY.md)); the silent-stream watchdog has never been confirmed
-   in real use ([AUDIO-WATCHDOG-SILENT-STREAM](AUDIO-WATCHDOG-SILENT-STREAM.md)). Android's 1024
+   in real use ([AUDIO-WATCHDOG-SILENT-STREAM](completed/AUDIO-WATCHDOG-SILENT-STREAM.md)). Android's 1024
    re-chunking removes the buffer-grid cause, so it may be the first edition able to isolate the replay
    difference.
 6. **Float text formatting in `.guitartap`.** Kotlin's shortest-representation float printing may differ
