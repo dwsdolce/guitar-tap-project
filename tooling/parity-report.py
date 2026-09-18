@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from typing import Any
 
 HUB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -174,6 +175,13 @@ def coverage(configs: dict[str, dict[str, Any]]) -> list[str]:
 
 
 def main() -> int:
+    # Status lines use non-ASCII markers. A Windows console is cp1252 by default and raises
+    # UnicodeEncodeError on them, which killed this script at its first status line - on the
+    # very platforms it exists to characterise. Same fix as tooling/parity/doc_coverage.py.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--verbose", action="store_true", help="every value's delta, worst first")
     args = parser.parse_args()

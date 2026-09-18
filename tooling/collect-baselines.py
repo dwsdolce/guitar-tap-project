@@ -39,6 +39,13 @@ def find_baselines(root: str) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
+    # Status lines use non-ASCII markers. A Windows console is cp1252 by default and raises
+    # UnicodeEncodeError on them, which killed this script at its first status line - on the
+    # very platforms it exists to characterise. Same fix as tooling/parity/doc_coverage.py.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
     if not argv:
         print(__doc__)
         return 2

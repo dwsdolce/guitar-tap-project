@@ -1,7 +1,7 @@
 # Per-configuration baselines: regression and parity
 
-**Status:** ⏳ BUILT, NOT RUN-REVIEWED — Python and web minted on macOS/arm64; Windows and
-Linux unminted. **Issue:** #10 (follow-on). **Depends on:** the oracle cutover, done 2026-09-18.
+**Status:** ⏳ BUILT, PARTLY MEASURED — Python and web minted on macOS/arm64 and
+Windows/x86_64; Linux unminted, Kotlin does not exist. **Issue:** #10 (follow-on). **Depends on:** the oracle cutover, done 2026-09-18.
 
 ## Two metrics, not one
 
@@ -161,8 +161,39 @@ The decomposition is the interesting part. **Python and web agree with each othe
 from the oracle. The entire measured edition effect is therefore *Swift versus the other
 two*, and the two tracking editions are numerically indistinguishable from each other.
 
-That is one platform. The bar must also cover Windows, Linux and eventually Kotlin, and
-none of those have been minted — so this is not yet an argument for tightening anything.
+### The platform effect, measured (Windows, 2026-09-18)
+
+Both tracking editions are now minted on Windows 11 / x86_64 (Intel i7-12700H), and the
+answer to *“is an edition stable across operating systems?”* is **very nearly yes**:
+
+| edition | values | differing macOS/arm64 vs Windows/x86_64 | worst \|Δ\| |
+|---|---|---|---|
+| Python (NumPy 2.5.1) | 91 | **0** | exactly 0 |
+| web (Node 24.20, V8 13.6) | 105 | **1** | 1.78e-15 dB |
+
+Python is **bit-identical** across a different OS *and* a different architecture. The web's
+single exception is `GFFT1/expected/100Hz/db`: `-15.722160814127067` on macOS against
+`-15.722160814127065` on Windows — bit patterns `…41c9` and `…41c8`, a difference of exactly
+**1.000 ULP**. What is distinctive about that case is amplitude: GFFT1 is the only tone
+driven at 0.5, roughly 34 dB hotter than GFFT2/3/5 at 0.01–0.1. It is not bin-centring —
+GFFT2's tones are off-bin like GFFT1's and match exactly.
+
+A single last-bit difference with 104 values identical is not an algorithmic difference; it
+is one rounding landing differently, most plausibly JIT codegen (arm64 contracting a
+multiply-add into an FMA where x64 does not) or a different `log10` in V8's libm per
+architecture. **Linux will discriminate between those two:** it is x86_64 like Windows but a
+different OS, so if linux-x64 matches windows-x64 exactly and both differ from darwin-arm64
+here, the cause is architecture rather than operating system.
+
+Consequence for the scheme: the per-OS baseline files are **not** redundant, but they are
+close to it. The measured platform effect is zero for Python and one ULP for web — against
+an edition effect of 0.0076 Hz, which is **twelve orders of magnitude larger**. Whatever the
+bar becomes, it is being set by the edition difference alone; the machine contributes
+nothing measurable.
+
+Still unminted: Linux for both editions, and Kotlin everywhere. Kotlin in particular is a
+different runtime and could behave unlike either, so no bar set now should be treated as
+final for it.
 
 ### What it is not (measured, not assumed)
 
@@ -186,8 +217,9 @@ frequency delta — are open, and they are exactly what this measurement exists 
 
 ## Known gaps
 
-* **Windows and Linux are unminted** for both editions, and Kotlin does not exist yet.
-  Seven configurations are reported missing by the hub script.
+* ~~**Windows and Linux are unminted**~~ — **Windows is minted** for both editions
+  (2026-09-18, results above). **Linux remains unminted** for both, and Kotlin does not
+  exist yet: five configurations are reported missing by the hub script.
 * ~~**Swift's zero bar holds only on the minting machine.**~~ **Measured, and it does
   not.** The full Swift suite was run on real hardware against the macOS-minted oracle at
   zero tolerance: iPad Pro 13-inch (M5) and iPhone 17 Pro Max (A19 Pro), both iOS 26.6.2,
