@@ -39,5 +39,6 @@ finished — but an archive doing live duty is worth re-checking whenever that I
 
 ## Elsewhere in the hub
 - [`../tooling/`](../tooling/) — the parity system (`PARITY-MAP.md`, `parity-index.json`, `parity-oracle.json`, the generators) + [`TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md).
+  - `sync-oracle.sh` vendors the oracle *out* to each repo; `collect-baselines.py` pulls each configuration's self-baseline *in* to `parity/baselines/`, and `parity-report.py` turns them into the edition-vs-platform numbers behind the parity tolerance ([`PARITY-AND-REGRESSION-BASELINES.md`](PARITY-AND-REGRESSION-BASELINES.md)).
 - [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 - [`images/`](images/), [`playback-validation/`](playback-validation/) — screenshots + the playback-validation harness.
