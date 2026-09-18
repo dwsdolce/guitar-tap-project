@@ -781,6 +781,18 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/parity-oracle",
+      "swift": [
+        "GuitarTapTests/ParityOracle.swift"
+      ],
+      "python": [
+        "tests/parity_oracle.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/peak-heal",
       "swift": [
         "GuitarTapTests/PeakDuplicateHealTests.swift"
@@ -1315,6 +1327,10 @@
     {
       "repo": "swift",
       "path": "GuitarTapTests/ExportDirectoryTests.swift"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTapTests/GenerateParityOracle.swift"
     },
     {
       "repo": "swift",

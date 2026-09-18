@@ -21,7 +21,7 @@ Anchored on **where the databases are stored and where the tools run**, not on w
 | `parity/gen_parity_map.py`, `parity_lookup.py`, `README.md` | **hub** `tooling/` | the cross-repo dev tools; run from the hub, which scans the three sibling code repos on disk |
 | `parity/PARITY-MAP.md`, `parity/parity-index.json` | **hub** `tooling/` | the generated coverage database (the tools' output) |
 | `TEST-COVERAGE.md` *(this file)* | **hub** `tooling/` | the coverage reference — co-located with the database + tools it documents |
-| `parity/parity-oracle.json` | **hub** `tooling/` (canonical) | the shared numeric-golden contract. ⚠️ **Only the web currently consumes it** — Swift and Python still hardcode the same goldens in their own regression tests, so unifying all three onto this oracle is **tracked open work, not done**. Each consumer keeps a committed local copy so tests run offline; `sync-oracle.sh` pulls this canonical file. |
+| `parity/parity-oracle.json` | **hub** `tooling/` (canonical) | the shared numeric-golden contract — **all three suites read it** (REG-G1/G2/B1/P1/P2 peaks, the REG-G2 per-tap table, the REG-G1 ring-out, GFFT1–5). Each consumer keeps a committed local copy so tests run offline, named in its own `tooling/oracle-dest.txt`; `sync-oracle.sh` (canonical copy in hub `tooling/`) pulls this file and `--check` fails on drift. |
 | project/planning docs (STATUS, phase logs) | **hub** `docs/` | the neutral home for project docs (formerly in `GuitarTapWeb/Development/`) |
 
 ---
@@ -103,16 +103,38 @@ the doc can't go stale.
 
 ### The oracle (shared golden numbers)
 
-Numeric parity (FFT magnitudes, REG-* peak freq/mag/Q) is *meant* to be pinned by a **shared oracle** — one
-canonical file of expected values + tolerances that every suite tests against, so the goldens can't fragment
-into per-platform copies. That canonical file now lives in the hub: `tooling/parity/parity-oracle.json`.
+Numeric parity (FFT magnitudes, REG-* peak freq/mag/Q) is pinned by a **shared oracle** — one canonical
+file of expected values + tolerances that every suite tests against, so the goldens cannot fragment into
+per-platform copies. It lives in the hub: `tooling/parity/parity-oracle.json`.
 
-⚠️ **This is only half-realized.** Today only the **web** suite reads the oracle (vendored at
-`GuitarTapWeb/test/fixtures/parity-oracle.json`, pulled via `GuitarTapWeb/tooling/sync-oracle.sh`; `--check` =
-CI drift check). **Swift and Python still hardcode the same goldens** as constants in their own regression
-tests — so the numbers are triplicated, which is exactly the drift risk the oracle exists to remove. Unifying
-all three suites onto the shared oracle (plus a real `GenerateParityOracle` generator that stamps it from the
-Swift pipeline) is **tracked open work**, not the accepted end state.
+**Mint once, pull everywhere.** Swift mints it, because Swift is canonical: `GenerateParityOracle` runs the
+same pipeline the regression tests assert against and writes the numbers back, so the oracle cannot disagree
+with Swift. A tracking edition minting it would make the file record what the *tracking* edition does, and
+the day the two disagreed there would be no way to say which was wrong. Only the minting step is macOS-bound;
+vendoring, drift-checking and consuming all run anywhere.
+
+| Step | Where | Command |
+|---|---|---|
+| Mint (rare — only on an intentional algorithm change) | Swift / macOS | `GENERATE_PARITY_ORACLE=1 xcodebuild test -only-testing:GuitarTapTests/GenerateParityOracle` |
+| Publish to the hub | Swift repo | `ORACLE_SRC=<hub> ./tooling/sync-oracle.sh --publish`, then commit the hub |
+| Vendor into a consumer | any repo, any OS | `ORACLE_SRC=<hub> ./tooling/sync-oracle.sh` (or `ORACLE_URL=` once the hub is public — #11) |
+| Drift gate | any repo, any OS | `./tooling/sync-oracle.sh --check` |
+
+`sync-oracle.sh` is one file copied verbatim into each repo; the repo's own vendored path lives beside it in
+`tooling/oracle-dest.txt`, so the script carries no per-repo knowledge. The vendored copies are
+`GuitarTapTests/parity-oracle.json` (Swift), `tests/parity-oracle.json` (Python) and
+`test/fixtures/parity-oracle.json` (web).
+
+The generator **recomputes values in place** rather than writing a fresh document: it reads the committed
+JSON, replaces only the numeric leaves and writes it back. That preserves the prose (`_note`,
+`_perTapNote`, `_ringOutNote`) — which is where the reasons behind odd-looking numbers live, such as why
+REG-G2 taps 1 and 7 pin Back at 296.5 Hz — and makes the diff after a regeneration exactly the set of values
+the algorithm moved.
+
+⚠️ **Not yet exercised:** the generator has never been run, and the Swift suite's conversion to reading the
+oracle has not been compiled (it was written on Windows). The Python and web suites were converted and run
+green. First macOS run should be: normal suite first (proves the conversion), then the generator, then
+compare its output against the committed file — the values should not move.
 
 ---
 
@@ -124,7 +146,7 @@ The block below is **generated from the `@parity`/`tests=` tags** — regenerate
 
 <!-- COVERAGE:BEGIN — generated by tooling/parity/gen_parity_map.py; do not hand-edit -->
 
-**Headline** — 87 parity groups · 9 platform-specific (`@parity none`) · 0 orphan slugs.
+**Headline** — 88 parity groups · 10 platform-specific (`@parity none`) · 0 orphan slugs.
 
 **Functional-block test coverage** — the unit is a functional block (impl group), not a line. Denominator = the **testable** blocks (`dsp` / `audio` / `state` / `model`); `view/*` is UI, review-only by design, and excluded.
 
