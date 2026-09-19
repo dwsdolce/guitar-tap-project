@@ -17,7 +17,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#2](https://github.com/dwsdolce/guitar-tap-project/issues/2) · [`THEME-SPEC.md`](THEME-SPEC.md) — Light / Dark / System theme
 - [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3) · [`AUDIO-BUFFER-SIZE.md`](AUDIO-BUFFER-SIZE.md) — Swift 4800-frame buffer
-- [#5](https://github.com/dwsdolce/guitar-tap-project/issues/5) · [`MATERIAL-MULTITAP-DISCREPANCIES.md`](MATERIAL-MULTITAP-DISCREPANCIES.md) — multi-tap material divergence
 - [#8](https://github.com/dwsdolce/guitar-tap-project/issues/8) · [`FROZEN-RECALC-TEST-PARITY.md`](FROZEN-RECALC-TEST-PARITY.md) — Python↔Swift test-fixture divergence
 - [#6](https://github.com/dwsdolce/guitar-tap-project/issues/6) · [`RESULTS-PANEL-CONSISTENCY.md`](RESULTS-PANEL-CONSISTENCY.md) — Results panel cross-platform consistency
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
@@ -33,6 +32,10 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
 
+#5 (multi-tap material divergence) is **closed**; its record is
+[`completed/MATERIAL-MULTITAP-DISCREPANCIES.md`](completed/MATERIAL-MULTITAP-DISCREPANCIES.md) — item 3's
+2 dB was old code in the archived evidence; the editions agree to 0.0004 dB on a capture made today.
+
 #7 (replay vs live capture) is **closed**; its record is
 [`completed/PLAYBACK-BIT-IDENTITY.md`](completed/PLAYBACK-BIT-IDENTITY.md) — replay of an app-dumped WAV
 reproduces the live capture to one float32 ULP; the apparent discrepancy came from a fixture that was
@@ -47,5 +50,5 @@ cause it uncovered is **not** finished and lives in
 ## Elsewhere in the hub
 - [`../tooling/`](../tooling/) — the parity system (`PARITY-MAP.md`, `parity-index.json`, `parity-oracle.json`, the generators) + [`TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md).
   - `sync-oracle.sh` vendors the oracle *out* to each repo; `collect-baselines.py` pulls each configuration's self-baseline *in* to `parity/baselines/`, and `parity-report.py` turns them into the edition-vs-platform numbers behind the parity tolerance ([`completed/PARITY-AND-REGRESSION-BASELINES.md`](completed/PARITY-AND-REGRESSION-BASELINES.md)). `compare-capture-probes.py` localises a cross-edition capture difference for [#7](https://github.com/dwsdolce/guitar-tap-project/issues/7).
-- [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
+- [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model), `CROSS-EDITION-INVESTIGATION.md` (how to find out why two editions disagree about a number). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 - [`images/`](images/), [`playback-validation/`](playback-validation/) — screenshots + the playback-validation harness.

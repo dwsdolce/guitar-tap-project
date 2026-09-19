@@ -1,5 +1,11 @@
 # Per-configuration baselines: regression and parity
 
+> **The living rules extracted from this record** — the two bars, the minting rules, which way each
+> file flows, and how to change the tolerances — are in
+> [`tooling/parity/README.md`](../../tooling/parity/README.md). This doc is the measurements and the
+> reasoning behind the numbers; re-measure before acting on any figure here.
+
+
 **Status:** ⏳ BUILT, PARTLY MEASURED — Python and web minted on macOS/arm64 and
 Windows/x86_64; Linux unminted, Kotlin does not exist. **Issue:** #10 (follow-on). **Depends on:** the oracle cutover, done 2026-09-18.
 

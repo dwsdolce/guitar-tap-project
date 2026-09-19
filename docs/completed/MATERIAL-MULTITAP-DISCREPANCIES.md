@@ -1,6 +1,14 @@
 # Material multi-tap — three discrepancies found in the 3-tap brace set
 
-**Status:** 📋 OPEN — analysed 2026-07-16 during 1.0.2 real-build testing. **No code written.**
+> **The living method extracted from this record** is in
+> [`process/CROSS-EDITION-INVESTIGATION.md`](../../process/CROSS-EDITION-INVESTIGATION.md) — in
+> particular that per-edition `.guitartap` files cannot separate a DSP divergence from different
+> physical taps. Re-measure before acting on any figure here: item 3's 2 dB had been fixed by
+> intervening work and nobody re-checked for two months.
+
+
+**Status: ✅ RESOLVED 2026-09-19.** Items 1, 2 fixed and user-verified; item 3 measured and found
+**already resolved** — Swift was never 2 dB low; items 4–6 were closed as not-bugs at the time.
 Found by comparing `~/Documents/GuitarTap/brace-umik-1-3-tap-{python,swift,web}-mac-*.guitartap`
 (same room, same UMIK-1, three apps recording the **same physical taps simultaneously** — so the
 three files are a controlled experiment, not three separate captures).
@@ -143,7 +151,7 @@ Verified against the user's real file: in-memory brace → `Brace` (was `—`); 
 **To run-review:** capture and save a plate/brace, then open Details **without restarting** —
 Measurement Type must read `Brace`/`Plate`, not `—`.
 
-### ⚠ OPEN: the Swift test case does not exist — see STATUS
+### ✅ CLOSED 2026-09-19: Swift's test now exists — `GuitarTapTests/MeasurementTypeNameTests.swift` (9 tests)
 
 New tests: Python `tests/test_measurement_type_name.py` (9) + web `test/measurement-type-name.test.ts`
 (6), parity group **`test/measurement-type-name`**. **Swift's slot is `—` in PARITY-MAP.md:63.**
@@ -168,7 +176,7 @@ the **raw string** (`fromLive.ts:201`: `t != null ? MEASUREMENT_SHORT_NAME[t] : 
 Python fix follows Swift (`"—"`). Unreachable with any valid file, so it is **not** touched before the
 release; the web test deliberately does not assert that case. Flagged for the post-release pass.
 
-## 3. Swift's magnitude is ~2 dB lower — 🔶 REAL, NEEDS FIXING **AFTER** THE RELEASE
+## 3. Swift's magnitude is ~2 dB lower — ✅ RESOLVED (see the 2026-09-19 measurement at the end)
 
 **Decided 2026-07-16 (user): does NOT hold up 1.0.2, but must be resolved after it.**
 
@@ -474,3 +482,48 @@ property, §4 one inaudible bin at 24 kHz. Scope for 1.0.2 is the user's call.
   `AUDIO-BUFFER-SIZE.md` item, which already concluded 0.1 Hz is immaterial to lutherie. Same call
   likely applies to 2 dB on a *level*, since fL and every derived property agree.
 - **§4 (bin count)** — needs a *decision* (which output is canonical) before any code.
+
+---
+
+## Resolution of item 3 — measured 2026-09-19
+
+The 2026-07-16 evidence was comparing **old code**. Replaying those same August recordings through
+the current build gives −54.00 dB where the live `.guitartap` had recorded −56.02 — so the 2 dB was
+fixed by work that landed in between, and nobody came back to retire the finding. The doc's own
+warning, that its `.guitartap` evidence was transient, applied to its conclusions too.
+
+**Confirmed on a capture made today** (`brace-3-tap-umik-1-mac-algo-test-1789854214`): a live 3-tap
+brace measurement on the current build, then its session WAV replayed through both editions.
+
+| | frequency | magnitude |
+|---|---|---|
+| live (`.guitartap`) | 553.63190 Hz | −65.49142 dB |
+| Swift replay | 553.63190 Hz | −65.49077 dB |
+| Python replay | 553.63187 Hz | −65.49039 dB |
+
+Inside **0.001 dB** and **0.00003 Hz**, with bit-identical capture fingerprints between editions on
+both sides of the onset-alignment step:
+
+```
+capture 1: buffer bd3f07af  window 44f021c3
+capture 2: buffer 0de1b0aa  window c794d015
+capture 3: buffer c08b3846  window 862fc34c
+```
+
+A harder case than the original fixtures — 18 dB-gain mic path, peak at −65.5 dB against a −63.9 dB
+threshold — and it still reproduces.
+
+**The iPad outlier is explained.** `brace-umik-1-3-tap-swift-ipad` reported −71.35 dB because that
+recording is 12 dB quieter in RMS through the same 18 dB-gain path. Replayed today it gives −70.08 dB
+in both editions (Δ 0.00038 dB). Its DSP is not different: the full Swift suite runs on the iPad at
+**zero** tolerance against the mac-minted oracle.
+
+Method note: the `.guitartap` comparison in the original analysis could not separate a DSP divergence
+from different physical taps, because each app recorded its own audio. Replaying **one** file through
+both editions removes that confound — any difference left is the code.
+
+## Left open (tracked elsewhere)
+
+No oracle case exercises **brace multi-tap**. REG-P2 pins plate multi-tap; REG-B1 is single-tap brace.
+That gap is why a claimed 2 dB divergence could sit unexamined for two months. The capture above
+would make a good REG case.

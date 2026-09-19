@@ -38,4 +38,10 @@ developer documentation → repo.
 - `Tests/` — the cross-platform manual-test corpus.
 
 **On completion:** a finished project's doc moves to `docs/completed/`. Any *living* convention it contains
-belongs in `process/` (like this doc), not buried in the archived record.
+belongs in `process/` (like this doc), not buried in the archived record — and a rule about how the
+parity system is *run* belongs in [`../tooling/parity/README.md`](../tooling/parity/README.md) beside
+its commands. Method (how we work) and operation (how a tool is run) live apart.
+
+Worked example: closing #5, #7 and #10 produced
+[`CROSS-EDITION-INVESTIGATION.md`](CROSS-EDITION-INVESTIGATION.md) here and the oracle operating rules
+in the parity README, while the measurements stayed in `docs/completed/`.

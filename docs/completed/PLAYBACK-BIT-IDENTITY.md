@@ -1,5 +1,11 @@
 # Replay does not bit-reproduce the original live capture
 
+> **The living method extracted from this record** is in
+> [`process/CROSS-EDITION-INVESTIGATION.md`](../../process/CROSS-EDITION-INVESTIGATION.md) — in
+> particular that a stereo WAV is not an app dump and cannot serve as a replay-vs-live reference,
+> which is the premise this issue was founded on. Re-measure before acting on any figure here.
+
+
 **Status: ✅ RESOLVED 2026-09-18 — the requirement is met. Replay of a WAV the app generated
 reproduces the live capture to float32 precision; the residual came from the fixture, not the
 pipeline.**
