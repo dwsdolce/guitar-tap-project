@@ -74,3 +74,59 @@ that should be `@parity none`). Design rationale: `../../docs/completed/PHASE6-P
 The living **coverage reference** (the `@parity` system, equivalence levels, the
 change-all-three rule, the gates, current gaps/reverse-gaps, and the full layout of where
 every coverage artifact lives) is **`../TEST-COVERAGE.md`** (in the hub's `tooling/`).
+## Operating rules for the oracle and the self-baselines
+
+Extracted from the #10 build-out (2026-09) so the rules live beside the commands rather than in an
+archived record. The measurements and the reasoning behind the numbers are in
+[`../../docs/completed/PARITY-AND-REGRESSION-BASELINES.md`](../../docs/completed/PARITY-AND-REGRESSION-BASELINES.md).
+
+### Two bars, and machines enter neither
+
+| | compares | against | bar |
+|---|---|---|---|
+| **regression** | one configuration | **its own** prior baseline | **zero** |
+| **parity** | one edition | the oracle | `tolerances` in `parity-oracle.json` |
+
+A tracking edition cannot be checked at zero against the oracle — the oracle holds Swift's numbers,
+and the distance to them is what the parity bar measures. So every configuration
+(**edition × OS × arch**) mints its own absolute self-baseline and is checked against itself.
+
+The configuration key deliberately excludes library, runtime and compiler versions. A NumPy, V8 or
+Xcode upgrade that moves the numbers is precisely the event the zero bar exists to catch; keying on
+the version would let the baseline follow the upgrade and report nothing.
+
+### A suite never writes its own expectations
+
+Minting is always an explicit command (`mint-oracle.sh`, `mint-baseline.py`,
+`mint-baseline.sh`), never a side effect of a test run. If a missing baseline caused a run to create
+one, the check could never fail: delete the file, run the tests, and whatever the machine produces
+today becomes the answer it is checked against.
+
+- **First mint** on a new configuration has no prior, so the values must clear
+  `bootstrapTolerances` — a deliberately separate, looser bar. Failing *parity* is a finding to
+  investigate; failing *this* means the numbers are garbage and must not be frozen. Sharing one
+  number would mean a port still being built loses its zero-tolerance check exactly when it most
+  needs one.
+- **Re-mint** of an existing configuration prints the diff and requires confirmation. That diff is
+  the review artifact: adopt it only if a deliberate change explains every line.
+- **No baseline** → the configuration skips its regression tests loudly; it is still covered at the
+  parity bar. The gap must stay countable (`parity-report.py` names every unminted configuration),
+  because an invisible skip is how a check dies.
+
+### Which direction each file flows
+
+The oracle flows **hub → repos** (`sync-oracle.sh`, `--check` proves the copies identical; no test
+opens the hub copy). Self-baselines flow the other way: minted and read by one configuration, they
+live beside that repo's tests and are published **up** to `parity/baselines/` where
+`parity-report.py` can see them all. Swift-on-macOS's baseline *is* the oracle — it minted it.
+
+**Publish before you sync.** Minting into the Swift repo and then running `sync-oracle.sh` elsewhere
+pulls the hub's *older* copy back down and silently undoes the mint.
+
+### Changing the tolerances
+
+`tolerances` measures today's state, defects included — see `_toleranceProvenanceNote` in the oracle
+itself, which is what someone changing the numbers will actually open. `freqHz` is **not**
+independent of `magDb`: peak frequency comes from a parabola through three dB bins, and on broad
+modes that fit reaches ~2.5 bins/dB, so a magnitude difference becomes a frequency difference.
+Tighten the two together or not at all.

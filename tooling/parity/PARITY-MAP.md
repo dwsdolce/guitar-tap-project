@@ -44,6 +44,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/mode-colors` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/presentation/modeColors.ts` | tests |
 | `model/quality-colors` | `GuitarTap/Models/MaterialProperties.swift` | `src/guitar_tap/models/material_properties.py` | `src/presentation/qualityColors.ts` | tests |
 | `model/wav-dump-folder` | `GuitarTap/Models/WavDumpFolder.swift` | `src/guitar_tap/models/wav_dump_folder.py` | — | tests |
+| `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | — | review only |
 | `state/button-enablement` | `GuitarTap/Views/TapToneAnalysisView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/state/buttonEnablement.ts` | tests |
 | `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts` | tests |
 | `state/status-message` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
@@ -70,7 +71,9 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/measurement-name` | `GuitarTapTests/MeasurementNameTests.swift` | `tests/test_measurement_name.py` | `test/measurement-name.test.ts` | test suite |
 | `test/measurement-type-name` | `GuitarTapTests/MeasurementTypeNameTests.swift` | `tests/test_measurement_type_name.py` | `test/measurement-type-name.test.ts` | test suite |
 | `test/mode-colors` | `GuitarTapTests/ModeColorsTests.swift` | `tests/test_mode_colors.py` | `test/mode-colors.test.ts` | test suite |
+| `test/oracle-sync` | — | `tests/test_oracle_sync.py` | `test/oracle-sync.test.ts` | test suite |
 | `test/parity-oracle` | `GuitarTapTests/ParityOracle.swift` | `tests/parity_oracle.py` | — | test suite |
+| `test/parity-runner` | — | `tests/parity_runner.py` | `test/parityRunner.ts` | test suite |
 | `test/peak-heal` | `GuitarTapTests/PeakDuplicateHealTests.swift` | `tests/test_peak_duplicate_heal.py` | `test/peak-duplicate-heal.test.ts` | test suite |
 | `test/peak-selection-persistence` | `GuitarTapTests/PeakSelectionPersistenceTests.swift` | `tests/test_peak_selection_persistence.py` | `test/peak-selection-persistence.test.ts` | test suite |
 | `test/peaks` | `GuitarTapTests/PeakFindingTests.swift`<br>`GuitarTapTests/PeakFixtureRegressionTests.swift` | `tests/test_fft_peak_detection.py`<br>`tests/test_peak_finding.py`<br>`tests/test_peak_fixture_regression.py` | `test/peak-fixture-regression.test.ts`<br>`test/peak-fullset-save.test.ts`<br>`test/peaks.test.ts` | test suite |
@@ -78,6 +81,8 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/plate` | `GuitarTapTests/PlatePropertiesTests.swift` | `tests/test_plate.py` | `test/plate.test.ts` | test suite |
 | `test/quality-colors` | `GuitarTapTests/QualityColorsTests.swift` | `tests/test_quality_colors.py` | `test/quality-colors.test.ts` | test suite |
 | `test/scenario-trace` | `GuitarTapTests/ScenarioStateTraceTests.swift` | `tests/test_scenario_state_trace.py` | `test/scenario-trace.test.ts` | test suite |
+| `test/self-baseline` | — | `tests/self_baseline.py` | `test/selfBaseline.ts` | test suite |
+| `test/self-regression` | — | `tests/test_self_regression.py` | `test/self-regression.test.ts` | test suite |
 | `test/session-pre-roll` | `GuitarTapTests/SessionPreRollTests.swift` | `tests/test_session_pre_roll.py` | `test/session-pre-roll.test.ts` | test suite |
 | `test/start-tap-race` | `GuitarTapTests/StartTapSequenceRaceTests.swift` | `tests/test_start_tap_sequence_race.py` | `test/start-tap-race.test.ts` | test suite |
 | `test/state-invariants` | `GuitarTapTests/StateInvariantTests.swift` | `tests/test_state_invariants.py` | `test/state-invariants.test.ts` | test suite |
@@ -86,6 +91,8 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/tap-decisions` | `GuitarTapTests/TapDetectionTests.swift` | `tests/test_tap_detection.py` | `test/tap-decisions.test.ts` | test suite |
 | `test/tap-progress` | `GuitarTapTests/TapProgressTests.swift` | `tests/test_tap_progress.py` | `test/tap-progress.test.ts` | test suite |
 | `test/wav-dump-folder` | `GuitarTapTests/WavDumpFolderTests.swift` | `tests/test_wav_dump_folder.py` | — | test suite |
+| `tooling/capture-probe` | `GuitarTapTests/CaptureProbeTests.swift` | `Tooling/capture-probe.py` | — | review only |
+| `tooling/mint-baseline` | — | `Tooling/mint-baseline.py` | `test/mint-baseline.test.ts` | review only |
 | `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | review only |
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
@@ -123,6 +130,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_wi10_qtimer_slots.py` | python |
 | `GuitarTapTests/ExportDirectoryTests.swift` | swift |
 | `GuitarTapTests/GenerateParityOracle.swift` | swift |
+| `GuitarTapTests/SpectrumReplayProbeTests.swift` | swift |
 | `GuitarTapTests/SpectrumViewGestureTests.swift` | swift |
 | `src/components/ReleaseNotes.tsx` | web |
 | `test/menu-placement.test.ts` | web |

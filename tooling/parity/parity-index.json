@@ -410,6 +410,18 @@
       "equivalence": "tests"
     },
     {
+      "slug": "models/capture-probe",
+      "swift": [
+        "GuitarTap/Models/CaptureProbe.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/capture_probe.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "state/button-enablement",
       "swift": [
         "GuitarTap/Views/TapToneAnalysisView.swift"
@@ -781,6 +793,18 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/oracle-sync",
+      "swift": [],
+      "python": [
+        "tests/test_oracle_sync.py"
+      ],
+      "web": [
+        "test/oracle-sync.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/parity-oracle",
       "swift": [
         "GuitarTapTests/ParityOracle.swift"
@@ -789,6 +813,18 @@
         "tests/parity_oracle.py"
       ],
       "web": [],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/parity-runner",
+      "swift": [],
+      "python": [
+        "tests/parity_runner.py"
+      ],
+      "web": [
+        "test/parityRunner.ts"
+      ],
       "tests": [],
       "equivalence": "test suite"
     },
@@ -891,6 +927,30 @@
       ],
       "web": [
         "test/scenario-trace.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/self-baseline",
+      "swift": [],
+      "python": [
+        "tests/self_baseline.py"
+      ],
+      "web": [
+        "test/selfBaseline.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/self-regression",
+      "swift": [],
+      "python": [
+        "tests/test_self_regression.py"
+      ],
+      "web": [
+        "test/self-regression.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1004,6 +1064,30 @@
       "web": [],
       "tests": [],
       "equivalence": "test suite"
+    },
+    {
+      "slug": "tooling/capture-probe",
+      "swift": [
+        "GuitarTapTests/CaptureProbeTests.swift"
+      ],
+      "python": [
+        "Tooling/capture-probe.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/mint-baseline",
+      "swift": [],
+      "python": [
+        "Tooling/mint-baseline.py"
+      ],
+      "web": [
+        "test/mint-baseline.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
     },
     {
       "slug": "util/field-precision",
@@ -1331,6 +1415,10 @@
     {
       "repo": "swift",
       "path": "GuitarTapTests/GenerateParityOracle.swift"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTapTests/SpectrumReplayProbeTests.swift"
     },
     {
       "repo": "swift",
