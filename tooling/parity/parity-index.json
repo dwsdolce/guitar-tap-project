@@ -857,6 +857,16 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/peak-state-store",
+      "swift": [],
+      "python": [],
+      "web": [
+        "test/peak-state-store.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/peaks",
       "swift": [
         "GuitarTapTests/PeakFindingTests.swift",
@@ -1431,6 +1441,10 @@
     {
       "repo": "web",
       "path": "test/menu-placement.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/peak-state-store.test.ts"
     }
   ]
 }
