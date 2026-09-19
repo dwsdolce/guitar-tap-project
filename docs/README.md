@@ -18,7 +18,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#2](https://github.com/dwsdolce/guitar-tap-project/issues/2) · [`THEME-SPEC.md`](THEME-SPEC.md) — Light / Dark / System theme
 - [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3) · [`AUDIO-BUFFER-SIZE.md`](AUDIO-BUFFER-SIZE.md) — Swift 4800-frame buffer
 - [#5](https://github.com/dwsdolce/guitar-tap-project/issues/5) · [`MATERIAL-MULTITAP-DISCREPANCIES.md`](MATERIAL-MULTITAP-DISCREPANCIES.md) — multi-tap material divergence
-- [#7](https://github.com/dwsdolce/guitar-tap-project/issues/7) · [`PLAYBACK-BIT-IDENTITY.md`](PLAYBACK-BIT-IDENTITY.md) — replay ≠ live capture (~0.02 dB)
 - [#8](https://github.com/dwsdolce/guitar-tap-project/issues/8) · [`FROZEN-RECALC-TEST-PARITY.md`](FROZEN-RECALC-TEST-PARITY.md) — Python↔Swift test-fixture divergence
 - [#6](https://github.com/dwsdolce/guitar-tap-project/issues/6) · [`RESULTS-PANEL-CONSISTENCY.md`](RESULTS-PANEL-CONSISTENCY.md) — Results panel cross-platform consistency
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
@@ -33,6 +32,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#7 (replay vs live capture) is **closed**; its record is
+[`completed/PLAYBACK-BIT-IDENTITY.md`](completed/PLAYBACK-BIT-IDENTITY.md) — replay of an app-dumped WAV
+reproduces the live capture to one float32 ULP; the apparent discrepancy came from a fixture that was
+not an app dump.
 
 #10 (oracle unification) is **closed**; its record is
 [`completed/PARITY-AND-REGRESSION-BASELINES.md`](completed/PARITY-AND-REGRESSION-BASELINES.md), which
