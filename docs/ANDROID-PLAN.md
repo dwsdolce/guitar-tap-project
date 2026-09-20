@@ -138,11 +138,21 @@ exists, and anything that changes canonical Swift gets ported twice if the port 
 
 ### Finish before Android code starts (Phases 2–3)
 
-| Issue | Why it gates the port |
-|---|---|
-| **#10 Unify test goldens onto the shared oracle** | The highest-leverage one. Only the web reads `parity-oracle.json` today; Swift and Python hardcode the same numbers. Phase 2 needs goldens: do this first and Android consumes one source; skip it and Android becomes a **fourth** hardcoded copy, and a fourth suite to update on every change. |
-| **#5 Material multi-tap: Swift ~2 dB / sub-bin below Python/web** | A numeric disagreement between editions, in the code Android mirrors. Until it is settled, "canonical" is ambiguous exactly where Android's material path would be validated. |
-| **#8 Python↔Swift fixture divergence (frozen-recalc)** | Android ports the tests and the fixtures. Porting against fixtures that already disagree is how a day disappears into a phantom bug. |
+**Status 2026-09-20: all three original gates are CLOSED. One successor gate is open — #17.**
+
+| Issue | Status | Why it gates the port |
+|---|---|---|
+| **#10 Unify test goldens onto the shared oracle** | ✅ **CLOSED** | The highest-leverage one. Only the web read `parity-oracle.json`; Swift and Python hardcoded the same numbers. All three suites now read the shared oracle, so Android consumes one source instead of becoming a fourth hardcoded copy. |
+| **#5 Material multi-tap: Swift ~2 dB / sub-bin below Python/web** | ✅ **CLOSED** | A numeric disagreement in the code Android mirrors. Re-measured on the current build and found already fixed — the archived finding was stale. "Canonical" is now unambiguous where Android's material path is validated. |
+| **#8 Python↔Swift fixture divergence (frozen-recalc)** | ✅ **CLOSED** | Android ports the tests and the fixtures. That slug is now 37 of 37 behaviours covered in all three editions, every test carrying its id. **But see #17 below — it closed this slug and opened the same question for the other 43.** |
+| **#17 Sweep every `@parity` slug** | ⏳ **OPEN — now the gate** | Inherits #8's reasoning and widens it. #8 read one slug out of 44 and found eight tests measuring nothing, two false-twin rows, and a data bug in shipped code — and that slug looked *healthier* than several others by test-count spread. Android ports tests and fixtures from all of them. Porting against fixtures that already disagree is how a day disappears into a phantom bug; porting against 43 unswept slugs is how a week does. |
+
+**How much of #17 must land first is a judgement, not a given.** Its Stage 1 (sweep and triage) is
+what protects the port — it is the part that says which slugs are trustworthy to port from. Its
+Stage 2 (shared case data) is a *maintenance* win that would also make Android cheaper, but the port
+does not strictly wait on it. A defensible middle: require Stage 1 for the slugs Android actually
+ports in Phases 2–3 (DSP, capture, state), rather than all 44 before any Kotlin is written.
+See [`SLUG-SWEEP.md`](SLUG-SWEEP.md).
 
 ### Finish before the Android UI (Phase 4)
 
@@ -158,12 +168,15 @@ exists, and anything that changes canonical Swift gets ported twice if the port 
 - **#3 Swift audio buffer (4800 frames)** — Android re-chunks to 1024 from day one, so it is not
   waiting on this. Worth landing fix A before the Android corpus capture in Phase 6, so both are
   on the same chunk grid.
-- **#4 silent-stream watchdog** and **#7 replay bit-identity** — Android may *resolve* these
-  rather than wait: it can force a silenced stream on demand (background the app, which Android
-  silences and reports through `isClientSilenced`), and its 1024 re-chunking removes one
-  suspected cause of the ~0.02 dB replay difference.
+- **#4 silent-stream watchdog** ✅ **CLOSED** and **#7 replay bit-identity** ✅ **CLOSED** — both
+  settled 2026-09; #7's premise turned out to hold only for a non-app-dump fixture. Android no
+  longer needs to resolve either, though its 1024 re-chunking and its ability to force a silenced
+  stream (background the app, which Android silences and reports through `isClientSilenced`) remain
+  useful if they recur.
 - **#12 TEST-PLAN.md rewrite** — stale and Swift-centric; rewrite it once as a four-edition
-  document instead of doing tri-platform now and redoing it.
+  document instead of doing tri-platform now and redoing it. **Check it against #17 before
+  starting either** — a tri-platform test definition and a sweep of every test slug may cover
+  the same ground.
 - **#9 Saved Measurements sort**, **#11 open-source the repos** — orthogonal. #9 is additive:
   before Android it is three implementations, after it is four.
 
