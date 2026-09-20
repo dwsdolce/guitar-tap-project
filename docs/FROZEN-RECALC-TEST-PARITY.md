@@ -45,10 +45,10 @@ detectable, and it is what a fourth edition would port against.
 
 Open, independent of Stage 2:
 
-1. **The Python flake** — `test_file_playback_regression.py` failed once in a full run (`Avg Top
-   freq`, got 201.56 Hz) and has passed in isolation (8/8), paired with the frozen-recalc file
-   (42/42), and in every run since. First step is to establish whether it predates this week, by
-   running it on a clean checkout of `main`.
+1. ~~**The Python flake**~~ — ✅ **SOLVED AND FIXED 2026-09-20.** Test infrastructure, not the
+   application: the test sandboxes had fixed names shared by every process, and were wiped at
+   session start, so starting a second run wiped the settings of one already in flight. See
+   "The shared test sandbox" below. Fixed in Python AND Swift; web was verified unaffected.
 
 **Done 2026-09-20:** PR10 / PR11 for web — the `n/a` was withdrawn, not re-justified. The web load was
 consolidated into one analyzer method under `isLoadingMeasurement` (see "The web load was five
@@ -386,6 +386,59 @@ sets the flag kills no test — in Python either, verified by running the same m
 test observes the flag *during* a load, because nothing can re-enter the analyzer synchronously from
 one. What the tests do pin is that the guard works when set (PR10/PR11) and that the restore is atomic
 (the third web test). That is the same shape Swift and Python have; it is not a web weakness.
+
+### The shared test sandbox — an intermittent failure that was never the DSP
+
+`test_file_playback_regression.py` REG-G2 failed once in a full run, reporting the averaged Top at
+**201.56 Hz / −56.15 dB** instead of **164.05 Hz / −35.11 dB**. Against a 0.02 Hz tolerance that is
+not drift — it is a different, far weaker peak.
+
+**Root cause.** Under test, QSettings and the saved-measurements file were redirected to fixed
+names — `Dolcesfogato.tests` and `$TMPDIR/com.guitartap.tests` — and `conftest` cleared both at
+session start "so every test run starts with factory defaults". Those names are shared by every
+pytest process on the machine, so **starting a second run wiped the settings of a run already in
+flight.** The victim carried on with default settings: a different guitar type, so different mode
+bands, so different peak classification.
+
+**The evidence that made it legible.** A diagnostic dump of the peak set, good run vs reproduction:
+
+| peak | correct | during the wipe |
+|---|---|---|
+| 87.2331 Hz / −44.344 dB | AIR, selected | **UNKNOWN**, unselected |
+| 164.0466 / −35.105 | TOP, selected | TOP, selected |
+| 201.5636 / −56.153 | **BACK**, unselected | **TOP** |
+
+The peak set is byte-identical. Only the bands moved. **The DSP was never wrong**, which is why
+every attempt to find the fault in capture, averaging or timing failed.
+
+**Three theories were disproved by experiment before the right one:** a wall-clock drain-loop
+timeout (shrinking it to 0.30 s changed nothing), partial capture (the test already asserts 8 tap
+entries *before* the frequency check), and a recalculation flipping the Top (stable across repeated
+recalcs). It reproduces only when two test processes overlap — never in isolation, never under CPU
+load, independent of test order — which is why it survived so long. The original occurrence was
+self-inflicted: concurrent pytest runs during mutation testing.
+
+**Swift had the identical defect; web did not.** Verified rather than assumed:
+
+| edition | exposed | how it was checked |
+|---|---|---|
+| Python | yes — fixed | reproduced on the first attempt; the same scenario now passes repeatedly |
+| Swift | yes — fixed | a probe key written into the container's `com.guitartap.tests.plist` from another process was deleted by a test run; it now survives, and two concurrent `xcodebuild test` runs both pass |
+| web | no | `environment: 'node'`, no real `localStorage` (reads/writes are try/caught no-ops), in-memory calibration mock, and the only file write is the flag-gated baseline mint |
+
+**The fix, both editions.** One helper decides where persistent state lives — Python
+`models/settings_scope.py`, Swift `Models/TestSandbox.swift` — and the sandbox name carries the
+process id. Between them they replaced six duplicated copies of the same "am I under test?" check.
+
+**Cleanup does not rely on teardown.** Per-process names would leave one file per run forever, and
+the obvious hooks do not fire reliably: clearing a QSettings suite empties it without removing the
+file, and Swift's `atexit` often loses the race with `cfprefsd`'s lazy flush. Both editions
+therefore **reap sandboxes belonging to dead process ids** at startup, which is self-healing after a
+crash or a killed run. Verified in both: stale files from earlier runs are removed by the next one.
+
+**Rule this earns.** A shared, fixed-name test sandbox that is *cleared at startup* is a
+cross-process mutex nobody declared. If two runs can overlap — and on a dev machine they will —
+the name has to be unique per process, and cleanup has to survive the process not exiting cleanly.
 
 ### Material peaks live somewhere else in the web — and why that was right
 
