@@ -1,6 +1,7 @@
 # Python↔Swift test-fixture divergence — frozen-peak-recalc
 
-**Status:** ⏳ IN PROGRESS. **Stage 1 complete** (web `4722ba4`, hub `4afd0e5`).
+**Status:** ✅ COMPLETE 2026-09-20 — issue #8 closed. The sweep of the other 43 slugs is **#17**.
+**Was:** ⏳ IN PROGRESS. **Stage 1 complete** (web `4722ba4`, hub `4afd0e5`).
 **Stage 2 ✅ COMPLETE 2026-09-20. Stage 3 is next** — see RESUME HERE below. (Working record for issue #8; not an
 authority and not tooling input — see "What this document is".)
 Found 2026-07-23 during the Phase 4a Python port; re-measured 2026-09-19.
@@ -15,7 +16,7 @@ See "Owner run-review of the web production changes".
 
 ## STATUS — ✅ COMPLETE 2026-09-20
 
-**Stages 1 and 2 are done. Stage 3 and Stage 4 have moved to their own issue** — they were never
+**Stages 1 and 2 are done. Stage 3 and Stage 4 moved to issue #17** — they were never
 frozen-recalc work, and keeping them here is what made this issue grow without bound.
 
 **The behaviour table is 37 of 37 covered in all three editions**, every test carries its table id
