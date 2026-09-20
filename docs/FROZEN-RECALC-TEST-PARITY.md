@@ -82,7 +82,7 @@ All four checks pass on real measurements.**
 | change | status | evidence |
 |---|---|---|
 | Peak Min projection on the analyzer (list, chart dots, live ratio) | ✅ **VERIFIED** | owner's manual check, plus the brace file below |
-| material peak below Peak Min still shows (the guitar-only rule) | ✅ **VERIFIED** | `brace-test-for-save-1789927895.guitartap` — fL at **−61.27 dB** persisted intact with `peakMinThreshold: −41`, the 2026-07-21 regression shape |
+| material peak below Peak Min still shows | ✅ **VERIFIED**, but by a different mechanism than first claimed | `brace-test-for-save-1789927895.guitartap` — fL at **−61.27 dB** persisted and displayed with `peakMinThreshold: −41`. **Correction:** this does NOT exercise the guitar-only branch of `refreshDisplayedPeaks`. In the web, material peaks never enter the guitar peak pipeline at all (see "Material peaks live somewhere else in the web"), so material display cannot be filtered by Peak Min. The outcome is right and stronger than the rule; the rule was not what was tested |
 | duplicate-peak save fixed | ✅ **VERIFIED** | `test3-1789928992.guitartap` — a real Generic Guitar capture at Peak Min −52: **195 peaks, 195 distinct ids, 0 duplicate frequencies**, 173 of them below Peak Min. On the previous build those 173 would each have been appended a second time: 368 peaks, 173 duplicated |
 | PR10/PR11 load atomicity (overrides / offsets / selection survive a load) | ✅ **VERIFIED** | owner, 2026-09-20: renamed a peak's mode, dragged an annotation label, hand-edited the selection, saved and reloaded — all three survived. That is exactly the state a torn load would have wiped |
 
@@ -386,6 +386,48 @@ sets the flag kills no test — in Python either, verified by running the same m
 test observes the flag *during* a load, because nothing can re-enter the analyzer synchronously from
 one. What the tests do pin is that the guard works when set (PR10/PR11) and that the restore is atomic
 (the third web test). That is the same shape Swift and Python have; it is not a web weakness.
+
+### Material peaks live somewhere else in the web — and why that was right
+
+Found 2026-09-20 while D3 turned up one web test with no table row. Chased because "web stores this
+differently" had already been wrong twice (see ¹ and ²). This time it was not.
+
+| | identified fL/fC/fFLC | full detected list per phase | user can re-pick which peak it is |
+|---|---|---|---|
+| Swift | in `allPeaks` **and** named slots | `longitudinalPeaks` / `crossPeaks` / `flcPeaks` | `selectLongitudinalPeak(_:)` — **tests only** |
+| Python | same | same | same — **tests only** |
+| web | `matPeaks` only | not kept | absent |
+
+`this.peaks` is assigned in exactly one place in the web — inside `recalculatePeaks`, which sets it
+to `[]` for material. Material results and chart markers read `matPeaks`, and neither
+`MaterialResults` nor `buildMaterialMarkers` takes a Peak Min, so material display **structurally
+cannot** be filtered. PR09's rule ("material peaks are never filtered by Peak Min") therefore has no
+web counterpart — not because the web is missing something, but because only Swift and Python
+overload one list and so need a guard against filtering it.
+
+**Why they overload it: a feature that was removed but not cleaned up.** Commit `c88e5e1`
+(2026-04-17, *"Make the phase detected labels inactive"*) deleted the L / C / FLC buttons from each
+peak row of the material Results panel. Those let a luthier correct a mis-identified fL, fC or fFLC
+— which matters, because fL and fC drive the stiffness and radiation numbers. The replacement was
+to REDO the phase (plate) or the measurement (brace), and **that decision stands** (owner,
+2026-09-20).
+
+The UI went; the model did not. `selectLongitudinalPeak` / `selectCrossPeak` / `selectFlcPeak`, the
+`userSelected*PeakID` tier they wrote to, and tests PS1–PS6 survived in Swift for five months,
+reachable only from those tests, and Python mirrored the leftovers rather than the feature. Web was
+built afterwards and never carried them.
+
+**Cleaned up 2026-09-20.** Removed from both editions: the three `select*Peak` methods, the
+`userSelected*PeakID` / `user_selected_*` tier, its reset lines in the redo and load paths, and
+PS1–PS6. The three-layer `effective*PeakID` resolution collapses to two, since the top layer could
+never be set. A fourth site turned up only when the full suite ran: `test_wi2_effective_peak_id.py`,
+a **Python-only file with no `@parity` tag**, had three more tests asserting the override layer —
+removed with it. `longitudinalPeaks` / `crossPeaks` / `flcPeaks` stay — they are a live lookup pool for
+resolving the effective peak id. Swift 506 → 500 tests, Python 617 → 608; web unaffected.
+
+**The lesson is about the test, not the code.** PS1–PS6 passed for five months against a feature no
+user could reach. Green paired tests made removed code look maintained, and were the only thing
+keeping it alive. When a feature is removed, its tests are part of the feature.
 
 ### Renamed 2026-09-20 — D3, and the bridge to the old ids
 
