@@ -1,18 +1,20 @@
 # Python↔Swift test-fixture divergence — frozen-peak-recalc
 
-**Status:** ✅ COMPLETE 2026-09-20 — issue #8 closed. Archived record; the sweep of the other 43
-slugs is **#17** (`docs/SLUG-SWEEP.md`). The living conventions this work produced were lifted to
-`process/PARITY-TEST-METHOD.md` — read those, not this. This file is the evidence behind them.
-**Was:** ⏳ IN PROGRESS. **Stage 1 complete** (web `4722ba4`, hub `4afd0e5`).
-**Stage 2 ✅ COMPLETE 2026-09-20. Stage 3 is next** — see RESUME HERE below. (Working record for issue #8; not an
-authority and not tooling input — see "What this document is".)
-Found 2026-07-23 during the Phase 4a Python port; re-measured 2026-09-19.
+**Status:** ✅ COMPLETE 2026-09-20 — issue [#8](https://github.com/dwsdolce/guitar-tap-project/issues/8)
+closed. **Archived record.**
 
-**Scope changed 2026-09-19.** This began as "Python vs Swift *test infrastructure*, not production
-code". That is no longer true: the investigation found two architectural defects and a duplicate-peak
-data bug in the web's shipping save path. Production code in `GuitarTapWeb` has changed and
-**has been run-reviewed by the owner (2026-09-20) — all four checks pass on real measurements.**
-See "Owner run-review of the web production changes".
+- **The method this work earned →** [`process/PARITY-TEST-METHOD.md`](../../process/PARITY-TEST-METHOD.md).
+  Read that. This file is the evidence behind it.
+- **The sweep of the other 43 slugs →** [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17)
+  · [`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md).
+
+Found 2026-07-23 during the Phase 4a Python port; re-measured and finished 2026-09-19/20.
+
+**Scope changed on the way.** This began as "Python vs Swift *test infrastructure*, not production
+code". It did not end there: the investigation found two architectural defects and a duplicate-peak
+data bug in the web's shipping save path, plus a user-visible chart behaviour that existed in Swift
+alone. Production code changed in all three editions and **was run-reviewed by the owner
+(2026-09-20) — every check passed on real measurements.**
 
 ---
 
@@ -276,8 +278,8 @@ half and one genuinely open one, and the open half dropped out of every subseque
 
 Found 2026-09-20 by counting the table's own cells with a script instead of trusting the prose
 summary above it, after a stale entry in a second open-items list showed the same drift. That second
-list has since been deleted — see "What this document is". **Check the table against the code, not
-against the summary.**
+list has since been deleted; this record now keeps ONE list of what was done and none of what is
+left. **Check the table against the code, not against the summary.**
 
 Python's half is now `test_B29_loaded_branch_keeps_stable_ids_so_overrides_are_not_remapped_away`,
 mutation-verified against three breaks of the remap: ignoring the ±5 Hz tolerance, dropping the
@@ -579,7 +581,7 @@ production path, not deleted — the behaviours are real and Swift/web cover the
 
 **Audit rule going forward:** a test under a `@parity` slug must reach production code. A helper that
 reimplements the behaviour under test is not a fixture, it is a second implementation, and a test
-against it measures nothing. Worth sweeping the other slugs for the same shape (stage 4).
+against it measures nothing. Worth sweeping the other slugs for the same shape — that is #17.
 
 ### The web analyzer did not own its display state — FIXED 2026-09-19
 
@@ -696,29 +698,13 @@ same id for the same row of the table.
 read as settled. The range
 is "however many rows the table has when the rename happens" — count it then.
 
-### Stage 3 — move the case list into shared data
+### Stages 3 and 4 — MOVED to #17
 
-**Goal:** make divergence unrepresentable, and make the fourth edition cheap.
-
-1. Design the case schema. Setup vocabulary from the measured state surface: `frozenPeaks` or
-   `spectrum` (bump recipe), `loadedPeaks`, `peakMin`, `measurementType`, `isLoading`, `offsets`,
-   `overrides`, `selection`, `tapEntries`. Expectation vocabulary: displayed peaks, durable set,
-   selection, offsets/overrides surviving or orphaned, `canReanalyze`.
-2. Put the cases in the hub beside the oracle; vendor them the way `parity-oracle.json` is vendored.
-3. Write one runner per edition that iterates the cases. Tests that genuinely do not fit the schema
-   stay hand-written and are tagged honestly.
-4. Retire `_make_spectrum_with_peak` / `freeze` duplicates where the runner replaces them.
-
-**Done when:** each edition's frozen-recalc suite is a runner over shared data, adding a case is one
-edit in one file, and a missing case cannot be silently absent.
-
-### Stage 4 — sweep the other slugs
-
-`--check` verifies presence, never equivalence, and it makes that claim for **every** slug in
-`PARITY-MAP.md`. `test/frozen-peak-recalc` is simply the first anyone read closely. Sweep the rest
-for the same false-twin shape, and consider whether the generator can flag paired tests whose
-fixture style diverges (a heuristic on which helper each test calls would have caught this one:
-22 Swift `freeze` calls against 3 Python `_make_spectrum_with_peak` calls on the same slug).
+Shared case data (Stage 3) and the sweep of the other 43 slugs (Stage 4) were never frozen-recalc
+work, and keeping them here is what made this issue grow without bound. They are
+[`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md) now, with Stage 4 **first**: designing the schema against
+this slug alone would fit it to a sample of one, and this is the least representative slug there is
+— it needs stateful analyzer setup where most are input→output.
 
 ## Related
 - STATUS item 2 (architectural-parity restructure) is **web-vs-native view layer** — a different
@@ -726,7 +712,7 @@ fixture style diverges (a heuristic on which helper each test calls would have c
 - `PEAK-LIFECYCLE-PLAN-PYTHON.md` Phase 4a — where the mirrored fixture landed.
 ---
 
-## D2 progress log — 2026-09-19 (UNCOMMITTED at time of writing)
+## D2 progress log — 2026-09-19
 
 **Closed:** PR06, PR07, PR10, PR11 (Python), PR31 (Swift). **Classified n/a:** PR10, PR11 (web — mechanism
 absent, reason in the table and in `test/frozen-peak-recalc.test.ts`).
@@ -793,17 +779,13 @@ archived FINDING. It does not cover descriptive claims in comments and docstring
 most of this week's false records lived: the July reconciliation plan, C1's loaded-path claim, "the
 Swift test doesn't exist", `_remap_by_freq`'s docstring, both file headers, and
 `fromLive.ts`'s "already in a.peaks". Prose that describes how code works outlives the code and
-reads as settled. Add the rule to that document.
+reads as settled. Added as rule 6 of `process/CROSS-EDITION-INVESTIGATION.md`.
 
 **Counts after the batch:** Swift 35 in `FrozenPeakRecalculationTests` (was 30), Python 34 in
 `test_frozen_peak_recalculation.py` (was 28), web 35 in `frozen-peak-recalc.test.ts` (was 28).
 Suites: Swift green, Python 616 passed / 1 skipped (`oracle-sync`, private hub), web 423 passed /
 2 skipped (`oracle-sync`, `mint-baseline` — both environment-gated).
 
-**What remains is NOT listed here.** Open work lives in exactly one place, **RESUME HERE** at the
-top. This is a dated log of what was done; it does not track what is left.
+**What remains is NOT listed here.** This is a dated log of what was done. Issue #8 is closed;
+what is left belongs to #17 ([`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md)).
 
-**Stage 4, sharpened twice over (a standing note, not an open-items entry):** sweep the other slugs for test-local helpers that
-reimplement the behaviour under test — AND for tests whose fixtures encode a contract the
-application no longer uses. `peak-fullset-save.test.ts` was the second kind, and it was hiding a
-data-loss bug in shipped code.
