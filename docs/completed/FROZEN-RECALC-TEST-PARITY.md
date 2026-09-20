@@ -1,6 +1,8 @@
 # Python↔Swift test-fixture divergence — frozen-peak-recalc
 
-**Status:** ✅ COMPLETE 2026-09-20 — issue #8 closed. The sweep of the other 43 slugs is **#17**.
+**Status:** ✅ COMPLETE 2026-09-20 — issue #8 closed. Archived record; the sweep of the other 43
+slugs is **#17** (`docs/SLUG-SWEEP.md`). The living conventions this work produced were lifted to
+`process/PARITY-TEST-METHOD.md` — read those, not this. This file is the evidence behind them.
 **Was:** ⏳ IN PROGRESS. **Stage 1 complete** (web `4722ba4`, hub `4afd0e5`).
 **Stage 2 ✅ COMPLETE 2026-09-20. Stage 3 is next** — see RESUME HERE below. (Working record for issue #8; not an
 authority and not tooling input — see "What this document is".)
