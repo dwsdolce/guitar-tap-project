@@ -132,7 +132,17 @@ verification style. No test code need change in stage 2.
 
 ### Stage 2 findings — the behaviour table (2026-09-19)
 
-Built by reading all three files. Legend: **✓** covered · **—** absent · **≠** covers something else.
+Built by reading all three files.
+
+Legend: **✓** covered · **—** GAP, the behaviour exists here but is untested, must be closed ·
+**n/a** the MECHANISM does not exist in this edition, documented and no test written ·
+**≠** covers something else.
+
+**A gap and an n/a are not the same thing.** A gap is a behaviour the edition has and does not
+test — it gets a test. An n/a is a behaviour the edition cannot have, because its architecture
+has no such state to reach. An n/a must carry its reason **here in this table**, and a matching
+note in that edition's test file so an auditor finds it from either direction. "Not needed" with
+no reason is neither, and is not an acceptable outcome.
 
 | # | behaviour | Swift | Python | web | verification style |
 |---|---|---|---|---|---|
@@ -141,12 +151,12 @@ Built by reading all three files. Legend: **✓** covered · **—** absent · *
 | B03 | loaded path and Peak Min (see conflict C1) | `loadedMeasurement_filtersAboveThresholdOnly` | `PRA3` | `PR-A3` ≠ | **injection** |
 | B04 | loaded, all below threshold | `loadedMeasurement_allBelowThreshold_yieldsEmpty` | `PRA4` | `PR-A4` | **injection** |
 | B05 | empty frozen magnitudes → no peaks, no crash | `emptyFrozenMagnitudes_yieldsNoPeaks` | `PRA5` | `PR-A5` | **injection** |
-| B06 | loaded path uses saved peaks, does NOT re-analyse | `loadedPath_usesSavedPeaks_notFrozenSpectrum` | — | `PR2c` | **injection** |
-| B07 | loaded peaks above threshold are kept | `loadedPeaks_aboveThreshold_areKept` | — | `PR2 (two peaks)` | **injection** |
+| B06 | loaded path uses saved peaks, does NOT re-analyse | `loadedPath_usesSavedPeaks_notFrozenSpectrum` | ✓ `test_loaded_path_uses_saved_peaks_not_the_frozen_spectrum` | `PR2c` | **injection** |
+| B07 | loaded peaks above threshold are kept | `loadedPeaks_aboveThreshold_areKept` | ✓ `test_loaded_peaks_above_threshold_are_kept` | `PR2 (two peaks)` | **injection** |
 | B08 | loaded peaks all below → display clears, classification kept | `loadedPeaks_allBelowThreshold_clears…` | — | — | **injection** |
 | B09 | material loaded peaks are never filtered by Peak Min | `loadedPeaks_material_areNeverFilteredByPeakMin` | — | `material mode yields no guitar peaks` | **injection** |
-| B10 | isLoadingMeasurement suppresses recalculation | `isLoadingMeasurement_suppressesRecalculation` | — | — | **injection** |
-| B11 | recalculation runs once loading completes | `afterLoadingCompletes_recalculationRuns` | — | — | **injection** |
+| B10 | isLoadingMeasurement suppresses recalculation | `isLoadingMeasurement_suppressesRecalculation` | ✓ `test_loading_measurement_suppresses_recalculation` | **n/a** ¹ | **injection** |
+| B11 | recalculation runs once loading completes | `afterLoadingCompletes_recalculationRuns` | ✓ `test_recalculation_runs_once_loading_completes` | **n/a** ¹ | **injection** |
 | B12 | live path tracks the live spectrum while incomplete | `liveTapPath_annotationOffset_remappedByFrequency` (partial) | — | `live-spectrum path` | **detection** |
 | B13 | Peak Min sweep preserves identity/selection/override/offset | `peakMinSweep_preservesIdentity…` | `peak_min_sweep_preserves_identity…` | `a peak hidden then revealed…` | **injection** |
 | B14 | deselect survives a Peak Min sweep | — | `deselect_survives_peak_min_sweep` | — | **injection** |
@@ -172,7 +182,15 @@ Built by reading all three files. Legend: **✓** covered · **—** absent · *
 | B34 | material can never be re-analyzed | `material_canNeverReanalyze` | `PR8d` | `PR8d` | **injection** |
 | B35 | nothing to re-analyze without a completed measurement | `incompleteOrNoFrozenSpectrum_cannotReanalyze` | `PR8e` | `PR8e` | **injection** |
 
-**Covered by all three: 14 of 35.** The rest are gaps or conflicts.
+**Covered by all three: 18 of 35** (was 14; B06, B07, B10, B11 closed 2026-09-19).
+
+**¹ B10 / B11 — web n/a, mechanism absent.** Swift and Python trigger recalculation from property
+observers that can fire part-way through a load, so both need a guard against re-analysing a
+half-applied measurement. Web calls `recalculatePeaks` from a single `useLayoutEffect` in
+`App.tsx` keyed on `loadedPeaks` itself, so the effect runs only once the loaded data is in place —
+there is no window to guard and no state a test could construct. The invariant it protects (loading
+must not clobber the loaded peaks) is covered for web by **B06**. Noted in
+`test/frozen-peak-recalc.test.ts` so it is findable from the web side too.
 
 ### Conflicts investigated — all four dissolved under inspection of the CODE
 
@@ -212,6 +230,32 @@ override survives. Web's orphan case is a *re-mint* where nothing lands within �
 *absent*, so the override is dropped. Different inputs, both correct. Becomes two gap rows, not a
 conflict.
 
+### Audit 2026-09-19 — 8 of Python's 28 tests never reach production code
+
+Found while filling B29. Python's remapping tests do not exercise
+`recalculate_frozen_peaks_if_needed` or `_apply_frozen_peak_state` **at all**:
+
+| test | what it actually exercises |
+|---|---|
+| `PR3a`, `PR3b`, `PR4`, `PR4b`, `PR6`, `PR6b` | `_remap_by_freq` — a **test-local reimplementation** of the carry-forward logic, whose own docstring calls it *"the Python equivalent of the Swift carry-forward logic"* |
+| `PR5a`, `PR5b` | **nothing** — `assert abs(201.0 - 200.0) <= 5.0`, arithmetic on two literals. Cannot fail. |
+
+This is a level worse than a false twin. The misfiled detection tests at least called production
+`peak_detection`; these call a second implementation living in the test file, or nothing. Production
+remapping could be broken in every one of these cases and all eight would still pass.
+
+It also explains an inventory signal that was visible and not chased: Python's `PR3`–`PR6` were
+tagged `inject` only — no `loadedPeaks`, no `peakMin`, no analyzer state — because they never needed
+an analyzer.
+
+**Consequence for the table: the ✓ marks for Python on B20–B28 were false** and are corrected below.
+Python's real coverage of remapping is zero. The eight are replaced by tests that drive the
+production path, not deleted — the behaviours are real and Swift/web cover them.
+
+**Audit rule going forward:** a test under a `@parity` slug must reach production code. A helper that
+reimplements the behaviour under test is not a fixture, it is a second implementation, and a test
+against it measures nothing. Worth sweeping the other slugs for the same shape (stage 4).
+
 ### Decisions — MADE 2026-09-19 (owner)
 
 **D1 — the five misfiled Python tests: extend, then delete.** `PR2c`'s case (two tones of unequal
@@ -226,8 +270,12 @@ it is the only coverage of a real gap, filed under the wrong slug. So:
 - **Delete** `PR1` / `PR1b`. Fixture invariants with no Swift or web counterpart — **no edition-only
   trivia.**
 
-**D2 — the 21 gaps must be closed, not documented.** Each row in the table must end up covered by
-all three editions. "Record why this edition does not need it" is not an outcome.
+**D2 — gaps must be closed; absences must be documented.** Clarified 2026-09-19 after B10/B11.
+A **gap** is a behaviour the edition HAS and does not test — it gets a test, and "record why this
+edition does not need it" is not an acceptable outcome for one. An **n/a** is a behaviour the
+edition CANNOT have, because its architecture provides no such state; it gets no test, and instead
+gets its reason recorded in the table above **and** a note in that edition's test file, so an audit
+finds it from either direction. The distinction must be explicit in the table — never a bare dash.
 
 **D3 — one ID convention: `PR`, flat and zero-padded — `PR01`…`PR35`.** Keeps the lineage already
 present in Python and web and documented in Swift's file header, while replacing the collided,
@@ -262,3 +310,41 @@ fixture style diverges (a heuristic on which helper each test calls would have c
 - STATUS item 2 (architectural-parity restructure) is **web-vs-native view layer** — a different
   concern; do not fold this into it.
 - `PEAK-LIFECYCLE-PLAN-PYTHON.md` Phase 4a — where the mirrored fixture landed.
+---
+
+## D2 progress log — 2026-09-19 (UNCOMMITTED at time of writing)
+
+**Closed:** B06, B07, B10, B11 (Python), B29 (Swift). **Classified n/a:** B10, B11 (web — mechanism
+absent, reason in the table and in `test/frozen-peak-recalc.test.ts`).
+
+**Purged and replaced — Python, 8 tests.** `PR3a`, `PR3b`, `PR4`, `PR4b`, `PR6`, `PR6b` exercised
+`_remap_by_freq`, a reimplementation of the carry-forward logic living in the test file; `PR5a` and
+`PR5b` asserted arithmetic on literals (`abs(201.0 - 200.0) <= 5.0`) and could not fail. All eight
+deleted, `_remap_by_freq` deleted with them, and replaced by
+`TestRemappingThroughProduction` (8 tests) driving `recalculate_frozen_peaks_if_needed` — re-freeze
+on a shifted spectrum so detection mints genuinely new ids, then assert what production did with the
+state keyed to the old ones.
+
+**Verified by mutation, not just by passing.** Setting the production remap tolerance to `0.0` fails
+exactly B20, B22, B24 (the carry-forward cases) and leaves the five negative cases passing — the
+correct signature. The purged eight would all have passed under that mutation. Production file
+restored and verified clean afterwards.
+
+Negative-only assertions were tightened first: `overrides.get(new.id) != "Air"` also passes on an
+empty dict or a leak under the stale id, so B23 now asserts the value is absent from the whole map.
+
+**Counts:** Python frozen-recalc 28 → 28, composition changed entirely (8 vacuous out, 8 real in,
+plus B06/B07/B10/B11 added and the 5 misfiled detection tests removed earlier).
+
+### Next — remaining gaps
+
+B08, B09, B12, B14, B17, B21, B25(web), B26, B27(web), B28(Swift/web), B30, and the B03 dual-surface
+tidy. Each needs the TARGET edition's production code read first — writing a test by translating
+another edition's test is how false twins start.
+
+**Then D3:** rename to `PR01`–`PR35` once the gaps are filled, so it is one rename not two.
+
+**Then stage 4, sharpened by this audit:** sweep the other slugs for *test-local helpers that
+reimplement the behaviour under test*. That shape is invisible to every signal we have — the suite
+was green, `--check` reported a clean pair, the slug looked covered three ways. It was found only by
+reading a helper while filling an unrelated gap.
