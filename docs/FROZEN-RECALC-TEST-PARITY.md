@@ -13,107 +13,41 @@ See "Owner run-review of the web production changes".
 
 ---
 
-## RESUME HERE — updated 2026-09-20
+## STATUS — ✅ COMPLETE 2026-09-20
 
-**Committed and pushed 2026-09-20**, after the owner run-review passed:
+**Stages 1 and 2 are done. Stage 3 and Stage 4 have moved to their own issue** — they were never
+frozen-recalc work, and keeping them here is what made this issue grow without bound.
 
-| repo | commit |
+**The behaviour table is 37 of 37 covered in all three editions**, every test carries its table id
+(`PR01`–`PR37`), and the parity map is clean: 97 groups, no orphans, no problems.
+
+### What this issue produced beyond its own slug
+
+It began as "Python and Swift test *infrastructure* diverge". It ended having found and fixed, in
+shipping code:
+
+| | |
 |---|---|
-| `GuitarTapWeb` | `6f1975d` — analyzer owns Peak Min and the load; duplicate-peak save fixed |
-| `GuitarTap` | `5adc0bf` — PR14, PR17, PR22, PR25, PR27, PR30, PR32 |
-| `guitar_tap` | `b5f0cc6` — PR08, PR09, PR12, PR17, PR28, PR31, PR32 |
-| `guitar-tap-project` | this doc + `process/CROSS-EDITION-INVESTIGATION.md` rule 6 |
+| duplicate peaks in every saved web measurement | 111 peaks written as 217, 106 frequencies duplicated |
+| the web analyzer did not own Peak Min | a model rule lived in a view `useMemo`, re-derived in two more places |
+| the web load was five view-orchestrated calls | correctness rested on React batching and statement order |
+| `peak_mode` guessed a mode it could not know | returned TOP for any peak in the 180–260 Hz overlap, including material |
+| a material peak re-selection feature removed in April | model, tests and `userSelected*` tier left behind for five months |
+| a shared, fixed-name test sandbox | concurrent runs wiped each other's settings — the REG-G2 "flake" |
+| Swift's chart auto-range was Swift-only | a plate's identified peak was simply off-screen in Python and web |
 
-Suites all green at the point of writing: **Swift 506 / 1 skipped · Python 617 / 1 skipped ·
-web 426 / 2 skipped.** Every skip is environment-gated (`oracle-sync` needs `ORACLE_SRC` while the
-hub is private; `mint-baseline` is flag-gated).
+Eight tests were purged for measuring nothing; six more for pinning features or states that no
+longer exist. Every replacement was mutation-verified.
 
-### ✅ STAGE 2 COMPLETE — 2026-09-20
+### The lesson worth carrying
 
-**Done when:** this doc contains the case table, every gap has a decision, and each case names its
-verification style. All three hold.
+Every one of those was found by reading **one slug out of 44**, and it was not the suspicious one —
+`test/frozen-peak-recalc` had a healthier edition-to-edition test-count spread than `test/pitch`,
+`test/brace`, `test/plate` or `test/classify`. There is no reason to think it was unusual. It was
+the one anyone read closely.
 
-- **The behaviour table is 37 of 37 covered in all three editions.** No row carries an `n/a`.
-- **D3 executed:** every test in all three editions now carries its table id, `PR01`–`PR37`, the
-  same id for the same behaviour. Mapping from the old `B`-ids in "Renamed 2026-09-20".
-- Two web architecture defects and one live data bug were found and fixed on the way, all
-  owner run-reviewed.
-
-**Next is Stage 3** — move the case list into shared data, vendored like `parity-oracle.json`, with
-one runner per edition. That is the step that makes divergence unrepresentable rather than
-detectable, and it is what a fourth edition would port against.
-
-Open, independent of Stage 2:
-
-1. ~~**The Python flake**~~ — ✅ **SOLVED AND FIXED 2026-09-20.** Test infrastructure, not the
-   application: the test sandboxes had fixed names shared by every process, and were wiped at
-   session start, so starting a second run wiped the settings of one already in flight. See
-   "The shared test sandbox" below. Fixed in Python AND Swift; web was verified unaffected.
-
-**Done 2026-09-20:** PR10 / PR11 for web — the `n/a` was withdrawn, not re-justified. The web load was
-consolidated into one analyzer method under `isLoadingMeasurement` (see "The web load was five
-view-orchestrated calls"), and `loadedPeaks` moved onto the analyzer. Three tests added, three of
-four mutations killed; the fourth is un-killable in Python too, and that limit is recorded in ¹.
-
-Also PR31 for Python (`test_B29_loaded_branch_keeps_stable_ids_so_overrides_are_not_remapped_away`),
-mutation-verified against three breaks of the remap — ignoring the tolerance, dropping the map, and
-widening the tolerance so 200 Hz and 400 Hz collide.
-
-Also **PR22 and PR25 for Swift**. Scope was corrected on the owner's call: footnote ³ was wrong,
-Swift was missing BOTH orphan halves, so the override row was split the way the offset row had
-been, and two tests were written
-(`remint_offsetWithNoNearbyPeak_isDropped`, `remint_overrideWithNoNearbyPeak_isOrphaned`). Both
-mutation-verified; the stale-id leak they catch is caught by no other Swift test. Swift 504 → 506.
-
-**D3, 2026-09-20.** 35 Python tests, 37 Swift, 38 web titles renamed to carry their table id. Old
-ids swept from all three files and from this document; the `B`→`PR` mapping is recorded so the
-commits already pushed under the old ids stay traceable.
-
-One near-miss worth recording: `GuitarTapWeb/test/button-enablement.test.ts` has its OWN unrelated
-`B1`–`B10` truth table. A repo-wide id sweep would have silently corrupted it. The rename was scoped
-to the three frozen-recalc files by name; do the same if these ids are ever renumbered again.
-
-### Owner run-review of the web production changes
-
-Two web changes shipped into the working tree: the Peak-Min projection moving onto the analyzer, and
-the load consolidating into one atomic `loadMeasurement`. **Run-review COMPLETE — owner, 2026-09-20.
-All four checks pass on real measurements.**
-
-| change | status | evidence |
-|---|---|---|
-| Peak Min projection on the analyzer (list, chart dots, live ratio) | ✅ **VERIFIED** | owner's manual check, plus the brace file below |
-| material peak below Peak Min still shows | ✅ **VERIFIED**, but by a different mechanism than first claimed | `brace-test-for-save-1789927895.guitartap` — fL at **−61.27 dB** persisted and displayed with `peakMinThreshold: −41`. **Correction:** this does NOT exercise the guitar-only branch of `refreshDisplayedPeaks`. In the web, material peaks never enter the guitar peak pipeline at all (see "Material peaks live somewhere else in the web"), so material display cannot be filtered by Peak Min. The outcome is right and stronger than the rule; the rule was not what was tested |
-| duplicate-peak save fixed | ✅ **VERIFIED** | `test3-1789928992.guitartap` — a real Generic Guitar capture at Peak Min −52: **195 peaks, 195 distinct ids, 0 duplicate frequencies**, 173 of them below Peak Min. On the previous build those 173 would each have been appended a second time: 368 peaks, 173 duplicated |
-| PR10/PR11 load atomicity (overrides / offsets / selection survive a load) | ✅ **VERIFIED** | owner, 2026-09-20: renamed a peak's mode, dragged an annotation label, hand-edited the selection, saved and reloaded — all three survived. That is exactly the state a torn load would have wiped |
-
-Integrity checks on `test3` also passed: all 6 `selectedPeakIDs` resolve to saved peaks, 182 peaks
-carry mode labels, and magnitudes run down to −90.2 dB — consistent with detection at the −100 dB
-floor rather than at Peak Min, which is what the full-set save is for.
-
-**A non-finding worth recording, so nobody re-chases it.** The saved peaks are not in ascending
-frequency order. That is correct: all three editions sort the detected set by DESCENDING MAGNITUDE
-(Swift `sorted(by: { $0.magnitude > $1.magnitude })`, Python "sorted by magnitude descending", web
-`.sort((a, b) => b.magnitude - a.magnitude)`). The ordering is consistent across editions and is not
-a parity defect.
-
-### What this document is
-
-**A working record for issue #8, not an authority and not tooling input.** It is archived to
-`docs/completed/` when #8 closes and does not survive the project. Nothing should be built that
-reads it as a source of truth — the table has already been wrong twice in ways that hid real work
-(the un-split override row's `≠` mark, PR31's double dash), and a checker built on it would just
-enshrine that.
-
-The durable artifact is **Stage 3**: the case list moves into shared data, vendored the way
-`parity-oracle.json` is. That is what a generator can legitimately check, and what a fourth edition
-ports against. Until then the authority is the CODE — check the table against the tests, never the
-other way round.
-
-**One list of open work, and it is RESUME HERE.** There was a second ("Not yet resolved", mid-
-document); the two had to be hand-synced, drifted twice in two days, and the drift is how PR22 came
-to be listed as open after it was closed and how PR31's Python half stayed invisible. The second list
-is deleted. Do not add another — if something is open, it goes in RESUME HERE; everything below that
-section is a dated record of what was already done.
+`gen_parity_map.py --check` cannot see any of this: it verifies **presence**, and only for files
+that carry a tag. Eleven test files carried none.
 
 ---
 

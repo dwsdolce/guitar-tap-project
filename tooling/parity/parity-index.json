@@ -422,6 +422,20 @@
       "equivalence": "review only"
     },
     {
+      "slug": "presentation/display-range",
+      "swift": [
+        "GuitarTap/Models/DisplayRange.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/display_range.py"
+      ],
+      "web": [
+        "src/presentation/displayRange.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "state/button-enablement",
       "swift": [
         "GuitarTap/Views/TapToneAnalysisView.swift"
@@ -511,7 +525,8 @@
         "tests/test_annotation_state.py"
       ],
       "web": [
-        "test/annotation-state.test.ts"
+        "test/annotation-state.test.ts",
+        "test/peak-state-store.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -589,9 +604,12 @@
     {
       "slug": "test/display-range",
       "swift": [
+        "GuitarTapTests/DisplayRangeExpansionTests.swift",
         "GuitarTapTests/DisplayRangeTests.swift"
       ],
-      "python": [],
+      "python": [
+        "tests/test_display_range_expansion.py"
+      ],
       "web": [
         "test/display-range.test.ts"
       ],
@@ -605,6 +623,18 @@
       ],
       "python": [
         "tests/test_dsp.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/effective-peak-id",
+      "swift": [
+        "GuitarTapTests/EffectivePeakIDTests.swift"
+      ],
+      "python": [
+        "tests/test_wi2_effective_peak_id.py"
       ],
       "web": [],
       "tests": [],
@@ -852,16 +882,6 @@
       ],
       "web": [
         "test/peak-selection-persistence.test.ts"
-      ],
-      "tests": [],
-      "equivalence": "test suite"
-    },
-    {
-      "slug": "test/peak-state-store",
-      "swift": [],
-      "python": [],
-      "web": [
-        "test/peak-state-store.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1441,10 +1461,6 @@
     {
       "repo": "web",
       "path": "test/menu-placement.test.ts"
-    },
-    {
-      "repo": "web",
-      "path": "test/peak-state-store.test.ts"
     }
   ]
 }
