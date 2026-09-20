@@ -700,11 +700,15 @@ is "however many rows the table has when the rename happens" — count it then.
 
 ### Stages 3 and 4 — MOVED to #17
 
-Shared case data (Stage 3) and the sweep of the other 43 slugs (Stage 4) were never frozen-recalc
-work, and keeping them here is what made this issue grow without bound. They are
-[`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md) now, with Stage 4 **first**: designing the schema against
-this slug alone would fit it to a sample of one, and this is the least representative slug there is
-— it needs stateful analyzer setup where most are input→output.
+Shared case data and the sweep of the other 43 slugs were never frozen-recalc work, and keeping them
+here is what made this issue grow without bound. They moved to #17 and were **renumbered there** —
+what this record calls Stage 4 (the sweep) is #17's **Stage 1**, and Stage 3 (shared case data) is
+its **Stage 2**. See [`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md).
+
+The order was deliberately swapped on the way out. Designing the shared case format against this
+slug alone would fit the mechanism to a sample of one, and this is the least representative slug
+there is: it needs stateful analyzer setup where most are input → expected output. The sweep has to
+say what the format must express before the format is designed.
 
 ## Related
 - STATUS item 2 (architectural-parity restructure) is **web-vs-native view layer** — a different
