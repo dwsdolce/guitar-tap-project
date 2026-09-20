@@ -67,3 +67,31 @@ each run. Tag records with the instance that produced them and filter.
 
 Related: `GuitarTapApp` now renders nothing when `XCTestConfigurationFilePath` is set, so the app
 no longer builds an analyzer, opens the microphone, or runs FFTs during a test run.
+
+## 6. A comment that describes how the code works is evidence with no expiry date — check it
+
+Rule 4 covers archived *findings*. It does not cover the far more common case: a descriptive claim
+in a comment, docstring or file header. Prose that explains how code works is written once, is
+rarely re-read against the code, and reads as settled fact precisely because someone took the
+trouble to write it down. Every false record found in 2026-09 but one was of this kind:
+
+- `_remap_by_freq`'s docstring — *"the Python equivalent of the Swift carry-forward logic"*. It was
+  a second implementation, and six tests asserted against it instead of production.
+- `test_frozen_peak_recalculation.py`'s header — *"the Python remap logic lives in
+  TapToneMeasurement data structures rather than in a separate recalculate method"*. False; it is
+  `recalculate_frozen_peaks_if_needed`. This sentence is why the helper existed.
+- `FrozenPeakRecalculationTests.swift`'s header — "Test plan coverage: PR1–PR7", after the suite had
+  moved on.
+- `fromLive.ts` — *"`a.peaks` (≥ Peak Min …) are kept; only the sub-Peak-Min peaks are appended"*.
+  True before Phase 1. After it, that append wrote a duplicate of every sub-Peak-Min peak into every
+  saved measurement: 111 peaks in, 217 out.
+- The July reconciliation plan, still standing as authoritative while contradicted elsewhere.
+
+**When a comment states what other code does, read that other code before trusting it** — especially
+when it is the reason something exists. The dangerous ones are not stale notes; they are load-bearing
+sentences that were true when written.
+
+Corollary for tests: a fixture encodes a contract. When the production contract changes, a test whose
+fixture still supplies the old one keeps passing while proving nothing about the shipping path.
+`peak-fullset-save.test.ts` passed a Peak-Min-filtered set that `App.tsx` had long stopped sending,
+and that is what hid the duplicate-peak bug. Check what the APPLICATION passes, not what the test does.
