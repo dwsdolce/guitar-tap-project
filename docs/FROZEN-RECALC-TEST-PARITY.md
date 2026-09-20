@@ -440,6 +440,58 @@ crash or a killed run. Verified in both: stale files from earlier runs are remov
 cross-process mutex nobody declared. If two runs can overlap — and on a dev machine they will —
 the name has to be unique per process, and cleanup has to survive the process not exiting cleanly.
 
+### peak_mode guessed, and guessed wrong — FIXED 2026-09-20
+
+Found while answering why web had no counterpart for PR09. Swift and Python resolved a peak's mode
+as:
+
+```
+identifiedModes.first(where: id matches)?.mode ?? GuitarMode.classifyAll([peak])[peak.id] ?? .unknown
+```
+
+A peak with no entry was classified **alone**. `classifyAll` earns its answer by letting peaks
+compete for a band; handed one peak it has nothing to arbitrate, and the Generic Top (140–260 Hz)
+and Back (180–300 Hz) ranges overlap — so it returned TOP for anything between 180 and 260. The
+codebase already said so elsewhere: *"classify_peak ... always returns TOP for peaks in the overlap
+zone, making BACK unselectable."*
+
+**Web never guessed** — `modeByPeak.get(id) ?? 'unknown'`. Three editions, two answers.
+
+**The miss is not an error case.** A completed plate/brace capture sets `all_peaks` and leaves
+`identified_modes` empty on purpose: material peaks have no guitar mode. Driving a real brace
+completion with the fL at 220 Hz, `peak_mode` returned **GuitarMode.TOP** — a guitar mode on a
+material peak.
+
+**Scope, checked rather than assumed.** `identified_modes` is not a subset of `all_peaks`; it is a
+parallel 1:1 mapping written in the same pass. Measured after capture, after load, after the
+following recalc and after re-analyze: 93 peaks, 93 entries, 0 missing, 0 stale every time —
+including the load window an earlier note claimed was a gap. It is not. The ONLY state where they
+differ is the deliberate material one. That killed the "keep them in step" option: there is no drift
+to prevent, and deriving `identified_modes` from `all_peaks` would break the carry-forward in
+`_apply_frozen_peak_state` that PR13 and PR19 pin.
+
+**Fixed by adopting web's answer** — return UNKNOWN, delete the guess. Four sites, not the two first
+reported: `peakMode` **and** `autoDetectedMode`, in both native editions. `autoDetectedMode`'s own
+docstring already said *"`.unknown` is a legitimate result (a peak in no band) and is shown as
+such"*.
+
+**Safe in production, verified before changing it:** every guitar `allPeaks` write classifies in the
+same pass, and the unknown-mode filter is gated on `isGuitar` (`peaksInDisplayRange`, the results
+view), so material peaks cannot be hidden by this.
+
+**Three existing tests were pinning the guess** and were fixed to classify first rather than have
+their assertions weakened: two built a peak the analyzer had never seen, and a Swift dot-layer test
+assigned `allPeaks` with no classify pass — with the guess gone, every peak became UNKNOWN and the
+`showUnknownModes` filter hid all three dots.
+
+**Two new tests per edition, mutation-verified in all three.** Restoring the fallback fails exactly
+those two and nothing else (Swift 2/500, Python 2/37, web 2/21). Counts: Swift 500 → 502,
+Python 608 → 610, web 426 → 428.
+
+**A false green on the way, worth recording again.** The first Swift mutation reported "0 failures"
+because `-only-testing` was given Python's class name (`AnnotationStateLive`) — **zero tests ran**.
+Always read the count, never just the failure list.
+
 ### Material peaks live somewhere else in the web — and why that was right
 
 Found 2026-09-20 while D3 turned up one web test with no table row. Chased because "web stores this
