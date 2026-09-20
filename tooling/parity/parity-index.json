@@ -1440,6 +1440,10 @@
     },
     {
       "repo": "swift",
+      "path": "GuitarTap/Models/ColorHex.swift"
+    },
+    {
+      "repo": "swift",
       "path": "GuitarTapTests/ExportDirectoryTests.swift"
     },
     {
