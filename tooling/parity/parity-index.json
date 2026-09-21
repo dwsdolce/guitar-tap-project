@@ -625,7 +625,9 @@
       "python": [
         "tests/test_dsp.py"
       ],
-      "web": [],
+      "web": [
+        "test/dsp.test.ts"
+      ],
       "tests": [],
       "equivalence": "test suite"
     },
@@ -858,7 +860,6 @@
         "GuitarTapTests/PeakFixtureRegressionTests.swift"
       ],
       "python": [
-        "tests/test_fft_peak_detection.py",
         "tests/test_peak_finding.py",
         "tests/test_peak_fixture_regression.py"
       ],
@@ -1422,10 +1423,6 @@
     {
       "repo": "python",
       "path": "src/guitar_tap/models/update_checker.py"
-    },
-    {
-      "repo": "python",
-      "path": "tests/test_fft_peak_detection.py"
     },
     {
       "repo": "python",

@@ -784,6 +784,76 @@ where all three say false for the same reason, and asserting `toFixed` disagrees
 only disagrees when the floor is even. Expected values must come from the canonical edition, never
 from running the code under test — and that applies to the tests written *during* the sweep too.
 
+### S4 — Peak detection & analysis (`peaks`, `dsp`, `peak-heal`)
+
+Status: ⏳ in progress. `test/dsp` done (F14). `test/peaks` and `test/peak-heal` not yet read.
+
+**F14 — Python's `test/dsp` tested a second implementation that the app never ran.
+(FIXED — Swift `8347ca7`, Python `8c750d0`, web `7fd739e`)**
+
+The most serious finding of the sweep, and the #8 shape at production scale rather than in a test
+helper.
+
+`test/dsp` read 10/10/0, which looked like web missing the slug. What it actually was:
+
+| edition | what its `test/dsp` exercised | does the app call it? |
+|---|---|---|
+| Swift | `TapToneAnalyzer.parabolicInterpolate`, `calculateQFactor` | **yes** |
+| Python | `peak_interp`, `peak_q_factor` in `realtime_fft_analyzer_fft_processing` | **no** |
+| web | nothing under this slug — the live code was covered indirectly under `test/peaks` | yes |
+
+Python carried a **second, parallel implementation** of both rules: NumPy ports of the
+peak-finding section of Swift's `findPeaks`. Searched exhaustively across the whole repo — the
+only references outside their own definitions were the module header's parity map and two
+docstrings. No caller in `src/`, ever. Meanwhile the pair the app *does* run —
+`_parabolic_interpolate` and `_calculate_q_factor`, called from
+`tap_tone_analyzer_spectrum_capture.py:1444` and `tap_tone_analyzer_peak_analysis.py:608` — had
+**no test at all**.
+
+Swift and web each have exactly one implementation, and it is the live one. The duplicate was
+Python-only.
+
+**It had been found before, and half-fixed.** `test_peak_finding.py` carries a note dated
+2026-07-19 recording the identical defect in `test/peaks`: *"this file previously did not test the
+code it claimed to. F10–F14 exercised `peak_detection` from the FFT layer rather than
+`TapToneAnalyzer.find_peaks`."* That was resolved by **relocating** the FFT-layer tests to
+`test_fft_peak_detection.py` "outside this parity group" rather than repointing them — which kept
+them running against dead code and left the sibling slug, `test/dsp`, with the same defect for five
+months. Moving a test that measures nothing does not make it measure something.
+
+**The fix**, per the owner: dead is dead.
+
+- Deleted `peak_detection`, `peak_interp` and `peak_q_factor` (120 lines) and the header lines
+  mapping them to Swift's `findPeaks`.
+- Rewrote `test_dsp.py` against the live pair, mirroring Swift's F1–F9 case for case. `test/dsp`
+  now tests what the app runs in all three editions.
+- Deleted `test_fft_peak_detection.py`, whose six tests existed only to exercise `peak_detection`.
+  `test/peaks` already covers the live `find_peaks`, which is what the July rewrite established.
+- Removed a dead `peak_q_factor` import from `test_frozen_peak_recalculation.py` — **#8's own
+  slug**, swept to completion, still carrying a stale import from the module.
+- Corrected `test_peak_finding.py`'s history note, which pointed at the file just deleted.
+- Added `test/dsp` to web as `test/dsp.test.ts`, 10 cases mirroring the natives. Web's
+  `parabolicInterpolate` and `calculateQ` were line-for-line equivalent to Swift's and correct,
+  but exercised only *indirectly* through `findPeaks`, which cannot reach the edge-bin and
+  flat-top guards. Those are the paths that produce `NaN` or `Inf` and carry it into a saved
+  measurement.
+
+**Mutation-proven against the live code**, which the old tests could not have been: removing the
+edge-bin guard raises `IndexError` and fails exactly the two edge-bin cases; removing the flat-top
+guard raises `ZeroDivisionError` and fails F1 and F5.
+
+**A mis-named test, found on the way.** Swift's `allBinsAboveThreshold_returnsZeroQ` and Python's
+`test_F9_peak_with_all_bins_above_threshold_returns_zero` assert nothing about zero. Q is **0.505**
+there, not 0 — with a flat spectrum the −3 dB walk runs to both edges, the bandwidth becomes the
+whole span, and Q is centre/span. Swift's body checked only "not NaN, not Infinite", with a comment
+conceding the value was "not meaningful"; Python's checked only `q >= 0`. Both now pin the real
+values and are renamed. **A test name is a comment**, and rule 3 applies to it.
+
+**Naming collision, worth knowing.** The test plans already use `F1`–`F16` as case IDs —
+`test_peak_finding.py` has its own `F10–F14`, `DSPTests.swift` has `F1–F9`. The findings in this
+document share that space. Always write **`SLUG-SWEEP.md F14`** in source comments, never a bare
+`F14`, or a reader lands on the wrong one.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those
