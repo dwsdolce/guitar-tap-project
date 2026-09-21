@@ -917,8 +917,35 @@ and tests alone cannot close them:
 | change | status |
 |---|---|
 | Save disabled until the name or notes differ | ✅ owner-verified 2026-09-21 |
-| notes trimming on save as well as edit | ⏳ tests only — needs saving notes with surrounding whitespace |
-| Python minting uppercase UUIDs | ⏳ tests only — Python edition, not exercised in the Swift run |
+| notes trimming on save as well as edit | ✅ owner-verified 2026-09-21 |
+| Python minting uppercase UUIDs | ✅ closed by test AND observed — see below |
+
+The UUID row has no UI surface — the id lives in the `.guitartap` file — so it looked unclosable by
+run-review. It was closed anyway, by exporting one: the owner renamed a measurement, saved and
+exported it, and the file carries `id: 0F350370-57D3-4167-8DFE-EA8F4C72D934`. A new uppercase
+measurement id in a real file is only producible by `with_()` minting one, so that single export
+run-reviewed F20 and F22 together. Its three peak ids are lowercase — captured before F22 and
+correctly not rewritten — and `selectedPeakIDs` still matches them exactly, case included, which
+is the invariant that keeps old files valid. Closing it needed a test instead,
+and F22 had not written one — it corrected fourteen call sites and pinned none of them, so a single
+`str(uuid.uuid4())` added later would have restored the divergence with every suite still green.
+
+`test/uuid-case` now pins it in both ports. Swift needs no counterpart, and the reason is
+structural rather than a convention anyone has to remember: every persisted id there is a typed
+`UUID` — `TapToneMeasurement`, `ResonantPeak`, `MicrophoneCalibration` — so lowercase is
+*unrepresentable*. Measured, not assumed: 5000 draws of `uuidString` gave none, JSONEncoder emits
+uppercase, and a lowercase UUID decoded from a file comes back out uppercase. The ports need a
+guard because they store ids as strings, where the rule lives in a call site and one careless line
+breaks it. A Swift test would only assert that Foundation is Foundation. Two cases each, and the second is the one that matters: the helper mints uppercase,
+**and no module mints outside the helper** — a source scan, because the case test alone says
+nothing about a direct call added elsewhere.
+
+Writing it found the divergence F22 had left behind: web uppercased measurement ids but minted
+calibration ids as raw `crypto.randomUUID()`, so moving Python to uppercase had left web the only
+edition disagreeing on a field Swift and Python both uppercase. Web now mints everything through
+one helper, `src/measurement/newId.ts`, mirroring Python's `utilities/new_uuid.py` — including
+`rowKey`, which is library-local and would not strictly need it, because one rule with no
+exceptions is cheaper to keep true than one rule and a list of places it does not apply.
 
 **Format checks that passed**, recorded so they are not redone:
 
