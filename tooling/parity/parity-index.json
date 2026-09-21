@@ -1224,6 +1224,20 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/edit-sheet",
+      "swift": [
+        "GuitarTap/Views/Measurements/EditMeasurementView.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/measurements/edit_measurement_view.py"
+      ],
+      "web": [
+        "src/components/EditMeasurementSheet.tsx"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "view/guitar-summary",
       "swift": [
         "GuitarTap/Views/TapAnalysisResultsView.swift"
