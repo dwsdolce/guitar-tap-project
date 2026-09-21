@@ -892,6 +892,238 @@ values and are renamed. **A test name is a comment**, and rule 3 applies to it.
 document share that space. Always write **`SLUG-SWEEP.md F14`** in source comments, never a bare
 `F14`, or a reader lands on the wrong one.
 
+### S5 — Measurement model & persistence (8 slugs)
+
+Status: ⏳ in progress. Four of eight slugs read — `measurement-codable` (F15),
+`measurement-type-name` (F16, F17), `material-selection` and `peak-selection-persistence` (clean).
+Landed so far as Python `5091154`, web `9ce7825`; Swift needed no change in any of them.
+Four slugs to go: `import-persistence`, `measurement-name`, `export-filename`,
+`material-measurement-inputs`.
+
+**Format checks that passed**, recorded so they are not redone:
+
+- All three editions use the **same fixture** for this slug,
+  `contreras-classical-1774731564.guitartap`, verified byte-identical by checksum across the three
+  repos — not merely the same filename. That is the F5 check.
+- Decoding it gives **identical values** in Python and web: 44 peaks, the first eight frequencies
+  agreeing to 5 dp, `numberOfTaps` 10, `peakMinThreshold` −78, `tapDetectionThreshold` −64,
+  6 selected, `annotationVisibilityMode` "selected".
+- A decode→encode round-trip in web preserves the format: top-level `measurementType` and
+  `guitarType` survive (web stores them on the snapshot and re-derives on write — "derive, don't
+  duplicate", documented in `types.ts`), `peakThreshold` is rewritten as the canonical
+  `peakMinThreshold`, and `hysteresisMargin` is dropped. That last one is correct in all three: it
+  is an analyzer constant (3.0), absent from Swift's `CodingKeys`, and `encode.ts` documents "no
+  hysteresisMargin/maxPeaks" as deliberate. It is a legacy field from an older writer.
+
+**F15 — a derived label was being carried through as if it were data. (FIXED)**
+
+Every edition writes a per-peak `modeLabel` into the saved file. The precedence differs:
+
+| edition | precedence for a guitar peak |
+|---|---|
+| Swift | `override` → `classifyAll` → `.unknown` |
+| Python | `override` → `classify_all` → `"Unknown"` |
+| **web** | `override` → **`p.modeLabel`** → `classifyAll` → `unknown` |
+
+Web inserts the **previously-decoded label** between the override and a fresh classification
+(`encode.ts:62`). The natives always reclassify. Swift's own comment states the intended rule:
+*"Resolve the mode label: user override > auto-classify > plate/brace role"* — two rungs, not
+three.
+
+**Measured, same input to all three.** Two classical peaks in the Top/Back overlap, the stronger
+carrying a stale `"Back"` from an older save:
+
+| peak | Swift / Python | web |
+|---|---|---|
+| 210 Hz, −18 dB, stale `"Back"` | **`Top`** | **`Back`** |
+| 220 Hz, −26 dB, no stale label | `Back` | `Back` |
+
+`classifyAll` gives the stronger overlap peak **Top** in every edition, so the natives write Top and
+web writes the stale Back.
+
+**It is self-perpetuating.** Web reads `modeLabel` on decode and prefers it on encode, so once a
+label is stale it survives every subsequent web save and no reclassification dislodges it. The
+reachable path is ordinary: open a saved measurement, change anything that moves the
+classification — Peak Min dropping a competing peak, or the guitar type — and save.
+
+**Why it survived: Swift is the only edition that tests the rule.** Its `MeasurementExportModeLabel`
+suite covers exactly the two cases that would catch this — overlap-zone peaks receiving distinct
+labels, and override priority. Python asserts one fixture peak reads `"Top"`
+(`test_measurement_codable.py:852`); web asserts the same on decode and encode. Neither exercises
+the precedence, and neither would fail if it were wrong.
+
+Same shape as F7 and F14: a rule the canonical edition pins and the ports do not, in code the ports
+implement differently.
+
+**It was wider than the writer.** Tracing every read of the stored label found the same mistake on
+the display side, and in a second edition:
+
+| edition | display | export |
+|---|---|---|
+| Swift | `override → classifyAll` | `override → classifyAll` ✓ self-consistent |
+| Python | `override → mode_label → classify_all` | `override → classify_all` ✗ |
+| web | `p.modeLabel ?? 'Peak'` | `override → p.modeLabel → classifyAll` ✗ |
+
+Only Swift had display and file agreeing. Python's detail view could show a label its own writer
+would never save. Web's detail view was weakest of all — no override check and no classification, so
+a file carrying no `modeLabel` showed **"Peak"** where Swift classifies and shows "Top".
+
+**What settled it.** `modeLabel` is not stored state. Python's own documentation says so: *"an
+export-only convenience that Swift injects only for the top-level `peaks` array… Python-only field:
+`mode_label` carries the resolved mode string **injected at serialisation time**. It is not part of
+the Swift struct."* It is output, recomputed every write by design. Preferring a decoded copy
+inverts that — and web's own `types.ts` states the principle for `measurementType` two files away:
+*"derive, don't duplicate, since a stored copy can fall out of sync."*
+
+The web comment claimed the code resolved the label *"exactly as the Swift writer does"* while
+adding a rung Swift does not have. A comment asserting parity is still just a comment.
+
+**The fix**, owner's decision — make all three handle it the same, with Swift as the target since it
+is the only self-consistent one. One rule, `override → classify`, used by **both** display and
+export in every edition, with the stored label as output only:
+
+- **Swift** — no change; already correct.
+- **Python** — `measurement_detail_view.py` drops the `peak.mode_label or` rung.
+- **web** — `encode.ts` drops the rung; `MeasurementDetail.tsx` resolves through a new
+  `measurementPeakModeLabels()` in `fromLive.ts`, built on the `effectiveMode` resolver this
+  codebase already documents as the one place every "which mode is this peak, really" surface
+  should go through. The PDF path already derived correctly and needed nothing.
+
+**Verified on the exposing case**, which previously gave `Back`/`Back`:
+
+```
+encode   A="Top"  B="Back"     ← matches Swift and Python
+display  A="Top"  B="Back"     ← matches the file
+```
+
+**Mutation-proven in both ports.** Reintroducing the rung fails `a STALE carried-through label does
+not win` in Python, and in web that plus `the displayed label matches the written one` — the second
+catching the display/file split specifically. Tests added in both; Swift already had its two.
+
+**F16 — `test/measurement-type-name` drifted three ways: six shared cases, three sets of extras.
+(FIXED)**
+
+Read because 14/9/6 was the widest spread left in S5 and because Python's test imports a **view**
+module (`views.measurements.measurement_detail_view._type_name`) where the slug's production anchor
+is a model — the signature of F14.
+
+**It is not F14.** Python testing a view function is correct here: Swift's equivalent is a view
+function too, `MeasurementDetailView.measurementTypeName`, and Python's docstring says so and quotes
+it. Each edition tests its own real implementation of the same rule; the layer differs because the
+implementations differ. Checked the underlying data as well — the short-name tables are **identical**
+in all three (`Generic`, `Acoustic`, `Classical`, `Flamenco`, `Plate`, `Brace`).
+
+What is there is ordinary drift. Six cases are shared by all three — brace and plate resolving from
+`longitudinalSnapshot`, guitar from `spectrumSnapshot`, `spectrumSnapshot` winning over
+`longitudinal`, comparison short-circuiting before any snapshot lookup, and the em-dash fallback.
+Then each edition grew extras the others never received:
+
+| case | Swift | Python | web |
+|---|---|---|---|
+| the six shared resolution cases | ✓ | ✓ | ✓ |
+| `everyTypeResolvesToItsShortName` — the 6-type table | ✓ | — | — |
+| material flag resolves from the same snapshot | ✓ | — | — |
+| unrecognised snapshot type → em-dash | — | ✓ | — |
+| `None` snapshot type → em-dash | ✓ | ✓ | — |
+| **loaded measurement still resolves** | — | ✓ | — |
+
+**The last row is load-bearing and only one edition has it.** Python's
+`test_loaded_measurement_still_resolves` exists because of a real defect its docstring records:
+`_type_name` read the top-level `measurement_type` field, which is deliberately not set when a
+measurement is created, so the Details pane showed "—" for every measurement saved in the current
+session and corrected itself only after an app restart re-read the file through `from_dict`. In the
+docstring's own words: *"That session-scoped behaviour is why no test caught it."*
+
+Neither Swift nor web pins that. Both resolve from the snapshot today, so neither is broken — but
+the regression that motivated the test is unguarded in two of three editions, and it is precisely
+the kind that passes every test and fails in the user's hands.
+
+**The fix: level the cases.** No production change was needed for F16 itself — the implementations
+and the short-name tables already agreed. Counts went **14/9/6 → 14/10/15**.
+
+- **web** gained the 6-type table, the unrecognised-type fallback, the undefined-type fallback, and
+  the loaded-measurement regression. Writing that unrecognised-type case is what exposed **F17**, a
+  genuine behavioural divergence — an argument for levelling cases even where no defect is suspected.
+- **Python** gained the 6-type table.
+- **Swift needed nothing, and that is a finding in itself.** Both cases it appeared to lack are
+  *structurally unreachable* there. An unrecognised type cannot be constructed — `snap()` takes a
+  typed `MeasurementType?`, and a bad string from a file decodes to `nil`, which
+  `nilSnapshotTypeFallsBackToEmDash` already covers. And the loaded-measurement regression cannot
+  happen: Swift has no stored top-level `measurementType` to read, only a **write-only**
+  `CodingKey` encoded from the snapshot (`TapToneMeasurement.swift:858`). Sweep rule 2 applies — a
+  case that cannot occur is not a gap, and forcing a test for it would have pinned nothing.
+
+**One row was a filing difference, not a gap.** Swift tests the material flag
+(`materialFlagResolvesFromTheSameSnapshot`) in this slug; both ports test theirs — `is_material`,
+`isMaterialMeasurement` — under `test/material-selection`. All three cover the rule. That is the F10
+shape, and by the rule adopted there the canonical edition decides the filing, so the ports' copies
+belong here. Left as-is for now: it is pure relocation with no coverage change, and worth doing in
+one pass at the end rather than slug by slug.
+
+**F17 — web showed an unrecognised measurement type verbatim; the natives show an em-dash.
+(FIXED)**
+
+| edition | an unrecognised type in the snapshot |
+|---|---|
+| Swift | `resolvedMeasurementType?.shortName ?? "—"` → **`—`** |
+| Python | `MeasurementType(...)` raises, caught → **`—`** |
+| web | `(raw ?? '—')` → **the raw string**, e.g. `Sousaphone` |
+
+Swift's contract is stated on `TapToneMeasurement.measurementTypeShortName`: *"Acoustic / Classical
+/ Flamenco / Generic / Plate / Brace / Comparison — or '—' when no snapshot carries a type."* Six
+names, Comparison, or an em-dash. Nothing else.
+
+Narrow but user-visible: it needs a file whose snapshot carries a `measurementType` none of the six
+match — a foreign writer, a corrupted field, or a future type opened by an older build. Web printed
+that string into the Details pane where both natives print `—`.
+
+**Found only by levelling F16's cases.** The unrecognised-type case existed in Python alone, so no
+test in any edition compared the three. Writing the missing case into web is what surfaced it —
+which is an argument for levelling cases even when no defect is suspected.
+
+**Decided: web follows the natives.** Two reasons, the second the owner's and the more durable:
+Swift is canonical and the em-dash is the documented contract; and **the natives have the larger
+installed base**, so where either edition could move, the one with fewer users should. Changing the
+natives' displayed label would touch more people for no gain.
+
+There is a real argument the other way — printing the unknown string tells the user what the file
+actually said, where an em-dash hides it. Recorded because if that is ever wanted, it should be
+adopted in all three rather than kept as a web-only difference.
+
+**test/material-selection and test/peak-selection-persistence — read, no defects. (no finding)**
+
+`test/material-selection` is 1/1/1 and the single case is well-built in all three: a **genuine
+iPad-corrupted file** as the fixture (`plate-umik-1-3-tap-swift-ipad-1784314709.guitartap`, verified
+byte-identical across the three repos), preconditions asserted — material, three peaks present, the
+corrupt aggregate holding only the cross peak — then the heal, `effectiveSelectedPeakIDs` resolving
+to all three. One test, but it pins the read side of the rule against real corrupt data rather than
+a constructed one.
+
+The save side — material persisting the full peak set, never the live aggregate, which is what stops
+the corruption recurring — is implemented and commented at
+`TapToneAnalyzer+MeasurementManagement.swift:349`. Its coverage belongs to the persistence slugs
+rather than here.
+
+`test/peak-selection-persistence` is 4/4/3, and the missing web case is **filing, not a gap**. Swift
+and Python each pin four: automatic re-selects a revealed Air, manual does not, a legacy file
+defaults to manual, and the flag round-trips. Web pins persistence in this slug and the flag's
+*effect* under `test/frozen-peak-recalc` — the auto path leaving the flag false, the manual
+carry-forward by ±5 Hz, re-selection from the stable frequency cache, and a deselected peak staying
+deselected across a Peak Min sweep. The behaviour is implemented (`tapToneAnalyzer.ts:667`,
+commented as mirroring Swift's `applyFrozenPeakState` branches) and it is tested.
+
+**Three instances of the F10 shape now, which makes it the rule rather than the exception:**
+
+| rule | Swift files it under | the ports file it under |
+|---|---|---|
+| mode abbreviation / display name | `test/classify` | `test/mode-colors` (web) |
+| material flag | `test/measurement-type-name` | `test/material-selection` |
+| selection flag's effect | `test/peak-selection-persistence` | `test/frozen-peak-recalc` (web) |
+
+Every one is covered in all three editions. What differs is where it is written down — and each
+makes a count read as a gap in an edition that is not short. Two of the four thin-looking web slugs
+examined in S5 so far have been this rather than missing coverage.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those
