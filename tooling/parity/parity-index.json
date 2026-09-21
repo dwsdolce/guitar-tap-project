@@ -348,6 +348,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/measurement-amend",
+      "swift": [
+        "GuitarTap/Models/TapToneMeasurement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_measurement.py"
+      ],
+      "web": [
+        "src/measurement/amend.ts"
+      ],
+      "tests": [
+        "test/measurement-amend"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/measurement-name",
       "swift": [
         "GuitarTap/Models/TapToneMeasurement.swift"
@@ -751,6 +767,20 @@
       ],
       "web": [
         "test/material-selection.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/measurement-amend",
+      "swift": [
+        "GuitarTapTests/MeasurementAmendTests.swift"
+      ],
+      "python": [
+        "tests/test_measurement_amend.py"
+      ],
+      "web": [
+        "test/measurement-amend.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"

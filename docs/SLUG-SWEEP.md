@@ -246,6 +246,10 @@ in. Checked: **no production group links to any of them**, and they are correctl
 `TESTABLE_AREAS`. `test/*` now means exactly one thing — evidence about application behaviour — and
 is **39 slugs, not 43**.
 
+*(S5 later added `test/measurement-amend`, taking it to **40** — the amend rule had no home in any
+edition and web had no implementation of it at all. See F20. Measured from the regenerated index,
+not counted by hand.)*
+
 **A residual, found by the owner asking why web had a skipped test and the natives did not.**
 Fixing the slug did not move the file. `mint-baseline.test.ts` still sat in `test/`, so vitest
 collected it on every run and it reported as a permanent skip, held back by a `MINT_BASELINE=1` env
@@ -892,13 +896,24 @@ values and are renamed. **A test name is a comment**, and rule 3 applies to it.
 document share that space. Always write **`SLUG-SWEEP.md F14`** in source comments, never a bare
 `F14`, or a reader lands on the wrong one.
 
-### S5 — Measurement model & persistence (8 slugs)
+### S5 — Measurement model & persistence (8 slugs read, 1 created)
 
-Status: ⏳ in progress. Four of eight slugs read — `measurement-codable` (F15),
-`measurement-type-name` (F16, F17), `material-selection` and `peak-selection-persistence` (clean).
-Landed so far as Python `5091154`, web `9ce7825`; Swift needed no change in any of them.
-Four slugs to go: `import-persistence`, `measurement-name`, `export-filename`,
-`material-measurement-inputs`.
+Status: ✅ **COMPLETE** — all eight slugs read and every finding resolved. Seven defects fixed
+(F15, F16, F17, F19a, F20, F21, F22); F19b deferred to the sorting work and F18 carried into
+Stage 2, both by decision. `measurement-codable` (F15), `measurement-type-name` (F16, F17),
+`import-persistence` (F19a, F19b, F20, F21, F22), `material-selection` and
+`peak-selection-persistence` (clean).
+
+Landed as Python `5091154`, web `9ce7825` (F15–F17), then F19a + F20 + F21 + F22 across all three —
+Swift `e962caf`, Python `8a1f2eb`, web `83360a0`.
+
+Suites at close: Swift **560** in 115 suites · Python **657** · web **581** in 52 files, nothing
+skipped; parity map 99 groups, no orphans. Every rule added here was mutation-tested — broken
+deliberately, confirmed failing, restored.
+
+**Run-review still outstanding**, tracked separately from sweep completion: three changes here are
+user-visible and have only been proven by tests — Save disabled until the name or notes differ,
+notes trimming on save as well as edit, and Python minting uppercase UUIDs.
 
 **Format checks that passed**, recorded so they are not redone:
 
@@ -1124,6 +1139,204 @@ Every one is covered in all three editions. What differs is where it is written 
 makes a count read as a gap in an edition that is not short. Two of the four thin-looking web slugs
 examined in S5 so far have been this rather than missing coverage.
 
+**F18 — case-level drift is endemic, and S5 is the measurement that shows it. (RESOLVED —
+carried into Stage 2)**
+
+All eight S5 slugs were read; only two have the same cases in all three editions. The
+implementations agree in every case, so **no defect follows** — what follows is that the editions
+pin different things, so a change that breaks one edition's rule can pass in another.
+
+The owner's call: level them in Stage 2 with the shared case lists rather than by hand now, since
+doing it by hand is Stage 2's work without Stage 2's mechanism and would be redone when the shared
+lists land. The measurement, the per-slug detail and the reasoning are carried forward under
+[Stage 2 → Carried in from Stage 1](#carried-in-from-stage-1) so they are not lost with this
+section.
+
+
+**F19a — web destroys the dataset UUID on import, and launders it into every file it exports.
+(FIXED)**
+
+Found while reading `test/import-persistence` (3/3/6), **filed wrongly twice**, and the corrections
+are the useful part.
+
+*First filing:* "equivalent behaviour by different mechanisms, no defect." Wrong — the standing rule
+is that an architectural divergence is fixed, not logged, and "no observable difference today" is
+not the test for one.
+
+*Second filing:* positional-vs-id-keyed addressing, recommending the natives adopt web's id-keyed
+model. Also wrong, and worse, because a future reader would have acted on it. Working through what
+an `id` actually **is** showed the recommendation was backwards. Two facts settle it:
+
+- In Swift the measurement `id` is a **write-only field**. Sweeping all 229 `.id` references in the
+  app target, the only four touches of `TapToneMeasurement.id` are: assign in `init`, copy in
+  `with()`, encode, decode. Nothing looks a measurement up by it. `Identifiable` is declared and
+  never exercised for this type. (`ResonantPeak.id` is a different id and *is* load-bearing.)
+- Its documented contract, *"Stable unique identifier"*, is false in the store: import copies the
+  file's id verbatim, so a duplicate import gives two rows with one id. Positional addressing
+  exists **because** of that, so the two cannot be separated.
+
+The owner's decision: the id identifies a **dataset**, never a row — multiple loads of one file are
+allowed, so an id can never address a row. Rows are addressed positionally in the natives (their
+library *is* an ordered array) and by an explicit row handle in web.
+
+**What was actually broken.** Web overwrote `id` at import (`parsed.map(m => ({...m, id:
+newMeasurementId()}))`) and writes `id` on export, so **any file passing through web had its
+identity replaced on the way out**. Files already exported that way are not recoverable. Web did not
+choose this: IndexedDB `createObjectStore({ keyPath: 'id' })` makes a duplicate key impossible, so
+re-iding was the only way to get the natives' append semantics. The storage engine forced it.
+
+Honest about the urgency: **nothing reads the measurement id in any edition today**, so the present
+observable harm was zero. The reason to fix it now is that the loss is cumulative and irreversible —
+every session adds files whose identity is gone, and the id has just acquired a meaning.
+
+**Fix.** Web's storage key became an explicit `rowKey`, freeing `id` to mean the dataset identity in
+all three editions:
+
+| | dataset identity | row handle |
+|---|---|---|
+| Swift / Python | `id`, preserved across export/import | array position |
+| web (before) | **destroyed at import** | `id` |
+| web (after) | `id`, preserved | `rowKey` — minted per insert, never written to a file |
+
+One rule in `saveMeasurement` carries it: `rowKey: m.rowKey ?? newRowKey()`. A parsed or freshly
+captured measurement has no row handle, so it lands as a new row; a stored one keeps its handle, so
+an edit replaces in place. That single line gives duplicate-import-appends, edit-replaces and
+heal-on-read-writes-back, with no special cases.
+
+IndexedDB `keyPath` is immutable, so this needed a schema bump: `VERSION` 1→2 with an
+`onupgradeneeded` that reads the records, drops the store, recreates it keyed by `rowKey`, and
+writes them back with `rowKey` set to their old `id`. The key *values* are unchanged, so nothing
+re-orders and nothing can collide. Migrated rows have `id == rowKey`, which is honest — their
+original dataset id was destroyed long ago. Upgrades are transactional, so a failure leaves the
+database at v1 rather than half-migrated.
+
+Two things the migration surfaced that were already latent: `openDB` had **no `onblocked` handler**,
+so a second tab holding the old version would have hung the panel silently with no error (added);
+and the import logic lived in the panel while `test/import-persistence` **re-stated it** rather than
+calling it — so the panel could have changed without a case failing. The storage side is now
+`store.importMeasurements`, which the panel and the tests both call. That is the F14 shape found
+again, in the test for the slug that found F19.
+
+**F19b — row identity and addressing. (DEFERRED — no issue yet, nothing to do)**
+
+Not a defect. `MeasurementsListView` iterates `savedMeasurements` directly, unsorted and unfiltered,
+so the view index *is* the storage index. It matters only for a feature that does not exist yet.
+
+The natives address rows positionally at four sites, not two: `updateMeasurement(at:)`,
+`deleteMeasurement(at:)`, `ForEach(Array(...enumerated()), id: \.offset)` and
+`selectedCompareIndices: Set<Int>`. The `ForEach` one is the tell — SwiftUI rows are identified by
+array offset precisely *because* ids can duplicate, so duplicate ids have already propagated out of
+the store into view identity and selection state.
+
+Design input for the sorting/manual-reordering work, recorded so it is not re-derived:
+
+- **Sort is a lens, not a commit.** Persist the *criterion*, never the resulting order. Every
+  criterion is derivable from data already stored — `timestamp`, `measurementName`, storage order —
+  so order can never drift from the data. "Restore what was in the file" is then just "clear the
+  sort", and costs nothing: the natives' array order and web's `savedAt` are both already durable.
+- **Manual reordering is the case that needs stored order.** An arrangement is not derivable. In the
+  natives the storage array *is* the arrangement (`move(fromOffsets:toOffset:)` + persist — no new
+  field, and the whole file is rewritten on every change anyway). Web cannot reorder an array
+  because it has no array; an `order` field *inside* each record would mean a drag rewriting dozens
+  of multi-MB records, so the order belongs in **one small separate record** holding row handles in
+  display order — one write per move, independent of library size.
+- That order record can drift from the record set after a crash mid-write; reconcile on load (drop
+  keys with no record, append records with no key). The natives cannot have this failure.
+- The arrangement travels between editions implicitly as the **array order in the `.guitartap`
+  file**. No format field, and the row handle still never leaves the app.
+- Open for the feature, not for the sweep: does a manual move permanently discard the
+  as-first-imported order?
+
+**F20 — an edit did not change the measurement's id. (FIXED, all three)**
+
+Name and notes are part of a measurement's **data**, not annotations on top of it, so an amended
+measurement is a different dataset and must carry a different identity. All three editions preserved
+the id through an edit, which meant two different datasets could share one id — the id lying about
+exactly the thing it exists to express.
+
+This was first classified as a new requirement rather than a defect, and that was wrong: fixing F19a
+alone would have had web faithfully preserving a value that was already untrue. The two are one
+change, and there is a mechanical proof of it — in web the edit fix is **impossible** without the
+row-key split, because `commitEdit` does a `put` keyed on `id`, so a new id would write a second row
+and orphan the first. A duplicate on every rename.
+
+The rule is now **same `id` ⟺ same content**, and it holds in both directions:
+
+- Save (fresh capture, *or* a loaded measurement) stamps a new timestamp, so it is new content and
+  correctly gets a new id.
+- Editing name or notes changes the content, so it mints a new id. `timestamp` is preserved: it
+  records when the tap was captured, which amending does not change.
+- Importing the same file twice gives identical content, so the rows correctly share an id — and
+  editing either one ends that.
+
+A Save that changes *nothing* would break the rule by giving unchanged content a new identity, so
+the owner's answer was to make it unreachable: **Save is disabled until the name or notes actually
+differ**, in all three editions, so saving an untouched form and cancelling it are the same action.
+
+**Where the rule lives.** It was first written as a private predicate inside each of the three
+views — untestable, and restated three times, which is precisely the divergence this sweep exists
+to remove. The codebase already had the answer in `isValidName`: *"Single source of truth so all
+three platforms — and their tests — agree; a view must bind its Save button to this, never
+re-implement it."* The amend rule now follows it, as a new group:
+
+| | rule | amend |
+|---|---|---|
+| Swift | `TapToneMeasurement.isAmended(measurementName:notes:)` | `with(measurementName:notes:)` |
+| Python | `is_amended` | `with_` |
+| web | `isAmended` | `amendMeasurement` — **new**, web had no counterpart at all |
+
+`model/measurement-amend` / `test/measurement-amend` (map: 97 → 99 groups). The cases moved out of
+`test/measurement-codable`, which is about serialisation and was never where an identity rule
+belonged; web's absence there is why the missing `amendMeasurement` went unnoticed. Each edition's
+edit view now supplies normalized values and binds to the shared rule.
+
+**F21 — the two user-entered fields normalized three different ways, and one edition disagreed
+with itself. (FIXED, all three)**
+
+Found implementing F20's Save gate, because the gate compares *stored* values and so depends on
+this:
+
+| | save path | edit path |
+|---|---|---|
+| Swift | no trim | no trim |
+| Python | **no trim** (`notes or None`) | **strips** |
+| web | trims | trims |
+
+Names were already trimmed everywhere; notes were not. Python's two paths disagreeing is a real
+defect and F20 would have exposed it: save notes with surrounding whitespace, reopen the edit
+dialog, and Save lights up immediately — because the dialog normalized while the stored value had
+not — offering to "amend" a field nobody touched, which under F20 mints a new id.
+
+The owner's call was that all three trim, with Swift changing. `normalizedNotes` now sits beside
+`normalizedName` in the model in each edition, and **every** path that stores notes goes through
+it: Swift's two save call sites and its edit sheet, Python's `create` factory (which funnels all
+six of its save call sites), and web's three `fromLive` builders. A test in each edition pins that
+the two fields normalize identically, since that is the property the Save gate rests on.
+
+**F22 — Python minted lowercase UUIDs where Swift and web mint uppercase. (FIXED)**
+
+Swift's `UUID().uuidString` is uppercase and web mints `crypto.randomUUID().toUpperCase()`
+explicitly to match it. Python minted `str(uuid.uuid4())` — lowercase — at 14 sites across 7 files.
+
+Harmless until F20 gave `id` a meaning. Swift uppercases any UUID it decodes while the ports
+preserve what the file holds, so nothing normalised it back: the same measurement exported from
+Python and from Swift differed by case in the field that identifies a dataset, and anything
+comparing ids as strings — which is how the web store and every test does it — would read them as
+two different things.
+
+Python now mints through one helper, `utilities/new_uuid.py`, uppercase. Case has never affected
+correctness *within* a file, since a file's internal references agree with its own ids whatever
+their case, so existing files stay valid and are not rewritten.
+
+**Format note for the Android port.** `id` and `timestamp` are the `.guitartap` format's **only
+mandatory fields** — every other field in Swift's decoder is `decodeIfPresent`. Swift rejects a file
+missing either one; measured, it throws on a missing key, `""` and `null` alike, and accepts a
+lowercase UUID (uppercasing it on read). The two ports are more tolerant — Python mints a
+replacement for an absent key, web falls back to `''` — but no edition can *produce* such a file, so
+those branches are unreachable and were deliberately left alone rather than levelled. Copy Swift's
+rule when writing a new decoder.
+
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those
@@ -1134,6 +1347,36 @@ one runner instead of thirty tests.
 The pattern is already proven in this codebase and needs no prototype: web's `pitch.test.ts` is a row
 list plus a loop that generates the cases.
 
+### Carried in from Stage 1
+
+**F18 — the six drifted S5 slugs, to be levelled here rather than by hand.** Stage 1 measured them;
+this is where they get fixed. All eight S5 slugs were read and only **two** had the same cases in
+all three editions:
+
+| slug | counts | cases |
+|---|---|---|
+| `measurement-name` | 4/4/4 | **identical** |
+| `material-selection` | 1/1/1 | **identical** |
+| `peak-selection-persistence` | 4/4/3 | same rules, web files the effect under `frozen-peak-recalc` |
+| `import-persistence` | 3/3/6 | 3 shared; web's extras guard a risk only its design had |
+| `export-filename` | 6/6/6 | **counts match, cases differ** |
+| `material-measurement-inputs` | 6/6/6 | **counts match, cases almost entirely different** |
+| `measurement-type-name` | 14/9/6 | drifted three ways (F16), levelled |
+| `measurement-codable` | 53/64/23 | organised by *type* in the natives, by *concern* in web |
+
+The implementations were checked in each case and agree, so **no defect follows from the drift** —
+what follows is that the editions pin different things, so a change that breaks one edition's rule
+can pass in another. Levelling the six by hand would be doing Stage 2's work without its mechanism,
+and would have to be redone once the shared case lists land.
+
+Note that `export-filename` and `material-measurement-inputs` are both 6/6/6 and neither is in
+parity. It was already known that a *spread* in the count table means little; this is the evidence
+that *agreement* means little too.
+
+The slugs already in parity — plus `view/dot-layer` and `test/peak-heal` from earlier subsystems —
+all reach it the same way: **a small, shared, numbered case list**. That is the pattern to
+generalise, and the reason this stage exists.
+
 **Why this comes second.** #8 designed a case schema for `test/frozen-peak-recalc` and never built
 it. That was fortunate: that slug needs stateful analyzer setup, where most slugs are
 input → expected output. Designing the shared format against it alone would have fitted the mechanism
@@ -1141,7 +1384,7 @@ to the least representative example — the same mistake that produced the origi
 fixture built for one test became the pattern for a suite.
 
 **Relative size.** The owner's read, 2026-09-20, is that Stage 1 overwhelms Stage 2. The measurement
-supports it: Stage 1 is 43 slugs across nine subsystems with production defects expected, where
+supports it: Stage 1 is 40 test slugs across nine subsystems with production defects expected, where
 Stage 2 is a mechanical move of the case-shaped subset. This bears on what #17 should gate — see
 [`ANDROID-PLAN.md`](ANDROID-PLAN.md), which records that how much of #17 gates the Android port is a
 judgement, not a given.
