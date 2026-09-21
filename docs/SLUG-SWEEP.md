@@ -728,6 +728,62 @@ job is to make every case-shaped slug look like this**, with the case list in da
 repeated in three files — but the ID scheme alone already captures most of the benefit and costs
 nothing.
 
+### S3 — Pitch (`test/pitch`)
+
+Status: ✅ **COMPLETE** — one finding (F13), fixed in all three editions.
+Landed as Swift `b973fdf`, Python `33c4899`, web `df2b45e`.
+
+**F13 — `test/pitch`'s 22/22/6 was a difference in SURFACE, not a gap in coverage. (FIXED)**
+
+The widest-looking gap left in the map, and it was not what it looked like. Web's `Pitch` had five
+members — `pitch`, `freq`, `note`, `freq0`, `cents` — and its six tests are table-driven over six
+frequencies asserting three of them, so on the **shared** surface the editions were comparable. The
+natives had three more methods: `pitchRange`, `formattedNote`, `isInTune`.
+
+Searched wider than the exact spelling (`intune`, `formattednote`, `pitchrange`, case-insensitive,
+across all Swift and Python app source plus the manual): **none of the three has a call site
+anywhere outside its own definition and its tests.** Nine of Swift's 22 tests exercised them. So
+roughly 40% of the natives' pitch coverage pinned code the application never calls, and that
+inflation was the whole apparent gap.
+
+**Not dead code, though.** Owner's reading: `Pitch` was written as a general package and not all of
+it is used by the application — *"They still need testing."* So the question was never whether to
+delete them, but whether the **package** is the same in all three editions. Owner's decision: it is.
+Web gains all three.
+
+**Porting them found a live divergence, which is the argument for that decision.** JavaScript's
+`toFixed` rounds ties **away from zero**; C's `%.0f` and Python's `:.0f` round ties **to even**. A
+naive port of `formattedNote` would disagree with both natives at every exact half-cent — `0.5` as
+`1` against `0`, `2.5` as `3` against `2`, `-0.5` as `-1` against `-0`. Web now carries an explicit
+`roundTiesToEven`, with a test pinning exactly which values the two modes disagree on (only where
+the floor is even: `1.5` and `-1.5` agree). Under the other reading this would have shipped silently,
+because web would simply never have had the method.
+
+**A second finding inside the first: two of `pitchRange`'s four branches were dead.** The outer
+branch on the sign of the cents offset is load-bearing — it decides whether the nearest note is the
+lower or the upper bound, and forcing it always-true fails two tests by name. But the inner
+`note == 11` / `note == 0` checks, commented as handling octave boundaries, did nothing:
+`freq(note, octave)` is `c0 · 2^(note/12) · 2^octave` with no bounds check, so note 12 already
+*means* C of the next octave and note −1 already means B of the previous one. Removing them changed
+**648 bound values across C0–B8 at −30/0/+30 cents by at most 1.15e-16 relative** — 5.8e-14 Hz at
+500 Hz. Eight lines became four in both natives, and the comment claiming credit for the formula's
+work is gone from all three files so it does not come back.
+
+**Found by mutation, not by reading.** `pitchRange` had **no test in any edition** despite that
+branching. Six were written for it, and disabling the octave crossing still passed all 28 — which is
+how the branches were discovered to be redundant. The tests were right to keep: they pin the
+observable bounds, which hold however the code computes them.
+
+Tests: Swift 22 → 28, Python 22 → 28, **web 6 → 20**. Suites: Swift **550** in 115 suites, web **539
+passed, 0 skipped**.
+
+**Three of the new web expectations were wrong when first written**, and each was checked against the
+natives before anything changed: asserting `+2` where all three editions produce `+3` (a frequency
+round-trip lands on 2.5000000000003633, genuinely above the tie), asserting `isInTune(f, 10)` true
+where all three say false for the same reason, and asserting `toFixed` disagrees on every tie when it
+only disagrees when the floor is even. Expected values must come from the canonical edition, never
+from running the code under test — and that applies to the tests written *during* the sweep too.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those
