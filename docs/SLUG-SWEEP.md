@@ -424,6 +424,218 @@ suite after every change, never just the slug's own file.
 (`.cyan`, `.green`, `.orange`, …) while Python pins RGB tuples and web pins hex, and those three sets
 are visibly different from each other. Unmeasured so far — it is S2's slug, taken up there.
 
+### S2 — Mode classification (`classify`, `mode-colors`, + `view/dot-layer`)
+
+Status: ✅ **COMPLETE** — all three slugs plus `view/dot-layer` read; four defects found and
+fixed (F9–F12). Landed as Swift `a653caf`, Python `8137876`, web `e162237`.
+
+Full suites after the S2 work, all green:
+
+| edition | after S1 | after S2 |
+|---|---|---|
+| Swift | 534 in 114 suites | **544 in 115 suites**, all passed |
+| Python | 633 passed, 1 skipped | **642 passed, 1 skipped** |
+| web | 488 passed, 2 skipped | **524 passed, 2 skipped** |
+
+Per-slug:
+
+| slug | Swift | Python | web |
+|---|---|---|---|
+| `test/classify` | 37 → 43 | 37 → 43 | **8 → 44** |
+| `test/mode-colors` | 1 → 5 | 1 → 4 | 3 → 3 |
+
+Four production files changed — `GuitarMode.swift` and `guitar_mode.py` (absolute colours, and
+Python's Quadrapole mapping), `modeColors.ts` (the academic-label table and two colours), and
+`PeakCard.tsx` (the extended-mode picker group). Two behaviour changes reach users: the mode colours
+on every chart, and web resolving academic override labels instead of silently demoting them.
+
+**What S2 says about the sweep.** The opposite lesson to S1's, and worth both. The part flagged in
+advance as the substantive risk — `classifyAll`, where #8 found a real bug — turned out **correct in
+all three editions**: same algorithm, same bands across all four guitar types, same tie-break. Every
+defect was in the periphery nobody was looking at: colours, label resolution, and which slug a rule
+was filed under. Two subsystems in, the count spread has pointed at the defects **zero** times:
+`test/classify` read 37/37/8 and hid nothing, `test/mode-colors` read 1/1/3 and hid two user-visible
+divergences.
+
+`test/classify` back-filled: web 8 → 31, Python 37 → 38, Swift 37 → 38. Web's gap was real and is
+closed — it now covers acoustic and classical band classification with Swift's own cases and
+frequencies, the band table for all four guitar types, and the `classifyAll` edge cases. Written as
+a row list plus a loop, which is the shape Stage 2 moves every case-driven slug to.
+
+Suites after the back-fill, all green — Swift **535** in 114 suites, Python **634 passed, 1 skipped**,
+web **511 passed, 2 skipped**. Parity map current at 97 groups, 12 platform-specific, no problems.
+
+One invariant is newly pinned in **all three**: on equal magnitude the **first** peak wins the band.
+No edition pinned it before. Verified in each rather than assumed — Swift's `max(by:)` and Python's
+`max()` both keep the first maximal element, and web's loop replaces only on a strict `>`. A
+tie-break that differed per edition would stay invisible until a real measurement produced a tie, and
+would then move which peak is "the Air peak" in one app and not the others.
+
+**The classifier itself is sound, and that is worth recording.** `classifyAll` — the context-aware
+claiming algorithm where peaks compete for mode bands, and where #8 found the Generic Top/Back
+overlap problem — matches across all three editions. Same ordering by ascending lower bound, same
+`max(range.lo, claimedTop + 1)` constraint on Back, same fallback for unclaimed peaks, and the same
+tie-break (all three keep the *first* maximal element on equal magnitude). The mode bands match
+exactly across all four guitar types:
+
+| type | air | top | back | dipole | ring | upper |
+|---|---|---|---|---|---|---|
+| generic | 70–135 | 140–260 | 180–300 | 310–460 | 580–880 | 880–20000 |
+| acoustic | 90–120 | 150–210 | 210–290 | 360–460 | 620–880 | 880–20000 |
+| classical | 80–110 | 170–230 | 190–280 | 330–430 | 580–820 | 820–20000 |
+| flamenco | 85–115 | 180–220 | 200–250 | 350–450 | 600–850 | 850–20000 |
+
+So `test/classify`'s 37/37/8 is a **coverage** gap, not a behaviour divergence. Checked one level
+down as well: web's `modeBands()` sorts in place, which would corrupt module state if it returned a
+shared array — it returns a fresh deep copy per call, and the comment saying so is accurate.
+
+**F9 — the three editions drew three different mode palettes, and only one had a reason. (FIXED)**
+
+Measured, Swift resolved on macOS 26.6.2:
+
+| mode | Swift | Python | web |
+|---|---|---|---|
+| Air | `#00C0E8` | `#00B7EB` | `#4EA1FF` |
+| Top | `#34C759` | `#28A028` | `#5FD07A` |
+| Back | `#FF8D28` | `#DC7828` | `#F0A03A` |
+| Dipole | `#FF383C` | `#D23232` | `#E0584A` |
+| Ring | `#CB30E0` | `#823CC8` | `#B07AD8` |
+| Upper | `#8E8E93` | `#828282` | `#9AA6B3` |
+| Unknown | `.secondary` ¹ | `#828282` | `#5A6573` |
+
+¹ `NSColor(Color.secondary)` resolves to black in a probe because `.secondary` is a hierarchical
+style rather than a plain colour. Treat that cell as unmeasured, not as "Swift draws black".
+
+Web's palette is brightened for its dark chart, which is deliberate, documented, and is what the
+theme work formalises. **Python has no such reason** — it is on white, like Swift — and its palette
+is its own invention, differing substantially: Ring is `#823CC8` against Swift's `#CB30E0`. Unlike
+F8, these never agreed; Python did not drift away from Swift, it never matched.
+
+**Python cannot distinguish Upper Modes from Unknown.** Both are `(130, 130, 130)`. Swift separates
+them (`.gray` vs `.secondary`) and so does web (`#9AA6B3` vs `#5A6573`). On the Python chart those
+two categories are the same grey — a functional difference, not a palette preference.
+
+Both native tests pin their own edition's values and state in a comment that the editions differ by
+design. For web that is true. For Python the comment records the divergence without justifying it.
+
+**The fix**, owner's rule 2026-09-20: *keep the web's value where the difference is the background,
+follow Swift where it is not.* Measuring the hues split the table cleanly.
+
+| mode | Swift & Python (light) | web (dark) | |
+|---|---|---|---|
+| Air | `#00C0E8` | `#00C0E8` | was `#4ea1ff` — a **blue**, 22° from Swift's cyan, not a dark variant |
+| Top | `#34C759` | `#5fd07a` | kept — Swift's hue at 1° |
+| Back | `#FF8D28` | `#f0a03a` | kept — 5° |
+| Dipole | `#FF383C` | `#e0584a` | kept — 7° |
+| Ring | `#CB30E0` | `#CB30E0` | was `#b07ad8` — 18° off |
+| Upper | `#8E8E93` | `#9aa6b3` | kept — near-neutral, only lightness matters |
+| Unknown | `#808080` | `#5a6573` | kept — near-neutral |
+
+Swift's values are now absolute, as in F8, and Python carries them identically. Python changed most:
+its whole palette was invented, and Upper Modes and Unknown are no longer the same grey. All three
+editions now assert that the seven must stay tellable apart, and name that pair specifically.
+
+Swift's `Unknown` was `.secondary` — black at 50% alpha. Resolved rather than guessed: it composites
+to `#808080` on the white chart, and that is the value pinned.
+
+**Mutation-tested with the real defect.** Setting Python's Unknown back to Upper's grey fails two
+tests: the table and the distinctness check.
+
+**One inconsistency, deliberately left.** `WoodQuality` pinned the **pre**-macOS-26 values (F8, which
+restored Swift's earlier appearance) while `GuitarMode` pins the **post**-26 ones (which preserves
+its current appearance). Each followed the decision made for its own case. The owner's call,
+2026-09-20: leave it — the theme work restates the whole palette anyway, and levelling it now would
+be churn against values that are about to change. Picked up by THEME-SPEC.md, not by #17.
+
+**F10 — the same rules lived under different slugs in different editions, so the counts were not
+comparable. (FIXED, and a rule adopted)**
+
+`test/mode-colors` reads 1/1/3. That is not a coverage gap. Web puts three rules in that slug —
+colour, abbreviation, display name. Swift and Python put colour there and assert **abbreviation and
+display name under `test/classify` instead** (`GuitarModeTests.displayName_*`,
+`test_guitar_mode.py::test_*_display_name`). All three editions test all three rules; they disagree
+only about which slug owns them.
+
+This is the fifth defect shape from S1 in a second form. There it was one rule under two slugs in one
+edition; here it is one rule under different slugs per edition. Both make `--check` and the count
+table describe something other than coverage. **Every count in the starting-picture table is suspect
+for this reason**, and the sweep cannot rely on them to find gaps — only reading can.
+
+**The rule, adopted 2026-09-20: the canonical edition decides which slug owns a rule.** Where the
+editions disagree about filing, the ports move to match Swift. It is mechanical, needs no judgement
+per case, and makes the counts honest again as a side effect rather than as the goal. Applied here:
+web's label and display-name assertions moved from `mode-colors` to `classify`.
+
+The owner's framing is worth keeping: the counts do not decide *what* gets checked, because every
+slug is being read anyway. They matter only for whether the record reads truthfully afterwards.
+
+**F11 — web had none of the academic mode labels, and silently downgraded them on load. (FIXED)**
+
+Swift and Python both offer a second set of override labels in the mode picker, in the acoustical
+physics T(m,n) notation, for users who prefer it: `Helmholtz T(1,1)_1`, `Top T(1,1)_2`,
+`Back T(1,1)_3`, `Cross Dipole T(2,1)`, `Long Dipole T(1,2)`, `Quadrapole T(2,2)`,
+`Cross Tripole T(3,1)`. Both resolve them back to real modes — Swift via
+`GuitarMode.fromDisplayName`, Python via `from_mode_string`. The two lists are identical.
+
+Web has neither half. `MODE_BY_DISPLAY_NAME` is built only from the seven current display names, so
+`effectiveMode` falls through to `'unknown'`. Measured, not inferred — all seven resolve to
+`unknown` in web where both natives resolve them to a mode.
+
+Two consequences. A web user cannot assign an academic label at all, which is a missing feature. And
+**a measurement saved in Swift or Python with one of those overrides loads in web as a freeform user
+label** — teal user colour instead of the mode colour, and excluded from every surface that asks
+"which peak is the Dipole", including the tap-tone ratio and the definitive-peak resolution. That is
+a cross-edition data-fidelity difference, not a UI preference.
+
+**The fix**, owner's decision 2026-09-20 — web matches Swift and Python, both halves.
+`MODE_BY_ADDITIONAL_LABEL` carries the seven, `MODE_BY_DISPLAY_NAME` folds them in so any edition's
+file resolves the same way here, and the picker gained an "Extended modes" group matching the
+natives' menu structure (standard modes, separator, extended, separator, Custom).
+
+**F12 — Swift and Python disagreed on what `Quadrapole T(2,2)` means. (FIXED)**
+
+| label | Swift | Python |
+|---|---|---|
+| Helmholtz T(1,1)_1 | Air | Air | 
+| Top T(1,1)_2 | Top | Top |
+| Back T(1,1)_3 | Back | Back |
+| Cross Dipole T(2,1) | Dipole | Dipole |
+| Long Dipole T(1,2) | Dipole | Dipole |
+| **Quadrapole T(2,2)** | **Ring Mode** | **Upper Modes** |
+| Cross Tripole T(3,1) | Ring Mode | Ring Mode |
+
+One entry in seven. Swift folds Quadrapole into Ring Mode; Python sends it to Upper Modes. Whichever
+a user picks, the two apps then disagree about which peak is the Ring Mode peak — which propagates
+into the ratio and the definitive-peak resolution.
+
+**The fix**, owner's decision 2026-09-20: Swift is correct; Python and web follow. Quadrapole
+resolves to Ring Mode in all three. Mutation-tested — reverting Python to Upper Modes fails exactly
+one test, naming the label.
+
+**Neither mapping was tested in any edition.** `fromDisplayName` / `from_mode_string` had no test in
+Swift, Python or web, despite being reachable from the override picker in two of them. That is how
+the two natives came to disagree, and it is the same shape as F7: a user-facing behaviour that no
+edition pinned. All three now cover it — the standard names, each academic label, that every label
+the picker offers resolves, and that a freeform label is `unknown` rather than falling through to the
+auto mode.
+
+**`view/dot-layer` is what parity looks like, and is the model for the rest. (no finding)**
+
+Recorded because it is the first slug read in this sweep with nothing wrong with it, and because it
+already does informally what Stage 2 proposes to do formally.
+
+Ten cases, **DL1–DL10**, numbered identically in all three editions, in the same order, testing the
+same rules with the same names: range filtering and inclusive bounds (DL1–DL2), the unknown-mode
+filter and its material exemption (DL3–DL5), the dot list being independent of annotation mode,
+selection and mode overrides (DL6–DL7), and a user-named out-of-band peak becoming known (DL8–DL10).
+
+The shared case IDs are the whole trick. A reader can line the three files up side by side, and a
+missing case is a missing number rather than something to be noticed. Nothing in this sweep has been
+easier to verify, and it took minutes rather than the hours the material subsystem took. **Stage 2's
+job is to make every case-shaped slug look like this**, with the case list in data rather than
+repeated in three files — but the ID scheme alone already captures most of the benefit and costs
+nothing.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those
