@@ -375,6 +375,7 @@
         "src/presentation/modeColors.ts"
       ],
       "tests": [
+        "test/classify",
         "test/mode-colors"
       ],
       "equivalence": "tests"
@@ -823,42 +824,6 @@
       "equivalence": "test suite"
     },
     {
-      "slug": "test/oracle-sync",
-      "swift": [],
-      "python": [
-        "tests/test_oracle_sync.py"
-      ],
-      "web": [
-        "test/oracle-sync.test.ts"
-      ],
-      "tests": [],
-      "equivalence": "test suite"
-    },
-    {
-      "slug": "test/parity-oracle",
-      "swift": [
-        "GuitarTapTests/ParityOracle.swift"
-      ],
-      "python": [
-        "tests/parity_oracle.py"
-      ],
-      "web": [],
-      "tests": [],
-      "equivalence": "test suite"
-    },
-    {
-      "slug": "test/parity-runner",
-      "swift": [],
-      "python": [
-        "tests/parity_runner.py"
-      ],
-      "web": [
-        "test/parityRunner.ts"
-      ],
-      "tests": [],
-      "equivalence": "test suite"
-    },
-    {
       "slug": "test/peak-heal",
       "swift": [
         "GuitarTapTests/PeakDuplicateHealTests.swift"
@@ -957,18 +922,6 @@
       ],
       "web": [
         "test/scenario-trace.test.ts"
-      ],
-      "tests": [],
-      "equivalence": "test suite"
-    },
-    {
-      "slug": "test/self-baseline",
-      "swift": [],
-      "python": [
-        "tests/self_baseline.py"
-      ],
-      "web": [
-        "test/selfBaseline.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1114,7 +1067,55 @@
         "Tooling/mint-baseline.py"
       ],
       "web": [
-        "test/mint-baseline.test.ts"
+        "tooling/mint-baseline.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/oracle-sync",
+      "swift": [],
+      "python": [
+        "tests/test_oracle_sync.py"
+      ],
+      "web": [
+        "test/oracle-sync.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/parity-oracle",
+      "swift": [
+        "GuitarTapTests/ParityOracle.swift"
+      ],
+      "python": [
+        "tests/parity_oracle.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/parity-runner",
+      "swift": [],
+      "python": [
+        "tests/parity_runner.py"
+      ],
+      "web": [
+        "test/parityRunner.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/self-baseline",
+      "swift": [],
+      "python": [
+        "tests/self_baseline.py"
+      ],
+      "web": [
+        "test/selfBaseline.ts"
       ],
       "tests": [],
       "equivalence": "review only"

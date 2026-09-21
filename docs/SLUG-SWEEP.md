@@ -189,41 +189,133 @@ tests in web than in canonical Swift, which is as interesting as the thin ones.
 
 Recorded here when found; each is closed in the subsystem that owns it.
 
-**F1 — the `tests=` links in the parity map are unreliable. (open, close at end of sweep)**
+**F1 — the `tests=` links in the parity map are unreliable. (open — repaired per subsystem)**
 `tests=` is a hand-written attribute on a production file's `@parity` tag, so it is a comment, and
 rule 3 applies. Against the import graph it does not hold: sixteen `test/*` slugs have no production
 group pointing at them, and twenty-six production groups claim no test evidence at all. Some of those
 are plainly wrong — `test/field-precision` is "unlinked" while `field-precision.test.ts` imports
 `src/precision.ts` and nothing else. This matters beyond tidiness: `doc_coverage.py` derives the
 functional-block coverage metric from these links, so the coverage number is only as good as the
-attribute. Do not use `tests=` as input to the sweep; repair it from the import graph at the end.
+attribute. Do not use `tests=` as input to the sweep.
 
-**F2 — five `test/*` slugs are not tests at all. (open, S9)**
-Three are shared helper modules imported by real tests: `parity-oracle`, `parity-runner`,
-`self-baseline`. Two are oracle-maintenance tooling, confirmed by the owner 2026-09-20:
-`oracle-sync` checks a repo's vendored `parity-oracle.json` against canonical, and `mint-baseline`
-(with `mint-oracle.sh`) regenerates the oracle and baseline files on the rare occasions they are
-deliberately refreshed. None of the five asserts anything about application behaviour.
+**Repair it at the end of each subsystem, not at the end of the sweep.** Owner's correction,
+2026-09-20: the links for a subsystem's slugs are known once that subsystem has been read, and that
+is the moment to fix them. Deferring the lot to the end would mean repairing from a script instead
+of from knowledge, and would leave `--gaps` and the coverage metric wrong in the meantime. It also
+matches the standing convention that a `@parity` change lands in the same commit as the code.
 
-Because they carry `test/*` slugs, `--check` counts them as test evidence and `doc_coverage.py`
-folds them into the functional-block coverage metric. They need a classification of their own —
-`tooling/*`, or `none` — decided in S9. Nothing about the files themselves is wrong; the
-classification is.
+S1 needed no repair — nothing moved slugs. **S2 needed three, and they were missed** on the first
+pass, which is the evidence for doing this per subsystem rather than later:
 
-**F3 — the oracle staleness guard is not running in any edition. (open — #16's, not #17's)**
+- `modeColors.ts` said `tests=test/mode-colors` after its label and display-name rules moved to
+  `test/classify` under the F10 rule.
+- `dsp/guitar-modes` carried `tests=test/classify` in Swift and **no `tests=` at all** in Python or
+  web, though all three pin the mode bands there.
+
+So the per-subsystem checklist gains a step: after the tests settle, re-read the `@parity` tags of
+every production file the subsystem touched, and regenerate. `--check` does not catch this — a
+missing or stale `tests=` is not an error, only a silently wrong coverage claim.
+
+**F2 — four `test/*` slugs were not tests at all. (FIXED — Swift `6ead450`, Python `e6e7ddc`, web `363776f`)**
+
+Two were helper modules imported by real tests — `parity-runner`, `self-baseline` — plus
+`parity-oracle`, the vendored oracle reader. The fourth, `oracle-sync`, looked like a test because
+it lives in a test file and runs in the suite, but the owner's reading settles it: **it is a tool
+that is run**, not a test. What it exercises is whether a vendored file is fresh, not what the app
+does.
+
+**Why they were treated as tests: the slug prefix is the only signal.** `gen_parity_map.py` decides
+on `slug.startswith("test/")` and nothing else — that stamps a group `equivalence = "test suite"`
+(line 211), and puts it in the set a production file's `tests=` is allowed to point at (line 351).
+These files were given the `test/` namespace because of where they live, not what they do.
+`tooling/mint-baseline` and `tooling/capture-probe` already had it right.
+
+**The harm was narrower than first recorded here, and that correction matters.** This entry
+originally claimed `--check` counted them as test evidence and that the coverage metric folded them
+in. Checked: **no production group links to any of them**, and they are correctly excluded from
+`testable`, so no coverage claim was ever inflated. What they actually cost was:
+
+- **Legibility.** Four slugs in the `test/*` namespace that can never have a test, reading as 0/0/0
+  gaps. That is exactly what cost time at the start of this sweep — the starting picture reported
+  "eight slugs missing an edition" and four of the eight were these.
+- **A latent trap.** Being in `test_groups`, a `tests=test/parity-runner` written on some production
+  file would have been accepted as valid evidence. Nothing did.
+
+**The fix:** all four retagged to `tooling/*`, joining `mint-baseline` and `capture-probe` at
+`equivalence = "review only"`, and excluded from the coverage maths because `tooling/` is not in
+`TESTABLE_AREAS`. `test/*` now means exactly one thing — evidence about application behaviour — and
+is **39 slugs, not 43**.
+
+**A residual, found by the owner asking why web had a skipped test and the natives did not.**
+Fixing the slug did not move the file. `mint-baseline.test.ts` still sat in `test/`, so vitest
+collected it on every run and it reported as a permanent skip, held back by a `MINT_BASELINE=1` env
+gate. The natives have no equivalent: Python's minter is `Tooling/mint-baseline.py`, which pytest
+never sees, and Swift has no self-baseline minter at all (F4). `MINT_BASELINE` was never a
+cross-edition convention — it existed **only** because web's minter lived inside the suite and
+therefore needed a runtime flag to stop it writing.
+
+It is now `tooling/mint-baseline.test.ts`, outside the `test/**/*.test.ts` glob, with its own
+`tooling/vitest.mint.config.ts`, run by the existing wrapper. Vitest 2.x has no `--include` CLI flag
+and `--dir` does not override the glob, so a second config is the way to run a file outside the
+suite — verified in a scratch sandbox before committing to the approach.
+
+Two things improve. The enablement gate is **deleted rather than obeyed**: the suite cannot load the
+minter at all, which is a stronger guarantee than a flag on something already imported.
+(`MINT_BASELINE_YES`, the confirm-the-diff flag, remains — it still has to reach the file, and is
+what Python spells `--yes`.) And web's default run now reports **zero skips**, like Python's.
+
+**Why bother, for one skipped test.** A standing skip in every run teaches people to scroll past
+skips. That is not hypothetical here: F3 skipped *loudly*, on every machine, for months, and nobody
+noticed. Leaving one permanent skip is the condition for the next one.
+
+**F3 — the oracle staleness guard was not running anywhere, and the reason was not what it said.
+(FIXED — same commits as F2)**
+
 Every repo vendors its own `parity-oracle.json` so its suite runs offline, which is also the failure
 mode: the copy can go stale while canonical moves on, and every test keeps passing against
 yesterday's numbers. Python and web each wrap `tooling/sync-oracle.sh --check` to catch that. Both
-currently skip, loudly, with *"CANONICAL ORACLE UNREACHABLE … Script said: curl: (56) The requested
-URL returned error: 404"* — the published URL 404s while the hub is private, and the fallback needs
-`ORACLE_SRC=<hub checkout>`. Swift has no wrapper test, though it too vendors a copy
-(`GuitarTapTests/parity-oracle.json`, with its own `oracle-dest.txt` and `sync-oracle.sh`); the check
-means less there, because Swift's copy is the source the hub's is published *from*.
+skipped, loudly, with *"CANONICAL ORACLE UNREACHABLE … curl: (56) … 404"*.
 
-All four copies — hub, Swift, Python, web — are byte-identical today (`md5 5880a2eb…`), so nothing
-has drifted yet. The guard simply is not guarding. It is designed to start working by itself once
-the hub goes public ([#11](https://github.com/dwsdolce/guitar-tap-project/issues/11)); until then the
-question is whether a local-checkout fallback should be wired up rather than left to a skip.
+**The premise recorded here was wrong.** This entry said the guard was waiting on the hub going
+public ([#11](https://github.com/dwsdolce/guitar-tap-project/issues/11)). The owner's correction,
+2026-09-20: the requirement was never that the hub be *public*, only that the repositories be
+*reachable* — and the hub has been checked out beside the code repos the whole time. The script
+simply never looked there. `fetch_canonical` went straight from "no `ORACLE_SRC` set" to curling a
+URL, with no middle rung, even though the rest of the toolchain already assumes that layout
+(`gen_parity_map.py` resolves the code repos as siblings of the hub the same way).
+
+**The fix:** `fetch_canonical` now resolves canonical in precedence order — explicit `ORACLE_SRC`,
+then the hub directory beside this repo, then the published URL. One change, applied to the three
+byte-identical copies of the script. **Nothing is fetched or checked out**: if the file is there it is
+read, and if it is not, that rung is skipped.
+
+**And it says what it compared against.** Owner's concern, 2026-09-20: reading a directory that
+happens to be on disk can give unpredictable results, because a working copy may hold edits nobody
+has committed. That is real, though narrow — the hub's oracle only changes when someone re-mints, and
+during that window a repo reporting drift is *correct*, since it has not synced yet. The false green
+needs a specific sequence: edit the hub's oracle, sync the repos to it, then discard the edit.
+
+Two ways to close it were considered. Reading the hub's committed content with
+`git -C <hub> show HEAD:…` removes the risk but adds a git dependency to a script that uses only
+`curl` and `cp`, inside a path a test runs. Weighed against how contrived the failure is, that was
+over-engineering — the owner's question about what would do the reading is what exposed it.
+
+What landed instead is honest labelling, so a passing check is self-describing:
+
+```
+✅ parity-oracle.json is in sync with canonical
+   Compared against: …/guitar-tap-project/tooling/parity/parity-oracle.json
+   Source:           local working copy, the hub beside this repo
+```
+
+A pass against a working copy is a statement about **this machine**; a pass against the URL is a
+statement about **the project**. The reader can now tell which they have. The drift path carries the
+same line. All three rungs were exercised in a scratch sandbox — in sync, drift (exit 1 with the
+diff), and no hub present (exit 2, which is what makes the wrapper skip rather than fail).
+
+Both wrappers now **run and pass** instead of skipping. That is the first time the vendored oracle
+has actually been checked for drift in either edition. All four copies — hub, Swift, Python, web —
+are identical, so nothing had drifted; the guard simply was not guarding.
 
 **F4 — Swift's zero-tolerance check is the oracle itself. (closed — not a finding)**
 Recorded because the count table makes it look like a gap and it is not. `test/self-regression` is
