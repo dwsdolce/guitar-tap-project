@@ -1369,6 +1369,437 @@ those branches are unreachable and were deliberately left alone rather than leve
 rule when writing a new decoder.
 
 
+### S6 — Analyzer state machine (11 slugs)
+
+Status: ⏳ **IN PROGRESS** — 4 of 11 slugs read.
+
+**RESUME HERE.** Audit position as of 2026-09-21. This table records only **what the reading
+produced** — a finding number, or "clean" where none was filed. Each finding's status lives in the
+finding and nowhere else; do not restate it here.
+
+| slug | read? | produced |
+|---|---|---|
+| `effective-peak-id` | ✅ | coverage clean — 6/6/0 is structural, both halves of the claim verified; **F23** |
+| `comparison` | ✅ | **F24** |
+| `button-enablement` | ✅ | clean — 13/13/13 (F24's fix made `displayMode` required) |
+| `measurement-complete` | ✅ | **F25**, **F26** |
+| `annotation-state` (44/42/32) | ☐ | |
+| `status-message` (12/12/16) | ☐ | |
+| `tap-count-change` (6/6/11) | ☐ | |
+| `state-invariants` (7/7/7) | ☐ | |
+| `scenario-trace` (4/4/4) | ☐ | |
+| `session-pre-roll` (4/4/4) | ☐ | |
+| `start-tap-race` (4/4/4) | ☐ | |
+
+The unread rows' counts are Swift/Python/web. `annotation-state` is the largest and the likeliest to
+show F10-shape filing differences; `status-message` and `tap-count-change` are the two where web
+carries more cases than the natives.
+
+Method reminders that earned their place in S6 so far: counts mean nothing in either direction
+(`effective-peak-id` 6/6/0 was correct, `measurement-complete` 8/13/8 had the LARGEST suite missing
+two rules); verify a test file's own claims about why an edition differs (rule 3 applies to test
+headers too); and "behaviour is equivalent today" is not a reason to close an architectural
+divergence — that reading mis-filed F19 and nearly mis-filed F24.
+
+
+
+| slug | Swift | Python | web |
+|---|---|---|---|
+| `annotation-state` | 44 | 42 | 32 |
+| `button-enablement` | 13 | 13 | 13 |
+| `comparison` | 20 | 32 | 7 |
+| `effective-peak-id` | 6 | 6 | 0 |
+| `measurement-complete` | 8 | 13 | 8 |
+| `scenario-trace` | 4 | 4 | 4 |
+| `session-pre-roll` | 4 | 4 | 4 |
+| `start-tap-race` | 4 | 4 | 4 |
+| `state-invariants` | 7 | 7 | 7 |
+| `status-message` | 12 | 12 | 16 |
+| `tap-count-change` | 6 | 6 | 11 |
+
+**`test/effective-peak-id` (6/6/0) — web's absence is structural, and the claim checks out.
+(clean)**
+
+The test file asserts that web needs no counterpart because `identifyMaterialPeak` stores exactly
+one peak per phase, so there is no intermediate auto-selection to resolve against, and web's
+`selectedLongitudinalPeakID` is a persisted FILE field rather than live analyzer state. Rule 3 says
+verify rather than accept, and both halves hold: `identifyMaterialPeak` returns one peak or null
+into `matPeaks.longitudinal`, and every reference to `selectedLongitudinalPeakID` in web is in
+`measurement/` — types, `fromLive`, `decode`, `encode`, and the detail view. **None in
+`state/tapToneAnalyzer.ts`.** Nothing to test, and no gap.
+
+**F23 — six one-line pass-throughs, six summary lines describing resolution logic that was deleted.
+(FIXED — both natives)**
+
+`effectiveLongitudinalPeakID` and its two siblings are now `selectedPhasePeak?.id`. The layers were
+removed on 2026-09-20 — a user-override tier whose UI went in April 2026, and an `autoSelected*`
+arm that was unreachable. The bodies are correct and identical across editions. The prose is not:
+
+| property | summary line claims |
+|---|---|
+| Python longitudinal | "applying **two-layer** priority" |
+| Python cross | "applying **three-layer** priority" |
+| Python flc | "applying **three-layer** priority" |
+| Swift longitudinal | "applying **two-layer** priority", and "the **three** underlying sources" |
+| Swift cross, flc | "Priority order:" followed by **one** item |
+
+Siblings disagreeing about identical code — two-layer here, three-layer there — is the signature of
+successive edits that fixed some comments and not others. Note *which* part is wrong: the detailed
+body text in both editions explains the removal accurately. It is the **one-line summary** that
+lies, and that is the line an IDE tooltip and a generated doc page show, and the line a reader sees
+first. No behaviour is affected.
+
+All six now state what the property is — the phase's identified peak, or `nil`/`None` before the
+phase finalises — with the longitudinal one carrying the explanation of what the removed layers
+were, and its siblings pointing at it. The Python cross and FLC docstrings were worse than the
+summary line: they documented the whole removed chain, `userSelectedCrossPeakID >
+selectedCrossPeak.id > autoSelectedCrossPeakID`, naming symbols that no longer exist in either
+edition. Comments only, so there is nothing to run-review; Swift **560** and Python **664** green.
+
+**F24 — web keeps the display mode in the VIEW. The natives keep it on the analyzer.
+(FIXED — web, run-reviewed; the general restructure remains #1)**
+
+Surfaced by `test/comparison` (20/32/7), but this is not a `comparison` finding. Display mode is
+S6's spine, and the count spread is a symptom.
+
+| | display mode | lives in | invalid states | transitions unit-testable |
+|---|---|---|---|---|
+| Swift | `AnalysisDisplayMode` enum — live / frozen / comparison | the analyzer | **unrepresentable** | yes |
+| Python | mirrors it | the analyzer | **unrepresentable** | yes |
+| web | `displayModeIsComparison: comparison != null` | **React state in `App.tsx`** | representable | **no** |
+
+**This is the only S6 state web left in the view.** Everything else it moved: `isMeasurementComplete`
+(29 analyzer references), `currentTapCount` (30), `isDetecting` (18), `statusMessage`,
+`numberOfTaps`. And `state/buttonEnablement.ts` is a *pure function extracted precisely so the view
+and the test can share one rule* — which is why `test/button-enablement` is a clean 13/13/13. Web
+already knows how to do this. Display mode is the piece it did not do.
+
+Do not read "behaviour is equivalent today" as mitigation. That reading is what got F19 filed wrongly
+the first time, and the same three consequences follow here:
+
+**1. The transitions cannot be tested.** Swift drives `sut.loadComparison(…)` and reads
+`sut.displayMode`. Web's equivalents are `setComparison(…)` and `onLoadMeasurement(…)` — a React
+state setter and a component callback inside `App.tsx`, unreachable from a unit test. Swift's five
+transition cases, the axis-union case, the empty-array case and three multi-tap-reset cases have no
+web counterpart and cannot be given one while the state lives where it does.
+
+**2. The invariant is held by convention, and nothing checks it.** Swift's enum makes "frozen AND
+comparison" unrepresentable. Web reaches the same exclusivity by remembering to clear at **eight**
+`setComparison` call sites — the guitar load path does it twice over, at `App.tsx:1054` and `:1074`,
+which is what belt-and-braces looks like when nothing enforces a rule. Every path was checked and
+every one is correct today. **No test asserts any of it.** Delete any one of the eight and the suite
+stays green.
+
+**3. It has already leaked into a rule that should not know about it.** Because the button rule
+cannot read display mode from the model, it takes it as an argument — and an *optional* one, since
+most callers and tests have no display mode to pass:
+
+```ts
+displayModeIsComparison?: boolean
+...
+if (s.displayModeIsComparison) newTapDisabled = false
+```
+
+During comparison New Tap must stay **enabled** — it is how the user leaves. Omit the optional
+field and it is `undefined`, falsy, the normal rule applies, New Tap is disabled, and the user is
+trapped in comparison with no way out. There is one production caller and it passes the field
+correctly; the type system permits a second that does not. The natives cannot have this bug,
+because there is no argument to forget.
+
+**Recommendation: move display mode onto web's analyzer**, as a three-state value, and let the
+button rule read it rather than receive it. That is the only option of the three that makes the
+invalid state unrepresentable, restores the transition tests, and removes the optional argument.
+`buttonEnablement.ts` is the proof the pattern works in this codebase — extracted, tagged, tested,
+13/13/13.
+
+This is [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1), the view-layer restructure,
+arriving with a concrete instance and a measured cost. Scope is the owner's call; whether it is a
+divergence is not.
+
+Done as recommended — owner's call, 2026-09-21: "match swift/python… full move." Web's analyzer now
+owns a three-state `DisplayMode` (`'live' | 'frozen' | 'comparison'`) with `comparisonEntries` and
+`showingMultiTapComparison` beside it, an `isSavedMeasurementComparison` getter, and six transition
+methods — `loadComparison`, `loadComparisonRecord`, `clearComparison`, `setMultiTapComparison`,
+`enterFrozen`, `enterLive` — with `loadMeasurement` and `clearResult` wired to them internally, so
+"frozen AND comparison" is unrepresentable rather than merely unreached. `buttonEnablement.ts` reads
+the mode instead of receiving it: the optional `displayModeIsComparison?` is now a required
+`displayMode`, and the trap-the-user bug it permitted cannot be written. Web suite 593, run-reviewed
+across Compare, load-during-comparison, New Tap out of comparison, and multi-tap.
+
+The **general** restructure stays open as #1. What closed here is display mode; F26 immediately
+found the next instance of the same shape, in the same subsystem.
+
+**The fix was incomplete, and F26's run-review found it.** Owner, 2026-09-21: load a plate
+measurement, compare two guitar measurements, press New Tap — the overlay stayed on screen with a
+fresh capture arming underneath it. Loading the plate measurement set the type to plate, so New Tap
+took the material path, `onMaterialNewTap` → `startMaterial()`, and `startMaterial` never returns to
+live. The transition was wired into `clearResult()` only.
+
+Neither native can have this bug, because neither has a material-specific start. Swift's New Tap
+button goes to `requestStartTapSequence()` → `startTapSequence(initialPhase:)`; Python's `_on_new_tap`
+goes to `restart_tap_sequence()` → `start_tap_sequence(initial_phase)`. One method, guitar and
+material alike, clearing the comparison unconditionally — Python's even says so: *"For plate/brace,
+start_tap_sequence() already transitions material_tap_phase … no separate start_plate_analysis() call
+needed."* Web's fork is what made the omission available: state a start must reset now has to be
+remembered twice.
+
+Underneath it is a fourth instance of the same shape. Web **already has** `startTapSequence()` on the
+analyzer, already mirroring the natives, and production does not call it. Its doc comment explains
+why: the engine owns arming and "may be stopped there, so they must clear WITHOUT arming; that
+clear-without-arm split is the engine/analyzer divergence tracked separately." Another accurate
+description of a defect written down as a design.
+
+**And the reason given is stale.** Both arming entry points open with
+`if (!this.running || this.state === 'capturing') return` — arming a stopped engine is already a
+no-op, so "must clear without arming" is not a constraint the code imposes (CROSS-EDITION rule 6).
+
+Owner's call, 2026-09-21: fix the ownership, not the instance — "never put off to tomorrow what is
+needed today." The seam turned out to be six lines in `App.tsx` (two `engine.arm()`, four
+`engine.disarm()`); `armMaterial` was already model-owned, and `isDetecting` stays a mirror of engine
+state, since web's tap detector genuinely lives in the engine and two owners of "is detection live"
+could disagree.
+
+Four questions were answered before any code moved, this piece having been mis-sized twice already:
+
+- **`setDevice` always precedes the first arm.** `useAudioEngine` calls it immediately after
+  constructing the engine, before `engine.start()` and before the `onStarted` arm.
+- **All four `disarm()` sites are the same thing** — freezing after entering a frozen or comparison
+  mode — and map onto three analyzer methods: `enterFrozen` (guitar load), `restoreMaterial`
+  (material load), and `loadComparison` (which `loadComparisonRecord` delegates to).
+- **Guitar `currentTapCount` is reset today by the engine**, not the analyzer: `arm()` zeroes
+  `guitarTapCount` and fires `onProgress(0, n)`. Setting it in `startTapSequence` matches the natives
+  and is consistent either way.
+- **File playback keeps its no-arm start** (`arm: false`), because the engine owns the L→C→FLC
+  auto-advance and must not be re-armed underneath it.
+
+`startMaterial` is gone, folded into `startTapSequence({ initialPhase, arm })`, which does the shared
+reset and arms the device. The disarms moved onto the three transition methods. `App.tsx` lost both
+`engine.arm()` calls, all four `engine.disarm()` calls, and `onMaterialNewTap` — the New Tap button
+no longer picks a handler by measurement type, which is where the fork was visible. Cancel routes
+through the one restart, mirroring Swift `cancelTapSequence` → `startTapSequence`.
+
+Web 600. The regression case is in `test/comparison.test.ts`, one per type; mutating
+`startTapSequence` back to the forked shape (only guitar gets the shared reset) fails the material
+case and passes the guitar one — the exact asymmetry the owner hit.
+
+**The run-review of that move found two more things, one of them self-inflicted.**
+
+*A disarm went missing.* `loadMeasurement` set `displayMode = 'frozen'` inline rather than calling
+`enterFrozen`, so moving the guitar-load `engine.disarm()` onto `enterFrozen` put it somewhere
+nothing ran: loading a guitar measurement stopped disarming, and a stray tap could capture over the
+loaded result (invariant I1). `loadMeasurement` now goes through `enterFrozen`, so the freeze —
+including the disarm — happens in one place. Two copies of a transition is what let the first one
+lose a line.
+
+*Arming could fail silently, and that is a real defect the natives cannot have.* Reported by the
+owner: mid-plate, after accepting fC, the FLC prompt appeared with the spectrum and level meter
+running normally, and no tap would ever register — only an app restart recovered it. On Swift and
+Python arming is an assignment (`isDetecting = true` / `self.is_detecting = True`) that cannot be
+refused. On the web the detector lives in the engine, so arming is a request, and
+`armMaterial`/`arm` both opened with `if (!this.running || this.state === 'capturing') return` — no
+retry, no log. A dropped request leaves the app permanently deaf while everything that does not
+depend on detection keeps working, which is exactly the reported picture.
+
+A refused arm is now remembered and applied when the capture completes, and every refusal is logged
+with the state that caused it (the engine's existing `console.warn('[engine] …')` watchdog idiom).
+`disarm()` cancels a pending arm, so it cannot resurrect detection over a frozen result. Pinned in
+`test/engine-arming.test.ts` (`@parity none`, justified in its header: web-only compensation for a
+platform difference); restoring the silent drop fails the two cases that describe the symptom.
+
+Worth knowing for any future report: `waitingForFlcTap` and `capturingFlc` set the **identical**
+status prompt, so a stuck disarmed state looks exactly like a working armed one. That matches Swift
+and Python, which also reuse the prompt, so it was left alone — but it is why the screen could not
+tell the owner which state it was in.
+
+**Asking whether the natives could fail the same way found a bug in the canonical edition.** They
+cannot fail that way — arming there is an assignment (`isDetecting = true`), with no second party to
+refuse it, so the failure mode needs the web's engine/analyzer seam. But Swift had the mirror-image
+defect on the same transition: its FLC cooldown closure carried **no cancellation guard**, and
+`DispatchQueue.main.asyncAfter` cannot be cancelled — `cancelTapSequence()`'s
+`captureTimer.invalidate()` reaches a different timer. So pressing Cancel or New Tap within the
+0.5 s after accepting fC let the closure fire into the restarted sequence, forcing
+`materialTapPhase = .capturingFlc` and `isDetecting = true` and clearing its frozen spectrum. Both
+ports had always guarded; the canonical edition was the outlier. Confirmed by mutation before the
+fix: removing the new guard reproduces `.capturingFlc` after a cancel. Run-reviewed on macOS by the
+owner, 2026-09-21 — Cancel inside the cooldown now leaves the restarted sequence alone.
+
+There was a Rule 3 sting in it. Python's guard is commented as mirroring "Swift's
+`captureTimer?.invalidate()` cancellation idiom" — Swift uses that idiom, but not on this path, so
+the comment described a protection that did not exist where it mattered.
+
+The behaviour was tested in **no edition**: Python's only FLC-slot test covers the happy path, in a
+`@parity none` Qt-mechanics file, and mentions the guard in a comment without asserting it. All
+three now carry the case under `test/tap-progress`. Mutation showed the web's is protected twice —
+`startTapSequence` cancels the pending timer *and* the callback guards — so single mutations survive
+there and removing both is what fails it; Swift and Python have the guard alone, their scheduled
+work being uncancellable. Recorded in the web test, since a case that survives mutation for a
+*good* reason still needs to say so.
+
+**F25 — Python's completion flag is a plain attribute where both other editions enforce a setter.
+(FIXED — Python, run-reviewed)**
+
+`test/measurement-complete` reads 8/13/8. Python has the **most** cases of any edition and is the
+only one missing two rules — `MC6` (no taps must not complete) and `MC8` (completing clears the
+loaded-settings warning). Swift and web have all eight, as a shared numbered list MC1–MC8, which is
+the pattern F18 identified as the one that actually holds parity.
+
+Python's extra five are Qt signal-emission tests, which are legitimate and have no counterpart by
+design: Swift gets change notification from `@Published` and web from `notify()`. So the count is
++5 framework plumbing, −2 behaviour.
+
+**MC8 is missing because Python cannot write it the way the others do:**
+
+| | mechanism | can an assignment bypass it? |
+|---|---|---|
+| Swift | `didSet` on `isMeasurementComplete` clears the warning | **no** |
+| web | `private _isMeasurementComplete` + `set isMeasurementComplete(v)` | **no** |
+| Python | plain attribute, plus a `set_measurement_complete()` helper | **yes** |
+
+Swift's and web's MC8 assign the flag and assert the warning cleared. In Python that assignment
+clears nothing, so the test as written would fail — the rule lives in a helper the test would have
+to call by name.
+
+**Four production sites bypass the helper**, assigning the attribute directly:
+`spectrum_capture.py:1999`, `measurement_management.py:667`, `control.py:627`, and
+`views/fft_canvas.py:676` — a *view* property forwarding straight through to analyzer state. The two
+completion paths compensate by clearing the warning by hand on the next line, so **behaviour today
+is correct**; it is correct the way F24's web comparison was correct, by every call site
+remembering.
+
+And it reaches the tests: `sut.is_measurement_complete = True` means different things in the three
+editions — in Swift it fires `didSet`, in web the setter, in Python nothing. Six Python test files
+across S6 set the flag that way. Cases that read identically are not exercising the same thing.
+
+**MC6 is a plain gap**, not structural: nothing stops Python asserting that an empty tap list does
+not complete.
+
+Recommendation: make `is_measurement_complete` a property with a setter that does what Swift's
+`didSet` does, remove the now-redundant hand-clears at the two completion sites, and add MC6 and
+MC8 so Python carries the same eight. That is the same fix as F24 pointing the other way — this
+time it is Python relying on call sites where Swift and web enforce.
+
+`is_measurement_complete` is now a property whose setter carries Swift's two `didSet` actions and
+nothing else, so the four sites that bypassed the helper can no longer bypass the rules.
+`set_measurement_complete()` is assign + emit. Python gained MC6 and MC8, giving all three editions
+the same eight; the slug reads 8/16/8. Python **664 passed**, Swift **560** and web **593**
+unchanged.
+
+Two things above were not true, both found while implementing.
+
+**The bundle had no production caller, so unbundling was a deletion, not a move.** Nothing in `src/`
+calls `set_measurement_complete(False)`. The only path that drives completion False is
+`start_tap_sequence()` (`tap_tone_analyzer_control.py:627`), which assigns directly and then does
+its own cleanup — `clear_comparison()`, `captured_taps.clear()`, `reset_all_annotation_offsets()`,
+`set_frozen_spectrum([], [])` — four of the six bundled items, in the same place Swift does them.
+The other two, `loaded_measurement_peaks = None` and `set_material_spectra([])`, are **not** in
+Swift's `startTapSequence` either: Swift clears loaded peaks at live-capture completion
+(`+SpectrumCapture.swift:1661`) and in `+PeakAnalysis.swift:382`, and the material spectra in the
+phase and load paths (`+Control.swift:495,567`). Dropping them from the `False` branch is therefore
+the parity-correct outcome, not a regression, and the branch was reachable only from tests. Path 5's
+`test_set_false_clears_frozen_arrays` pinned it under a docstring calling the helper "the canonical
+setter"; it is now `test_set_false_does_not_reset_frozen_arrays`, pinning the Swift contract so the
+bundling cannot return (METHOD rule 5).
+
+**The emit does not belong in the setter.** The recommendation above said "plus the existing
+unconditional emit", contradicting this finding's own note that two sites defer it deliberately.
+Verified rather than inferred (CROSS-EDITION rule 6): both deferrals are real, each setting the flag
+and emitting inside one method — `process_multiple_taps()` (set 1999, emit 2100) and
+`_load_measurement_body()` (set 667, emit 856). Swift's `didSet` body contains no notification at
+all; the notification comes from `@Published` → `objectWillChange`, which SwiftUI coalesces to the
+end of the run loop, so the view is never told until the enclosing method has finished populating
+state. A Qt signal fires synchronously, so an emit in the setter would hand the view a half-built
+model at exactly those two sites. Emit-in-setter is the option that *diverges* from Swift. Owner's
+call, 2026-09-21: alignment is the goal, "but it is also tempered by the difference between the
+underlying frameworks — do it when swift does." The emit stays at the point Swift renders.
+
+**An ordering dependency neither edition states.** Load sets complete **before** raising the
+loaded-settings warning — Swift at 709 → 833, Python at 667 → 826 — which is the only reason a
+load's own warning survives a setter that clears the warning on completion. Reversing either would
+silently kill the banner.
+
+Mutation-tested (METHOD rule 2), each confirmed with no other test failing in its place: removing
+the empty-taps guard fails MC6 alone; removing the warning-clear fails both MC8 cases alone.
+Run-reviewed by the owner across eight checks — load raises the banner, New Tap clears it, guitar
+multi-tap completes, a plate sequence seeds Sample Dimensions from the Settings defaults on the
+transition, loading a saved plate measurement shows its **stored** dimensions instead of re-seeding,
+brace completes, Cancel re-arms with the frozen spectrum cleared, and New Tap clears a comparison.
+The last two are what confirm the deleted bundle had no production caller.
+
+One rule has no UI-reachable check: the warning being cleared *by completion itself*. New Tap
+already clears the banner and completion can only follow New Tap, so it is unobservable from the
+app. It mirrors Swift's `didSet`, is defensive, and is pinned by MC8 and mutation instead.
+
+**F26 — Swift's completion `didSet` does two things; each port implements a different half of it
+somewhere else. (FIXED — Python with F25, web separately; both run-reviewed)**
+
+Swift `isMeasurementComplete.didSet` (TapToneAnalyzer.swift:903) does exactly two things, and
+nothing else: clear the loaded-settings warning on completion, and seed Store B from Settings on a
+material CAPTURE completion (guarded `!oldValue`, `!isGuitar`, `!isLoadingMeasurement`).
+
+| | clear the warning | seed Store B |
+|---|---|---|
+| Swift | `didSet` | `didSet`, guarded on the **transition** |
+| Python | `set_measurement_complete()` — a method, so bypassable, and 4 sites bypass it | same method |
+| web | ✓ the real setter — matches | **a `useEffect` in `App.tsx`**, guarded on `matInputs == null` |
+
+Web's effect states outright that it "Mirrors Swift isMeasurementComplete.didSet seeding
+materialInputs" — it knows what it mirrors, and mirrors it in the view. That is F24's shape again:
+analyzer behaviour implemented in React.
+
+The guards are not the same predicate either. Swift and Python fire on the **transition** into
+complete. Web fires whenever the phase reads complete **and** Store B happens to be null, so
+anything that nulls Store B while still complete re-seeds from Settings — where the natives would
+not, having already spent their one transition.
+
+Also note what Swift's `didSet` does NOT do: clear captured taps, loaded peaks, annotation offsets,
+frozen arrays, the comparison, or material spectra. Swift does all of that explicitly in `reset()`
+and `cancelTapSequence()`. Python's `set_measurement_complete` bundles that reset work into its
+`if not is_complete:` branch, and **that bundling is the reason it cannot be a property**: an
+assignment of `False` anywhere would trigger a full reset. Unbundling is therefore the first step of
+F25's fix, not a separate clean-up.
+
+The Python half landed with F25: one setter mirroring the `didSet` now clears the warning and seeds
+Store B on the transition. The web half was larger than relocating the effect — Store B was not on
+web's analyzer at all, it was `useState` in `App.tsx`, making this F24's shape a second time rather
+than a guard change.
+
+Swift makes exactly three `materialInputs` writes: the `didSet` seed, the load, and the user's edit
+binding. It never nulls Store B on New Tap. Web did, at `App.tsx:502`, and that null-drop and the
+`matInputs == null` guard were a matched pair — both existed only because the seed lived in a view
+effect. Removing the drop makes the guard *become* the transition.
+
+**The settings path.** Swift and Python build Store B by reading a settings singleton from inside the
+model (`MaterialMeasurementInputs.fromSettings(for: TapDisplaySettings.measurementType)`). The web
+has no such global, which is why its helper takes settings as an argument. Three ways to give the
+analyzer one: push a narrow material-defaults slice, push the whole `Settings` object, or have the
+analyzer call `loadSettings()` itself. The third is a genuine trap — App keeps settings in React
+state and persists them through an ordinary `useEffect`, so localStorage lags state by a render, and
+a completion in the same tick as a settings change would seed from stale values. The first costs a
+bespoke type to maintain and a reshaped helper.
+
+Owner's call, 2026-09-21: push the whole object. The coupling objection did not survive the code —
+only three places consume a `Settings` *instance* (the settings panel, `fromLive`, and the seed
+helper); the other eight importers take types and constants. So `analyzer.settings` is pushed from
+the same `useLayoutEffect` that already pushes `measurementType` and `measureFlc`, for the reason
+that effect's own comment gives: the web has no analyzer-visible global.
+
+**A load had to be given a loading window.** Swift's `loadMeasurement` holds `isLoadingMeasurement`
+across the whole restore, which is what suppresses the seed. Web's material load is orchestrated
+from `App.tsx` as six separate calls — `measurementToLiveMaterial`, `updateSettings`, `setMatInputs`,
+`clearResult`, `restoreMaterial`, `restoreOffsets` — and never set that flag, because with the seed
+in a view effect the `== null` guard was doing the job instead. `restoreMaterial` now takes the
+measurement's dimensions and holds `isLoadingMeasurement` across the completion assignment. Without
+it the setter's guard reads false during a load and Settings clobbers the file's stored dims — the
+origin bug this whole two-store design exists to prevent.
+
+**The slug's own test header was a rule-4 finding.** `material-measurement-inputs.test.ts` opened
+with a "WEB DIVERGENCE" note recording the three canonical seed-gating cases (Swift
+`doesNotSeedStoreB*`) as untestable "React behaviour, covered by the V-A / V-C run-review" — an
+accurate description of a defect, written down as a design. With the seed on the analyzer they are
+ordinary unit tests, and the web now carries all three, plus one for the transition guard the old
+effect got wrong and one for the load window. Web 598. The `loadedNotes` state cases stay App-side
+and remain run-review territory.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those
