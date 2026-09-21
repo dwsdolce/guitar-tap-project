@@ -786,7 +786,45 @@ from running the code under test — and that applies to the tests written *duri
 
 ### S4 — Peak detection & analysis (`peaks`, `dsp`, `peak-heal`)
 
-Status: ⏳ in progress. `test/dsp` done (F14). `test/peaks` and `test/peak-heal` not yet read.
+Status: ✅ **COMPLETE** — all three slugs read. One finding (F14), the most serious of the sweep.
+Landed as Swift `8347ca7`, Python `8c750d0`, web `7fd739e`, hub `b6492f6`.
+
+Suites after S4: Swift **550** in 115 suites, Python **643**, web **549** across 51 files, none
+skipped anywhere. Python's count **drops** — minus sixteen tests that could not fail, plus ten that
+exercise the live code. A suite that shrinks while covering more is the honest outcome; adding only
+the web file would have raised the total while Python still tested nothing.
+
+**`test/peaks` — clean. (no finding)**
+
+Recorded because it was read closely rather than skipped, and because it was the obvious place to
+expect another F14: `test_peak_finding.py` carries the note from 2026-07-19 saying it "previously
+did not test the code it claimed to". That rewrite **did** land. All three editions call the live
+methods — `find_peaks` / `findPeaks`, `remove_duplicate_peaks`, `average_spectra` — and the
+underscore-prefixed helpers are fixture builders (`_flat`, `_tap`, `_spectrum`) and assertion
+helpers (`expect_no_duplicate_peaks`, which checks an invariant over `find_peaks` output), not
+reimplementations of production logic.
+
+The full-set-save rule is organised differently in each edition — inside the peak-finding file in
+Swift and Python, its own file in web — but all three cover it and all three sit under this slug, so
+the counts are not distorted. Now **24/24/26**, the Python figure having dropped by the six dead
+`test_fft_peak_detection` tests removed under F14.
+
+**`test/peak-heal` — clean, and the best-built slug read so far. (no finding)**
+
+Five cases, same names, same order in all three editions, with Python and web sharing the **D8**
+case IDs. All three reach production — `TapToneAnalyzer.decodeMeasurements`,
+`TapToneMeasurement.from_dict`, `decodeMeasurement` — and all three load the **same fixture**,
+`dws-2024-umik-1-swift-mac-1784225155.guitartap`, verified byte-identical across the three repos by
+checksum rather than by filename. That last check is what F5 was about: matching names over
+different bytes is how the material fixtures diverged.
+
+This is the `view/dot-layer` pattern again — shared case IDs make a missing case a missing number —
+and it is what Stage 2 is trying to generalise.
+
+**What S4 says about the sweep.** The two slugs that looked safe were safe; the one that looked like
+a missing web file was an edition testing code its app never ran. Four subsystems in, the count
+spread has pointed at the actual defect **zero times out of four** — and here it pointed at the
+wrong edition entirely, since `test/dsp`'s 10/10/0 read as a web gap and the defect was in Python.
 
 **F14 — Python's `test/dsp` tested a second implementation that the app never ran.
 (FIXED — Swift `8347ca7`, Python `8c750d0`, web `7fd739e`)**
