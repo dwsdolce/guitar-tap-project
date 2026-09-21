@@ -911,9 +911,14 @@ Suites at close: Swift **560** in 115 suites · Python **657** · web **581** in
 skipped; parity map 99 groups, no orphans. Every rule added here was mutation-tested — broken
 deliberately, confirmed failing, restored.
 
-**Run-review still outstanding**, tracked separately from sweep completion: three changes here are
-user-visible and have only been proven by tests — Save disabled until the name or notes differ,
-notes trimming on save as well as edit, and Python minting uppercase UUIDs.
+**Run-review**, tracked separately from sweep completion, since three changes here are user-visible
+and tests alone cannot close them:
+
+| change | status |
+|---|---|
+| Save disabled until the name or notes differ | ✅ owner-verified 2026-09-21 |
+| notes trimming on save as well as edit | ⏳ tests only — needs saving notes with surrounding whitespace |
+| Python minting uppercase UUIDs | ⏳ tests only — Python edition, not exercised in the Swift run |
 
 **Format checks that passed**, recorded so they are not redone:
 
