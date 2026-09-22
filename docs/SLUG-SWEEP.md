@@ -1371,7 +1371,7 @@ rule when writing a new decoder.
 
 ### S6 — Analyzer state machine (11 slugs)
 
-Status: ⏳ **IN PROGRESS** — 4 of 11 slugs read.
+Status: ⏳ **IN PROGRESS** — 5 of 11 slugs read.
 
 **RESUME HERE.** Audit position as of 2026-09-21. This table records only **what the reading
 produced** — a finding number, or "clean" where none was filed. Each finding's status lives in the
@@ -1383,7 +1383,7 @@ finding and nowhere else; do not restate it here.
 | `comparison` | ✅ | **F24** |
 | `button-enablement` | ✅ | clean — 13/13/13 (F24's fix made `displayMode` required) |
 | `measurement-complete` | ✅ | **F25**, **F26** |
-| `annotation-state` (44/42/32) | ☐ | |
+| `annotation-state` (44/42/32) | ✅ | **F27**, **F28** |
 | `status-message` (12/12/16) | ☐ | |
 | `tap-count-change` (6/6/11) | ☐ | |
 | `state-invariants` (7/7/7) | ☐ | |
@@ -1799,6 +1799,108 @@ accurate description of a defect, written down as a design. With the seed on the
 ordinary unit tests, and the web now carries all three, plus one for the transition guard the old
 effect got wrong and one for the load window. Web 598. The `loadedNotes` state cases stay App-side
 and remain run-review territory.
+
+**F27 — six measurement-update cases are filed under `annotation-state` in both natives, three of
+them re-asserting rules that `measurement-amend` already owns. (FIXED — filing only, both natives)**
+
+`test/annotation-state` reads 44/42/32, the widest spread left in S6, and most of it is this block.
+Swift's `AnnotationStateTests` carries a section headed "Update Measurement (moved from
+MeasurementCodableTests)" with six `update_*` cases; Python mirrors it as `TestUpdateMeasurement`.
+Web has none of them under this slug, which is the whole of the 12-case gap to Swift.
+
+They are not annotation state. Three duplicate rules already pinned under `test/measurement-amend`,
+which all three editions carry with 11 cases apiece:
+
+| `annotation-state` (Swift/Python) | already asserted by `measurement-amend` |
+|---|---|
+| `update_nilValues_clearFields` | `with_clearsMeasurementNameWithNil` |
+| `update_successiveEdits_eachMintANewId` | `with_successiveAmendments_eachMintANewId` |
+| `update_mintsNewId_andPreservesCapturedData` | `with_preservesOtherFields` + the mint rule |
+
+This is F8's shape — the same rule under two slugs, which is how two copies come to disagree — and
+it is why the count spread reads as a web gap when web is the edition filing correctly.
+
+The other three are **collection**-level: `update_byIndex_changesOnlyTargetedEntry`,
+`update_outOfRangeIndex_isNoOp` and `update_duplicateImport_onlyEditedIndexChanges`. Those belong
+with the saved-measurement library, not with per-peak annotation state.
+
+**Two of them cannot exist on web, and that is architecture, not a gap.** The natives hold
+`savedMeasurements` as an array and update by INDEX; web's store is a rowKey-addressed IndexedDB
+(`src/measurement/store.ts`) with `saveMeasurement` upserting by `rowKey` and no index API at all.
+So "update at index N" and "an out-of-range index is a no-op" have no web counterpart by
+construction — that is [F19b](#), row identity and addressing, already deferred to the sorting work.
+The third does have a web counterpart, under a different slug: `import-persistence`'s "a duplicate
+import gives two rows that SHARE the id and differ by rowKey".
+
+Done as recommended, 2026-09-21. The three collection-level cases moved to
+`test/import-persistence` in both natives — `ImportPersistenceTests.swift` and
+`test_import_persistence.py` — under a header saying why they live with the library and why two of
+them have no web counterpart. The three duplicates were deleted. No production code moved, and
+nothing was added to web.
+
+**One of the three was not a pure duplicate, and deleting it blind would have lost a rule.**
+`update_nilValues_clearFields` also asserted that clearing the fields mints a new id — "clearing the
+fields is a data change too" — which `with_clearsMeasurementNameWithNil` did not. That assertion
+was added to the `measurement-amend` case in all three editions *before* the delete, so the rule
+now sits once, in the slug that owns it. The other two were fully covered:
+`update_successiveEdits_eachMintANewId` by `with_successiveAmendments_eachMintANewId`, and
+`update_mintsNewId_andPreservesCapturedData` by `with_preservesOtherFields` plus that same mint rule.
+
+Counts: Swift 561 → 558, Python 665 → 662 — six cases deleted, three moved, one assertion added in
+each edition. `test/annotation-state` now reads 39/37/32, and the remaining spread is the visibility
+cycle and the offset/selection basics, which web files across its two files.
+
+**F28 — Swift can store a mode override meaning "no override", and only its tests ever do.
+(FIXED — Swift; the state is gone, the file format is unchanged)**
+
+`peakModeOverrides` is `[UUID: UserAssignedMode]`, an enum with `.auto` and `.assigned(String)`.
+Every consumer treats a stored `.auto` exactly as an absent key: `hasManualOverride` and
+`overriddenPeakIDs` both test `if case .assigned`, and `effectiveModeLabel` reads
+`peakModeOverrides[peak.id] ?? .auto`.
+
+Production never stores it. The results view calls `setModeOverride(.assigned(label), …)` to set and
+`resetModeOverride(for:)` — which does `removeValue(forKey:)` — to clear. The only
+`setModeOverride(.auto, …)` calls in the repository are `AnnotationStateTests.swift:290` and `:391`.
+
+Neither port can represent it. Python pops the key on reset and documents the invariant outright —
+*"stores only user-assigned label strings (every entry IS an override)"* — and web is
+`Map<number, string>` with `resetModeOverride` deleting. Absence is their only "auto".
+
+So two Swift cases assert behaviour through a state the application cannot produce, one of them
+(`hasManualOverride_trueForAssigned_falseForAuto`) covering a branch that is dead in production while
+the live branch — the absent key — is reached by a different arm of the same guard. That is METHOD
+rule 1: check what the APPLICATION passes, not what the test does.
+
+The underlying behaviour is real and worth keeping: clearing an override reverts to the
+auto-classified label. It is `resetModeOverride` that should be asserting it.
+
+Owner's call, 2026-09-21 — "why leave an unused state that confuses things in the code? Will it ever
+be used?" It will not: `resetModeOverride` removes the key, so nothing in the app can create one.
+Both halves were done.
+
+An override is now the label alone, `[UUID: String]`, on the analyzer AND on `TapToneMeasurement` —
+the shape both ports already had. `setModeOverride` takes a label, `hasManualOverride` is a presence
+test, `overriddenPeakIDs` is `Set(keys)`, and `effectiveModeLabel` is one `??`. Six views lost their
+`if case .assigned` pattern matches. The two tests now drive `setModeOverride` and
+`resetModeOverride`, which is what the results view calls. Swift 558 → 559.
+
+**The file format is untouched.** `UserAssignedMode` survives as the wire shape and as the picker's
+label catalogs: encode re-wraps each label as `.assigned`, decode unwraps it, and an `auto` entry —
+which carries no label and therefore means "no override" — is DROPPED on read, exactly as Python and
+web have always dropped it. The `.guitartap` JSON is byte-identical.
+
+That last part needed its own guard, because nothing pinned the emitted shape: a silent change there
+would write files both ports read as having no overrides at all. `overrides_areWrittenAsAssignedEntries`
+now asserts the wrapper, and the replaced `.auto` case asserts that such an entry is dropped rather
+than becoming an override.
+
+**A false green nearly certified that guard.** The mutation — emit bare labels instead of the
+wrapper — appeared to survive, which would have meant the test measured nothing. It had not
+survived: `-only-testing:GuitarTapTests/MeasurementCodableTests` names a FILE, not a suite, matches
+nothing, and exits 0 having executed 0 tests. METHOD rule 2 records this exact trap ("read the
+count, not the failure list"), and it caught three false greens before this one. Re-run against the
+real suite name, `ModeOverridesCodableTests`, the mutation fails both the round-trip and the new
+guard.
 
 ## Stage 2 — move case lists into shared data
 
