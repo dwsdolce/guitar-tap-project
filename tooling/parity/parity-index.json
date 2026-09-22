@@ -455,10 +455,10 @@
     {
       "slug": "state/button-enablement",
       "swift": [
-        "GuitarTap/Views/TapToneAnalysisView.swift"
+        "GuitarTap/Models/ButtonEnablement.swift"
       ],
       "python": [
-        "src/guitar_tap/views/tap_tone_analysis_view.py"
+        "src/guitar_tap/models/button_enablement.py"
       ],
       "web": [
         "src/state/buttonEnablement.ts"
@@ -868,6 +868,20 @@
       ],
       "web": [
         "test/mode-colors.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/notification",
+      "swift": [
+        "GuitarTapTests/StateNotificationTests.swift"
+      ],
+      "python": [
+        "tests/test_state_notification.py"
+      ],
+      "web": [
+        "test/state-notification.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1507,6 +1521,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_state_notification.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_update_checker.py"
     },
     {
@@ -1532,6 +1550,10 @@
     {
       "repo": "swift",
       "path": "GuitarTapTests/SpectrumViewGestureTests.swift"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTapTests/StateNotificationTests.swift"
     },
     {
       "repo": "web",

@@ -21,6 +21,7 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#6](https://github.com/dwsdolce/guitar-tap-project/issues/6) · [`RESULTS-PANEL-CONSISTENCY.md`](RESULTS-PANEL-CONSISTENCY.md) — Results panel cross-platform consistency
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
+- [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
 - [#15](https://github.com/dwsdolce/guitar-tap-project/issues/15) · [`guitar_tap-manual-seo-handoff.md`](guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/` indexed as "Page with redirect"
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
   - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey

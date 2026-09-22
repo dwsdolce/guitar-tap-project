@@ -1380,12 +1380,12 @@ finding and nowhere else; do not restate it here.
 | slug | read? | produced |
 |---|---|---|
 | `effective-peak-id` | ✅ | coverage clean — 6/6/0 is structural, both halves of the claim verified; **F23** |
-| `comparison` | ✅ | **F24** |
-| `button-enablement` | ✅ | clean — 13/13/13 (F24's fix made `displayMode` required) |
+| `comparison` | ✅ | **F24**; **F31** from the F30 run-review |
+| `button-enablement` | ✅ | first read said clean — 13/13/13; re-read under **F30** found both natives asserting against a retyped copy of the rule; **F32** from the F30 run-review |
 | `measurement-complete` | ✅ | **F25**, **F26** |
 | `annotation-state` (44/42/32) | ✅ | **F27**, **F28** |
-| `status-message` (12/12/16) | ✅ | **F29**, **F30** |
-| `tap-count-change` (6/6/11) | ☐ | |
+| `status-message` (12/12/16) | ✅ | **F29**, **F30**; **F33** from the F30 run-review |
+| `tap-count-change` (6/6/11) | ☐ | **F34** surfaced here from the F30 run-review, before the slug was read |
 | `state-invariants` (7/7/7) | ☐ | |
 | `scenario-trace` (4/4/4) | ☐ | |
 | `session-pre-roll` (4/4/4) | ☐ | |
@@ -2012,7 +2012,7 @@ Two parity notes from writing them: Python counts material taps in `captured_tap
 
 **F30 — web drew the engine/model line in a different place: its engine owned the detector, the
 gated capture and the session WAV, which Swift and Python keep on the analyzer.
-(FIXED — web, run-reviewed; the natives' boolean pair is left alone, see below)**
+(FIXED — all three, run-reviewed)**
 
 Filed after the owner pushed back on this being dismissed as "not worth chasing" — the same
 "behaviour is equivalent today" reasoning that mis-filed F19 and nearly mis-filed F24.
@@ -2113,9 +2113,223 @@ Swift/Python don't have". Both went with the divergences they compensated for.
 constant, live alongside the analyzer's. `tsc` is silent about assigned-but-unread state, so only
 reading `playFile` line by line found it. A move is not done when the new copy works.
 
-**Not changed**: the natives' `isDetecting` + `isDetectionPaused` pair can still express
-detecting-AND-paused, and is kept consistent by every call site. Collapsing it into one value remains
-available, in all three editions together, if a bug ever comes from it — none has.
+**The boolean pair — decided, attempted, and RESUME HERE.** Owner's call 2026-09-21, after asking
+whether the flags are "truly exclusive": do both the divergence fix and the cleanup.
+
+*Are they exclusive?* Two different answers. `isDetecting` / `isDetectionPaused` ARE exclusive —
+pause clears one and sets the other, no site sets both, and the detector's gate tests both
+defensively, which is the tell. `gatedCaptureActive` is NOT: a capture runs *while* the detector
+listens, and re-entry is blocked by capture id (`gatedCaptureID == lastLevelCrossingCaptureID`)
+because the window can start on the audio queue and finish before the main thread's call runs. That
+is a concurrency fact, not a state-machine fact, so it must stay a separate flag.
+
+**Done and verified (web, UNCOMMITTED at the time of writing):** web's frame dispatch was
+`if (capturing) feedCapture else if (detecting) detectTap` — exclusive, where Swift's
+`onRmsLevelChanged` gates only on `isDetecting && !isDetectionPaused && !isMeasurementComplete` and
+never on the capture flag. Web now runs the detector through a capture, with re-entry guarded in
+`beginCapture`. All seven REG-* baselines pass, so the latch and noise-floor EMA behave identically
+on these fixtures; the structure now matches.
+
+**The enum — done in all three.** `DetectionState { idle, listening, paused }`, with `isDetecting`
+and `isDetectionPaused` kept as derived reads so every site that only *asks* is unchanged; only the
+writes moved. It is a top-level type in its own file in each edition — `Models/DetectionState.swift`,
+`models/detection_state.py`, and a `DetectionState` union beside `MaterialTapPhase` in
+`state/tapToneAnalyzer.ts` — which is the shape `MaterialTapPhase` and `AnalysisDisplayMode` already
+have. Python could not nest it: the analyzer's mixins need the type and are themselves imported by
+the analyzer, so nesting gives a circular import.
+
+The arming `didSet` moved onto the enum keyed on `let wasDetecting = (oldValue == .listening)`, and
+opens with `guard oldValue != detectionState else { return }` — which expresses structurally what the
+old comment called "deliberately ignore true → true assignments". That guard also drops the old
+idle→idle disarm, which is safe: the only arming site outside the `didSet` is file-playback-only, and
+the `didSet`'s disarm is itself skipped during file playback, so a redundant clear could never reach a
+level crossing that was actually armed.
+
+**A fourth paired site the recipe had missed.** `handleRouteChangeRestart` reads `wasDetecting`, sets
+`isDetecting = false`, and deliberately leaves `isDetectionPaused` alone — so a sequence paused across
+a route change is still paused afterwards. A flat `detectionState = .idle` there would have discarded
+the pause. It is now `if wasDetecting { detectionState = .idle }` in Swift and Python. The three the
+recipe did list — pause, resume, and `startTapSequence`/`loadMeasurement` — were as described; in
+`startTapSequence` the early pause-clear is *dropped* rather than converted, because clearing to
+`.idle` there would disarm a level crossing that a restart-while-listening relies on staying armed.
+
+**Then the same reading turned up the button rule**, on the `button-enablement` slug this sweep had
+already marked clean. Web's `buttonRule` is production code in `state/buttonEnablement.ts`, imported
+by `App.tsx` and by its test. Swift and Python each had the real rule inline in the view and a second,
+retyped copy in the test file — and the Swift header said the duplication was deliberate, so that
+drift in the view "would make one side give". It could not: the test asserted against the copy, so the
+view was free to drift and the suite would stay green. That is PARITY-TEST-METHOD rule 1's headline
+shape, and 26 of the 39 tests in the slug were measuring nothing about the shipping path.
+
+Folded into F30 rather than filed separately, on the owner's call — *"this is part of what you are
+doing. We do it now. Divergence is a call to action not to burying under the rug."* The rule now lives
+in `Models/ButtonEnablement.swift` and `models/button_enablement.py`, the views call it, and the tests
+import it. The parity map's anchor for the group moved from the two view files onto the three model
+modules, so it is 1:1:1 in the same layer in all three.
+
+The extraction also closed the drift the copies were hiding: both natives' fixtures still carried the
+`displayModeIsComparison` boolean that F24 had already replaced with a required `displayMode` in web,
+for the exact reason that a defaulted boolean answers for a state the caller never supplied. The
+production `ButtonState` now takes `detectionState` and a required `displayMode` in all three.
+
+It also dropped `currentTapCount`, which every edition declared on `ButtonState` and no edition's rule
+ever read. `git show` on the commit that created `buttonEnablement.ts` has it declared and unused in
+the same diff that introduced `numberOfTaps` and used it — dead from the first line, then copied into
+both natives when their mirrors were written, and nearly copied forward again here. The rule asks only
+whether the sequence is multi-step, which is `numberOfTaps`: the sequence's SHAPE. `currentTapCount` is
+its PROGRESS, and progress never enters the question of which buttons are live. The tap-count control's
+own lock (`currentTapCount > 0 && !isMeasurementComplete`) is a different rule about a different
+control, still inline in all three views — unpinned, and noted here rather than folded in, because
+putting it behind a type named for three action buttons would be the same conflation in reverse.
+
+**The evidence.** Swift 566 tests in 117 suites, Python 670, web 598 in 53 files — each identical to
+its pre-change baseline — plus all seven REG-* baselines (REG-G1, both REG-G2 cases, REG-B1, REG-B2,
+REG-P1, OUT-4) and the self-regression oracle on the web side. Passing is not evidence, so the
+extraction was mutation-tested on both natives: breaking `pauseEnabled` in the *production* rule fails
+exactly one case (B6, the paused one) in Swift and in Python, which is the proof the tests now reach
+production — the mutation would have changed nothing before. The Swift run was checked for the
+count, 13 tests in 1 suite, not just the exit code.
+
+Invariants I1/I2/I6 did NOT become vacuous, as expected: they check detecting/paused against
+*completion* and *phase*, which the enum does not cover. No invariant asserted `!(detecting && paused)`,
+so nothing was lost by making it unrepresentable.
+
+**Run-review steps — specific to this finding.** No standard procedure exists; these come out of
+the diff. Explanations are in the notes below, keyed by step — the steps themselves are just the
+actions and what to expect.
+
+Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview` (NOT `npm run dev`). Same list per edition, canonical first.
+
+**Web: clear the service worker after EVERY build, before testing.** The app is a PWA
+(`vite-plugin-pwa`, `dist/sw.js`), so the worker serves the cached shell and a new tab gets the OLD
+bundle — opening a fresh tab does not help, and nothing fails visibly. On 2026-09-22 this silently
+invalidated a run-review: steps 1–7 were run against a pre-enum bundle, and the model's
+`detectionState` field did not even exist in the code under the owner's fingers. It was caught only
+by walking the React fiber from the console and finding `detectionState === undefined` on an analyzer
+whose other fields were all correct. Same mechanism as the stale-SW lazy-chunk bug — reproduces under
+`build` + `preview`, never under `dev`.
+
+    navigator.serviceWorker.getRegistrations()
+      .then(rs => Promise.all(rs.map(r => r.unregister())))
+      .then(() => caches.keys())
+      .then(ks => Promise.all(ks.map(k => caches.delete(k))))
+      .then(() => location.reload());
+
+Or Develop → Empty Caches, then reload. A web result obtained without this step is not a weaker
+result, it is not a result.
+
+**Quitting the browser does NOT count as clearing it**, and neither does opening a new tab. A service
+worker's registration and its Cache Storage survive a restart — that is what they are for. The config
+is `registerType: 'autoUpdate'`, which makes the trap worse: the new worker installs but takes over
+only once the old clients are gone, so a quit-and-reopen typically serves the OLD bundle one more
+time and the load AFTER that is the fresh one. It is easy to test stale code, watch it update on the
+next launch, and conclude it was a glitch.
+
+*Detection state machine*
+
+1. Guitar, tap count 3. Press New Tap. → "Ready…"; Pause enabled, New Tap disabled, Cancel enabled.
+2. Tap once. → 1/3.
+3. Press Pause. → Button reads Resume. Spectrum stays live. Tapping does not increment.
+4. Press Resume. → Still 1/3. Next tap → 2/3.
+5. While paused, change the audio input device. → Still paused when it settles; Resume works.
+   The status still reads "Detection paused – tap freely, then resume" — not a tap prompt.
+6. While paused, press Cancel. → Back to the step-1 state: tap-count label GONE, status back to
+   the tap prompt, Pause enabled, New Tap disabled, Cancel enabled.
+7. While paused, load a saved measurement. → Frozen on it. New Tap enabled; Pause and Cancel
+   disabled; Pause reads "Pause". Live audio does not change the loaded peaks.
+8. Set the tap count back to 3. New Tap, tap once (label reads 1/3), press Cancel. → Label GONE,
+   status back to the tap prompt.
+
+*Button rule*
+
+9. Complete a 1-tap guitar measurement. → New Tap enabled; Pause and Cancel disabled.
+10. With that measurement still complete, change the audio input device. → New Tap disables for
+    ~3 s, then re-enables on its own. The status keeps reading "Analysis complete! N peaks
+    identified…" the whole time — it must NOT change to "Ready", and must not say "Tap again".
+11. New Tap, leave it listening. Measurements → **Compare…** → select 2–5 guitar measurements →
+    **Compare (n)**. → Overlay on the chart. New Tap enabled; Pause and Cancel disabled.
+12. Plate, 2 taps. Tap L. → Pause reads "Accept" (green), Cancel reads "Redo L", New Tap disabled.
+    Accept → capturing C. Redo → re-captures L.
+13. Mid-sequence, try the tap-count spinner. → Locked. Complete the measurement. → Unlocked.
+14. macOS and Python only. Create a throwaway folder; turn on Dump Capture Audio and select it;
+    delete the folder in Finder; press New Tap. → "Capture Audio Folder Unavailable" alert. Press **Cancel**.
+    → Nothing armed: New Tap enabled, Pause and Cancel disabled.
+
+*Web only*
+
+15. Multi-tap guitar, live. → Count advances once per tap; no double-count, no missed tap.
+
+**Notes on the steps.**
+
+- **5** — `handleRouteChangeRestart` is the fourth paired site, where a flat `.idle` would drop the
+  pause.
+- **6, 8** — the early pause-clear was dropped from `startTapSequence`. Cancel is the way in: the
+  rule disables New Tap while paused (B6) and enables Cancel, which delegates to `startTapSequence`.
+  The restart is confirmed by the count label DISAPPEARING, not by it reading "0/3" — for guitar the
+  label is gated on `currentTapCount > 0` (`Controls.swift:406`), so zero renders nothing. Earlier
+  versions of these steps said "0/3", a display the UI cannot produce; the owner caught it,
+  2026-09-22.
+- **7** — a load resets to frozen, which is correct. That enablement IS the proof the load went to
+  `.idle` and not `.paused`: a surviving pause would leave the sequence in flight, so Pause would
+  read "Resume" and be enabled and New Tap would be disabled. It is also why the pause-clear exists —
+  while paused, the analysis loop keeps overwriting the loaded peaks from live audio.
+- **8** — needs its own New Tap because step 7 leaves nothing to cancel, and needs the count reset
+  because loading restores the file's own tap count and type (Swift `MeasurementManagement:782`,
+  Python `:749`). Cancel is only enabled for a multi-step sequence.
+- **5, 10 (status)** — the settle derives the status from state instead of choosing between two
+  strings (F33). Paused stays paused-worded; a completed measurement keeps its result announcement,
+  because a completed measurement is not a state the settle has anything to say about. Both were
+  added after the first pass, which checked only the buttons — the owner pointed out that step 10
+  "says nothing about the status", 2026-09-22.
+- **10** — the only route in normal use into the rule's `!(fftIsRunning && isReadyForDetection)` arm:
+  `isReadyForDetection` has exactly two writes, false at `TapToneAnalyzer.swift:1821` and true again
+  after `fftSettleTime` at `:1886`. It MUST be done from a completed or idle measurement, not from
+  the paused sequence in step 5 — while a sequence is in flight `sequenceActive` holds New Tap
+  disabled before, during and after the settle, so there is nothing to see. That was the first
+  version of this step and the owner caught it, 2026-09-22. A sample-rate change or the dead-input
+  watchdog's restart reach the same arm via `routeChangeRestartCount`. Denying the mic exercises the
+  other term, `fftIsRunning`, but it is the same arm and B9 pins the logic, so it is optional.
+- **11** — since F31 the overlay disarms the detector, so New Tap here is enabled because the
+  sequence is idle, not because comparison overrides it. The override still matters for MATERIAL,
+  where `sequenceActive` follows the phase rather than the detector: a plate sequence mid-phase plus
+  an overlay is the case F24 was filed for.
+- **14** — the disarmed-idle state that B1 and B13 pin. The guard is
+  `dumpCaptureAudio && !WavDumpFolder.isReachable` (`Control.swift:104`), so the trigger is a folder
+  that has become UNREACHABLE — renamed, moved, deleted, or on an ejected volume — not one that was
+  never set. There is always a default folder, so "no folder set" is not a reachable state; the first
+  version of this step said that and could not be run. Owner, 2026-09-22. Platform: the guard exists
+  exactly where the save location is USER-CHOOSABLE — macOS (`#if os(macOS)` in `Control.swift:104`)
+  and Python, which has the full equivalent: same guard (`tap_tone_analyzer.py:1311`), same dialog
+  title and body, same three buttons. iOS and web write to a fixed location that cannot be changed,
+  so an unreachable folder is not a state they can reach and there is nothing there to guard. The
+  other two alert buttons are worth exercising while there: "Change Location…" retries and arms
+  if the new folder is reachable, "Turn Off Saving" arms directly. One plumbing difference, not
+  user-visible: Swift arms from the alert's button handlers, Python's helper returns a bool the
+  caller acts on, plus a `pending_dump_folder_prompt` flag for a prompt needed before the view's
+  signals are connected.
+- **15** — detection now runs THROUGH a gated capture, with re-entry blocked in `beginCapture`. The
+  REG-* baselines pass but do not exercise the live path.
+
+Steps 5, 6 and 7 are the hand-converted sites. A failure there is a conversion mistake, not a
+compiler gap.
+
+**Run-review progress.** All three editions completed the step list (owner, 2026-09-22): Swift 1–14,
+Python 1–14, web 1–13 + 15 (step 14 does not apply there — fixed save location, no folder guard).
+Web's first pass was invalidated by the service worker and redone against a cleared build.
+
+Steps 5 and 10 were then re-run on all three after F33 and F35 changed what the settle does
+(owner, 2026-09-22): the status survives the settle, and so does the measurement.
+
+F30–F35 landed together: Swift `576c3d4`, Python `a2716a5`, web `ac1925f`.
+
+Six of the fourteen steps had to be rewritten during the review because they described what the rule
+COMPUTES rather than what the screen SHOWS, or put the app in a state where the thing under test was
+not observable: step 6 named a button the rule disables; the settle watch sat where a paused sequence
+pins New Tap off throughout; two steps expected "0/3", which the UI cannot render because the count
+label is gated on `currentTapCount > 0`; step 8 assumed a tap count that a load replaces; step 14
+described an unreachable trigger on the wrong platforms. Writing steps from the model rather than
+from the UI is the pattern, and it cost six round trips.
 
 **The detector had no `@parity` group in ANY edition** — `TapToneAnalyzer+TapDetection.swift` and
 `tap_tone_analyzer_tap_detection.py` were both untagged, which is why this move disturbed no group.
@@ -2128,6 +2342,282 @@ natives kept theirs on the analyzer, so the group would have been lopsided.
 
 F29 remains separately actionable and test-only — and easier now, since the seam it needs is the
 same shape in all three.
+
+**F31 — both natives leave the tap detector ARMED underneath a frozen comparison overlay, so
+live audio keeps overwriting the overlay's peaks and a tap completes a measurement the user never
+sees being made. (FIXED — both natives; web already disarmed. Run-reviewed, all three)**
+
+Found at the app, by the owner, during the F30 run-review of step 10 — the step that builds a
+comparison from an armed sequence. The symptom was that New Tap and **Pause** were both enabled
+with a comparison showing: *"there is nothing to pause… Pressing it makes no change to the display
+or state except to change the button from Pause to Resume. BUT if I then make a tap while showing
+the comparison measurement the Pause button becomes disabled. Really strange state of affairs."*
+
+The buttons were telling the truth; the model was in a state it should not have been in.
+`loadComparison` sets `displayMode` and nothing else — not the detection state, not the completion
+flag (Swift `MeasurementManagement:936`, Python `load_comparison`). So the detector kept listening
+under a frozen overlay. Pause genuinely worked, which is why the label flipped; the chart did not
+move because the chart was showing the overlay. And the tap was captured: `analyzeMagnitudes`
+(`PeakAnalysis:90`) runs whenever `(isDetecting || isDetectionPaused || captureTimer != nil) &&
+!isMeasurementComplete`, so it went on overwriting the displayed peaks from live audio, the tap
+completed a measurement behind the overlay, and `isMeasurementComplete` going true is what
+disabled Pause.
+
+**This is a defect, not a design, and Swift already says so one function over.** `loadMeasurement`
+clears to `.idle` for precisely this reason, and its comment spells it out: *"the analyzeMagnitudes
+loop would otherwise keep overwriting peaksAbovePeakMin with fresh live-audio peaks on every FFT
+frame."* A comparison overlay is frozen in exactly the same sense. One load path carried the guard;
+its sibling did not.
+
+**Web already had it**, with the reasoning in the comment — `if (entries.length > 0)
+this.disarmDetection()`, *"An overlay is frozen, like a loaded measurement — see enterFrozen."* So
+this runs the same direction F30 did: web right, both natives carrying the defect. Third time in
+S6 that a native/web split turned out to be a native defect rather than a port difference.
+
+**The fix** is the guard, in both natives: disarm when the overlay is non-empty. It deliberately
+does NOT set `isMeasurementComplete` — matching web, and giving the coherent button state for a
+comparison (New Tap enabled, Pause and Cancel disabled). An EMPTY comparison leaves the mode `live`,
+so there is nothing to freeze and the detector is left exactly as it was: the mode follows the data,
+and so does the disarm.
+
+**Tests: CP-U9 and CP-U10, paired in all three.** CP-U9 pins the disarm, CP-U10 pins that an empty
+comparison leaves a running detector alone. Python uses a real `TapToneAnalyzer` rather than the
+file's `_StubAnalyzer`, because the behaviour under test IS the detection-state property. Mutation:
+removing the disarm from production fails exactly CP-U9 and nothing else. Swift **569**, web
+comparison suite 21 (was 19).
+
+**A design question the run-review opened, NOT yet decided.** If Comparison is understood as a
+measurement *type* rather than a display state, then "New Tap" in a comparison is a category error —
+a comparison is not made by tapping, and what the button does instead is change the measurement type
+without naming one. Three readings were put up: (A) today's, New Tap silently starts the current tap
+type; (B) New Tap disabled in a comparison, leave it by choosing a type; (C) New Tap means "new
+measurement of the current type", so in a comparison it relabels to "New Comparison" and reopens the
+browser — which fits the existing idiom where Pause/Cancel relabel to Accept/Redo during a material
+review. B and C both depend on measurement-type selection being a visible control rather than buried
+in a Settings sheet, which is the actual blocker and is a separate piece of work. **Undecided;
+recorded here so the reasoning is not lost.** The disarm above is required under all three.
+
+**F32 — Python's `is_ready_for_detection` was a plain attribute with no notification, so the
+button row went stale for the whole route-change settle and New Tap never greyed out.
+(FIXED — all three, run-reviewed)**
+
+Found at the app during the F30 run-review of step 10, on Python: *"I do not see the New Tap disable
+at all."* The route-change path itself was correct — `handle_route_change_restart` stands readiness
+down at `tap_tone_analyzer_control.py:359` and restores it at `:436`, 3 seconds later, mirroring
+Swift's `fftSettleTime`. What was missing was anyone telling the view.
+
+| | readiness during a route change |
+|---|---|
+| Swift | `@Published var isReadyForDetection`, false for a 3 s settle — every bound view re-renders, New Tap greys out |
+| Python | same 3 s settle, but a plain attribute with **no signal** — nothing refreshed |
+| web | **no settle at all.** `isReadyForDetection` is declared at `tapToneAnalyzer.ts:146` and never written or read: not on the snapshot, not passed to `buttonRule`. `handleDeviceChange` only sets a status message. |
+
+`_update_tap_buttons()` only runs when something calls it, so the buttons held whatever state they
+were in before the device change, through the settle and out the other side. The user-visible effect
+is that Python's New Tap stays clickable for ~3 seconds while the engine is reinitialising, where
+Swift and web disable it.
+
+**The port had already solved this once, for the neighbouring flag.** `detectionStateChanged` exists
+precisely because Python has no `@Published`, and its comment states the principle: *"Swift's
+`detectionState` is @Published, so every view bound to it re-evaluates on ANY change… Python has no
+such binding: without this signal the view could only sample the state inside some other slot, which
+meant a state change alone never refreshed anything."* Readiness needed the same treatment and never
+got it — the gap is the second half of a pattern whose first half is already in the file.
+
+**The fix** follows that precedent exactly: `is_ready_for_detection` becomes a property over
+`_is_ready_for_detection`, emitting a new `readyForDetectionChanged` on an actual change (same-value
+assignments stay silent); `FftCanvas` relays it beside `detectionStateChanged`; the view connects it
+to a slot that re-runs `_update_tap_buttons()`.
+
+**Tests: a new 1:1:1 group, `test/notification`** — `StateNotificationTests.swift` /
+`test_state_notification.py` / `state-notification.test.ts`, three cases each (N1 readiness cleared
+notifies, N2 restored notifies, N3 the production route-change path clears and notifies).
+
+They were first written Python-only, in `test_wi10_qtimer_slots.py`, tagged `@parity none`, on the
+grounds that signal plumbing is PySide6-specific with no counterpart. The owner rejected that: *"they
+do have an equivalent to test — when the data changes does the UI get updated — in the swift/web case
+it is caused by react pattern — unless someone breaks it."* Exactly right. The contract is not "does
+Qt emit" but "does a state change reach the UI", which all three implement and all three can break —
+drop the `@Published`, never add the signal, leave the field off the snapshot. And `none` is the one
+home where `--check` can never report a missing edition, so parking it there guaranteed the gap
+stayed invisible. This is PARITY-TEST-METHOD rule 4 — *an "n/a" that rests on the view layer is a
+finding, not a difference* — written into this document three screens above the place it was ignored.
+
+**Web was a third case, and it is fixed too.** The first version of this entry claimed web was fine
+because the snapshot and `notify()` cover it — asserted without checking, and wrong. Web declared
+`isReadyForDetection` and no path ever wrote or read it: a dead field of exactly the shape
+`currentTapCount` turned out to be on `ButtonState`. `handleDeviceChange(settling)` set a status
+message and nothing else, so New Tap's enablement during a device change followed only `running`.
+
+Owner's call: web gets the behaviour. `handleDeviceChange` now sets `isReadyForDetection = !settling`
+— the method already received exactly the right boolean on both edges — the field is on the snapshot,
+and `App.tsx` passes it to `buttonRule`.
+
+**And the settle windows now match.** Swift is 3.0 s (`fftSettleTime`, commented as extended from 2 s
+to absorb HALC/CoreAudio startup transients at ~2.5 s), Python mirrors it, web was **1500 ms** with no
+recorded reason. The settle is how long New Tap stays disabled after a device change, so a different
+number is a different user-visible behaviour, not an implementation detail. Web is now 3000 ms.
+
+**Pre-existing, not caused by F30** — nothing in the enum or the button-rule extraction touched
+`is_ready_for_detection`. It was invisible because no test constructs the view, which is the same
+blind spot that let the button rule live in two copies: the rule is now production code and pinned,
+but the view's WIRING to it is still unpinned in every edition.
+
+**F33 — the device-change settle CHOSE a status string instead of deriving one, so it was wrong in
+both directions: mid-sequence it gave the opening instruction, and on a finished measurement it threw
+the result away. (FIXED — all three, run-reviewed)**
+
+Found at the app during the F30 run-review of step 10 on web. The owner completed a 1-tap generic
+measurement, changed the input device, and the status read **"Tap 1/1 captured. Tap again…"** on a
+sequence that was done. Raising the tap count to 3 then left the progress bar showing 1/3 while the
+text still said 1/1 — a consequence, not a second defect: the status is only refreshed on a count
+change while armed and at zero taps (Swift `numberOfTaps.didSet`, and web's equivalent), so a string
+that already embedded the wrong N simply stayed.
+
+**The owner's framing is what settled it.** *"Swift is telling you what to do while the web's message
+is telling you something you did. They are not the same state. If I have not made a tap then 'Tap 1/3
+captured' is wrong and 'tap 3 times' is correct. If I have completed a tap then 'Tap 1/3' is correct
+and 'tap 3 times' is wrong. So which is it?"* Both — conditioned on the count. Any message that
+ignores the count is wrong half the time, and the settle was picking between exactly two:
+
+| | at the settle |
+|---|---|
+| Swift / Python | `tapPrompt()` when detecting, `"Ready"` otherwise — wrong mid-sequence ("Tap the guitar 3 times…" with a tap already captured), and discards "Analysis complete! N peaks…" |
+| web | `restingPrompt()` — count-aware, but with no completion check, so a finished measurement was told to tap again |
+
+**Fixed by deriving rather than choosing**, which is the principle this project already adopted for
+status (Swift's own doc comment calls `guitarLoopStatus` "status derived from the current state", and
+the status state-machine alignment made the natives derived-from-state to match web). The settle was
+a leftover imperative assignment that never joined that derivation — in all three editions, with
+three different guesses.
+
+`statusAfterSettle()` / `_status_after_settle()` now returns the status for the current state, or
+**nothing** where the status is a RESULT announcement rather than a prompt: complete → leave it,
+comparison → leave it, paused → the paused literal, detecting → `armedPrompt()`, else `"Ready"`. The
+second question this raised — whether the settle should be allowed to clobber "Analysis complete!" —
+is answered by construction rather than by a decision, because a completed measurement is no longer a
+state the settle has anything to say about.
+
+`armedPrompt()` was extracted from `resumeTapDetection()`, which held the only "restore a
+context-appropriate prompt" logic in the app and never shared it. Resume and the settle now call one
+function per edition, so they cannot drift apart again. The paused literal likewise became one
+constant per edition instead of a string repeated at each site.
+
+**A rename that had missed a site.** Extracting the prompt forced the plate longitudinal label into
+the open: Swift said "Ready for fL tap" when ARMING a plate sequence and "Ready for L tap" when
+RESUMING the same one, while Python and web said "fL" throughout — and web's comment claimed it
+"mirrors Swift", which it did not. Python's version was `"Ready for fL tap" if is_brace else "Ready
+for fL tap"`, a dead conditional with identical arms that had been sitting there looking deliberate.
+Owner: *"when we renamed the way phase taps were labeled we missed one. Fix Swift."* One occurrence,
+no test pinned it.
+
+**Tests: N4–N6 added to `test/notification`, paired in all three** — a complete measurement keeps its
+status, mid-sequence reports progress, idle gives "Ready". They pair only because the derivation is a
+directly callable function; the first version of the web fix could be tested and the natives could
+not, which was a sign the fix was in the wrong shape.
+
+**Process note.** The first fix here was option 1 of two the owner had been offered, implemented
+before the answer came back, on the reasoning that it was "the standing rule so not really a
+decision". It was a decision, it was the wrong branch, and the owner's reply was an analysis rather
+than a verdict. Swift **575**, Python **679**, web **607**.
+
+**F34 — web DERIVED the progress bar at render time where Swift and Python STORE it, so raising the
+tap count retroactively shrank a finished measurement's bar. (FIXED — web; the natives already
+stored it and gained the regression test. Run-reviewed)**
+
+Found at the app by the owner, on web, during the F30 run-review: complete a 1-tap generic
+measurement, then increment Taps without pressing anything else. Web's full bar dropped to a third;
+Swift's stayed full. *"The web changes the progress bar before New Tap is pressed while swift does
+not. I believe that python follows swift."* It does.
+
+| | `tapProgress` |
+|---|---|
+| Swift | STORED `@Published`, written at each capture site and pinned to `1.0` at completion (`SpectrumCapture:739`, `:1273`, `Control:438`) |
+| Python | the same, at the same sites (`spectrum_capture.py:899`, `:1551`, `control.py:665`) |
+| web | `get tapProgress()` — a computed getter, re-derived on EVERY render |
+
+So in web the bar was a live function of `currentTapCount / numberOfTaps`, and the tap-count stepper
+is (correctly) enabled once a measurement completes — so configuring the NEXT measurement rewrote the
+record of the one just finished. The getter's own comment said it "Mirrors Swift `tapProgress`",
+which it did not: rule 6 again, and the fourth confidently-wrong comment this sweep has turned up.
+
+**Which behaviour is right** was not in doubt once stated: the bar records what was MEASURED. A later
+count change configures the next measurement and has no business rewriting a completed one. Swift and
+Python were correct; web was fixed to match.
+
+**The fix, and a wrong turn worth recording.** The first attempt mirrored Swift literally — an
+explicit `syncTapProgress()` after each of the twelve internal `currentTapCount` assignments. That
+failed on the first test run, because App and the tests assign `currentTapCount` directly and bypassed
+every one of them. `currentTapCount` is now an accessor pair whose setter snapshots `tapProgress`, so
+the snapshot happens on every write regardless of origin. Swift and Python do not need this: their
+external writers go through the model. The test caught it within seconds of being written, which is
+the argument for writing the test before believing the fix.
+
+**Tests: one paired case in `test/tap-progress`**, all three — a complete 1-tap measurement keeps a
+full bar when Taps is raised to 3. It passes trivially on the natives; that is the point, since it
+pins them against anyone making it derived later. Swift **576**, Python **680**, web **608**.
+
+**A note on the environment, not the code.** Three Swift runs failed oddly while this landed — missing
+test fixtures, then `CodeSign failed ... code object is not signed at all`. All one cause: an
+`xcodebuild` and the owner's Xcode session sharing one DerivedData, which left
+`GuitarTapTests.xctest` corrupt inside the app bundle and poisoned every later run. `xcodebuild clean`
+cleared it. Worth checking `pgrep -fl GuitarTap.app` before believing a Swift failure is real.
+
+**F35 — the device-change settle blanked the chart on a guard that asked the wrong field, wiping
+completed measurements; `displayMode` was carrying two facts and one of them was already held by
+`isMeasurementComplete`. (FIXED — all three, run-reviewed)**
+
+Found at the app during the F30 run-review, and only because a step MOVED. The settle watch started
+life as step 6, run while paused mid-sequence; the owner pointed out New Tap never toggles there, so
+it became step 10 — after a completed measurement. That is the first time this path had ever been run
+with a finished result on screen, and it exposed two defects at once: F33's stuck status, and this.
+
+**The guard.** `handleRouteChangeRestart` blanked the spectrum and cleared `allPeaks` /
+`identifiedModes` when `displayMode == .live`, meaning "a live spectrum is showing". But **no
+completion path sets `.frozen`** — not guitar `processMultipleTaps`, not brace, not either plate
+finaliser. Only `loadMeasurement` does. So a freshly captured measurement is still `.live`, got
+blanked, and nothing restored it: `analyzeMagnitudes` is gated on `!isMeasurementComplete`, so the
+live loop never repaints, and the settle's restore only put `displayMode` back.
+
+**Provenance, because the owner pushed twice and was right to.** First answer was "it's pre-existing,
+not in my diff" — true but not an answer to "when". `git log -S` puts it at **`a086638`, build 264,
+25 April 2026**, *"Fix audio engine restart crash. Clean-up mic hot switch."* The owner's build 213
+predates it and does not blank. So: a regression, eight months old, never exercised in this state.
+Web never had it; Python inherited it in the port.
+
+**The owner's test was the right one.** Comparing web against Swift — rather than before-and-after in
+one edition — settled it immediately: web keeps the measurement, Swift wipes it. Third time in this
+sweep that web-vs-native was the discriminating experiment.
+
+**Why the intent was right and the guard wrong.** Blanking a LIVE spectrum during a device swap is
+correct — otherwise the old device's noise floor lingers as though it were current. `displayMode ==
+.live` simply is not the question; `isMeasurementComplete` is.
+
+**Fixed in two parts.**
+
+*One — the honest guard, and a flag for the blank.* The guard is now `!isMeasurementComplete &&
+displayMode != .comparison`, and the transient blank is an explicit `isSettling` / `is_settling`
+rather than a borrowed `displayMode = .frozen` write. Python needed two sites Swift did not, both of
+which would have failed silently: its per-frame handler branched on `FROZEN` to emit the blank, so
+without the new check it would have drawn the new device's not-yet-valid audio; and its canvas had
+the mirror of Swift's chart read. Web did not blank at all — the opposite divergence — and now does.
+
+*Two — `.frozen` deleted.* Once the settle stopped borrowing it, nothing in any edition distinguished
+`.frozen` from `.live`: Swift had no production reads, web never had any, and Python's two were
+redundant with `is_measurement_complete` and unreachable besides. It is runtime-only — absent from the
+`.guitartap` format and from settings — so removal touches no saved data. `AnalysisDisplayMode` is now
+`live | comparison` in all three; both writers per edition set `live`, Python's dead branches are gone,
+and the five test assertions (Swift 2, web 3, Python 0 — the coverage was already asymmetric) now
+assert `live`.
+
+**Tests: N7 and N8, paired in all three** — a completed measurement survives a device change; a live
+spectrum is blanked for the settle and restored after. Mutation: restoring the old
+`display_mode == LIVE` guard fails N7 alone. That test did not exist for eight months.
+
+**The fourth instance of one shape.** F30's `isDetecting`/`isDetectionPaused`, F33's settle choosing
+between two strings, and now `displayMode`/`isMeasurementComplete` twice over — two fields describing
+one fact, call sites guessing which to trust. Each time the fix was to delete the redundant one rather
+than keep them in sync. Swift **578**, Python **682**, web **610**.
 
 ## Stage 2 — move case lists into shared data
 
