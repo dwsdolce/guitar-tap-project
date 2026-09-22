@@ -2117,11 +2117,14 @@ reading `playFile` line by line found it. A move is not done when the new copy w
 detecting-AND-paused, and is kept consistent by every call site. Collapsing it into one value remains
 available, in all three editions together, if a bug ever comes from it — none has.
 
-**Also noticed, not acted on**: the detector has no `@parity` group in ANY edition —
-`TapToneAnalyzer+TapDetection.swift` and `tap_tone_analyzer_tap_detection.py` are both untagged,
-which is why this move disturbed no group. It is newly worth tagging: before it, web's detector sat
-in the audio layer and a group would have been lopsided; now all three sit on the analyzer, so
-`state/tap-detection` would be 1:1:1 for the first time. That is a parity-map decision, left open.
+**The detector had no `@parity` group in ANY edition** — `TapToneAnalyzer+TapDetection.swift` and
+`tap_tone_analyzer_tap_detection.py` were both untagged, which is why this move disturbed no group.
+An untagged file is invisible to `--check`: a group that does not exist cannot be reported
+divergent, which is the blind spot this sweep exists to close.
+
+Now tagged `state/tap-detection` in all three (Swift `348f4ae`, Python `4fbf17f`, web `71408d5`),
+1:1:1. It is only now worth having: until this move web's detector sat on the engine while the
+natives kept theirs on the analyzer, so the group would have been lopsided.
 
 F29 remains separately actionable and test-only — and easier now, since the seam it needs is the
 same shape in all three.

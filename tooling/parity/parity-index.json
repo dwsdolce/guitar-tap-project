@@ -501,6 +501,23 @@
       "equivalence": "tests"
     },
     {
+      "slug": "state/tap-detection",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer+TapDetection.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_tap_detection.py"
+      ],
+      "web": [
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/status-message",
+        "test/tap-decisions"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "state/tap-tone-analyzer",
       "swift": [
         "GuitarTap/Models/TapToneAnalyzer+Control.swift"

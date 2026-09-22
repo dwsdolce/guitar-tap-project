@@ -50,6 +50,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `state/button-enablement` | `GuitarTap/Views/TapToneAnalysisView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/state/buttonEnablement.ts` | tests |
 | `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts` | tests |
 | `state/status-message` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/tap-detection` | `GuitarTap/Models/TapToneAnalyzer+TapDetection.swift` | `src/guitar_tap/models/tap_tone_analyzer_tap_detection.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-tone-analyzer` | `GuitarTap/Models/TapToneAnalyzer+Control.swift` | `src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `test/analysis-quality` | `GuitarTapTests/AnalysisQualityTests.swift` | `tests/test_analysis_quality.py` | `test/analysis-quality.test.ts` | test suite |
 | `test/annotation-state` | `GuitarTapTests/AnnotationStateTests.swift` | `tests/test_annotation_state.py` | `test/annotation-state.test.ts`<br>`test/peak-state-store.test.ts` | test suite |
