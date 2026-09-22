@@ -1916,7 +1916,7 @@ real suite name, `ModeOverridesCodableTests`, the mutation fails both the round-
 guard.
 
 **F29 — `status-message` 12/12/16 is not "web has four extra". Both natives have gaps, and their
-test headers claim a coverage that does not exist. (open — needs a decision)**
+test headers claim a coverage that does not exist. (FIXED — both natives)**
 
 Swift and Python are 1:1 here — twelve cases, matching names, no drift between them. Web's sixteen
 are not four extras: it MERGES four native cases into two (single/multi-tap resting prompt; plate
@@ -1976,9 +1976,39 @@ are set imperatively too, at `tapToneAnalyzer.ts:1094`, `:1132` and `:1145`. Web
 its analyzer owns the material phase machine, which the natives' analyzers also own. The editions
 are structurally the same here; only the test coverage differs.
 
-Recommendation: add the five cases to Swift and Python against the existing seam, and delete the
-rationale from both headers rather than leaving a sentence that explains an obstacle which is not
-there. No production code moves.
+Done, 2026-09-21. Six cases added to each native — the five above plus one the list missed — against
+the seam their own sibling test files already use. No production code moved.
+
+Each case drives a method another test file calls without audio: `guitarLoopStatus(capturing:)` for
+the two guitar-loop strings, `redoCurrentPhase()` for the "— tap again" re-arm,
+`handleLongitudinalGatedProgress` for the material progress string and the file-playback
+auto-advance, and `finishGatedFFTCapture` fed silence for "No resonance detected". Mutation-tested:
+four strings broken, four failures, each caught by its own case.
+
+**A sixth gap turned up when the counts still did not match.** With five added, the slug read 17/17/16
+and the owner asked why web was still different. Mapping case by case: two of the differences are
+filing (web merges single/multi resting prompt into one case, and plate-complete ±FLC into another —
+four native cases, two web cases, same rules), and one is correct asymmetry (web's removed-string
+guard sweeps for `Requesting microphone` / `Comparing` / `Playing` / `Cancelled`, web-only inventions
+the natives never had). The third was real: **`Set up for fLC tap, then tap` was asserted in no
+edition but web.** Web's accept case covered BOTH transitions, fL → "Rotate 90°…" and fC → the FLC
+prompt; the natives covered only the first. Both natives produce it, and it is the prompt shown
+during the FLC cooldown — the same window whose missing cancellation guard F24's trail fixed in Swift
+the same day. Added to both, mutation-tested.
+
+`test/status-message` now reads **18/18/16**, with every remaining difference explained by behaviour
+rather than coverage.
+
+**Both headers now say what is true.** They claimed the transients were written too deep for a
+state-driven suite and were covered by the file-playback regression tests. Neither held: those tests
+run the pipeline but assert no status at all, and the handlers take a spectrum and a peak, which
+`FrozenPeakRecalculationTests` and `test_frozen_peak_recalculation` have always called directly. The
+rationale is replaced with what happened, because a sentence explaining a non-existent obstacle is
+what kept the gap alive.
+
+Two parity notes from writing them: Python counts material taps in `captured_taps` where Swift uses
+`materialCapturedTaps` (a name difference, not a behaviour one), and Python's analyzer needs a real
+`RealtimeFFTAnalyzer(for_testing=True)` for the gated transform, exactly as Swift's test passes one.
 
 **F30 — web drew the engine/model line in a different place: its engine owned the detector, the
 gated capture and the session WAV, which Swift and Python keep on the analyzer.
