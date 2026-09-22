@@ -1522,7 +1522,7 @@
     },
     {
       "repo": "web",
-      "path": "test/engine-arming.test.ts"
+      "path": "src/measurement/dumpWav.ts"
     },
     {
       "repo": "web",

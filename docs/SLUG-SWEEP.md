@@ -1371,7 +1371,7 @@ rule when writing a new decoder.
 
 ### S6 — Analyzer state machine (11 slugs)
 
-Status: ⏳ **IN PROGRESS** — 5 of 11 slugs read.
+Status: ⏳ **IN PROGRESS** — 6 of 11 slugs read.
 
 **RESUME HERE.** Audit position as of 2026-09-21. This table records only **what the reading
 produced** — a finding number, or "clean" where none was filed. Each finding's status lives in the
@@ -1384,7 +1384,7 @@ finding and nowhere else; do not restate it here.
 | `button-enablement` | ✅ | clean — 13/13/13 (F24's fix made `displayMode` required) |
 | `measurement-complete` | ✅ | **F25**, **F26** |
 | `annotation-state` (44/42/32) | ✅ | **F27**, **F28** |
-| `status-message` (12/12/16) | ☐ | |
+| `status-message` (12/12/16) | ✅ | **F29**, **F30** |
 | `tap-count-change` (6/6/11) | ☐ | |
 | `state-invariants` (7/7/7) | ☐ | |
 | `scenario-trace` (4/4/4) | ☐ | |
@@ -1914,6 +1914,187 @@ nothing, and exits 0 having executed 0 tests. METHOD rule 2 records this exact t
 count, not the failure list"), and it caught three false greens before this one. Re-run against the
 real suite name, `ModeOverridesCodableTests`, the mutation fails both the round-trip and the new
 guard.
+
+**F29 — `status-message` 12/12/16 is not "web has four extra". Both natives have gaps, and their
+test headers claim a coverage that does not exist. (open — needs a decision)**
+
+Swift and Python are 1:1 here — twelve cases, matching names, no drift between them. Web's sixteen
+are not four extras: it MERGES four native cases into two (single/multi-tap resting prompt; plate
+complete with and without FLC) and adds **six** of its own.
+
+Five of those six pin strings that all three editions produce:
+
+| web case | the string | asserted in Swift/Python? |
+|---|---|---|
+| capturing + between-taps strings | `Tap n/N capturing…` / `…captured. Tap again…` | no |
+| Redo re-arms the phase | `Ready for fLC tap — tap again` | no |
+| multi-tap progress then review | `fL tap n/N captured. Tap again…` | no |
+| EG-1: no in-band resonance re-arms | `No signal detected — tap again` | **no — and Swift sets it at five sites** |
+| file playback auto-advance | `File: fL complete, capturing fC…` | no |
+
+The sixth is a guard that no sweep state yields a string that was removed — a shape neither native has.
+
+**Both native headers record the exclusion as architecture.** Swift's says the per-tap progress
+transients "are written deep in the gated-capture pipeline … and are **produced by** the
+file-playback + gated-capture regression tests running the real capture. The web pins them directly
+because it has an explicit engine-state setter (`setEngineState`); Swift/Python set them
+imperatively mid-pipeline, so a state-driven suite can't reach them cleanly."
+
+**"Produced by" is not "asserted by", and the difference is the whole finding.** `statusMessage` is
+asserted in exactly two Swift test files — `StatusMessageTests` and `TapCountChangeTests` — and
+**zero** times in `FilePlaybackRegressionTests`. Python is identical. Those regression tests run the
+pipeline, so the strings are certainly *set*; nothing checks them. Delete `No signal detected — tap
+again` from all five of its Swift sites and both native suites stay green.
+
+So this is METHOD rule 4 again — an `n/a` resting on an architectural difference turns out to be a
+finding, not a difference — compounded by rule 3: the sentence asserting the coverage is the reason
+nobody looked. It is the same shape as F14, where a docstring's claim about what a helper mirrored
+was why six tests asserted against a copy of the logic instead of the app.
+
+It also inverts the count intuition a third time. `effective-peak-id` 6/6/0 was correct;
+`measurement-complete` 8/13/8 had the LARGEST suite missing two rules; here 12/12/16 reads as web
+carrying extras when it means the two natives share a gap.
+
+**And the architectural barrier does not exist either.** Asked whether it could be cleaned up so the
+difference stops existing, the answer is that there is nothing to restructure — the seam is already
+there, in all three editions, and both natives already drive it from tests:
+
+| | entry point a test can call with a synthetic spectrum | already called by |
+|---|---|---|
+| Swift | `handleLongitudinalGatedProgress(magnitudes:frequencies:)`, `handleCrossGatedProgress(…)` | `FrozenPeakRecalculationTests`, `FilePlaybackRegressionTests` |
+| Python | `_handle_longitudinal_gated_progress(…)`, `_handle_cross_gated_progress(…)` | `test_frozen_peak_recalculation.py` |
+| web | `recordMaterialTap(spectrum)` | `status-message.test.ts` |
+
+`StatusMessageTests` can call exactly the methods a sibling test file in the same repository already
+calls, without audio. The guitar loop strings need even less: `guitarLoopStatus(capturing:)` is
+already a named helper in Swift, the counterpart of web's `setGuitarStatus`, and can be asserted
+directly.
+
+Note also that web is not as state-driven as its own header implies: only the GUITAR loop strings
+come from `setEngineState`. Web's material strings — `File: fL complete…`, `fL tap n/N captured…` —
+are set imperatively too, at `tapToneAnalyzer.ts:1094`, `:1132` and `:1145`. Web tests them because
+its analyzer owns the material phase machine, which the natives' analyzers also own. The editions
+are structurally the same here; only the test coverage differs.
+
+Recommendation: add the five cases to Swift and Python against the existing seam, and delete the
+rationale from both headers rather than leaving a sentence that explains an obstacle which is not
+there. No production code moves.
+
+**F30 — web drew the engine/model line in a different place: its engine owned the detector, the
+gated capture and the session WAV, which Swift and Python keep on the analyzer.
+(FIXED — web, run-reviewed; the natives' boolean pair is left alone, see below)**
+
+Filed after the owner pushed back on this being dismissed as "not worth chasing" — the same
+"behaviour is equivalent today" reasoning that mis-filed F19 and nearly mis-filed F24.
+
+| | model of engine/detection state | guitar loop status set at |
+|---|---|---|
+| web | `EngineState = 'idle' \| 'listening' \| 'capturing' \| 'paused'`, forwarded from the engine; `setEngineState` derives `isDetecting`, `isDetectionPaused` and the status string | **1 site** |
+| Swift | `isDetecting` + `isDetectionPaused`, two independent `@Published` booleans | **4 sites** |
+| Python | `is_detecting` + `is_detection_paused` | **4 sites** |
+
+Swift's own comment on `guitarLoopStatus(capturing:)` calls it "the equivalent of the web
+`setGuitarStatus(engineState)`" — it mirrors the string-building half and not the state-driven
+dispatch that decides when to apply it.
+
+The boolean pair can express a state that does not exist: detecting AND paused. Nothing prevents it
+structurally; `pauseTapDetection()` clears one while setting the other, and every other site that
+touches the pair has to do the same. Web cannot represent it — one value, both booleans derived —
+which is precisely the argument F24 made for `displayMode`, where three fields became one three-state
+value so "frozen AND comparison" stopped being writable. Web's invariant suite carries I1 and I2 to
+catch illegal combinations; an invariant test is a workaround for a state that should not be
+representable.
+
+This is the third instance of one shape inside S6: F24 (display mode held in the view), F26 (a model
+rule implemented as a view effect), and now a model rule maintained by call-site discipline rather
+than by derivation. Two were fixed by moving the decision onto the model; this one is the same move
+one level down.
+
+**It is also much the largest, and it runs the other way.** F24 and F26 moved web toward the natives.
+Here web has the better structure, and the natives are the ones carrying the risk — across
+`isDetecting` (67 references in Swift, 65 in Python) and `isDetectionPaused` (38 / 14). A
+`detectionState` enum with the booleans derived is a real refactor of canonical model code with real
+behavioural risk, not a filing change.
+
+**Asked how to move WEB onto the natives' shape, the honest answer is that it can be done — the
+claim that it could not was wrong twice over.**
+
+First this was filed recommending the natives adopt web's enum, which inverts the owner's standing
+rule. Then, asked the reverse, it was defended as platform-forced on two grounds, both false:
+
+- *"Web's detector runs in an AudioWorklet, off the main thread."* It does not. The worklet computes
+  FFT and RMS and posts chunks to the MAIN thread — `port.onmessage` → `onChunk` → `processChunk` →
+  `detectTap`. Detection is main-thread in web exactly as it is in Swift.
+- *"An analyzer-owned `isDetecting` would reintroduce the silent-arm bug."* Circular: the
+  request/refusal seam exists only BECAUSE detection was put on the engine. Move it and the seam,
+  and the bug class with it, disappears.
+
+The real difference is where each edition draws the engine/model line:
+
+| | engine | detection + capture members on the engine | detection lives in |
+|---|---|---|---|
+| Swift | `RealtimeFFTAnalyzer*.swift`, 3409 lines | **1** | `TapToneAnalyzer+TapDetection.swift` (495) + `+SpectrumCapture.swift` (1713) |
+| Python | `mic`/proc-thread | — | `tap_tone_analyzer_tap_detection.py`, `…_spectrum_capture.py` |
+| web | `realtimeFFTAnalyzer.ts`, 1268 lines | **48** | the engine |
+
+Swift's engine is microphone, FFT and watchdog. Web's additionally owns the detector, the
+hysteresis and confirmation counters, the noise-floor EMA, the warm-up window, the capture buffers
+and the gated-capture completion — the contents of Swift's two analyzer files.
+
+That is a port choice, and it is the largest single divergence the sweep has found. It is also the
+root of several smaller ones already recorded: arming as a refusable request (F24's tail),
+`isDetecting` as a mirror rather than state, the four status sites web does not have (F29), and the
+boolean pair above.
+
+Moving detection and gated capture from `realtimeFFTAnalyzer.ts` into `tapToneAnalyzer.ts` would
+leave the engine as mic + worklet + FFT + watchdog, matching Swift, and would retire the
+`pendingArm` machinery added under F24 rather than keeping it as compensation.
+
+Owner's call, 2026-09-21, against a recommendation to defer it: *"This needs to be done. It has been
+put off for months and always delayed."* Done, and run-reviewed.
+
+**What moved to `tapToneAnalyzer.ts`**, all of it transplanted rather than retyped so the arithmetic
+is unchanged: the pre-roll ring, the capture windows, `detectTap` with its hysteresis latch,
+2-chunk confirmation, noise-floor EMA and warm-up, the arming and disarming, the onset alignment and
+zero-padding, the calibration APPLICATION, `tapDetectionThreshold`, and the entire session WAV —
+buffer, bounded pre-roll, phase checkpoints, redo truncation and the write itself. The constants
+Swift keeps on its analyzer (`hysteresisMargin`, `noiseFloorAlpha`, `warmupPeriod`) went with them.
+
+**What stayed on the engine**: the microphone, the worklet, the FFT primitive, the calibration
+*corrections*, level, clipping, decay, the watchdogs, device management and file transport. 1268
+lines → 793. The five detection-result callbacks collapsed into one `onAudioFrame`, and the caller
+now arms before playback — `startTapSequence({ skipWarmup })` then `playFile` — which is the order
+`TapToneAnalysisView+Actions` uses.
+
+**The evidence the DSP survived**: all seven REG-* baselines — REG-G1, both REG-G2 cases, REG-B1,
+REG-B2, REG-P1 and OUT-4 — plus the self-regression oracle. One failed at first and was worth the
+whole exercise: the material runner passed calibration through `playFile` while the analyzer reads
+it from the device, which moved plate fL by ~1 Hz. REG-P1 caught it.
+
+**Two things were deleted rather than moved.** `test/engine-arming.test.ts` in full: its six cases
+covered the deferred-arm machinery added hours earlier under F24, which existed only because arming
+was a refusable request — no request, no refusal. And `tap-count-change`'s engine layer, five cases
+testing a progress re-fire its own comment called "a web-specific progress-bar mechanism
+Swift/Python don't have". Both went with the divergences they compensated for.
+
+**A caution the cleanup earned.** Cutting the engine's detector methods left its FIELDS behind, and
+`playFile` went on faithfully resizing a pre-roll, allocating capture windows and resetting
+`prevAbove`/`consecutive`/`guitarTapCount` that nothing read — plus a second copy of every detection
+constant, live alongside the analyzer's. `tsc` is silent about assigned-but-unread state, so only
+reading `playFile` line by line found it. A move is not done when the new copy works.
+
+**Not changed**: the natives' `isDetecting` + `isDetectionPaused` pair can still express
+detecting-AND-paused, and is kept consistent by every call site. Collapsing it into one value remains
+available, in all three editions together, if a bug ever comes from it — none has.
+
+**Also noticed, not acted on**: the detector has no `@parity` group in ANY edition —
+`TapToneAnalyzer+TapDetection.swift` and `tap_tone_analyzer_tap_detection.py` are both untagged,
+which is why this move disturbed no group. It is newly worth tagging: before it, web's detector sat
+in the audio layer and a group would have been lopsided; now all three sit on the analyzer, so
+`state/tap-detection` would be 1:1:1 for the first time. That is a parity-map decision, left open.
+
+F29 remains separately actionable and test-only — and easier now, since the seam it needs is the
+same shape in all three.
 
 ## Stage 2 — move case lists into shared data
 
