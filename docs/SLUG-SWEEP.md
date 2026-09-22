@@ -1894,6 +1894,19 @@ would write files both ports read as having no overrides at all. `overrides_areW
 now asserts the wrapper, and the replaced `.auto` case asserts that such an entry is dropped rather
 than becoming an override.
 
+**And the corpus had never carried one.** Asked for a real file to verify the reader against, the
+corpus turned up nothing: 119 measurements, 116 with selection, 91 with annotation offsets, **zero**
+with `peakModeOverrides`. Every override test in every edition had always used a hand-built fixture,
+so the `.guitartap` reader had never met an override an app wrote — a gap that predated this work.
+
+The owner captured two, saved from the running apps: `annotation-override-1790037028.guitartap`
+(Swift, label "Fred") and `annotation-override-python-1790037332.guitartap` (Python, "Fred2"), with
+a PDF and PNG beside each. Both editions emit the identical wire shape, and the Python file loads in
+Swift by hand. All three editions now decode both files and assert the label survives as the label
+alone, keyed to a peak the file still contains. The Python-written file is the one that matters for
+Swift: Python's writer was untouched by this refactor, so reading it proves cross-edition parity
+against bytes Swift did not produce.
+
 **A false green nearly certified that guard.** The mutation — emit bare labels instead of the
 wrapper — appeared to survive, which would have meant the test measured nothing. It had not
 survived: `-only-testing:GuitarTapTests/MeasurementCodableTests` names a FILE, not a suite, matches
