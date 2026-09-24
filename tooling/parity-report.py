@@ -97,7 +97,7 @@ def tolerance_class(path: str) -> str | None:
 def load_configurations() -> dict[str, dict[str, Any]]:
     """Every collected baseline, plus the oracle standing in for the canonical configuration."""
     with open(ORACLE_PATH, encoding="utf-8") as fh:
-        oracle = json.load(fh)
+        oracle = decode_nonfinite(json.load(fh))
     # The oracle is the canonical configuration's own baseline as well as the cross-edition
     # contract. Newer mints name the configuration that produced them; older ones predate the
     # field, and the only configuration that has ever minted is this one.
@@ -116,7 +116,7 @@ def load_configurations() -> dict[str, dict[str, Any]]:
             if not name.endswith(".json"):
                 continue
             with open(os.path.join(BASELINES, name), encoding="utf-8") as fh:
-                document = json.load(fh)
+                document = decode_nonfinite(json.load(fh))
             configs[name[:-5]] = {
                 "values": flatten(document["values"]),
                 "provenance": document.get("provenance", {}),
@@ -125,8 +125,22 @@ def load_configurations() -> dict[str, dict[str, Any]]:
     return configs
 
 
+def decode_nonfinite(node: Any) -> Any:
+    """JSON has no infinity: every oracle and baseline stores a non-finite number as the STRING
+    "-Infinity" / "Infinity" / "NaN" (GFFT4's silence is -inf). Turn them back into floats."""
+    if isinstance(node, dict):
+        return {k: decode_nonfinite(v) for k, v in node.items()}
+    if isinstance(node, list):
+        return [decode_nonfinite(v) for v in node]
+    if isinstance(node, str) and node in ("-Infinity", "Infinity", "NaN"):
+        return float(node.replace("Infinity", "inf").replace("NaN", "nan"))
+    return node
+
+
 def deltas(reference: dict[str, float], other: dict[str, float]) -> dict[str, float]:
-    return {p: other[p] - reference[p] for p in reference if p in other}
+    # Equal values differ by exactly 0 — including two equal infinities, whose subtraction is NaN.
+    return {p: (0.0 if other[p] == reference[p] else other[p] - reference[p])
+            for p in reference if p in other}
 
 
 def worst_by_class(delta_map: dict[str, float]) -> dict[str, tuple[float, str]]:

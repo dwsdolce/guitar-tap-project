@@ -1371,9 +1371,19 @@ rule when writing a new decoder.
 
 ### S6 — Analyzer state machine (11 slugs)
 
-Status: ⏳ **IN PROGRESS** — 6 of 11 slugs read.
+Status: ⏳ **IN PROGRESS** — 7 of 11 slugs read.
 
-**RESUME HERE.** Audit position as of 2026-09-21. This table records only **what the reading
+> **State, 2026-09-23 end of session.** F23–F44 are all **closed** — every one fixed and run-reviewed
+> by the owner in all editions it touched. **Committed:** Swift `068f814` (code) + `ee8e72f` (oracle,
+> minted clean from `068f814`), Python `87e7ad7`, web `04c66b9`, hub (this doc, oracle, baselines, report). Full suites on the committed tree: **Swift 598, Python 712,
+> web 635, all passing**; parity map 103 groups, no problems. What remains of S6 is **reading the four
+> unread slugs** below; any finding they produce is open until fixed, like every other.
+>
+> Split out and **not** S6 work (owner, 2026-09-23): [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19)
+> (file-playback results depend on machine speed), and the Swift meter/detection cadence recorded under
+> [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3).
+
+**RESUME HERE.** Audit position as of 2026-09-23. This table records only **what the reading
 produced** — a finding number, or "clean" where none was filed. Each finding's status lives in the
 finding and nowhere else; do not restate it here.
 
@@ -1385,21 +1395,30 @@ finding and nowhere else; do not restate it here.
 | `measurement-complete` | ✅ | **F25**, **F26** |
 | `annotation-state` (44/42/32) | ✅ | **F27**, **F28** |
 | `status-message` (12/12/16) | ✅ | **F29**, **F30**; **F33** from the F30 run-review |
-| `tap-count-change` (6/6/11) | ☐ | **F34** surfaced here from the F30 run-review, before the slug was read |
+| `tap-count-change` (6/6/6 → 10/10/10) | ✅ | cases clean — 3+3 identical all three, the best-aligned slug in S6, and every case guitar; **F36**, **F37**, **F38**, **F39**, **F40**. **F34** had surfaced here from the F30 run-review, before the slug was read |
 | `state-invariants` (7/7/7) | ☐ | |
 | `scenario-trace` (4/4/4) | ☐ | |
 | `session-pre-roll` (4/4/4) | ☐ | |
 | `start-tap-race` (4/4/4) | ☐ | |
 
 The unread rows' counts are Swift/Python/web. `annotation-state` is the largest and the likeliest to
-show F10-shape filing differences; `status-message` and `tap-count-change` are the two where web
-carries more cases than the natives.
+show F10-shape filing differences; `status-message` was one of the two where web carried more cases
+than the natives. `tap-count-change` was the other — its 6/6/**11** was already stale when the table
+was written, because F30 deleted web's engine-refire layer. Measured with the runner, it is 6/6/6.
 
 Method reminders that earned their place in S6 so far: counts mean nothing in either direction
 (`effective-peak-id` 6/6/0 was correct, `measurement-complete` 8/13/8 had the LARGEST suite missing
 two rules); verify a test file's own claims about why an edition differs (rule 3 applies to test
 headers too); and "behaviour is equivalent today" is not a reason to close an architectural
 divergence — that reading mis-filed F19 and nearly mis-filed F24.
+
+And one more, from `tap-count-change`: **agreement between the case lists means as little as spread
+between the counts.** That slug's two suites are 3 + 3 in every edition, assert identical strings,
+and all reach production — and it produced five findings, two of them reachable from the UI. The
+cases agreed because they were all written for guitar, against a hook three measurement types use.
+S5 had already shown that a matching 6/6/6 proves nothing (`export-filename`,
+`material-measurement-inputs`); this is the same lesson where the cases match too. **Ask what the
+production code is used for that no case covers.**
 
 
 
@@ -2618,6 +2637,745 @@ spectrum is blanked for the settle and restored after. Mutation: restoring the o
 between two strings, and now `displayMode`/`isMeasurementComplete` twice over — two fields describing
 one fact, call sites guessing which to trust. Each time the fix was to delete the redundant one rather
 than keep them in sync. Swift **578**, Python **682**, web **610**.
+
+**`test/tap-count-change` (6/6/6) — the cases are in parity. The code under them is not.
+(read 2026-09-22)**
+
+The best-aligned slug S6 has produced: two suites per edition, 3 + 3 cases, the same three prompt
+assertions and the same three OUT-5 "no implicit finalise" assertions, asserting identical strings.
+All three reach production. Web's fixture is the strongest — it drives `startTapSequence` →
+`beginGuitarAccumulation` → `recordGuitarTap` where both natives poke `currentTapCount` /
+`captured_taps` directly.
+
+`--check` is happy, the case lists agree, and the slug still yielded five findings. Two of them are
+reachable and user-visible today. The reason is one sentence: **every case in every edition is
+guitar**, and the hook they exercise is used by plate and brace as well.
+
+Two fixture details are worth keeping, because they are what made F36 invisible rather than obvious.
+Swift's prompt fixture sets `currentTapCount = 0`; Python's sets `captured_taps = []`. Each sets the
+field its own edition's guard happens to read, so each passes against its own divergence and neither
+could ever catch the other's. That is the "fixture encoding a contract" shape (method rule 1) turned
+inward: not a contract the app no longer sends, but a contract only *this* edition has.
+
+**F36 — the tap-count hook was written for guitar and never revisited, so changing Taps during a
+plate measurement writes the guitar prompt over it. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+Start a plate measurement. Before the first tap the Taps stepper is unlocked — the lock is
+`currentTapCount > 0 && !isMeasurementComplete`, and the count is 0 — and detection is listening.
+Change Taps from 1 to 3:
+
+| | what the status bar says |
+|---|---|
+| Swift | **"Tap the guitar 3 times..."** |
+| Python | **"Tap the guitar 3 times..."** |
+| web | "Ready for fL tap (×3 each for L, C)" |
+
+Reachable from the UI, user-visible, wrong in two editions. Web is correct, and this is the fourth
+time in this sweep that the web-vs-native comparison was the discriminating experiment.
+
+**Part one — the prompt.** Both natives call `tapPrompt()` / `_tap_prompt()`, whose own docstring
+calls it "the guitar resting prompt". Each edition already owns the mode-aware alternative:
+`armedPrompt()` (`TapToneAnalyzer.swift:329`) and `_armed_prompt()` (`control.py:72`), **both added
+three days ago by F33**, which extracted exactly this logic for exactly this reason. The hook calls
+the wrong one. Web calls `restingPrompt()`, which dispatches on type and then on phase, and whose
+default arm returns `materialArmPrompt()` — the string carrying the "×N each for L, C" the user just
+changed.
+
+**Part two — the zero-check.** The same guard is written three ways:
+
+| | guard |
+|---|---|
+| Swift | `isDetecting && currentTapCount == 0` |
+| Python | `is_detecting and len(captured_taps) == 0` |
+| web | `!isMeasurementComplete && isDetecting && currentTapCount === 0` |
+
+Python reads the **within-phase buffer**. Its own production code says why that is wrong, at
+`tap_tone_analyzer_spectrum_capture.py:1259-1267`: `captured_taps` is cleared at every phase
+completion, `current_tap_count` is cumulative across L → C → FLC, "the two are different things and
+Swift keeps them apart", and deriving one from the other has already caused a bug once (the progress
+bar resetting each phase, and a "Tap 0/N" label). So Python's guard is true at the start of *every*
+phase, not only at the start of the measurement.
+
+Web's extra `!isMeasurementComplete` term is harmless — completion sets `detectionState` to idle in
+all three — but it is a third spelling of one predicate, which is how the first two came to differ.
+
+**The fix is to call the function F33 already wrote**, and to settle the guard on the cumulative
+count in all three. Needs a plate run-review: change Taps before the first tap.
+
+**Done as described, 2026-09-22.** Both natives now call `armedPrompt()` / `_armed_prompt()` from the
+hook, and all three guard on the cumulative `currentTapCount`. Web's third spelling — the extra
+`!isMeasurementComplete` term — is gone: completion sets `detectionState` to idle in every edition,
+so `isDetecting` already covered it, and three spellings of one predicate is how the guards came to
+differ. Owner's call, 2026-09-22, on which way to level it: delete it from web, since Swift is
+canonical.
+
+**Tests: four material cases per edition**, taking `test/tap-count-change` from 6/6/6 to **10/10/10**
+— the fL arm prompt after a raise, the FLC variant, the brace variant, and the guard case at a later
+phase. Mutation caught all of them.
+
+**One of those four was worthless when first written, and mutation is what said so.** The guard case
+set the status to the string the derivation *also* produces, so "the hook stayed silent" and "the
+hook fired" were indistinguishable and swapping the guard back to the phase buffer still passed —
+PARITY-TEST-METHOD rule 1's "assertion that holds by construction", written by someone who had just
+read that rule. It now uses the string a REDO leaves on screen, which the derivation never produces.
+
+**F37 — `armedPrompt()` restores a DIFFERENT string from the one the phase actually shows, so a
+device change silently rewords the instruction mid-plate. And the preserve path it was to be fixed
+with was itself broken. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+Found while verifying F36's part one, in the function F36 recommends calling.
+
+| phase | the live prompt, set when the phase begins | what the settle restores |
+|---|---|---|
+| capturing fC | "Rotate 90° and tap for fC" (`Control.swift:381`, `control.py:938`) | **"Ready for fC tap"** |
+| capturing fLC | "Set up for fLC tap, then tap" (`Control.swift:387`, `control.py:947`) | **"Ready for fLC tap"** |
+
+Web's `restingPrompt()` returns the same strings the phase set, so a device change mid-plate leaves
+the instruction alone. Both natives replace a specific physical instruction — rotate the plate, set
+up for the FLC tap — with a generic one. The user is mid-measurement and the app has just forgotten
+what it told them to do.
+
+This is inside **F33's own path**, which is marked FIXED and run-reviewed. The run-review was step 10,
+executed **after a completed measurement**; mid-plate at phase C was never run. That is the same
+reason F35 survived eight months — a path exercised in one state and declared correct in all of them.
+
+Fixing F36 by routing the hook through `armedPrompt()` makes this reachable from a second direction,
+so the two are one change.
+
+**The fix is not to derive it better — it is not to derive it at all.** The owner's question,
+2026-09-22: *"It may not be a divergence but it may be wrong?"* It is. Two strings are correct at
+(plate, capturingCross, armed) — the advance's "Rotate 90° and tap for fC" and a redo's "Ready for fC
+tap — tap again" — so the prompt is not a function of the state the analyzer holds. Modelling the
+entry path would not help either: after a device swap the user has **already rotated the plate**, so
+instructing them to rotate it is wrong however it is derived.
+
+F33 had already drawn this line and filed the material prompts on the wrong side of it. Its own
+comment says a completed measurement's status is "a RESULT announcement rather than a live prompt …
+not re-derivable and must not be thrown away". A phase instruction is the same kind of thing.
+`statusAfterSettle()` now returns nil for an armed material phase, and `restoredStatus(before:)`
+puts back what was showing. Guitar still derives, and should: its prompt is a pure function of count
+and total, both of which the analyzer holds.
+
+The two callers wanted opposite things, which was the actual defect — the tap-count change must
+RECOMPUTE, the settle must PRESERVE — and one function was answering both.
+
+**The check the owner asked for before any of this was written found the preserve path broken.**
+All three captured `statusMessage`, the OVERRIDE-RESOLVED string, where each keeps the underlying
+value in `latestRealStatus` for exactly this purpose. So a route change while the input was clipping
+preserved the warning sentinel and put it back as though the analyzer had set it. Web and Python were
+worse than Swift: their write path stores the argument as the real status, so the sentinel BECAME the
+real status and clearing the condition restored the warning. Already reachable before this change —
+`statusAfterSettle()` has returned nil for a completed measurement since F33 — so widening it to
+armed material would have widened a live defect. All three now capture `latestRealStatus`.
+
+**And the resolver was two-of-three.** Python's `_set_status_message` resolved clipping inline and
+ignored `input_appears_dead`, though `_apply_status_overrides()` sat ten lines below with Swift's
+precedence — so any status write dropped the dead-input warning. Web had no resolver and **no
+dead-input status at all**: its engine detects a silent input, warns to the console and retries, and
+`realtimeFFTAnalyzer.ts:520` sets `inputAppearsDead` — which nothing read. The seam was even
+documented, "set by the owner to surface 'no audio input' in the status line", and never wired. Web
+alone told the user nothing. Now all three resolve through one precedence rule (dead input, then
+clipping, then the analyzer's own status) and web has the warning, the resolver and the wiring.
+
+Owner's call, 2026-09-22, on whether to file these separately: *"Who does that help … does it just
+delay the fix?"* The Python resolver was not separable — it is one line inside the function whose
+input was already changing, so filing it produces a paragraph and no work item. Web's dead input was
+separable by mechanism but is a user-visible divergence, which rule 7 says is fixed in the same
+change. *"Let's not create more delayed problems to fix."*
+
+**One structural change beyond the findings.** Swift held the pre-settle status in a LOCAL where both
+ports hold a field, so the capture was unobservable and only two editions could pin it. It is now a
+stored property, matching Python `_status_before_settle` and web `statusBeforeSettle`.
+
+**A residual, recorded rather than fixed.** After a redo the phase shows "Ready for fC tap — tap
+again" and the ARM path would say "Rotate 90° and tap for fC". Nothing rewrites it now, because
+nothing re-derives it — but the two strings still describe one phase. Not a divergence; all three
+behave identically.
+
+**Tests: N9–N12, paired in all three**, taking `test/notification` from 8/8/8 to **12/12/12**. N9 —
+the settle preserves a material phase instruction. N10 — the override precedence, including that an
+ordinary status write while the input is dead keeps the warning. N11 — the settle captures the real
+status, not the sentinel. N12 — the phase ADVANCE and the armed DERIVATION produce the same string,
+pinned from both ends.
+
+**N12 exists because mutation found a hole the other three left.** Drifting the advance's literal
+back to "Ready for fC tap" passed every test in all three editions — the exact defect F37 is, still
+undetectable after the fix. Nothing had ever pinned the string the advance writes.
+
+Swift **586**, Python **690**, web **618**. Parity map clean at 103 groups.
+
+**The run-review this needs, which no existing step covers.** On each edition: (1) start a plate
+measurement and change Taps before the first tap — the prompt must name the new count and stay a
+plate prompt; (2) mid phase-C, pull the microphone — the instruction must come back unchanged, not
+reworded; (3) unplug the mic entirely — all three must now show "⚠ No audio input", web included.
+
+**F38 — Python's `number_of_taps` is a plain attribute where Swift enforces the hook on every write,
+and two Python paths write it directly. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+| | the hook | fires on |
+|---|---|---|
+| Swift | `didSet` on `@Published var numberOfTaps` | **every assignment**, including the load and file-playback paths |
+| Python | `set_tap_num()`, a method | only the spinner |
+| web | `setNumberOfTaps()`, a method | the stepper and both load paths |
+
+`load_measurement` (`tap_tone_analyzer_measurement_management.py:751`) and `play_file_for_testing`
+(`tap_tone_analyzer.py:802`) both assign `self.number_of_taps` directly and skip the hook entirely.
+
+No user-visible effect today: Swift's `didSet` fires on load but is a no-op there, because
+`loadMeasurement` sets `detectionState = .idle` at `:709` — thirty-five lines before it writes
+`numberOfTaps` at `:784` — so the guard is false. The correctness rests on statement order in a
+method neither port shares.
+
+This is **F25 exactly** — "Python's completion flag is a plain attribute where both other editions
+enforce a setter" — which was fixed for `is_measurement_complete` by making it a property. The same
+shape is still present one field over. The fix is the one already proven in this file: make
+`number_of_taps` a property whose setter holds the logic, and let `set_tap_num` become a thin wrapper
+or disappear.
+
+**Done for this field, 2026-09-22.** `number_of_taps` is now a property whose setter carries the
+hook, so the load and file-playback paths can no longer bypass it. The `max(1, n)` clamp in
+`set_tap_num` went with it: Swift's `didSet` has no model-layer clamp, and the spinner already bounds
+the value 1–10 in the view exactly as the Swift and web steppers do — keeping it was the divergence.
+
+**And then the owner stopped the pattern.** *"Didn't we work on this early today or yesterday? Why is
+it coming up again?"* It had: **F25**, **F32**, **F34** and now F38 are one defect wearing four names
+— state whose notification lives in a separate method, with the plain field writable beside it. Each
+was fixed on the field, never on the class, so the next was guaranteed. This finding's own text says
+so and then proposes fixing one more field.
+
+The sweep that followed measured all three editions. Its result — that Swift has zero instances, that
+web is **not** an instance and must not be "fixed" into one, and that the three editions' observable
+surfaces are shaped by three different questions — is recorded in
+[`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) under "The observable surface", because the owner
+routed it to #1 on 2026-09-22: *"it is what I think is required — i.e. ideally it would be the same
+observable set expressed the same way, so both."* Two live Python defects it turned up are **F41**.
+
+**F39 — the tap-count lock is a fourth rule, triplicated in the views, and Python's copy reads a
+view-local cache instead of the model. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+The lock is deliberately **not** part of `buttonRule` — Swift says so at `TapToneAnalysisView.swift:220`,
+and the reason is sound: that rule answers which of the three action buttons are live, and a numeric
+input's lock is a different question about a different control. The owner's call stands. What follows
+from it is that the expression is written three times, and one of them reads a different field:
+
+| | expression |
+|---|---|
+| Swift | `tapToneAnalyzer.currentTapCount > 0 && !tapToneAnalyzer.isMeasurementComplete` |
+| web | `currentTapCount > 0 && !snapshot.isMeasurementComplete` |
+| Python | `self._tap_count_captured > 0 and not is_complete` |
+
+`_tap_count_captured` is a **view field**, fed by the `tapCountChanged` signal and hand-reset in five
+more places. One of those five exists to paper over a model reset that emits nothing:
+`load_measurement` sets `current_tap_count = 0` with no `tapCountChanged.emit`, and the view resets
+its own copy at `tap_tone_analysis_view.py:4446` — where the comment says so outright. The other
+three model resets do emit. Its comment claims it mirrors Swift's expression; it computes the same
+value today.
+
+Fifth instance of **two fields describing one fact**, this time across the model/view boundary rather
+than within the model. The other four were each fixed by deleting the redundant field, and the same
+applies: read `analyzer.current_tap_count`.
+
+**Done, 2026-09-22 — one line.** The lock reads the model; the mirror stays for the LABEL, which is
+legitimately push-fed by the signal's payload. That distinction is the whole finding: a label may
+render whatever the last signal carried, but a *rule about model state* has to ask the model.
+
+**No behaviour changed** — all four states (0/2 taps × complete/incomplete) were already correct, and
+were verified so after the change. Owner's framing, 2026-09-22, on why it was still worth doing:
+*"since we want to remove as much structural divergence as possible that implies that F39 should have
+a change in the Python code."*
+
+**No test.** The lock is the one rule with no coverage in any edition — it is deliberately outside
+`buttonRule` (see above), and no edition tests its view-layer expression. Verified instead by driving
+`_update_tap_buttons()` headlessly through the four states. Recording that gap rather than papering
+over it: a Python-only test would be the kind of one-sided coverage this sweep keeps finding.
+
+**F40 — web carries a dead copy of a native model field while the real state sits in the view, and
+the slug's own test file contradicts itself. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+`TapToneAnalyzer.showLoadedSettingsWarning` (`state/tapToneAnalyzer.ts:280`) is declared `false` and
+set `false` once, at `:322`. It is never set true, never read, and not in the snapshot type. The
+banner the user sees is a React `useState` in `App.tsx:240`, cleared at five sites and raised at two.
+Both natives hold the flag on the model and clear it from four model sites, one of which is the
+tap-count hook — which is how this surfaced here rather than under a banner slug.
+
+A small F24: state that belongs on the analyzer left in the view, with a stub on the analyzer that
+makes it look otherwise. Noted rather than filed separately because it is on the path this slug
+touches (`dont-fragment-work`), and because the stub is what would make a future reader believe the
+web already holds the flag.
+
+Separately, `test/tap-count-change.test.ts` disagrees with itself. Lines 20-21 say the reduce-count
+branch "is NOT pinned 3-way: it diverges — Swift defers with 'All taps captured. Processing…',
+Python's `set_tap_num` processes synchronously. Tracked in 6-TEST 4c." Lines 46-52 of the same file
+say the branch was removed from every edition and that the tests below pin the removal. The second is
+correct. The first is a load-bearing sentence that was true when written — CROSS-EDITION rule 6, and
+the fifth confidently-wrong comment this sweep has turned up.
+
+**Done, 2026-09-22 — the state moved, not the stub deleted.** Owner's call, and it corrected mine:
+*"since we want to remove as much structural divergence as possible … the first option (a) for F40 is
+to move the state on the web's analyzer so divergence is removed. But it is not #1 — it is finding
+and fixing divergence as we can. This is not the same magnitude of work that we delayed earlier."*
+That distinction is worth keeping: #1 is unifying the whole observable surface; this is one field with
+a known destination, the same size as F24, which was also done here.
+
+`showLoadedSettingsWarning` is now analyzer state and on the snapshot. The clears live where the
+natives keep them — `startTapSequence` (Swift `Control.swift:149`), `setNumberOfTaps` (Swift
+`numberOfTaps.didSet`), and the completion setter, which already had it. The raises live in
+`loadMeasurement` and `restoreMaterial`. `App.tsx` lost the `useState`, five clear sites and two raise
+sites, and the banner now renders from `showLoadedSettingsWarning && !isSavedMeasurementComparison`
+— Swift's own view gate, which makes the comparison clear site unnecessary rather than merely moved.
+
+### The divergence the move uncovered: web's banner misattributed the user's own threshold to the file
+
+Worth stating at length, because it is the most consequential thing in F40 and neither this finding
+nor the sweep predicted it.
+
+**The banner names two numbers, and it renders the LIVE ones.** All three editions draw
+"Settings from loaded measurement — Threshold: N dB · Taps: M" from current state —
+`tap.tapDetectionThreshold` / `tap.numberOfTaps` in Swift
+(`TapToneAnalysisView+Controls.swift:377` and `:478`), the equivalents in Python and web. Nothing
+stores the file's values for display. That design is fine, and it is fine *only* because the banner
+is dismissed the moment either number stops being the loaded one. **The label is a claim about
+provenance; the numbers are live state; the clears are the entire mechanism keeping the claim true.**
+
+Swift and Python clear on both numbers:
+
+| the banner names | Swift clears at | Python clears at | web cleared at |
+|---|---|---|---|
+| Taps | `numberOfTaps.didSet` | `set_tap_num` | `changeTaps` (view) |
+| Threshold | `tapDetectionThreshold.didSet` | `set_tap_threshold` | **nowhere** |
+
+**So on web the banner did not go stale — it lied.** Load a measurement captured at −45 dB with 3
+taps and the banner correctly reads "Threshold: −45 dB · Taps: 3". Drag the threshold slider to
+−30 dB and it reads "Settings from loaded measurement — Threshold: −30 dB · Taps: 3". The user's own
+value, presented as the file's.
+
+**Why that is worse than a cosmetic defect.** The tap threshold is a capture parameter. This
+application has an entire provenance apparatus — the microphone match, the calibration comparison,
+the sample-rate check, `measurementWarning` — built so a luthier can tell what a saved measurement
+was actually taken with, and whether a new tap is comparable to it. A banner that misreports the
+file's threshold corrupts precisely the judgement that machinery exists to support, and it does so
+in the one place the user is told to look.
+
+**Why it stayed invisible.** The banner is correct when it appears and only becomes false on a later
+action — moving a slider — that has nothing to do with loading. No edition tested it: web's MC8
+asserted the completion clear against the dead copy (see below), and the flag had no other coverage
+anywhere. And no run-review step has ever touched the threshold slider after a load.
+
+**Why the sweep found it.** Only because moving the state forced every clear site to be laid against
+the natives' one by one. **A missing clear has no line number** — it cannot be grepped for, and
+reading web on its own would never have shown it. It is visible only in the diff between two
+editions' lists, which is the argument for this whole issue in one sentence.
+
+**Deliberately NOT folded in:** web's `tapDetectionThreshold` lives in `settings`, not on the
+analyzer, so the view has to report the deviation where the natives do it inside the threshold's own
+setter. That is a separate divergence, named in the code at `noteLoadedSettingsDeviation()` rather
+than quietly widened into this change.
+
+**MC8 had been passing against the corpse.** Web already asserted that completion clears this flag —
+and had done so for months against a field the application never read. Not a test-local helper this
+time (method rule 1's first shape) but its mirror image: a real production field that no production
+path consumed. The test was true and meaningless.
+
+**Tests: MC9-MC11 in web, MC9-MC10 in both natives** — a new sequence clears it, a tap-count change
+clears it, and (web only, because only web's load path can be driven from a unit test) a load RAISES
+it and survives the completion clear. That last one pins an ordering dependency Swift carries between
+`MeasMgmt:709` and `:834`: the completion setter clears the flag, so the raise must come after.
+Mutation confirms it — moving the raise one line earlier fails MC11, and the three other rules each
+fail their own case when removed.
+
+**Recommended order**, all three editions, tests paired and mutated:
+
+1. **F36** — route the hook through `armedPrompt()`; settle the guard on the cumulative count.
+2. **F37** — `armedPrompt()` returns the phase's own string. One change with F36.
+3. **F38** — `number_of_taps` becomes a property in Python, as F25 did.
+4. **F39** — Python's lock reads the model.
+5. **F40** — delete the dead field; fix the self-contradicting comment.
+
+1 and 2 are user-visible and are method rule 7 — fixed now, not logged. They need a **plate**
+run-review, which no existing step covers: change Taps before the first tap, and pull the mic mid
+phase-C. 3, 4 and 5 are structural and have no run-review. 5 is comment-and-dead-code only.
+
+The tests to add are the ones whose absence let all of this through: **a material case in this
+slug**, in all three editions.
+
+**F41 — a loaded measurement's microphone warning is never reset, so it survives onto the NEXT
+measurement and describes one that is no longer on screen. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+Found by the F38 sweep, which went looking for a different defect and produced a wrong answer twice
+before this one. Both wrong answers are recorded below, because the second nearly broke working code.
+
+**The defect.** Neither native resets `microphoneWarning` / `microphone_warning` when a measurement
+loads. Both assignments sit *inside* the "does this file name a microphone?" test — Swift
+`if let uid = measurement.microphoneUID {` with no `else`
+(`TapToneAnalyzer+MeasurementManagement.swift:824`, `:830`), Python `if mic_uid or mic_name:`
+(`tap_tone_analyzer_measurement_management.py:809`, `:823`). So:
+
+> Load A, whose microphone does not match → the warning appears. Load B, whose file records no
+> microphone at all → the block is skipped entirely, and **A's warning is still on screen**, now
+> attached to a measurement that is not displayed.
+
+**Web is correct**, and by construction rather than by care: `setLoadWarning(measurementWarning(m, …))`
+runs on every load and takes `null` when there is nothing to say, so it cannot go stale. Fifth time in
+this sweep that the natives are wrong and web is right, and the third time the fix is "assign
+unconditionally" rather than "remember to clear".
+
+This is a user-visible cross-edition divergence, so method rule 7 applies: it is fixed, not logged.
+The fix is to compute the warning once per load in both natives, web's shape.
+
+**Written after the owner's question settled it — one line.** *"Since the banner is modal (or at
+least the popup is modal) how can anything proceed without acknowledging the microphone warning?"*
+That killed the original reading: the warning IS modal in both natives, so a second load cannot
+happen with the first warning still up. What remains is smaller — Swift CONSUMES the warning on
+acknowledgement (its alert's OK button and the binding's setter both clear it), while Python only
+displayed it and left the field set. Invisible except to the import handler, which reads the field
+directly and would fold a previous measurement's warning into the success message for a file that
+records no microphone of its own. Python now clears it after the dialog, guarded on the value still
+matching so a newer warning raised meanwhile is not wiped.
+
+**NOT VERIFIED — the Python suite has not been run since.** Treat the fix as unproven.
+
+**✅ F41 RUN-REVIEWED by the owner, all three editions, 2026-09-23** (load from the list, a plate/
+brace load, a saved comparison load, single-file import, library import, comparison-file import).
+The review found two more, both fixed and re-verified the same day:
+- **Python showed the microphone warning in the MIDDLE of a load.** The modal opened synchronously
+  when the model raised the warning, so everything the view syncs after the load (ring-out, sliders,
+  material results) waited behind OK. Pre-existing (the committed `_restore_measurement` had the same
+  order). Now deferred one event-loop turn and shown only if still current — Swift presents its alert
+  after rendering the loaded state.
+- **The web's import message was an inline line of text, not a dialog** — a divergence introduced by
+  this change. Now an "Import Successful" OK dialog over the list, as Swift's `.alert`; the panel stays
+  open underneath. (The first web review ran a stale `dist/`: a type error in a new web test broke
+  `npm run build`, and `preview` kept serving the 16:55 build.)
+
+Committed: Swift `068f814`, Python `87e7ad7`, web `04c66b9`.
+
+**F41 widened, 2026-09-23 — what changed (kept for the record):**
+Owner's decisions: an IMPORT is a library operation and never mentions microphones; a LOAD warns.
+A single-file import also loads, so its ONE dialog carries the load's warning (option (a), canonical
+Swift). The test pins the OUTCOME (the message) in all three, not any clearing mechanism.
+- **Swift — done, 6/6 pass.** Import-time microphone check removed from `importMeasurements`; new
+  `importAndLoadMeasurements(from:) -> String` (clears the warning first, imports, auto-loads one,
+  folds + consumes the load's warning); both view copies (TapToneAnalysisView open-URL,
+  MeasurementsListView) now call it. `ImportMessageTests` (3) in ImportPersistenceTests.swift.
+- **Python — done, 43/43 in the two affected files.** Same model method `import_and_load_measurements`;
+  import-time check removed; the suppression flag moved into the model. Load made reactive: the
+  analyzer emits `measurementLoadStarting` / `measurementLoaded(m)` (relayed by fft_canvas);
+  `_restore_measurement` split into `_on_measurement_load_starting` + `_on_measurement_loaded`; the
+  list dialog now asks the analyzer to load. `TestImportMessage` (3). Also: the `savedMeasurements`
+  alias removed — one list, `saved_measurements` (a test had rebound the alias, splitting the two).
+  NOT run-reviewed: loads from the list, a single-file import, and a comparison need checking.
+- **Web — done, 631/632 (the one failure is F44's GFFT4 baseline, awaiting its re-mint).** Owner
+  chose (a): the load moved into the analyzer. `loadMeasurement(m)` now takes the saved measurement
+  and works out guitar / material / comparison record, converts it, restores itself, and records what
+  it loaded — replacing ~110 lines in `App.tsx` that converted the file, wrote five pieces of React
+  state and handed the analyzer the already-converted parts, which is why no other caller could
+  perform a load. New analyzer state, Swift's names: `loadedMeasurementName`, `loadedNotes`,
+  `loadedAxisRange`, `loadedSettings` (Swift's nine `loaded*` properties as one patch, since web
+  settings are one object), `microphoneWarning`, `currentDecayTime`. The old piece-wise entry points
+  are now the restore STEPS (`restoreSnapshot` / `restoreMaterial`), which is all the 14 existing test
+  call sites needed. `App.tsx` applies only what lives outside the model — the settings store and the
+  chart range — as Swift's `.onReceive(tap.$loaded…)` handlers do; five `useState`s went with it,
+  including `showMultiTap`, a second copy of the analyzer's `showingMultiTapComparison`. Ring-out is
+  ONE value on the analyzer (owner's call (i), Swift `currentDecayTime`): the engine keeps the tracker
+  and pushes each value in, the load writes the file's, `startTapSequence` clears it — the view used
+  to hold two and choose between them by `loadedName != null`. `loadComparison` clears the loaded
+  state as Swift's does. The web gained the import success message it never had.
+  **A consequence to check in the run-review:** the Measurements panel now stays OPEN after an import,
+  showing the message over the list, as both natives do; it used to close itself on a single import. The web's load lives in the VIEW
+  (`App.tsx onLoadMeasurement`, ~110 lines: conversion, settings patch, loaded name/notes/range/
+  ring-out, the warning, engine config), so a model import method cannot load. (a) move the load into
+  the analyzer as Swift (recommended; ~F40+F30 in size; web side of #1), or (b) keep the load in
+  App.tsx and model only the message. Either way the web gains the import success message.
+- Mutation checks done in all three (drop the pre-clear, or warn on a library import: caught, and
+  each edition restored). The library-import test now SETS a stale warning first — without that the
+  pre-clear mutation survived, because a load always reassigns the field.
+- Full suites since: Swift **598 pass**, Python **707 pass**, web **631/632** (GFFT4 only).
+  Parity map: 103 groups, no problems.
+- Still open after this under F44: Python's integer level scale (option (B): floats end to end AND
+  single delivery of levels/frames — Python delivers each to the analyzer twice, direct callback +
+  Qt signal, with a racy dedupe guard), then the GFFT4 re-mint, then full suites.
+
+**What the original version of this finding claimed, and why it was wrong.** The field carries a
+deliberate suppression mechanism —
+`_suppress_mic_warning_signal`, set by the import handler so a synchronous mid-load signal does not
+raise a second dialog — and an unconditional assignment fires the change signal on a path that is
+currently silent. That interaction wants checking on a clear head rather than at the end of a long
+session, having already been misread once here.
+
+**Wrong answer #1, recorded so it is not re-derived.** The first version of this finding said the
+import handler clears the warning without emitting and strands the banner. It does clear without
+emitting — and that is correct, because the same handler suppressed the raise, read the value
+directly, and folded it into its own dialog. Raise suppressed, clear silent, no listener involved.
+The code mirrors `MeasurementsListView.swift`.
+
+**Wrong answer #2, which is the one that matters.** Acting on #1, `microphone_warning` was converted
+to a property whose setter always emits — which would have defeated `_suppress_mic_warning_signal`
+and produced the double dialog it exists to prevent. Reverted before it ran. The lesson is the one
+CROSS-EDITION rule 6 states about comments and this file keeps relearning about code: a mechanism
+that looks redundant is usually load-bearing, and "two writers, one forgets to notify" is a pattern
+worth *checking* rather than a diagnosis.
+
+**A second, smaller thing the sweep found and this one is real.** `saved_measurements` has
+`self.savedMeasurements` bound beside it, commented "legacy alias" — two names for one list, in sync
+only because `tap_tone_analyzer.py:1350-1351` rebinds both and every other mutation happens in place
+(`.extend`, `.append`, `.pop`). Rebind one and they diverge silently. Sixth instance in this sweep of
+**two names for one fact**, and the only one still standing. No behaviour is wrong today.
+
+**F42 — web's tap detector ignored the threshold slider, and re-armed on a ring-out. Both fixed.
+(✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+Two defects in one detector, found by asking a question the sweep had not asked: *who owns the tap
+threshold?* Owner, 2026-09-22: *"the separate divergence of 'who owns the threshold' needs resolved
+… in favour of consistency with swift/python."*
+
+**One — the slider was dead.** Swift and Python hold `tapDetectionThreshold` on the analyzer, where
+`detectTap` reads it. Web held it in `settings`, pushed it to the engine with
+`setConfig({ tapDetectionThreshold })`, and its analyzer carried a field of the same name that
+**nothing ever wrote**. Before #17 F30 the ENGINE detected taps and read `config.tapDetectionThreshold`
+(`672ca05^`, line 1079), so the slider worked. F30 moved the detector onto the analyzer and left the
+threshold behind: from that commit the detector sat at its `-40` dB default — for guitar's absolute
+rule and as the base of material's relative one — while the slider went on writing two values nobody
+read. **A regression introduced by this issue**, committed as `672ca05` and carried into `ac1925f`.
+**Never released** — there has been no web deploy since, so no user ever had the dead slider. It
+existed only in the repository, between F30 and tonight.
+
+It survived every run-review because −40 dB is a workable default: taps register, and nothing looks
+wrong unless you move the slider and expect a change. Fixed in `setSettings`, which App already calls
+on every settings change, so the slider, a settings load and a measurement load's patch all arrive.
+
+**Two — a ring-out counted as the next tap.** Asked whether the editions agreed in shape, they did
+not, and the natives agreed with each other:
+
+| | the latch | what gates firing |
+|---|---|---|
+| Swift / Python | `isAboveThreshold`, raised on CONFIRMATION, cleared at `falling` | the same flag — while it is up, nothing counts |
+| web (was) | raised on the FIRST above-`rising` chunk | a separate `prevAbove` edge, cleared at `rising` |
+
+Because the edge cleared at `rising` and the latch at `falling`, the 3 dB between them was a hole:
+between taps of a multi-tap sequence — capture finished, signal not yet settled — a ring-out that
+decayed past `rising` but never reached `falling` re-armed the detector, and its next swing up was
+taken as the following tap. The sequence would finish early with a decay averaged in place of a
+strike. Web now uses the natives' single-flag shape, `prevAbove` is gone, and the mid-sequence re-arm
+deliberately leaves the latch alone.
+
+**A wrong turn worth recording.** The first probe of this showed nothing — `beginCapture` refuses to
+re-enter while a capture is filling, so the double-fire is masked *during* a capture, and the reading
+was nearly abandoned as "not reachable". It is reachable between captures, where no guard applies.
+Twice this sweep a defect has hidden behind a guard that made the symptom intermittent.
+
+**Tests, one file per edition under `test/tap-decisions`** — the slug's existing cases pin the
+detection RULE with the threshold handed to them as an argument, which is exactly why they could
+never catch either defect (method rule 1: check what the APPLICATION passes). Added: three threshold
+cases and two re-arm cases per edition, each driving the analyzer the way the app does. The natives
+passed all five on the first run — the control working. Web failed the two that describe the defects
+and passes them now. Swift **15**, Python **15**, web **627**.
+
+A second wrong turn, also worth keeping: the Swift control fed one loud frame too many. `tapDetected`
+is a per-frame flag, and the frame after a fire re-enters the latched branch and clears it — the test
+failed, not the code.
+
+**F43 — two detector divergences. BOTH TURNED OUT TO BE DEAD CODE, and the finding was wrong about
+each of them in the same direction. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+Owner's instruction, 2026-09-22, on being shown both: *"Sounds like they need fixed as well. Please
+add a finding so that we cannot close this slug until they are fixed."*
+
+**What the investigation found, 2026-09-23 — both halves as written below are wrong.** Each described
+a live mechanism that diverged; each was in fact code nothing calls. The descriptions are kept because
+the reasoning that produced them is the thing to distrust next time: in both cases the wiring existed
+and read as evidence of behaviour, and in neither case was the source ever checked.
+
+**1. Web has a SECOND detector that still has the old shape.** `src/dsp/gatedCapture.ts` —
+`findLevelCrossing` and `findAllLevelCrossings` — still uses `prevAbove` + `consecutive` with no
+hysteresis latch. It is the offline scanner that finds taps in a played-back file, and it is what the
+original `test/tap-decisions` cases exercise. So after F42 web is internally inconsistent: its live
+detector latches, its offline detector does not.
+
+Before fixing, settle what the natives use for the same job — **do not start from a line-by-line
+comparison of the two implementations.** In the natives, level-crossing is NOT a tap decision at all:
+it is the pre-roll snapshot trigger that grabs pre-onset audio so the gated window has lead-in, and
+`detectTap` alone decides whether a tap happened (stated in the comment corrected under F36). If web
+uses its scanner to MAKE the decision for file playback, the two are not counterparts and the
+question is which edition's file-playback path is right, not which loop is.
+
+**2. The `tapDetected` surface differs.** Swift and Python carry a per-frame `tapDetected` /
+`tap_detected` flag; Python wires it through `tapDetectedSignal` → `_on_tap_detected`, which turns the
+status-bar dot orange when a tap fires. **Web has no such field at all** — it signals a tap only by
+beginning the capture. So the natives have a user-visible tap indication driven by a model flag that
+web does not have, and the flag itself is part of the observable surface the three are supposed to
+share. Check what web's status dot actually does before deciding whether the fix is a field, a
+notification, or both.
+
+Neither is run-reviewable until fixed, and both are in the same subsystem F42 just touched.
+
+### Resolution — 2026-09-23
+
+**Part 1 was dead code, not a second detector.** `findLevelCrossing` and `findAllLevelCrossings` had
+**no production caller**, and had not had one since **2026-07-11** (`d29c654`, "remove wrong-altitude
+guitar-fft/gated-capture suites"), which deleted the callers precisely because they took *"a shortcut
+Swift/Python deliberately don't take"* — driving DSP on raw WAV samples instead of the engine. The
+functions and their tests outlived their callers by two months. This is the sweep's own fourth defect
+shape: tests keeping a removed feature alive (method rule 5).
+
+Both functions deleted, along with the four DSP cases that only exercised them and the test helpers
+left orphaned behind those. **No coverage lost, and verified rather than assumed:** the deleted cases
+asserted that the brace fixture yields 1 tap and the plate 3; `REG-B1` and `REG-P1` in
+`file-playback.test.ts` assert exactly that, on exactly those fixtures
+(`brace-umik-1-swift-mac-1778816093.wav`, `plate-umik-1-swift-mac-1778816330.wav`), through the
+engine. `d29c654`'s claim that file-playback was "a strict superset" was true — checked this time
+rather than trusted (rule 6).
+
+**Part 2 was dead in all three editions, and the finding's premise was backwards.** It claimed Python
+had built a status-dot flash on `tapDetected` that Swift lacked. In fact **`tapDetectedSignal` is
+never emitted anywhere** — Python had built the whole chain (signal → canvas relay → status dot) and
+never connected the source, so the flash never ran. And in Swift the field was `@Published` and read
+by **nothing**: no view, no model logic. Its doc comment said *"Views observe this to flash the tap
+indicator."* None ever did — the sixth confidently-wrong comment this sweep has turned up.
+
+So `tapDetected` was write-only in Swift, write-only-plus-dead-wiring in Python, and absent in web.
+All of it removed: ~20 production lines per native, the Qt signal, both handlers, both connections,
+and the false doc comment.
+
+**The test suites moved onto `lastTapTime`**, 17 edits per edition. Owner's reasoning, 2026-09-23, and
+it is the general rule worth keeping: *"propagating an unused variable in the application as a guide
+to the testcases is just either wrong or intentional … my bias is it is wrong."* A production field
+that exists only so tests can observe something is the application bending to the suite.
+
+It also made the tests better. `tapDetected` was true for ONE frame and the next frame cleared it —
+which is exactly what failed the Swift control under F42 while the code was right. `lastTapTime` is
+durable. Two cases needed more than substitution: the cooldown test and the hysteresis test each have
+a tap already recorded, so "no tap fired" is "the timestamp did not MOVE", not "it is nil".
+
+Swift **593**, web **623** (four fewer than before: the deleted DSP cases).
+
+**F44 — the epsilon clamp, the −∞ readout, and a self-regression failure that turned out to be
+something else. (✅ CLOSED 2026-09-23 — fixed and run-reviewed by the owner in every edition it touched)**
+
+Owner's observation during the #17 run-review: Swift shows **−∞** for Peak on a silent input (BlackHole
+2ch), Python showed **−313.0 dB**. Owner's call: −∞ is right, because **−100 dB is a REAL reading** a
+live UMIK-1 reaches in a quiet room, so a finite floor makes "no microphone" look like "a quiet one".
+
+**State of the code RIGHT NOW (uncommitted, unverified):**
+
+- Python: BOTH epsilon clamps removed — `dft_anal` (live, `realtime_fft_analyzer_fft_processing.py`)
+  and `compute_gated_fft` (`realtime_fft_analyzer.py`). Same literal in each: `np.finfo(float).eps`.
+- web: BOTH removed — `guitarFFT.ts` and `gatedFFT.ts`, plus the now-unused `EPS` constant.
+- Swift: untouched; it never had a clamp.
+- Python also gained a **consumer clamp**: `perform_fft` did `int(np.max(mag_y_db) + 100.0)`, which
+  raised `OverflowError` on `-inf` and killed the FFT thread on every chunk (the app showed no peak
+  level and never recovered). Now floors the derived integer at 0. **This bug was reported by the
+  owner from a running app, not by any test.**
+
+**What is established by experiment:**
+
+- The clamp does NOT affect REG-G2's peaks. Four A/B arms (no clamp / live only / gated only / both)
+  give byte-identical results, matching the baseline AND Swift's oracle to 16 figures.
+- web's self-regression moves exactly **1 of 94** — `GFFT4/maxDb: -313.07 → -Infinity`, a deliberately
+  silent synthetic fixture. That is the expected consequence.
+- Python's full pipeline outside pytest — both with the owner's real settings and in a fresh sandbox —
+  moves the same **1 of 94**, GFFT4 only.
+
+**Resolution of the clamp question (2026-09-23):** the clamp removal changes **only GFFT4**, in both
+Python and web, and makes both match Swift, which never clamped. The GFFT4 baselines in Python and web
+must be re-minted to adopt −∞ — a change to committed baseline files, owner's approval.
+
+**What the Python self-regression failure actually was.** Under pytest, 19 and then 21 of 94 moved —
+late-sequence REG-G2 taps 7/8 and REG-P2 FLC, by an amount that varied run to run. The cause is NOT
+the clamp: file playback paces audio at real time + processing time while the tap lifecycle runs on
+wall-clock timers, so results depend on machine speed. Demonstrated by adding work per chunk: 0 ms
+and 5 ms move nothing, 15 ms moves all 54 REG-G2 values. Swift has the same structure. It predates
+the sweep (April–May 2026, shipped in 1.0–1.0.2) and hid under the old 1 Hz / 1 dB bar. The earlier
+"file playback is deterministic" bullet was wrong — it was deterministic only at one speed. Moved to
+[#19](https://github.com/dwsdolce/guitar-tap-project/issues/19), detail in
+[`PLAYBACK-WALL-CLOCK-TIMING.md`](PLAYBACK-WALL-CLOCK-TIMING.md). **Not an S6 gate** (owner,
+2026-09-23). Until #19 is fixed, a Python self-regression failure that lists only late-sequence
+REG-G2/REG-P2 values is #19; anything else is not.
+
+**Still open under F44:**
+- **Python's integer level scale — ✅ RUN-REVIEWED by the owner 2026-09-23** (live guitar and plate
+  taps, level readouts, file playback; owner's option (B)).
+  Floats end to end AND one delivery each, as Swift: the per-chunk level reaches detection ONLY
+  through the direct `rms_level_handler` on the processing thread (Swift's `rmsLevelHandler` on the
+  audio queue) — `rmsLevelChanged` now carries float dB for the threshold meter only; the FFT frame
+  reaches `on_fft_frame` ONLY through `fftFrameReady`, so on the main thread (Swift's Combine sink
+  `.receive(on: .main)`). Removed: the int wrapper `_on_rms_level_changed_direct`, the dedupe guard
+  `_last_rms_chunk_pos` (whose own comment recorded that a miss doubles the N-consecutive-chunks
+  confirmation), the direct `fft_frame_handler` (every live frame had been analysed twice, once per
+  thread, unguarded), `levelChanged(int)` (the material readout now updates in `_on_peak_info`,
+  Swift's one guitar/material choice), the F44 `OverflowError` consumer clamp (nothing converts to
+  int any more), and dead code on the path (canvas `ampChanged` relay, never-connected
+  `_on_fft_frame_ready`, unused `rms_amp`). Tests: `TestPipelineDeliversOnceAndExact` (3, in
+  test_tap_detection.py) — exact float level, one detection pass per chunk, one analysis per frame —
+  each killed by exactly one mutation (truncation / second level delivery / second frame delivery).
+  Python 707 + 3 pass; parity vs Swift's oracle passes; standalone self-baseline moves ONLY GFFT4, so
+  the truncation never changed which chunk confirmed a tap in the recordings. During the review the
+  owner noticed Swift's threshold meter updates less often than the other two — that is #3 (Swift's
+  4800-frame buffers), not this change; recorded there as symptoms 4 and 5.
+  What was there before: Python quantises two levels to whole-dB integers, `int(dB + 100)`, and converts them back at the consumer;
+  Swift keeps both as `Float` end to end. It arrived with `e3b6622` (2026-04-05) and no platform
+  requires it.
+  - `rms_amp` — the per-chunk RMS level. **Tap detection** receives it: the direct path holds the
+    float `level_db` and still converts it (`tap_tone_analyzer.py` `_on_rms_level_changed` caller),
+    so detection compares whole-dB levels against threshold, noise floor and hysteresis. `int()`
+    truncates toward zero, so it is biased, not just rounded (−37.6 dB reads as −38.0). The threshold
+    slider's meter gets the same integer.
+  - `fft_peak_amp` — the spectrum's peak. Re-derived into `_current_peak_magnitude_db`, which seeds
+    `is_above_threshold` on guitar re-enable, and passed to `analyze_magnitudes` as whole dB (Swift
+    passes `fft.peakMagnitude`). Its `levelChanged` signal is now only the material readout's tick.
+  - Fix: floats end to end, as Swift. Changes Python's detection behaviour toward Swift; may move
+    Python's REG values and require a reviewed self-baseline re-mint.
+- **GFFT4 re-mint — ✅ DONE 2026-09-23, with the owner's option (i).** JSON has no infinity: the web
+  wrote `null` (so its self-regression still failed after a naive re-mint) and Python wrote the
+  non-standard bare `-Infinity` token. Now EVERY oracle and baseline file — all three editions and
+  the hub — stores a non-finite number as the string `"-Infinity"` / `"Infinity"` / `"NaN"` and
+  decodes it on load (Swift `nonConformingFloatDecodingStrategy`; Python `decode_nonfinite` /
+  `encode_nonfinite` in `self_baseline.py`; web `reviveNonFinite` / `replaceNonFinite` in
+  `selfBaseline.ts`; hub `parity-report.py`, which also treats equal infinities as a difference of 0).
+  The oracle now records GFFT4 EXACTLY (`"maxDb": "-Infinity"`) instead of the bound `maxDbBelow:
+  -100` it carried only because JSONSerialization cannot write infinity; all three GFFT4 parity tests
+  and both mint plausibility checks compare exactly. Oracle minted from Swift as `576c3d4-dirty`
+  (owner's choice: mint now, re-mint clean at commit time — values will be identical), published to
+  the hub and synced; Python and web baselines re-minted against it, and both record that version.
+  Python's mint gained a check that rewrites a baseline whose ENCODING is stale even when every value
+  is identical — its reader accepts the bare token, so without it a stale file would never be
+  rewritten (the owner caught me hand-converting instead of re-minting).
+  **Suites: Swift 598, Python 712, web 635 — all pass, no known failures.** Parity map: 103 groups.
+- Not touched, and belonging to #16: the hub's Windows and Linux baselines (minted on those
+  machines) still record GFFT4 as −313.07; they need re-minting there.
+- **Done at commit:** oracle re-minted from the committed Swift tree (`068f814`, committed as
+  `ee8e72f`), published and synced; both baselines re-minted against it — both mints now also rewrite
+  a baseline whose recorded oracle version is stale. Commits: Swift `068f814` + `ee8e72f`, Python
+  `87e7ad7`, web `04c66b9`.
+
+**Done under F44 (2026-09-23, all three editions, run-reviewed by the owner):**
+- Step 15 now passes on Python and web as well as Swift.
+- Silence reads `-∞` everywhere: `FieldPrecision.string` renders ±∞ as `-∞`/`∞` in all three
+  (Swift's status bar already drew `-∞`; its own Metrics panel drew `-inf`, Python `-inf`, web
+  `-Infinity`).
+- The live peak is owned by the FFT analyzer in all three (Swift `peakFrequency`/`peakMagnitude`,
+  Python `mic.peak_frequency`/`peak_magnitude`, web `EngineMetrics`), first maximum on ties — web had
+  shown "Starting..." on silence. Python's Metrics panel had read the detected-peaks list since
+  `bdd6cc9` (2026-04-02) under a docstring claiming otherwise; it now reads the live peak.
+- Per-chunk RMS level on true silence is Swift's −100 in all three (Python since `42ec2b7` and web,
+  copied from Python, used −200). The material level READOUT alone shows `-∞` on true silence
+  (`readoutLevelDB` → `displayLevelDB`); detection is unchanged. Python's material readout showed the
+  spectrum's peak in whole dB; it now shows the RMS level, as Swift.
+
+**A related divergence found on the way, worth its own fix:** Python carries `fft_peak_amp`, a 0–100
+INTEGER scale (`int(peak_db + 100)`), through two Qt signal hops — and the terminal consumer converts
+it straight back (`float(fft_peak_amp) - 100.0`), while the slider's own handler says *"the slider
+expects dB"*. Swift has no such value; it keeps `peakMagnitude` a Float throughout. So Python
+quantises its peak magnitude to whole dB for no surviving reason. It arrived with `e3b6622`
+("Model changes from PYTHON_ARCHITECTURE_RESTRUCTERING_PLAN.md"), not from any platform constraint.
+
+**Process note.** Four successive explanations of the clamp were offered and each was wrong:
+"defensive idiom, safe to remove", "load-bearing for the int() conversion", "load-bearing for parity
+with Swift", "the failures are load-induced" — and while chasing the failure, three more: "guitar type
+from the settings file", "an unpinned setting", "an ordering leak between cases". Each was killed by a
+measurement, and the measurement should have come first each time. The owner's question — *"how do these values compare
+against swift?"* — was what first cut through it, and the A/B that should have preceded any edit was
+run only after the edit. **Do not change a DSP path in this area again without running the A/B and
+the oracle comparison first.**
 
 ## Stage 2 — move case lists into shared data
 

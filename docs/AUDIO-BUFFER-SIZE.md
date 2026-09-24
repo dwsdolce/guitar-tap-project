@@ -24,13 +24,23 @@ Everything downstream keys off the buffer grid: `audioElapsed += samples.count /
 (`+FFTProcessing.swift:126`) advances by the **actual** size, the tap trigger fires on a buffer
 boundary, and the session recording accumulates whole buffers.
 
-## Three symptoms, one cause
+## Symptoms, one cause
 
 | # | Symptom | Swift | Python / web |
 |---|---|---|---|
 | 1 | **Ring-out quantized** — level envelope sampled once per buffer | exactly **0.100 s** (1 × 4800) | 21.3 ms grid (n × 1024) |
 | 2 | **Sub-bin peak shifts** — gated FFT window starts at *(trigger − preRollSamples)*; trigger is buffer-quantized | Air **97.262** → displays **97.3** | Air **97.223 / 97.224** → **97.2** |
 | 3 | **WAV length quantized** — session recording accumulates whole buffers | **163200 = exactly 34 × 4800** | 1024-grid (n.75 × 1024) |
+| 4 | **Level meter update rate** — `inputLevelDB` is published once per buffer and drives the threshold slider's meter | **~10 updates/s** (48 kHz ÷ 4800) | ~47/s (48 kHz ÷ 1024) |
+| 5 | **Live tap-confirmation latency** — the level-crossing detector confirms after 2 consecutive above-threshold *buffers* | **~200 ms** (2 × 100 ms) | ~43 ms (2 × 21 ms) |
+
+Symptoms 4 and 5 were added 2026-09-23, from the owner's observation during the #17 run-review that
+Swift's threshold meter updates visibly less often than Python's and the web's. Both are **live-only**:
+Swift's file playback splits the file into 1024-sample chunks itself (`processFileData`), so every
+test, fixture and parity check runs Swift at the 1024 grid and none of them can see these. Fix A
+retires both along with 1–3: re-chunking to 1024 gives the meter and the detector the same cadence as
+the other editions. Until it lands, Swift is not a valid reference for meter smoothness or live tap
+timing — compare Python against web instead.
 
 **The window mechanism (symptom 2).** The guitar window is seeded either from the level-crossing
 pre-roll snapshot taken *at the crossing buffer* (fast-start) or from the live pre-roll (fallback,

@@ -218,3 +218,88 @@ worth expecting:
 - Does consolidating hurt React testability enough to matter here? (probably not — DSP is already
   separately testable)
 - Naming: align web component filenames to native view names where consolidated.
+
+## The observable surface — the model-layer half of this issue (2026-09-22, from #17 S6)
+
+Everything above is about the **view** layer. This is about the seam just below it, and it arrived
+from #17 rather than from a view review. Owner's call, 2026-09-22: it belongs here, not in #17.
+
+### What was measured
+
+Four #17 findings turned out to be one defect wearing four names — a piece of model state whose
+change notification lived in a separate method, with the plain field still writable beside it:
+
+| finding | field | edition |
+|---|---|---|
+| F25 | `is_measurement_complete` | Python |
+| F32 | `is_ready_for_detection` | Python |
+| F34 | `currentTapCount` | web |
+| F38 | `number_of_taps` | Python |
+
+Each was fixed on the field, never on the class of defect, so the next one was guaranteed. The sweep
+that followed (#17, 2026-09-22) measured all three editions and found the recurrence is **Python-only
+in mechanism** but **three-way in cause**.
+
+Per edition, the "published set" — what the view is able to react to:
+
+| edition | surface | count | shaped by |
+|---|---|---|---|
+| Swift | `@Published` on `TapToneAnalyzer` | 67 | **storage** — everything stored, read or not |
+| web | the `cachedSnapshot` object | 37 | **consumption** — what the view actually reads, computed getters included |
+| Python | `QtCore.Signal` declarations | 21 | **events** — whichever change once needed pushing to a widget |
+
+Three different questions, three different answers. **Nobody ever decided what the observable surface
+is**, which is upstream of any mechanism difference. Do not read a naive set-diff of those three lists
+as a divergence list — the names and the granularity do not line up, and an early attempt to diff
+them produced a meaningless overlap count.
+
+### Why Python keeps breaking and the other two do not
+
+Swift and web are **the same architecture**: one object, one change notification, the view re-derives
+whatever it read. `objectWillChange` and `notify()` are the same idea and neither names the field
+that changed. Swift cannot forget to notify because the language does it; web batches deliberately
+(`setStatusMessage`'s own comment: "Callers notify … so multi-field transitions render once"), so
+per-field notifying accessors would make it render *more*, not less — **web is not an instance of
+this defect and must not be "fixed" into one.**
+
+Python is the outlier, and not because Qt lacks reactivity: its notifications are **per-field to
+per-widget** (`tapCountChanged` → this label, `peaksChanged` → that scatter). That is why it needs 21
+signals where the others need one mechanism, why every new field is a fresh decision made by whoever
+adds it, and why the same defect has now been found four times.
+
+### What alignment means here
+
+The owner's answer, 2026-09-22, asked as a semantic question rather than an implementation one:
+**ideally the same observable set, expressed the same way — both.**
+
+- **Same set.** Decide once which model state the view layer may depend on. Each edition then spells
+  that one set in its idiom: Swift makes exactly those `@Published`, web puts exactly those in the
+  snapshot, Python makes exactly those properties whose setters emit. Checkable the way `@parity`
+  slugs are — the three surfaces must be the same set, and adding a field becomes a three-edition
+  decision instead of a Python accident.
+- **Same way.** Python goes object-level — one `changed` signal, the view re-reads what it needs —
+  so the three share a notification model and not merely a list. This is the larger half: it reworks
+  how every Python widget binds.
+
+Both, per the owner. The second is why this is #1's work and not a #17 finding: "It is a big job
+since there are a lot of other items that get attached to it."
+
+### Carried in from the sweep, for whoever writes the spec
+
+- Python has **8** fields already converted to property setters. Those 8 are exactly the ones that
+  were converted after a bug. **5** notify-paired fields remain unenforced:
+  `show_loaded_settings_warning`, `status_message`, `loaded_measurement_name`, `microphone_warning`,
+  `saved_measurements`.
+- The sweep's claim that two of those five had live notify gaps did **not** survive checking. The
+  `microphone_warning` gap was a misread of a deliberate suppression mechanism; #17 **F41** records
+  the real defect there, which is a missing reset rather than a missing signal, and is not about the
+  observable surface at all. The one real instance of this shape still standing is the
+  `savedMeasurements` "legacy alias" — two names bound to one list.
+- That matters for the spec: the sweep looked for "field written without its notify" and found
+  essentially none. Python's hand-written emits are, today, correct almost everywhere. The cost of
+  the current design is not that it is broken — it is that correctness is re-established by hand at
+  every write site, and the four findings above are what that costs over time.
+- Swift has **zero** instances. It is the reference for "cannot be forgotten".
+- A guard was considered and NOT written: "assert every signal has a property" would only police
+  Python's existing habit, where the real check is that the three surfaces match. The guard belongs
+  with the spec, not ahead of it.

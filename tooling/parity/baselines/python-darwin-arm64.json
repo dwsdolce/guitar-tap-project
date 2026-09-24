@@ -6,10 +6,10 @@
     "os": "darwin"
   },
   "provenance": {
-    "mintedAt": "2026-09-19T02:04:33Z",
+    "mintedAt": "2026-09-24T05:56:08Z",
     "numpy": "2.4.2",
-    "oracleVersion": "75d4356-dirty",
-    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "oracleVersion": "068f814",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
     "processor": "arm",
     "python": "3.14.2"
   },
@@ -21,6 +21,16 @@
             "frequency": 512.6888095520416,
             "magnitude": -70.93451271905934,
             "q": 87.5,
+            "role": "longitudinal"
+          }
+        ]
+      },
+      "REG-B2": {
+        "peaks": [
+          {
+            "frequency": 553.6318746565486,
+            "magnitude": -65.49038947115368,
+            "q": 94.5,
             "role": "longitudinal"
           }
         ]
@@ -307,7 +317,7 @@
         ]
       },
       "GFFT4": {
-        "maxDb": -313.07119549054045
+        "maxDb": "-Infinity"
       },
       "GFFT5": {
         "expected": [
