@@ -1373,11 +1373,11 @@ rule when writing a new decoder.
 
 Status: ⏳ **IN PROGRESS** — 7 of 11 slugs read.
 
-> **State, 2026-09-24.** F23–F45 are all **closed** — every one fixed and run-reviewed
+> **State, 2026-09-24.** F23–F46 are all **closed** — every one fixed and run-reviewed
 > by the owner in all editions it touched. **Committed:** Swift `068f814` (code) + `ee8e72f` (oracle,
 > minted clean from `068f814`), Python `87e7ad7`, web `04c66b9`, hub (this doc, oracle, baselines, report). Full suites on the committed tree: **Swift 598, Python 712,
 > web 635, all passing** (after F45: Swift 605, Python 719, web 642); parity map 103 groups, no problems.
-> What remains of S6 is **reading the three unread slugs** below; any finding they produce is open until fixed, like every other.
+> What remains of S6 is **reading the two unread slugs** below; any finding they produce is open until fixed, like every other.
 >
 > Split out and **not** S6 work (owner, 2026-09-23): [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19)
 > (file-playback results depend on machine speed), and the Swift meter/detection cadence recorded under
@@ -1397,7 +1397,7 @@ finding and nowhere else; do not restate it here.
 | `status-message` (12/12/16) | ✅ | **F29**, **F30**; **F33** from the F30 run-review |
 | `tap-count-change` (6/6/6 → 10/10/10) | ✅ | cases clean — 3+3 identical all three, the best-aligned slug in S6, and every case guitar; **F36**, **F37**, **F38**, **F39**, **F40**. **F34** had surfaced here from the F30 run-review, before the slug was read |
 | `state-invariants` (7/7/7) | ✅ | cases identical all three (V1–V7, I1–I6); **F45** |
-| `scenario-trace` (4/4/4) | ☐ | |
+| `scenario-trace` (4/4/4) | ✅ | cases and traces identical all three (S1–S4); **F46** |
 | `session-pre-roll` (4/4/4) | ☐ | |
 | `start-tap-race` (4/4/4) | ☐ | |
 
@@ -3442,6 +3442,44 @@ and the review phases I6 guards are real and entered in all three. Three things 
   any capture). The test now drops the analyzer's Combine sinks, as the state-invariant tests do;
   3 of 3 full runs clean, and a status write added to Swift's re-arm still fails it.
 - **Suites (2026-09-24): Swift 605, Python 719, web 642 — all pass; parity map 103 groups.**
+
+**F46 — `scenario-trace` pins a state path the tests write themselves, and part of it is a path the
+app no longer takes. (✅ CLOSED 2026-09-24 — tests only, all three; no app behaviour changed. Commits:
+Swift `b441119`, Python `d382280`, web `51600ae`)**
+
+The four scenarios (S1–S4) and their expected traces are identical row for row in Swift
+(`ScenarioStateTraceTests.swift`), Python (`test_scenario_state_trace.py`) and web
+(`scenario-trace.test.ts`). But the slug's purpose — pin the intermediate state PATH, because the UI
+reacts to it in real time — is undone by how each tap is produced: every scenario assigns the "tap
+happened" state by hand (`detectionState = idle`, `capturedTaps = [...]`, `currentTapCount = n`, and in
+S3/S4 `detectionState = listening`, commented "scheduleGuitarReEnable result") and then snapshots it. So
+the `postCapture` / `postTap1` rows record what the TEST wrote. Only `postStart`, `postPause`,
+`postResume`, `postCancel` and `postProcess` come from production (PARITY-TEST-METHOD rule 1; the same
+defect F45 fixed in V4).
+
+It is worse than tautological now: **S3/S4's `postTap1` says detection is back on the instant a tap is
+captured** — a state the real code never produces, since all three editions rest for `tapCooldown`
+(0.5 s) with detection OFF and only then re-arm (F45). The canonical trace documents a path the app does
+not take, and passes only because the test builds it. And S1/S3 call `processMultipleTaps()` directly,
+skipping the real completion (`captureWindow`, 0.2 s, "All taps captured. Processing...").
+
+Fix, identical in all three: capture every tap through the real `finishGuitarGatedCapture` and let
+completion happen on its own. S1 keeps its rows, now produced by real code. S3/S4's `postTap1` becomes
+resting (`det=false`), followed by a new `postReArm` (`det=true`) after the cooldown; S3's remaining taps
+go the same way. S2 keeps its simulated spurious detection (the stray detection IS the scenario) but
+captures through the real path. Mutation checks: removing the cooldown, or completing immediately, must
+break the trace.
+
+**What was done (2026-09-24):** in all three, every tap goes through the real
+`finishGuitarGatedCapture`, completion happens on its own after the capture window, and re-arming after
+the real cooldown. The canonical traces (identical in all three): S1/S2 keep their rows, now produced by
+real code; S3/S4 have `postTap1` resting (`det=false`), a new **`midCooldown`** row halfway through the
+cooldown (still resting), and **`postReArm`** (`det=true`). The `midCooldown` row was added after the
+first mutation run: re-arming on the next event-loop turn instead of after 0.5 s passed the Swift traces,
+because nothing sampled inside the cooldown. Mutation checks, all three: cooldown → next turn fails S3/S4;
+completing without the capture window fails S1/S2. Swift note: `updateFrequencyBins()` publishes the bins
+via `DispatchQueue.main.async`, so the scenario SUT builds them before each scenario's existing wait.
+Suites: Swift 605, Python 719, web 642 — all pass; parity map 103 groups.
 
 ## Stage 2 — move case lists into shared data
 
