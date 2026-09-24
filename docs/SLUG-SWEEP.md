@@ -1373,17 +1373,17 @@ rule when writing a new decoder.
 
 Status: ⏳ **IN PROGRESS** — 7 of 11 slugs read.
 
-> **State, 2026-09-23 end of session.** F23–F44 are all **closed** — every one fixed and run-reviewed
+> **State, 2026-09-24.** F23–F45 are all **closed** — every one fixed and run-reviewed
 > by the owner in all editions it touched. **Committed:** Swift `068f814` (code) + `ee8e72f` (oracle,
 > minted clean from `068f814`), Python `87e7ad7`, web `04c66b9`, hub (this doc, oracle, baselines, report). Full suites on the committed tree: **Swift 598, Python 712,
-> web 635, all passing**; parity map 103 groups, no problems. What remains of S6 is **reading the four
-> unread slugs** below; any finding they produce is open until fixed, like every other.
+> web 635, all passing** (after F45: Swift 605, Python 719, web 642); parity map 103 groups, no problems.
+> What remains of S6 is **reading the three unread slugs** below; any finding they produce is open until fixed, like every other.
 >
 > Split out and **not** S6 work (owner, 2026-09-23): [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19)
 > (file-playback results depend on machine speed), and the Swift meter/detection cadence recorded under
 > [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3).
 
-**RESUME HERE.** Audit position as of 2026-09-23. This table records only **what the reading
+**RESUME HERE.** Audit position as of 2026-09-24. This table records only **what the reading
 produced** — a finding number, or "clean" where none was filed. Each finding's status lives in the
 finding and nowhere else; do not restate it here.
 
@@ -1396,7 +1396,7 @@ finding and nowhere else; do not restate it here.
 | `annotation-state` (44/42/32) | ✅ | **F27**, **F28** |
 | `status-message` (12/12/16) | ✅ | **F29**, **F30**; **F33** from the F30 run-review |
 | `tap-count-change` (6/6/6 → 10/10/10) | ✅ | cases clean — 3+3 identical all three, the best-aligned slug in S6, and every case guitar; **F36**, **F37**, **F38**, **F39**, **F40**. **F34** had surfaced here from the F30 run-review, before the slug was read |
-| `state-invariants` (7/7/7) | ☐ | |
+| `state-invariants` (7/7/7) | ✅ | cases identical all three (V1–V7, I1–I6); **F45** |
 | `scenario-trace` (4/4/4) | ☐ | |
 | `session-pre-roll` (4/4/4) | ☐ | |
 | `start-tap-race` (4/4/4) | ☐ | |
@@ -3341,7 +3341,8 @@ REG-G2/REG-P2 values is #19; anything else is not.
   rewritten (the owner caught me hand-converting instead of re-minting).
   **Suites: Swift 598, Python 712, web 635 — all pass, no known failures.** Parity map: 103 groups.
 - Not touched, and belonging to #16: the hub's Windows and Linux baselines (minted on those
-  machines) still record GFFT4 as −313.07; they need re-minting there.
+  machines) still record GFFT4 as −313.07. **Deliberately deferred until the slug sweep is finished**
+  (owner, 2026-09-23) — further changes are likely, so re-minting now would only have to be repeated.
 - **Done at commit:** oracle re-minted from the committed Swift tree (`068f814`, committed as
   `ee8e72f`), published and synced; both baselines re-minted against it — both mints now also rewrite
   a baseline whose recorded oracle version is stale. Commits: Swift `068f814` + `ee8e72f`, Python
@@ -3376,6 +3377,71 @@ measurement, and the measurement should have come first each time. The owner's q
 against swift?"* — was what first cut through it, and the A/B that should have preceded any edit was
 run only after the edit. **Do not change a DSP path in this area again without running the A/B and
 the oracle comparison first.**
+
+**F45 — `state-invariants`: the checker is well mirrored, but mostly untested, one case tests a
+hand-built state, and the web keeps a test helper in production. (✅ CLOSED 2026-09-24 — fixed in all
+three and run-reviewed by the owner: web cooldown/processing, Python re-arm status. Commits: Swift
+`f2b4452`, Python `9a61713`, web `307a2b6`)**
+
+The seven tests (V1–V7) and the six invariants (I1–I6) are identical case for case in Swift
+(`StateInvariantTests.swift`), Python (`test_state_invariants.py`) and web (`state-invariants.test.ts`),
+and the review phases I6 guards are real and entered in all three. Three things are wrong:
+
+1. **Web keeps the checker in production.** Swift and Python define `stateInvariantViolation` in the
+   TEST file; web defines it in `src/state/tapToneAnalyzer.ts`, where nothing but the test calls it.
+   Fix: move it into the web test file.
+2. **Most of the checker is never exercised, in any edition.** Every case runs a guitar measurement,
+   so I6 (no detection during a plate/brace review phase) is never evaluated on a material analyzer;
+   and the only "the checker catches a bad state" test is V7, for I1 alone — nothing shows I2–I6
+   would ever fire. Fix, all three: a material case that drives a real plate capture into a review
+   phase and checks the invariants, and a flagged-state test per invariant (as V7 is for I1), each
+   proven with a mutation check.
+3. **V4 tests a state it built by hand.** It assigns `capturedTaps`, `currentTapCount` and
+   `detectionState = listening`, then checks the invariants of that fabricated state — so it
+   exercises the checker, not a production path (PARITY-TEST-METHOD rule 1). Fix: reach the
+   mid-sequence state through the real capture-and-re-arm path, all three.
+
+**What was done (2026-09-24):**
+- **All three:** V4 now reaches mid-sequence through the REAL guitar capture
+  (`finishGuitarGatedCapture`) and is checked twice — resting through the tap cooldown, and
+  re-armed after it. New V8 drives a real plate capture into its review phase (I6's territory).
+  New flagged-state tests for I2–I6, as V7 is for I1. Mutation: removing rules I2–I6 from the
+  checker fails exactly those five tests in each edition; restored.
+- **Web — aligned with the natives, owner's decision:** the checker moved from `src/` into the test
+  file. The private `finishCapture` was split into public `finishGuitarGatedCapture(samples,
+  sampleRate)` and `finishGatedFFTCapture(samples, sampleRate, phase)`, as in Swift and Python (a
+  stale comment had said the FFT was "the device's job", untrue since F30). And the two waits the
+  natives have and the web lacked are now there too, as the same **wall-clock** timers: after each
+  mid-sequence guitar tap, detection rests for `tapCooldown` (0.5 s) and then re-arms with the latch
+  re-anchored from the current level; after the last tap, "All taps captured. Processing..." shows for
+  `captureWindow` (0.2 s) before averaging. Mutation: re-arming at once fails V4.
+- **Why wall-clock, not audio time** (owner, 2026-09-24): non-divergence. The natives' timers are
+  wall-clock; if that is wrong it is #19, and #19's fix then goes to all three at once. So every web
+  playback is now PACED, as the natives' is — the parity runner (which now also waits for completion,
+  like Swift's `playFileForTesting`), the ring-out tests and the F44 silence test. "Slower tests mean
+  it is doing what Swift and Python do." The web inherits #19's machine-speed exposure with them.
+- **Swift test-setup note:** an unstarted analyzer has no frequency bins (all 0 Hz), so a real
+  spectrum put every peak at 0 Hz and `Pitch.pitch` trapped on `log2(0)`. V4 sets the bins up as
+  starting the engine does. Not reachable in the app.
+- Suites: Swift 604, Python 718, web 641 — all pass. Parity map 103 groups.
+- **Run-review needed (web, live guitar, Taps = 3):** a second strike within half a second of a
+  captured tap is ignored; after the third tap "All taps captured. Processing..." shows briefly before
+  the result.
+- **Web run-reviewed by the owner 2026-09-24** (a second strike inside the cooldown is ignored;
+  "All taps captured. Processing..." shows before the result).
+- **Python's re-arm no longer rewrites the status message** (owner: "if Python is odd man out, bring
+  it back"). It used to set the loop prompt again, or "Tap N/M captured. Waiting for settle..." while
+  the level was still high — text no other edition has; Swift's `scheduleGuitarReEnable` and now the
+  web's touch only the latch and the detection state, and the capture's own status stands. Pinned in
+  all three by a new `test/status-message` case (re-arm with the level still above the falling
+  threshold leaves the status as the capture set it); putting Python's old writes back fails it.
+  The Swift case was intermittent at first (2 of 3 full runs): the analyzer's clipping / dead-input
+  override sinks re-resolve the status from `latestRealStatus`, which another sink keeps current
+  asynchronously, and in a busy run an override delivery restored the initial "Tap the guitar to
+  begin" before that sink caught up — a test-environment race (in the app the sinks settle long before
+  any capture). The test now drops the analyzer's Combine sinks, as the state-invariant tests do;
+  3 of 3 full runs clean, and a status write added to Swift's re-arm still fails it.
+- **Suites (2026-09-24): Swift 605, Python 719, web 642 — all pass; parity map 103 groups.**
 
 ## Stage 2 — move case lists into shared data
 
