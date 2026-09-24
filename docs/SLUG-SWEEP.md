@@ -1373,11 +1373,11 @@ rule when writing a new decoder.
 
 Status: ⏳ **IN PROGRESS** — 7 of 11 slugs read.
 
-> **State, 2026-09-24.** F23–F46 are all **closed** — every one fixed and run-reviewed
+> **State, 2026-09-24.** F23–F47 are all **closed** — every one fixed and run-reviewed
 > by the owner in all editions it touched. **Committed:** Swift `068f814` (code) + `ee8e72f` (oracle,
 > minted clean from `068f814`), Python `87e7ad7`, web `04c66b9`, hub (this doc, oracle, baselines, report). Full suites on the committed tree: **Swift 598, Python 712,
 > web 635, all passing** (after F45: Swift 605, Python 719, web 642); parity map 103 groups, no problems.
-> What remains of S6 is **reading the two unread slugs** below; any finding they produce is open until fixed, like every other.
+> What remains of S6 is **reading the last unread slug** below; any finding they produce is open until fixed, like every other.
 >
 > Split out and **not** S6 work (owner, 2026-09-23): [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19)
 > (file-playback results depend on machine speed), and the Swift meter/detection cadence recorded under
@@ -1398,7 +1398,7 @@ finding and nowhere else; do not restate it here.
 | `tap-count-change` (6/6/6 → 10/10/10) | ✅ | cases clean — 3+3 identical all three, the best-aligned slug in S6, and every case guitar; **F36**, **F37**, **F38**, **F39**, **F40**. **F34** had surfaced here from the F30 run-review, before the slug was read |
 | `state-invariants` (7/7/7) | ✅ | cases identical all three (V1–V7, I1–I6); **F45** |
 | `scenario-trace` (4/4/4) | ✅ | cases and traces identical all three (S1–S4); **F46** |
-| `session-pre-roll` (4/4/4) | ☐ | |
+| `session-pre-roll` (4/4/4) | ✅ | cases identical all three; **F47** |
 | `start-tap-race` (4/4/4) | ☐ | |
 
 The unread rows' counts are Swift/Python/web. `annotation-state` is the largest and the likeliest to
@@ -3480,6 +3480,32 @@ because nothing sampled inside the cooldown. Mutation checks, all three: cooldow
 completing without the capture window fails S1/S2. Swift note: `updateFrequencyBins()` publishes the bins
 via `DispatchQueue.main.async`, so the scenario SUT builds them before each scenario's existing wait.
 Suites: Swift 605, Python 719, web 642 — all pass; parity map 103 groups.
+
+**F47 — `session-pre-roll`: the web freezes the pre-roll latch in a different place, and its tests set
+the latch by hand. (✅ CLOSED 2026-09-24 — web only, no behaviour change. Commit: web `afe1436`)**
+
+The four cases are the same in Swift (`SessionPreRollTests.swift`), Python (`test_session_pre_roll.py`)
+and web (`session-pre-roll.test.ts`), and so is the outcome: the latch is ARMED at session start and when
+a redo of the first phase empties the buffer, in all three; and at the first tap the triggering chunk is
+trimmed and the next is not, so the session WAV comes out the same length. But the FREEZE lives in
+different places — Swift and Python freeze it in `maintainSessionRecording`, on the first chunk appended
+while `gatedCaptureActive` (`if gatedCaptureActive { sessionPreRollActive = false }`); web freezes it in
+`beginCapture`, just before setting `gatedCaptureActive = true`. Two owners of one rule.
+
+That is what hollows out the web tests: its "first tap freezes the latch" case and the freeze step of
+"fully live after the first tap" set `sessionPreRollActive = false` BY HAND and then assert it is false —
+the first tests nothing at all. The natives drive both through `gatedCaptureActive`.
+
+Fix: web moves the freeze into `maintainSessionRecording` in Swift's shape and removes it from
+`beginCapture`; the web tests drive it through `gatedCaptureActive` as the natives do. Mutation check:
+without the freeze in `maintainSessionRecording` the web tests must fail.
+
+**Done (2026-09-24, owner: "the fact that they diverge is sufficient"):** the web's
+`maintainSessionRecording` now freezes the latch in Swift's shape and `beginCapture` no longer touches
+it; the web tests drive the freeze through `gatedCaptureActive`. Mutation: without the freeze, 2 of the 4
+web tests fail — under the old hand-set tests the same removal would have gone unnoticed. Web 642 pass;
+parity map 103 groups. Swift and Python unchanged. No behaviour change (the WAV comes out the same
+length), so nothing to run-review.
 
 ## Stage 2 — move case lists into shared data
 
