@@ -1371,19 +1371,17 @@ rule when writing a new decoder.
 
 ### S6 — Analyzer state machine (11 slugs)
 
-Status: ⏳ **IN PROGRESS** — 7 of 11 slugs read.
+Status: ✅ **CLOSED 2026-09-24** — all 11 slugs read; every finding it produced (F23–F48) fixed, run-reviewed where it changed behaviour, and committed.
 
-> **State, 2026-09-24.** F23–F47 are all **closed** — every one fixed and run-reviewed
-> by the owner in all editions it touched. **Committed:** Swift `068f814` (code) + `ee8e72f` (oracle,
-> minted clean from `068f814`), Python `87e7ad7`, web `04c66b9`, hub (this doc, oracle, baselines, report). Full suites on the committed tree: **Swift 598, Python 712,
-> web 635, all passing** (after F45: Swift 605, Python 719, web 642); parity map 103 groups, no problems.
-> What remains of S6 is **reading the last unread slug** below; any finding they produce is open until fixed, like every other.
+> **S6 is closed, 2026-09-24.** All 11 slugs read; F23–F48 all closed. Full suites on the committed
+> tree: **Swift 605, Python 719, web 642 — all passing**; parity map 103 groups, no problems.
 >
 > Split out and **not** S6 work (owner, 2026-09-23): [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19)
 > (file-playback results depend on machine speed), and the Swift meter/detection cadence recorded under
-> [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3).
+> [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3). The Windows/Linux baseline re-mint (#16)
+> waits until the sweep is finished.
 
-**RESUME HERE.** Audit position as of 2026-09-24. This table records only **what the reading
+**Audit record (S6 closed 2026-09-24 — the sweep resumes at S7, Capture / DSP pipeline).** This table records only **what the reading
 produced** — a finding number, or "clean" where none was filed. Each finding's status lives in the
 finding and nowhere else; do not restate it here.
 
@@ -1399,7 +1397,7 @@ finding and nowhere else; do not restate it here.
 | `state-invariants` (7/7/7) | ✅ | cases identical all three (V1–V7, I1–I6); **F45** |
 | `scenario-trace` (4/4/4) | ✅ | cases and traces identical all three (S1–S4); **F46** |
 | `session-pre-roll` (4/4/4) | ✅ | cases identical all three; **F47** |
-| `start-tap-race` (4/4/4) | ☐ | |
+| `start-tap-race` (4/4/4) | ✅ | cases R1–R5 in all three; **F48** |
 
 The unread rows' counts are Swift/Python/web. `annotation-state` is the largest and the likeliest to
 show F10-shape filing differences; `status-message` was one of the two where web carried more cases
@@ -3506,6 +3504,39 @@ it; the web tests drive the freeze through `gatedCaptureActive`. Mutation: witho
 web tests fail — under the old hand-set tests the same removal would have gone unnoticed. Web 642 pass;
 parity map 103 groups. Swift and Python unchanged. No behaviour change (the WAV comes out the same
 length), so nothing to run-review.
+
+**F48 — `start-tap-race`: the web's R4 is not the natives' test, its R1 tests nothing, and R2–R4
+hand-simulate the capture. (✅ CLOSED 2026-09-24 — tests only, all three; no app behaviour changed. Commits:
+Swift `867889d`, Python `7ba1083`, web `4d439fd`)**
+
+R1–R5 exist in Swift (`StartTapSequenceRaceTests.swift`), Python (`test_start_tap_sequence_race.py`) and
+web (`start-tap-race.test.ts`); R5 (a restart from paused ends listening) matches and drives production.
+The rest:
+
+1. **Web R4 is a different test.** R4 guards "the actual iPad bug": the natives capture through
+   `finishGuitarGatedCapture` and assert that IT clears detection. Web R4 calls `recordGuitarTap` and then
+   sets `detectionState = 'idle'` BY HAND ("the device's idle transition" — stale since F30/F45), so
+   nothing on the web checks what R4 exists to guard. Web now has a public `finishGuitarGatedCapture`
+   (F45), so its R4 can be the natives' test exactly.
+2. **Web R1 tests nothing.** It arms, sets idle, and immediately asserts idle — no wait. The natives'
+   R1 waits for deferred work (Swift `Task.sleep`, Python's event-loop drain) — that is how it catches a
+   deferred re-arm, the line-304 race. Web has deferred work of its own since F45, so the wait now
+   matters there too.
+3. **R2/R3 hand-simulate the capture in all three** ("we simulate by populating capturedTaps", then
+   `processMultipleTaps()`) — the F46 defect. The natives' R4 also calls `processMultipleTaps()` by hand
+   right after the real capture, which already schedules it after the capture window — so it runs twice.
+
+Fix, all three: R2/R3/R4 capture through the real `finishGuitarGatedCapture` and wait for the real
+completion, with no hand-called `processMultipleTaps()`; web R4 becomes the natives' R4; web R1 waits
+before asserting. Mutation checks: removing the detection clear in `finishGuitarGatedCapture` must fail
+R4; adding a deferred re-arm to `startTapSequence` must fail R1.
+
+**Done (2026-09-24):** in all three, R2/R3/R4 capture through the real `finishGuitarGatedCapture` and wait
+for the real completion (no hand-called `processMultipleTaps()`); web R4 is now the natives' R4; web R1
+waits before asserting. Mutation checks, all three: removing the detection clear in
+`finishGuitarGatedCapture` fails R4 (and R2/R3 where they reach it); adding a deferred re-arm to
+`startTapSequence` fails R1 and R2 — the line-304 race is guarded in every edition. Suites: Swift 605,
+Python 719, web 642 — all pass; parity map 103 groups.
 
 ## Stage 2 — move case lists into shared data
 
