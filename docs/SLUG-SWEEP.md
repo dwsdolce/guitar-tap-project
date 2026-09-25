@@ -3285,7 +3285,7 @@ and 5 ms move nothing, 15 ms moves all 54 REG-G2 values. Swift has the same stru
 the sweep (April–May 2026, shipped in 1.0–1.0.2) and hid under the old 1 Hz / 1 dB bar. The earlier
 "file playback is deterministic" bullet was wrong — it was deterministic only at one speed. Moved to
 [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19), detail in
-[`PLAYBACK-WALL-CLOCK-TIMING.md`](PLAYBACK-WALL-CLOCK-TIMING.md). **Not an S6 gate** (owner,
+[`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md). **Not an S6 gate** (owner,
 2026-09-23). Until #19 is fixed, a Python self-regression failure that lists only late-sequence
 REG-G2/REG-P2 values is #19; anything else is not.
 
@@ -3543,7 +3543,7 @@ Python 719, web 642 — all pass; parity map 103 groups.
 Status: ⏳ **In progress — started 2026-09-24.** Paused after `gated-fft` (F49) while #19 was finished
 (owner, 2026-09-24): #19 blocked F49's Python re-mint, and its fix changes the capture lifecycle the rest
 of S7 reads. **#19 is done** (committed 2026-09-25: Swift `58796ac`, Python `820fabd`, web `c4fb2f3`) — see
-[`PLAYBACK-WALL-CLOCK-TIMING.md`](PLAYBACK-WALL-CLOCK-TIMING.md). S7 resumes at `tap-decisions`; that doc's
+[`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md). S7 resumes at `tap-decisions`; that doc's
 "Noticed while doing #19" list feeds `tap-decisions` and `decay-tracking`.
 
 **Audit record.** As in S6, this table records only **what the reading produced** — a finding number,

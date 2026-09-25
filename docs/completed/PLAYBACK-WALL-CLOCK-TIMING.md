@@ -2,10 +2,10 @@
 
 **Issue:** [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19)
 
-**Status:** ✅ DONE (2026-09-25) — committed: Swift `58796ac`, Python `820fabd` (with F49's baseline
+**Status:** ✅ COMPLETE — issue closed 2026-09-25. Committed: Swift `58796ac`, Python `820fabd` (with F49's baseline
 re-mint), web `c4fb2f3`. Implemented in all three editions and verified repeatable; owner's run-review
 PASSED in all three; the Chrome hidden-tab check PASSED on the current bundle. The web's "Tap 8/8" status
-was a stale cached bundle, not #19 (below). Found 2026-09-23 during #17 (S6, finding F44).
+was a stale cached bundle, not #19 (below). No open questions remain. Found 2026-09-23 during #17 (S6, finding F44).
 
 ## The symptom
 
@@ -32,10 +32,10 @@ Two clocks run during file playback, and the tap lifecycle straddles them.
 1. **Audio advances at "real time + processing time."** Playback processes a chunk and then sleeps one
    chunk's duration:
    - Python `process_file_data` —
-     [`realtime_fft_analyzer_engine_control.py`](../../guitar_tap/src/guitar_tap/models/realtime_fft_analyzer_engine_control.py)
+     [`realtime_fft_analyzer_engine_control.py`](../../../guitar_tap/src/guitar_tap/models/realtime_fft_analyzer_engine_control.py)
      (`process_raw_samples(chunk)` then `time.sleep(chunk_duration)` then pump the Qt loop).
    - Swift `processFileData` —
-     [`RealtimeFFTAnalyzer+EngineControl.swift`](../../GuitarTap/GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift)
+     [`RealtimeFFTAnalyzer+EngineControl.swift`](../../../GuitarTap/GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift)
      (`processRawSamples(chunk)` then `Thread.sleep(forTimeInterval: chunkDuration)` on a background
      queue).
 2. **The tap lifecycle is timed on the wall clock.** Cooldown / re-enable, capture window, safety
@@ -51,7 +51,7 @@ takes in. The error accumulates along the sequence, which is why the last taps m
 **Web** is partly different: detection and warm-up are timed on `audioTime`, and the parity runner
 plays **unpaced** (`pace: false`) yet reproduces its baseline, so the paths the oracle exercises are
 audio-clocked. It still has one wall-clock timer — the FLC cooldown `setTimeout` in
-[`tapToneAnalyzer.ts`](../../GuitarTapWeb/src/state/tapToneAnalyzer.ts). The rest is not audited.
+[`tapToneAnalyzer.ts`](../../../GuitarTapWeb/src/state/tapToneAnalyzer.ts). The rest is not audited.
 
 ## The evidence
 
@@ -96,24 +96,57 @@ moves: Python's parity tests have passed only because they ran at a speed where 
 
 ## Open questions
 
-1. **Magnitude.** How large do the moves get on a slower machine? Only pytest's values were measured;
-   the 15 ms run showed *that* everything moved, not by how much. Is 1 Hz / 1 dB ever exceeded?
-2. **A reliable test case.** The pytest failure depends on this machine's speed and could pass
-   elsewhere. The injected-delay run is machine-independent but has been run once — confirm it repeats
-   bit-identically before relying on it.
-3. **Swift.** Same structure; not yet shown to move. Its self-baseline is bit-reproducible only at the
-   speed it ran.
-4. **The live app.** The same wall-clock timers run live. A slow audio callback or a pause shifts
-   capture boundaries against the audio. Unmeasured.
-5. **Fix direction.** Principled: drive the tap-lifecycle timers from **audio time** in all editions,
-   Swift first — the same lesson as the ring-out decay fix ("a timestamp must travel WITH the sample").
-   Not recommended: unpaced playback, which would make tests deterministic while leaving the live app
-   exposed. Needs a design and the owner's approval; it changes canonical Swift.
-6. **Tests define their full context** (owner, 2026-09-23). Every test must set its measurement type
-   itself — including which of the four guitar types — never inherit it from a settings file or the
-   environment. Python's runner does pass the type, but `play_file_for_testing` delivers it by writing
-   the global settings store, which production then reads back in ~40 places. Swift and web not yet
-   checked.
+None. Questions 1–5 were answered by the fix, and 6 by checking how tests are isolated (below).
+
+### 6. Tests define their full context — answered, no action (owner, 2026-09-25)
+
+Asked 2026-09-23: every test must set its measurement type itself — including which of the four guitar
+types — never inherit it from a settings file or the environment. Python's runner passes the type by
+writing the global settings store, which production then reads back. The owner's core question: **how is
+one test's environment, including that store, isolated from another's?** Checked in all three:
+
+- **Between test runs (processes): isolated in all three.**
+  - Swift: under XCTest, `TapDisplaySettings` uses a per-process UserDefaults suite,
+    `com.guitartap.tests.<pid>`, wiped on first access; stale suites of dead runs are reaped
+    (`TestSandbox.swift`).
+  - Python: `conftest.py` sets `GT_TEST_SANDBOX=<pid>` before anything reads settings; QSettings then
+    uses `Dolcesfogato.tests.<pid>`, cleared at session start, dead runs' files reaped
+    (`settings_scope.py`) — the fix for the 2026-09-20 cross-run wipe.
+  - Web: no persistent store under test. The analyzer's settings are an object on the instance
+    (`settings = DEFAULT_SETTINGS`), and tests pass settings objects in. The node test environment has
+    no `localStorage`; the one test that needs it installs an in-memory mock. Vitest also gives each test
+    file fresh modules.
+  - Parallel execution would not break this: Xcode's parallel clones and pytest-xdist workers are
+    separate processes, so each gets its own store. Today both natives run serially (Swift's
+    `guitar_tap.xctestplan`: `parallelizable: false`; Python: no xdist).
+- **Between tests within one run:** Swift and Python share the process's store, serially, with no reset
+  between tests — isolation rests on each test setting the context it reads, which is the rule itself;
+  `play_file_for_testing` sets the measurement type on every call. The web is isolated by construction
+  (each test builds its own analyzer with its own settings).
+- **Remaining gaps, already listed under "Noticed while doing #19" and due in S7's slugs:** Python's
+  minter run standalone (outside pytest, without `GT_TEST_SANDBOX`) uses the real settings; and timers
+  from one playback case fire during the next (not the settings store; no result changed).
+
+### Answered by the fix (2026-09-25)
+
+Questions 1–5, as first asked (2026-09-23), and what settled each:
+
+1. **Magnitude** — how large the moves get on a slower machine. **Superseded, not measured:** the fix
+   removed the dependence on machine speed, so there is no longer a move to size. Python with 15 ms of
+   added work per chunk now gives the same 146 values as a normal-speed run (0 differ; before the fix,
+   65 did) — see "Reliability check … REPEATABLE" below.
+2. **A reliable test case.** **Answered:** repeatability is shown by that comparison (two normal-speed
+   runs: 0 of 146 differ; normal vs +15 ms/chunk: 0), and the audio clock is pinned in all three by
+   `test/audio-clock-timers` — each case advances only audio, so a delay moved back to the wall clock
+   would not fire and the case fails.
+3. **Swift** — same structure, not shown to move. **Settled by the fix, not measured before it:** Swift
+   received the same audio-clock timers and the same playback hold (App Nap), and its
+   `AudioClockTimerTests` pin them.
+4. **The live app** — the same wall-clock timers ran live. **Answered:** the timers are the same code
+   live and in playback, so live capture now runs on the audio clock too. The one wall-clock timer left,
+   T6, measures silence: it fires only when no audio arrives, which is its purpose.
+5. **Fix direction.** **Done as proposed:** the tap-lifecycle timers run on audio time in all three
+   editions, Swift first — see "Design (approved by the owner, 2026-09-24)" and "Implementation".
 
 ## Inventory — every tap-lifecycle timer, all three editions (read 2026-09-24)
 
