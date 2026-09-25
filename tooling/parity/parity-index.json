@@ -566,6 +566,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/audio-clock-timers",
+      "swift": [
+        "GuitarTapTests/AudioClockTimerTests.swift"
+      ],
+      "python": [
+        "tests/test_audio_clock_timers.py"
+      ],
+      "web": [
+        "test/audio-clock-timers.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/brace",
       "swift": [
         "GuitarTapTests/BracePropertiesTests.swift"
@@ -1123,6 +1137,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "tooling/audio-clock-feed",
+      "swift": [
+        "GuitarTapTests/AudioClockFeed.swift"
+      ],
+      "python": [
+        "tests/audio_clock_feed.py"
+      ],
+      "web": [
+        "test/audioClockFeed.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "tooling/capture-probe",
       "swift": [
         "GuitarTapTests/CaptureProbeTests.swift"
@@ -1218,6 +1246,20 @@
       ],
       "web": [
         "src/precision.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "util/timing-activity",
+      "swift": [
+        "GuitarTap/Utilities/TimingActivity.swift"
+      ],
+      "python": [
+        "src/guitar_tap/utilities/timing_activity.py"
+      ],
+      "web": [
+        "src/audio/realtimeFFTAnalyzer.ts"
       ],
       "tests": [],
       "equivalence": "review only"

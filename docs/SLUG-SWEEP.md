@@ -3540,7 +3540,11 @@ Python 719, web 642 — all pass; parity map 103 groups.
 
 ### S7 — Capture / DSP pipeline (5 slugs)
 
-Status: ⏳ **In progress — started 2026-09-24.**
+Status: ⏳ **In progress — started 2026-09-24.** Paused after `gated-fft` (F49) while #19 was finished
+(owner, 2026-09-24): #19 blocked F49's Python re-mint, and its fix changes the capture lifecycle the rest
+of S7 reads. **#19 is done** (committed 2026-09-25: Swift `58796ac`, Python `820fabd`, web `c4fb2f3`) — see
+[`PLAYBACK-WALL-CLOCK-TIMING.md`](PLAYBACK-WALL-CLOCK-TIMING.md). S7 resumes at `tap-decisions`; that doc's
+"Noticed while doing #19" list feeds `tap-decisions` and `decay-tracking`.
 
 **Audit record.** As in S6, this table records only **what the reading produced** — a finding number,
 or "clean" where none was filed. Each finding's status lives in the finding and nowhere else.
@@ -3575,9 +3579,9 @@ and Swift's 4800-frame buffers ([#3](https://github.com/dwsdolce/guitar-tap-proj
 
 **F49 — `gated-fft`: the cases match and reach production, but the transform differs in two
 mechanisms, Swift's tests build a hardware analyzer, and the tests' own explanations are wrong.
-(open — implemented and committed 2026-09-24: Swift `c4611e0`, Python `c3b1bff`, web `1f858f8`. Still
-to do: the owner's run-review of the web calibration change, and Python's self-baseline re-mint, which
-waits for #19)**
+(✅ closed 2026-09-25 — committed 2026-09-24: Swift `c4611e0`, Python `c3b1bff`, web `1f858f8`. Python's
+self-baseline re-minted under #19 once playback was repeatable — exactly the 24 values this finding's
+window moved — committed with #19 as Python `820fabd`. The owner's run-review passed in all three)**
 
 Files: `GatedFFTParityTests.swift` / `test_gated_fft_parity.py` / `gated-fft.test.ts`. Production:
 Swift `RealtimeFFTAnalyzer.computeGatedFFT` (`+FFTProcessing.swift:434`), Python
@@ -3867,6 +3871,9 @@ What that means (all three editions alike; plate and brace only):
 **Implementation started 2026-09-24**, in the approved order Swift → Python → web. Status: **committed in all
 three** (Swift `c4611e0`, Python `c3b1bff`, web `1f858f8`), web baseline re-minted and collected into the
 hub; **Python's baseline is not re-minted** (below), so its `test_self_regression` fails until #19.
+*Update, 2026-09-24: done under #19 once playback was repeatable — exactly the 24 values this window
+moved, agreeing with the web's to 13–14 significant digits; Python's `test_self_regression` passes
+(committed with #19, Python `820fabd`).*
 
 - **Swift:** `computeGatedFFT` returns empty for fewer than two samples; its window comments rewritten
   (plus the `window` property, documented as Hann but rectangular, and the file header). One shared
