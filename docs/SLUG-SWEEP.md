@@ -3538,6 +3538,382 @@ waits before asserting. Mutation checks, all three: removing the detection clear
 `startTapSequence` fails R1 and R2 — the line-304 race is guarded in every edition. Suites: Swift 605,
 Python 719, web 642 — all pass; parity map 103 groups.
 
+### S7 — Capture / DSP pipeline (5 slugs)
+
+Status: ⏳ **In progress — started 2026-09-24.**
+
+**Audit record.** As in S6, this table records only **what the reading produced** — a finding number,
+or "clean" where none was filed. Each finding's status lives in the finding and nowhere else.
+
+| slug | read? | produced |
+|---|---|---|
+| `gated-fft` (5/5/5) | ✅ | cases identical all three (GFFT1–5, from the oracle); **F49** |
+| `tap-decisions` | | |
+| `tap-progress` | | |
+| `file-playback` | | |
+| `decay-tracking` | | |
+
+**Counts, measured with the runners, 2026-09-24** (Swift: the ten S7 suites run with a result bundle,
+47 tests, all pass, no argument expansion; Python: `pytest --collect-only`, 50; web: `vitest list`, 46):
+
+| slug | Swift | Python | web | files (Swift / Python / web) |
+|---|---:|---:|---:|---|
+| `gated-fft` | 5 | 5 | 5 | `GatedFFTParityTests.swift` / `test_gated_fft_parity.py` / `gated-fft.test.ts` |
+| `tap-decisions` | 15 | 18 | 6 | `TapDetectionTests.swift` / `test_tap_detection.py` / `tap-decisions.test.ts` |
+| `tap-progress` | 12 | 12 | 14 | `TapProgressTests.swift` / `test_tap_progress.py` / `tap-progress.test.ts` |
+| `file-playback` | 8 | 8 | 11 | `FilePlaybackRegressionTests.swift` / `test_file_playback_regression.py` / `file-playback.test.ts` |
+| `decay-tracking` | 7 | 7 | 10 | `DecayTrackingTests.swift` / `test_decay_tracking.py` / `decay-tracking.test.ts` |
+
+These have changed since the starting picture (2026-09-20: `tap-decisions` 10/10/5, `tap-progress`
+10/10/12), through S6 work. `tap-decisions` is the widest spread, and the natives differ from each other
+there too (15 vs 18). `file-playback` and `decay-tracking` have more web tests than canonical Swift. As
+S6 showed, neither a spread nor a match settles anything — the reading does.
+
+`file-playback` carries two things already split out of the sweep, and neither is a finding here:
+results that depend on machine speed ([#19](https://github.com/dwsdolce/guitar-tap-project/issues/19))
+and Swift's 4800-frame buffers ([#3](https://github.com/dwsdolce/guitar-tap-project/issues/3)).
+
+**F49 — `gated-fft`: the cases match and reach production, but the transform differs in two
+mechanisms, Swift's tests build a hardware analyzer, and the tests' own explanations are wrong.
+(open — implemented and committed 2026-09-24: Swift `c4611e0`, Python `c3b1bff`, web `1f858f8`. Still
+to do: the owner's run-review of the web calibration change, and Python's self-baseline re-mint, which
+waits for #19)**
+
+Files: `GatedFFTParityTests.swift` / `test_gated_fft_parity.py` / `gated-fft.test.ts`. Production:
+Swift `RealtimeFFTAnalyzer.computeGatedFFT` (`+FFTProcessing.swift:434`), Python
+`RealtimeFFTAnalyzer.compute_gated_fft` (`realtime_fft_analyzer.py:891`), web `computeGatedFFT`
+(`dsp/gatedFFT.ts`). In every edition that is the transform every plate/brace capture runs
+(`finishGatedFFTCapture` → align → gated FFT → dominant peak). **Guitar never uses it:** the guitar
+capture uses the live path's rectangular window at `fftSize` 65536 in all three (Swift
+`finishGuitarGatedCapture` → `computeFFT(on:)`, Python `dft_anal(…, window_fcn)`, web `dftAnalRect`), so
+everything in F49 — the window, the calibration move, the taper observation — concerns **plate and brace
+only**, and leaves guitar results untouched.
+
+**What is sound.** All three run the same five cases, taken from the oracle rather than retyped:
+GFFT1 one tone, GFFT2 two tones at the plate-C frequencies, GFFT3 two "bin-centred" tones, GFFT4 silence
+(exactly −∞ since F44), GFFT5 one "bin-centred" tone. Each builds its signal in double precision and rounds
+to float32 per sample, and each calls the production transform directly. Swift asserts at zero (it mints
+the oracle, F4); Python and web at `gatedFftDb`, which is **0.001 dB**.
+
+1. **Calibration is applied in a different place.** Swift and Python add the microphone calibration inside
+   the transform (`activeCalibration` / `_calibration_profile`). The web's `computeGatedFFT` returns it
+   uncalibrated, and its caller `gatedCaptureResult` (`dsp/gatedCapture.ts`) adds it from the phase's
+   `search.calibration`. Two owners of one step. **No test in any edition covers calibration on the gated
+   path** — every GFFT case runs uncalibrated.
+2. **The window is a different window.** Swift uses `vDSP_HANN_DENORM`, the *periodic* Hann
+   `0.5·(1 − cos 2πn/N)`. Python (`np.hanning`) and web (a port of it) use the *symmetric* Hann
+   `0.5·(1 − cos 2πn/(N−1))`. Swift's comment records the difference and that they agree to within the
+   tolerance at these sizes. That is a measured agreement, not the same mechanism.
+3. **Swift's tests (and the oracle minter) build a full hardware analyzer.** `RealtimeFFTAnalyzer()`
+   defaults to `forTesting: false`: it enumerates input devices, registers the CoreAudio listener, and
+   selecting a device **auto-loads that device's saved calibration** into `activeCalibration`, which
+   `computeGatedFFT` then applies. The GFFT tests avoid it only by timing: the device selection is queued
+   with `DispatchQueue.main.async`, and the tests call the transform synchronously before it can run. So
+   the result depends on the machine's saved settings, held off only by the run order. Python uses
+   `for_testing()`, and web a pure function, so neither is exposed. `GenerateParityOracle` builds its
+   gated analyzer the same way. The pattern is wider than this slug: `RealtimeFFTAnalyzer()` appears 46
+   times across 24 Swift test files.
+4. **"Bin-centred to eliminate spectral leakage" is false (GFFT3/GFFT5, all three).** The Hann window
+   spans the padded 32768-sample buffer, but the signal is 19200 samples (0.4 s), so no tone is periodic
+   in the window and leakage is not eliminated. Measured through Python's production transform: the same
+   67.3828125 Hz tone reads **−49.50 dB alone (GFFT5) and −49.70 dB with the 117 Hz tone beside it (GFFT3)**.
+   That 0.2 dB is leakage from the stronger tone. It bears on the next item.
+5. **Stale or wrong text in the tests and the transforms (rule 3):**
+   - Swift GFFT5 explains its golden's move from −49.7 to −49.5 as float phase error in the old
+     synthesis. But −49.70 is exactly this tone's value **with the 117 Hz companion (GFFT3)**, so the
+     likelier story is that GFFT5's hand golden was copied from GFFT3. Unverified either way; the comment
+     is not evidence.
+   - Tolerance text says 1 dB: Swift GFFT5 ("within 1 dB"), Python class docstring ("within 1 dB"), web
+     (`// 1.0 dB`). It is 0.001 dB. Python GFFT5's docstring still says "must read −49.70 dB" (the oracle
+     says −49.50).
+   - Python `compute_gated_fft`'s docstring says `np.hanning` is `0.5·(1 − cos 2πn/N)` "matching Swift's
+     vDSP_HANN_DENORM". It is the `/(N−1)` form, and does not match (item 2). Swift's comment is correct.
+   - Web `gatedFFT.ts` opens with a comment about an epsilon floor constant that no longer exists (F44).
+   - Python `_make_proc_thread()` and the `realtime_fft_analyzer_fft_processing.py` header refer to
+     `_FftProcessingThread.compute_gated_fft()`, which moved to `RealtimeFFTAnalyzer` long ago.
+   - Test names carry history: Swift `afterFix_binCentred_matchesPython` / Python
+     `…_matches_swift` (both now check the oracle), Swift `silence_allBinsBelowNoiseFloor` (it checks −∞
+     exactly).
+6. **The web keeps its test-signal generator in production source.** `makeToneSignal` / `makeSilence` live
+   in `src/dsp/signal.ts`, and only `test/gated-fft.test.ts` and `test/parityRunner.ts` import them.
+   Swift and Python keep theirs in the test file. **Same for `magnitudeAtFrequency`** (found while
+   discussing this item): it is exported from production `src/dsp/gatedFFT.ts`, but only those two test
+   files call it; Swift and Python define it in the test file. The same shape as F45 item 1, where the
+   web kept `stateInvariantViolation` in `src/` and it moved into the test. The natives are not tidy
+   either: each synthesises the gated signal in two test-side places (Swift `GatedFFTParityTests.swift`
+   and `GenerateParityOracle.swift`; Python `test_gated_fft_parity.py` and `tests/parity_runner.py`).
+7. **Tiny input differs.** Python and web return an empty spectrum for zero samples (an explicit guard) and
+   for one sample (their size loop starts at 1, leaving no bins). Swift has no guard; its `nextPowerOfTwo`
+   has a floor of 2, so zero or one sample gives a one-bin spectrum (−∞ for zero), and
+   `vDSP_DFT_zrop_CreateSetup` accepts length 2 (checked), so the setup-failure path does not catch it.
+   From two samples up, all three size the transform identically. *Correction, 2026-09-24:* this entry
+   first said every caller passes a full-length window. Not so — `alignCaptureToOnset` returns the buffer
+   unchanged when it is too short or has no onset. What keeps zero out is the callers: every Swift path
+   into `finishGatedFFTCapture` guards `!isEmpty` (`SpectrumCapture.swift:132, 398, 457, 509`). A
+   one-sample buffer is not excluded by any guard found; whether a real capture can be that short was not
+   checked. No reason for Swift's shape was found: `nextPowerOfTwo` dates from 2026-02-26 (`7032314`,
+   "Work on brace and plate measurements"), written for vDSP; the ports wrote their own size loop and
+   added the guard.
+
+**Outside the parity question — an observation, not a finding item.** Item 4's cause is also a property of
+the production DSP, identical in all three. The Hann window is applied over the padded buffer, not over the
+captured window, so the capture's end (sample 19200 of 32768) is weighted about 0.93 rather than tapered.
+The Swift and Python comments justify Hann by saying the buffer "starts and ends near silence". Whether a
+400 ms ring-out ends near silence is a question for the owner; changing it would move every material
+number in all three editions, and the oracle with them.
+
+**Measured 2026-09-24 — for STEADY tones.** The effective window (the periodic Hann over 32768, cut where
+the 0.4 s capture ends) was measured in numpy: its gain, and how strongly a steady tone shows up N bins
+away from itself, relative to its own peak. One bin is 1.46 Hz at 48 kHz. **A tap is not a steady tone —
+see the correction below, which reverses the practical conclusion.**
+
+| window | gain | +5 bins (~7 Hz) | +10 | +34 (~50 Hz) | +100 | +1000 |
+|---|---:|---:|---:|---:|---:|---:|
+| **app at 48 kHz** (19200 of 32768 samples) | −9.5 dB | −20.7 | −27.0 | −37.7 | −47.1 | −67.1 |
+| **app at 44.1 kHz** (17640 of 32768) | −10.8 dB | −19.1 | −25.3 | −35.9 | −45.3 | −65.3 |
+| **app at 96 kHz** (38400, cut to 32768) | −6.0 dB | −54.1 | −71.1 | −102.2 | −130.1 | −190.0 |
+| Hann spanning only the captured 19200 | −10.7 dB | −41.5 | −58.7 | −88.7 | −116.4 | −176.1 |
+
+What that means (all three editions alike; plate and brace only):
+
+- **For steady tones, leakage is 20–50 dB worse than the code claims.** At 48 kHz a steady tone 7 Hz from a
+  stronger one gets that one's leakage at −21 dB, where a Hann over the captured audio would give −41 dB.
+  GFFT3's 0.2 dB (steady tones 50 Hz apart) is an instance. *First recorded here as a general defect; the
+  decaying-tap test below shows it does not carry over to taps.*
+- **The result depends on the input's sample rate.** The same tap reads about 1.3 dB higher at 48 kHz than
+  at 44.1 kHz, and about 3.5 dB higher again at 96 kHz, and leakage differs far more. At 96 kHz the
+  capture is also cut to 341 ms instead of 400 ms, and there, by accident, the window is correct. In the
+  field that is a UMIK-1 at 48 kHz, a browser at 44.1 or 48 kHz, an interface at 96 kHz. Peak
+  frequencies are affected much less than magnitudes and Q.
+- **Parity tests cannot see it.** All three editions do exactly the same thing, which is why it has lasted.
+- **What it does to the results that matter — measured on the real fixtures, 2026-09-24.** Young's
+  modulus, shear modulus and target thickness take only the peak **frequencies** (plus dimensions and
+  mass): E ∝ f², G_LC ∝ fLC², and Gore's target thickness ∝ 1/√(a weighted sum of E_L, E_C, G_LC).
+  Magnitude and Q do not enter. The Python material pipeline was run on the four material fixtures twice
+  — today's window, and a Hann spanning only the captured samples — through `play_file_for_testing` with
+  `compute_gated_fft` patched in a scratch test (nothing in the repo changed):
+
+  | case | peak | today | captured-only | Δf | modulus Δ (≈ 2·Δf/f) |
+  |---|---|---:|---:|---:|---:|
+  | REG-B1 brace | fL | 512.689 Hz | 512.724 Hz | +0.035 Hz | E +0.01% |
+  | REG-B2 brace (3 taps) | fL | 553.632 | 553.645 | +0.013 | E +0.005% |
+  | REG-P1 plate | fL | 67.115 | 67.445 | +0.33 | E_L +1.0% |
+  | | fC | 116.270 | 116.424 | +0.15 | E_C +0.3% |
+  | | fLC | 35.354 | 35.910 | +0.56 | G_LC +3.1% |
+  | REG-P2 plate (3 taps) | fL | 68.259 | 68.860 | +0.60 | E_L +1.8% |
+  | | fC | 117.468 | 117.740 | +0.27 | E_C +0.5% |
+  | | fLC | 35.301 | 35.994 | +0.69 | G_LC +3.9% |
+
+  **Braces: negligible.** **Plates: E_L about +1–2%, E_C +0.3–0.5%, G_LC +3–4%**; the target thickness
+  moves the other way, by roughly 0.5–1% (estimated from the formula, not computed with real dimensions).
+  The shifts are all upward and grow toward the lowest frequencies. Every shift is under 1 Hz, so it passed
+  unseen under the old 1 Hz tolerance. Q moved a lot (REG-P1 fL 15.3 → 11.5, fC 26.3 → 15.8) and so did
+  magnitude, but neither feeds the material results. **This shows the two windows differ, not which is
+  right** — the fixtures have no ground truth. fLC moves most but weighs least: Gore's own note
+  (`MaterialProperties.swift`) puts omitting G_LC entirely at a 5–7% thickness change, so a 3–4% change in
+  G_LC is worth roughly 0.2%; the thickness change is carried mostly by fL. Near a `WoodQuality` threshold, a
+  1–2% change in specific modulus could change a rating.
+- **Correction, 2026-09-24 — against known frequencies, today's window is as good or better for taps.** A
+  numpy test fed decaying modes at KNOWN frequencies (0.1 s pre-onset silence, then an exponentially
+  decaying sine, 0.4 s at 48 kHz, peak by the production parabolic interpolation), swept across a bin and
+  over phases:
+  - *One mode alone* (35 Hz Q6, 67 Hz Q15, 116 Hz Q26, 513 Hz Q87): both windows are unbiased (mean error
+    ≤ 0.003 Hz); worst cases today −0.08 / −0.03 / −0.02 / −0.01 Hz, captured-only about twice that.
+  - *67 Hz Q15 with one neighbour* (+8/15/30/50 Hz, 0.3×/1×/3× amplitude, Q15/Q40): today's window has the
+    smaller error in nearly every case. With a strong neighbour 8 Hz away, today's worst is 3.9 Hz; the
+    captured-only window's worst is 31 Hz — it picks the neighbour.
+  Why: a tap decays, so the signal supplies its own end taper — the hard edge at 0.93 carries almost no
+  energy. The edge that matters is the tap's abrupt **onset**, 0.1 s in, and today's window weights it at
+  ≈0.2 where a Hann over the capture weights it at 0.5. The Swift/Python rationale ("starts and ends near
+  silence") holds for the end; the steady-tone table above overstated the practical effect. **So the
+  real-fixture shifts above are not evidence that today's plate results are wrong.** What would settle the
+  real fixtures is a window-free estimate — fitting decaying sinusoids to the captured audio (e.g. matrix
+  pencil) — which has not been done.
+- **The sample-rate dependence stands** (it is about gain and how much of the padded window the capture
+  fills, not about leakage): same tap, different dB — and at 96 kHz a shorter capture (341 ms) with a
+  different effective window. Its effect on the frequencies has not been measured.
+- **Whether anything should change is now open, not assumed.** The windowing is not shown to be wrong for
+  taps; the sample-rate dependence is real but unmeasured in frequency. Any change would move every
+  plate/brace result in all three, the oracle and every baseline — the same kind of change as #19 and #16 —
+  so it is not F49's. The owner's decision whether it becomes its own issue.
+
+**Decisions (owner, 2026-09-24) — recorded as they are made; nothing implemented yet.**
+
+- **Item 1 — the web matches Swift and Python.** No reason was found for the web to differ: its comment
+  gives none, and `computeGatedFFT`'s only production caller (`gatedCaptureResult`) calibrates the result
+  at once. Matching means the web applies the calibration inside the gated transform, reading the active
+  calibration **when the FFT is computed**, as Swift does. Today the web copies it into the phase's search
+  when the phase is armed (`matSearch`), so a calibration change between arming and capture would be
+  applied differently. Swift's shape puts the transform on the web's `RealtimeFFTAnalyzer`, which holds
+  the calibration. The web's file-playback harness, which sets the analyzer's calibration to the file's
+  so the per-phase search picks it up, is adjusted to match. **And a calibrated gated case is added in
+  all three** (owner, 2026-09-24) — no edition tests calibration on this path today.
+- **Item 2 — Python and the web use Swift's periodic Hann window; comments cleaned; a window test added.**
+  The symmetric window was never forced on them: `np.hanning` only makes the symmetric form, but the
+  periodic one is a single numpy line (`0.5 - 0.5*np.cos(2*np.pi*np.arange(N)/N)`), and the web builds its
+  window in its own loop (`denom = fftSize - 1` → `fftSize`). SciPy is not needed for either and stays
+  out (removed in Python `c1de197`). Swift and the oracle do not change.
+  Checked: `vDSP_HANN_DENORM` is the periodic form (max difference from `0.5·(1 − cos 2πn/N)` at 32768
+  points 7×10⁻⁸, from the `/(N−1)` form 7×10⁻⁵). Through the formula, the periodic window reproduces every
+  GFFT oracle value to ~4×10⁻⁶ dB; the symmetric one is off by ~1.7×10⁻⁴ dB on every case. That is under
+  the 0.001 dB tolerance, which is why **no current test can tell the windows apart** and why the drift
+  recurred — and the tolerance used to be 1 dB / 1 Hz, so almost any difference passed. The guard is
+  therefore a **window test** in each edition, under `test/gated-fft`, comparing the gated window to the
+  periodic formula, so that a return to the symmetric form fails at once. Comments cleaned with it:
+  Python's docstring claiming `np.hanning` is Swift's window, the web's "numpy.hanning uses (N−1)", and
+  Swift's own note that the ports use a different window. The tolerances themselves are
+  [#16](https://github.com/dwsdolce/guitar-tap-project/issues/16)'s to set after the sweep, not F49's.
+- **Item 3 — the wider fix (owner, 2026-09-24): every test analyzer is built with the test constructor
+  unless the test genuinely needs hardware.** Swift: all 46 direct `RealtimeFFTAnalyzer()` constructions
+  across 24 test files, including `GenerateParityOracle`, become `forTesting: true`. Python: the five
+  `RealtimeFFTAnalyzer(None)` calls in `test_dsp.py` become `for_testing()`, and its false "opens no audio
+  device" comment goes. **Each site is checked, not replaced by search**: a test that genuinely needs the
+  hardware path (a device-management test, say) keeps it and states why. None found yet.
+
+  Why the wider fix over GFFT-plus-minter only:
+  1. The narrow fix leaves the hazard where it is likeliest to fire. The GFFT tests finish synchronously,
+     before the queued device load runs. Many of the other sites **wait**: the S6 tests rewritten under
+     F45/F46 (`StateInvariantTests.swift:27`, `ScenarioStateTraceTests.swift:62`, `StatusMessageTests.swift:43`
+     and `:86`) build `RealtimeFFTAnalyzer()` and then sleep through the real cooldown and capture window.
+     During that wait the `DispatchQueue.main.async` device selection runs and can load the machine's saved
+     calibration into `activeCalibration` mid-test. **Not yet checked** whether that changes any of their
+     results today; either way the outcome would depend on the machine running the tests.
+  2. A test's result must not depend on the machine (PARITY-TEST-METHOD rule 6 — the shared-sandbox
+     failure that survived every isolation check).
+  3. `forTesting: true` changes only hardware: in Swift it skips device enumeration, the CoreAudio
+     listener and the route observer in `init`, and the matching `stop()` / listener removal in `deinit`
+     (`RealtimeFFTAnalyzer.swift:744–818`). The analysis is unchanged. `TapToneAnalyzer.forTesting()`
+     already builds its analyzer this way (`TapToneAnalyzer.swift:111`), so the 46 are the odd ones out.
+  4. Python's GFFT tests and the web's tests are already hardware-free; this brings Swift and the rest of
+     Python into line.
+
+  What exploring it found (checked 2026-09-24):
+  - **Python:** the GFFT tests use `RealtimeFFTAnalyzer.for_testing()`, which returns before any hardware
+    setup (no stream, no device enumeration, no hot-plug monitor). Even the full constructor does not
+    load a calibration: it stores the device directly, bypassing the `selected_input_device` setter that
+    auto-loads one. Isolated by design, not by timing.
+  - **Web:** the tests call `computeGatedFFT`, a free function, so no analyzer and no calibration are
+    involved. The web analyzer's constructor touches nothing either (no `AudioContext` until `start()`).
+    After item 1 the transform moves onto that analyzer, so the tests will construct it — still with no
+    hardware — and the new calibrated case sets the calibration explicitly.
+  - **Found on the way, same shape in Python:** `test_dsp.py` (`test/dsp`, S4) calls the **full**
+    constructor `RealtimeFFTAnalyzer(None)` five times. Its comment says constructing it "opens no audio
+    device"; the code opens a `sounddevice.InputStream` on the default input, starts the hot-plug
+    monitor, registers an `atexit` close, and on macOS runs the microphone-access check (`MacAccess`),
+    which, if permission is undetermined, requests it and spins a Qt event loop until answered. At least
+    one of these uses was added in S6's F36–F44 commit (`87e7ad7`, 2026-09-23) — the comment's claim was
+    not verified when it was written. No calibration is loaded, so results are unaffected; the test does
+    depend on the machine's audio hardware.
+  - **Swift, where the calibration comes from:** `init(forTesting: false)` calls
+    `loadAvailableInputDevices()`, which queues the device choice on `DispatchQueue.main.async`; assigning
+    `selectedInputDevice` runs its `didSet`, which loads `CalibrationStorage.shared.calibration(forDeviceUID:)`
+    into `activeCalibration` (`RealtimeFFTAnalyzer.swift:117–129`, `+DeviceManagement.swift:220–267`).
+  - **The test sandbox does not cover this.** `TestSandbox` redirects only `TapDisplaySettings` (a
+    per-process `UserDefaults` suite) and the saved-measurements file. `CalibrationStorage` (calibrations,
+    the global active one, the device→calibration map) and the `selectedInputDeviceUID` key all use
+    `UserDefaults.standard` — which, in the sandboxed test host, is the app's own container
+    (`GenerateParityOracle.swift:65`). So a full analyzer under test reads **the user's real saved device and
+    calibration**.
+  - **And it can write the user's real setting.** `selectedInputDevice.didSet` writes
+    `selectedInputDeviceUID` to `UserDefaults.standard` on every assignment. When the saved device is
+    present that rewrites the same value; when it is not (the measurement mic unplugged during a test
+    run), the initial load falls through to "any external mic", then the default, and **saves that as the
+    user's device**. Read from the code, not observed. `activeCalibration.didSet` likewise persists the
+    global active calibration and the device map unless `isLoadingDeviceCalibration` is set — whether any
+    test sets a calibration on a full analyzer is not yet checked. `forTesting: true` avoids all of it,
+    since no device is ever selected.
+  - **Unrelated, noticed while reading:** in `RealtimeFFTAnalyzer+DeviceManagement.swift` around line 704,
+    the doc comment of the device-switch function is split in two, with the doc comment for
+    `setCalibrationWithoutSavingDeviceMapping` spliced into the middle of it. Comment only.
+- **Item 4 — the code does not change; the comments are corrected** (owner's inclination, 2026-09-24,
+  after the decaying-tap test showed today's window is as good or better for taps). In all three, GFFT3
+  and GFFT5 stop claiming their tones are "bin-centred to eliminate spectral leakage": the window spans
+  the padded 32768 samples and the signal only 19200, so steady tones leak (GFFT3's 0.2 dB is that). The
+  oracle values stay; they pin what the transform produces. **The production comments on the gated window
+  are corrected in the same change, in all three — and they matter more than the test comments** (owner,
+  2026-09-24). They must say what actually happens: the Hann spans the padded 32768 samples, not the
+  19200 captured; for a steady tone that leaves a hard edge (weight ≈0.93) and poor sidelobes, but for a
+  tap it works, because the decay supplies the end taper and the window weights the abrupt onset at ≈0.2.
+  The "~31 dB sidelobe suppression" and "the captured buffer starts and ends near silence" claims are
+  replaced with that, and the sample-rate dependence of the gain is stated.
+- **Item 5 — text clean-up, with three rules (owner agreed, 2026-09-24):**
+  1. **Comments never state the tolerance or an expected value**; they name the oracle's field
+     (`gatedFftDb`, the case's `expected`). The tolerance has moved and will move again (#16), so a number
+     in a comment goes stale. Covers "within 1 dB" (Swift, Python), the web's `// 1.0 dB`, and Python's
+     "must read −49.70 dB".
+  2. **Swift GFFT5's history story is deleted, not rewritten** — neither its explanation nor the leakage
+     one is verified, and history belongs in git. Its rationale for building the signal in Double and
+     rounding to Float per sample stands on its own and stays.
+  3. **Test names that carry history are renamed to say what they check, consistently in all three**
+     (Swift `afterFix_binCentred_matchesPython` / Python `…_matches_swift` check the oracle; Swift
+     `silence_allBinsBelowNoiseFloor` checks −∞ exactly). "Bin-centred" may stay: the frequencies are bin
+     centres; only the no-leakage claim was false.
+  Plain corrections with no decision: Python's window-formula docstring (true once item 2 lands), the
+  web's dead epsilon comment, Python's stale `_FftProcessingThread` references.
+- **Item 6 — move, and merge the duplicates (owner, 2026-09-24).** The web moves `makeToneSignal`,
+  `makeSilence` and `magnitudeAtFrequency` out of `src/` into one shared helper file under `test/` (as
+  `parityRunner.ts` and `selfBaseline.ts` already are); `gatedFFT.ts` then exports only the transform —
+  the F45 precedent. **"Duplicates are bad no matter where they are"**: each native's two gated-signal
+  builders become one — Swift `GatedFFTParityTests.swift` and `GenerateParityOracle.swift` share one
+  helper; Python `test_gated_fft_parity.py` and `tests/parity_runner.py` share one helper.
+- **Item 7 — Swift takes the ports' behaviour (owner, 2026-09-24):** fewer than two samples returns an
+  empty spectrum. A one-bin "spectrum" of nothing is meaningless, and Swift's own caller already treats
+  an empty spectrum as a failed capture ("tap again"). A change to canonical Swift, made for that
+  concrete reason. A test pins it in all three.
+- **The window-taper observation is not F49's.** It changes no code here (item 4). Whether it becomes its
+  own issue — with the two unmeasured questions: a window-free check of the real plates, and the
+  sample-rate effect on frequencies — is still the owner's to decide.
+
+**Implementation started 2026-09-24**, in the approved order Swift → Python → web. Status: **committed in all
+three** (Swift `c4611e0`, Python `c3b1bff`, web `1f858f8`), web baseline re-minted and collected into the
+hub; **Python's baseline is not re-minted** (below), so its `test_self_regression` fails until #19.
+
+- **Swift:** `computeGatedFFT` returns empty for fewer than two samples; its window comments rewritten
+  (plus the `window` property, documented as Hann but rectangular, and the file header). One shared
+  test helper, `GatedTestSignal.swift` (`tooling/gated-signal`), used by the GFFT tests and
+  `GenerateParityOracle` (whose own signal loop and `magnitudeAt` are gone). `GatedFFTParityTests`
+  rewritten: renamed, text per item 5, and three new cases — the periodic window (a constant input
+  leaves bins ≥ 2 below −120 dB; the symmetric window puts them near −100), fewer than two samples, and
+  calibration applied inside the transform. All 40 remaining `RealtimeFFTAnalyzer()` test sites use
+  `RealtimeFFTAnalyzer.forTesting()`; none used a hardware API.
+- **Python:** `compute_gated_fft` uses the periodic window and a `< 2` guard; docstrings in it and in
+  `realtime_fft_analyzer_fft_processing.py` rewritten (the latter also claimed `dft_anal` ran the gated
+  path; it does not). `tests/gated_signal.py` shared by the GFFT tests and `parity_runner.py`. Test file
+  mirrors Swift's. `test_dsp.py`'s five full constructors use `for_testing()`, and
+  the false "opens no audio device" comment is gone.
+- **Web:** the uncalibrated transform is `gatedHannFFT` (periodic window, `< 2` guard); the app calls
+  `RealtimeFFTAnalyzer.computeGatedFFT`, which adds the active calibration at the moment of the call.
+  `finishGatedFFTCapture` aligns and calls it, as Swift does; `gatedCaptureResult`, `PhaseSearch` and the
+  search's `calibration` field are gone. `src/dsp/signal.ts` moved to `test/gatedSignal.ts`, with
+  `magnitudeAtFrequency` from `gatedFFT.ts`; `parityRunner.ts` uses them and the analyzer's transform.
+- **Mutation checks, all caught by the intended test only** (Swift also fails its zero-tolerance oracle
+  cases on the window, as it should): symmetric window → the window test (in Python and web the oracle
+  cases pass it at 0.001 dB — the reason the test exists); no guard with a size floor of 2 (Swift's old
+  shape) → the tiny-input test; calibration skipped → the calibration test. Web only: the material
+  finish path using the uncalibrated transform fails REG-B1, REG-B2, REG-P1 and REG-P2 (all calibrated);
+  OUT-4 (uncalibrated) passes.
+- **Suites:** Swift **608** pass (605 + 3). Python **722** (719 + 3) and web **645** (642 + 3): all pass
+  except `self-regression`, which fails because the window moved their own baselines. Parity map
+  **104 groups**, no problems. `tsc` clean.
+- **The baseline diffs.** Web (`mint-baseline.sh`, no `--yes`): 24 values — every GFFT and every
+  material value, by −0.00017 dB and a few µHz (−0.00037 dB and −1.7×10⁻⁵ Hz at most); no guitar value.
+  Each new value is identical to Python's new value, and both now reproduce the oracle (e.g. GFFT1
+  −15.722327). Python (`mint-baseline.py --check`): the same 24, **plus REG-G2 guitar taps 7–8 and their
+  average** — that is #19, not this change: with only the window put back to `np.hanning`, the GFFT and
+  material values match the baseline exactly and REG-G2 taps 7–8 still move, by a different amount on
+  each run (tap 7 air −0.31, −0.40, −0.59 dB across three runs). Re-minting Python as-is would write a
+  timing-dependent REG-G2 into its baseline.
+- **Python re-mint: tried and abandoned (owner, 2026-09-24).** Option (a) was to re-run the minter until
+  one run showed exactly the 24 window values, and adopt only that run. A scripted loop answered the
+  minter's prompt "y" only on that condition: **four runs, all rejected** — REG-G2 taps 7–8 moved every
+  time, and tap 6 too in one. (The minter lists at most 40 changed values; every run exceeded that.)
+  Owner: "reminting from that is not reproducible or reliable". Python's baseline stays as committed and
+  `test_self_regression` fails for this reason until #19 is fixed; #19's fix will move values in all three
+  editions anyway, so everything is re-minted once, after it. Python being more sensitive to #19 than the
+  web (whose runs have not moved REG-G2) is noted there, unexplained.
+- **Noticed, not touched:** Python's `hps_peak_freq` (`realtime_fft_analyzer_fft_processing.py`) has
+  no caller; the material peak finder does its own HPS.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those

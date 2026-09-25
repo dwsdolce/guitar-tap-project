@@ -95,6 +95,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/uuid-case` | — | `tests/test_uuid_case.py` | `test/uuid-case.test.ts` | test suite |
 | `test/wav-dump-folder` | `GuitarTapTests/WavDumpFolderTests.swift` | `tests/test_wav_dump_folder.py` | — | test suite |
 | `tooling/capture-probe` | `GuitarTapTests/CaptureProbeTests.swift` | `Tooling/capture-probe.py` | — | review only |
+| `tooling/gated-signal` | `GuitarTapTests/GatedTestSignal.swift` | `tests/gated_signal.py` | `test/gatedSignal.ts` | review only |
 | `tooling/mint-baseline` | — | `Tooling/mint-baseline.py` | `tooling/mint-baseline.test.ts` | review only |
 | `tooling/oracle-sync` | — | `tests/test_oracle_sync.py` | `test/oracle-sync.test.ts` | review only |
 | `tooling/parity-oracle` | `GuitarTapTests/ParityOracle.swift` | `tests/parity_oracle.py` | — | review only |

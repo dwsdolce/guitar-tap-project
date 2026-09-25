@@ -1135,6 +1135,20 @@
       "equivalence": "review only"
     },
     {
+      "slug": "tooling/gated-signal",
+      "swift": [
+        "GuitarTapTests/GatedTestSignal.swift"
+      ],
+      "python": [
+        "tests/gated_signal.py"
+      ],
+      "web": [
+        "test/gatedSignal.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "tooling/mint-baseline",
       "swift": [],
       "python": [

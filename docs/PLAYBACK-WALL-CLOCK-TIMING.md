@@ -117,3 +117,13 @@ moves: Python's parity tests have passed only because they ran at a speed where 
 
 Until this is fixed, Python's `test_self_regression` can fail under pytest for this reason alone. A
 failure listing only late-sequence REG-G2 / REG-P2 values is this issue; anything else is not.
+
+**2026-09-24 — now blocking a re-mint, and the reason to do this next.** #17 F49 changed Python's gated
+window, which moves 24 GFFT and plate/brace values in its self-baseline. The re-mint could not be done
+cleanly: four standalone mint runs in a row each also moved REG-G2 taps 7–8 (tap 6 too in one run), by a
+different amount each time (tap 7 air −0.31, −0.40, −0.59 dB in the runs inspected). Standalone runs were
+therefore **not** reliably clean on this machine that day, contrary to the note above. Python's baseline
+was left as committed, so `test_self_regression` fails until this is fixed; since the fix moves values in
+all three editions anyway, every baseline (and the oracle, if Swift's playback numbers move) is
+re-minted once, afterwards. The web's runner did not move REG-G2 in any run — why Python is the more
+sensitive edition has not been examined.
