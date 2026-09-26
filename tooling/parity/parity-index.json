@@ -93,7 +93,7 @@
         "src/guitar_tap/models/tap_tone_analyzer_decay_tracking.py"
       ],
       "web": [
-        "src/dsp/decay.ts"
+        "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
         "test/decay-tracking"
@@ -142,7 +142,7 @@
         "src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py"
       ],
       "web": [
-        "src/dsp/gatedCapture.ts"
+        "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
         "test/file-playback",
@@ -159,8 +159,7 @@
         "src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py"
       ],
       "web": [
-        "src/dsp/gatedCapture.ts",
-        "src/dsp/gatedFFT.ts"
+        "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
         "test/gated-fft"

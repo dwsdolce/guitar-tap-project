@@ -24,11 +24,11 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `dead-input` | `GuitarTap/Models/DeadInput.swift`<br>`GuitarTapTests/DeadInputThresholdTests.swift` | `src/guitar_tap/models/dead_input.py`<br>`tests/test_dead_input_threshold.py` | `src/audio/deadInput.ts`<br>`test/dead-input-threshold.test.ts` | review only |
 | `dsp/analysis-quality` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/dsp/analysisQuality.ts` | tests |
 | `dsp/calibration` | `GuitarTap/Models/MicrophoneCalibration.swift` | `src/guitar_tap/models/microphone_calibration.py` | `src/dsp/calibration.ts` | tests |
-| `dsp/decay` | `GuitarTap/Models/TapToneAnalyzer+DecayTracking.swift` | `src/guitar_tap/models/tap_tone_analyzer_decay_tracking.py` | `src/dsp/decay.ts` | tests |
+| `dsp/decay` | `GuitarTap/Models/TapToneAnalyzer+DecayTracking.swift` | `src/guitar_tap/models/tap_tone_analyzer_decay_tracking.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/fft` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py` | `src/dsp/fft.ts` | tests |
 | `dsp/find-peaks` | `GuitarTap/Models/ResonantPeak.swift` | `src/guitar_tap/models/resonant_peak.py` | `src/dsp/peaks.ts` | tests |
-| `dsp/gated-capture` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/dsp/gatedCapture.ts` | tests |
-| `dsp/gated-fft` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/dsp/gatedCapture.ts`<br>`src/dsp/gatedFFT.ts` | tests |
+| `dsp/gated-capture` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `dsp/gated-fft` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/guitar-fft` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py` | `src/dsp/guitarFFT.ts` | tests |
 | `dsp/guitar-modes` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/guitarModes.ts` | tests |
 | `dsp/material-properties` | `GuitarTap/Models/MaterialProperties.swift` | `src/guitar_tap/models/material_properties.py` | `src/dsp/material.ts` | tests |

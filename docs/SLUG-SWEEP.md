@@ -3540,11 +3540,12 @@ Python 719, web 642 — all pass; parity map 103 groups.
 
 ### S7 — Capture / DSP pipeline (5 slugs)
 
-Status: ⏳ **In progress — started 2026-09-24.** Paused after `gated-fft` (F49) while #19 was finished
-(owner, 2026-09-24): #19 blocked F49's Python re-mint, and its fix changes the capture lifecycle the rest
-of S7 reads. **#19 is done** (committed 2026-09-25: Swift `58796ac`, Python `820fabd`, web `c4fb2f3`) — see
-[`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md). S7 resumes at `tap-decisions`; that doc's
-"Noticed while doing #19" list feeds `tap-decisions` and `decay-tracking`.
+Status: ⏳ **In progress — started 2026-09-24.** `gated-fft` (F49) and `tap-decisions` (F50) done and
+committed; #19 finished between them (see [`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md)).
+**Next: `tap-progress`**, then `file-playback` — which also takes the playback-controls question F50's
+run-review raised — and `decay-tracking`. From #19's "Noticed while doing #19" list, two items remain for
+those slugs: the Python minter's missing settings sandbox, and timers leaking from one playback case into
+the next (F50 settled the other two).
 
 **Audit record.** As in S6, this table records only **what the reading produced** — a finding number,
 or "clean" where none was filed. Each finding's status lives in the finding and nowhere else.
@@ -3552,7 +3553,7 @@ or "clean" where none was filed. Each finding's status lives in the finding and 
 | slug | read? | produced |
 |---|---|---|
 | `gated-fft` (5/5/5) | ✅ | cases identical all three (GFFT1–5, from the oracle); **F49** |
-| `tap-decisions` | | |
+| `tap-decisions` (14/18/6) | ✅ | **F50** (closed) |
 | `tap-progress` | | |
 | `file-playback` | | |
 | `decay-tracking` | | |
@@ -3920,6 +3921,443 @@ moved, agreeing with the web's to 13–14 significant digits; Python's `test_sel
   web (whose runs have not moved REG-G2) is noted there, unexplained.
 - **Noticed, not touched:** Python's `hps_peak_freq` (`realtime_fft_analyzer_fft_processing.py`) has
   no caller; the material peak finder does its own HPS.
+
+**F50 — `tap-decisions`: the web tests a third of the detector, Swift and Python test it one level below
+production, T6 does not test what it names, and production is laid out three ways. (✅ CLOSED 2026-09-25 —
+all 15 items done or settled, run-reviewed in all three. Commits: Swift `fe0cfcf`, Python `dd5f608`, web
+`02b762e`)**
+
+Files: `TapDetectionTests.swift` (14) / `test_tap_detection.py` (18) / `tap-decisions.test.ts` (6 when read)
+— recounted after #19 removed T4. Production: the per-chunk detector (Swift `detectTap`, Python
+`detect_tap`, web private `detectTap`) and what a confirmed tap calls (Swift/Python `handleTapDetection` →
+`handlePlateTapDetection`; web `beginCapture`). The detector's RULE is the same in all three — the same
+thresholds, the same relative formula, `hysteresisMargin` 3, EMA α 0.05, the silent warm-up, the
+post-warm-up sync frame, N-chunk confirmation, and one flag as latch and gate (the web's `prevAbove` split
+was removed earlier in #17). What differs is the tests and the layout around it.
+
+**Standing decisions (owner, 2026-09-25):** align all three to Swift unless there is a good reason not
+to. Every case enters at the per-chunk production entry — Swift `onRmsLevelChanged`, Python
+`_on_rms_level_changed`, web `processAudioFrame` — and a tap has fired when a capture has started
+(`gatedCaptureActive`), the one effect a tap has in every edition and both capture kinds.
+
+| # | item | status |
+|---|---|---|
+| 1 | The web tests a third of the detector | ✅ done (web) |
+| 2 | Onset alignment: tested on the web only; the web's is a free function, the natives' a method | ✅ done (all three) |
+| 3 | Two entry levels | ✅ done (all three) — one entry, one setup, one case list |
+| 4 | Python's cases use a hysteresis margin production never has | ✅ done (Python; `captureWindow` all three) |
+| 5 | T6 does not test relative detection (natives) | ✅ done (item 3) |
+| 6 | Explanations that are wrong or stale | ✅ done |
+| 7 | Production is laid out three ways; `tapDetectionLevel` unused; the settle rewrite breaks plate prompts | ✅ done (all three) |
+| 8 | Python's four pipeline cases are Python-only — because of Python's own thread; an unreachable restart path dropped two warnings | ✅ docs cleaned, dead path removed (Python); owner ran the app |
+| 9 | Python feeds the ring-out before detection, Swift after | ✅ done (Python) |
+| 10 | The web's detection guard omits `isMeasurementComplete` | ✅ done (web) |
+| 11 | The web picks relative detection by `captureKind` | ✅ done (web) |
+| 12 | Onset alignment's fallbacks differ: the natives return the buffer unchanged, the web a window-sized copy | ✅ done — natives follow the web (all three tested) |
+| 13 | The floor's seed at arming; the web's resume differs from Swift's; the natives keep a stale tap counter | ✅ done (all three) |
+| 14 | A frequency with no pitch (0 Hz, NaN…): Swift traps, Python raises, the web prints garbage | ✅ done (all three) |
+| 15 | Python's live Ring-Out box never shows a value (found by run-review step 1) | ✅ fixed (Python) and run-reviewed |
+
+Verification: Swift **626**, Python **741**, web **675** — all pass, tsc clean; parity map regenerated.
+Every rule added or changed was mutation-tested (broken deliberately, confirmed failing, restored).
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after every build (see F30's steps).
+Same list per edition, canonical first.
+
+1. Guitar, tap count 3. New Tap, tap three times. → Each tap registers and the status counts up; the
+   Ring-Out box shows a value; the result appears.
+2. Plate, 2 taps per phase. Tap L once and let it ring down. → The status stays "fL tap 1/2 captured.
+   Tap again..." — it must not become "Tap 1/2 captured. Tap again...". Complete L, C (and FLC). → Sensible
+   peaks.
+3. Guitar, tap count 3. Tap once, Pause, Resume. → Still 1/3; the next taps register normally.
+4. Play a guitar file and a plate file. → Results as before.
+5. Web only: during a guitar file playback, Pause, then Resume. → Playback carries on and completes
+   correctly.
+
+Python's thread start and restart (item 8) is already run-reviewed (owner, 2026-09-25).
+
+**Run-review progress.** Step 1 on Python (owner, 2026-09-25): no ring-out — the box stayed "Waiting…"
+where Swift showed a value on the same input. Item 15; fixed and re-run. All three editions then passed
+the steps (owner, 2026-09-25), with one caveat: during a file playback, Pause, Resume and Cancel do
+NOTHING, in all three editions (step 5) — pressing Pause, taps are still detected; Resume and Cancel have no
+effect. Not from F50: no edition can pause or stop a playback (the buttons act on detection only, and
+Cancel is "restart the sequence" while the file plays on), and the shared button rule does not consider
+playback. The owner's options: (1) disable New Tap, Pause/Resume and Cancel during playback; (2) enable
+them and make them useful (pause/resume the playback, Cancel stops it). *Decision (owner, 2026-09-25):*
+decide it in the `file-playback` slug, next in S7.
+
+**1. The web tests a third of the detector.** Its six cases were threshold wiring (= T1c–T1e), the re-arm
+rule (= T1f/T1g) and onset alignment (item 2). Untested on the web: the tap's audio-time stamp (T1b),
+warm-up suppression (T3), the hysteresis latch holding and clearing (T5/T5b), the post-warm-up sync frame
+(T8), relative detection (T6) and the noise-floor EMA (T7).
+- *Decision:* the web gains T1, T1b, T2, T3, T5, T5b, T8, T6, T7, named as in the natives. T6 is written
+  correctly from the start (item 5): an elevated floor so the relative threshold differs from the absolute
+  one, a level that fires under the absolute rule but not the relative one, a real capture phase, a
+  capture actually started.
+- *Decision — T1b needs the ring-out on the analyzer, do it now:* the web analyzer stamped no tap; its
+  ring-out started in the engine from the engine's own clock. The **whole** ring-out moves onto the web
+  analyzer, laid out as in Swift (moving only the start would split it, a third layout). This settles
+  #19's noticed item "the web tracks the ring-out in the engine". (Owner: "it is where we are currently
+  working and there is no good reason to delay the change.")
+- *Done:* the analyzer has `startDecayTracking`, `stopDecayTracking`, `trackDecayFast`, `measureDecayTime`,
+  `decayThreshold`, `peakMagnitudeHistory`, `decayTapAudioTime`, `tapPeakLevel`, `decayTrackingDuration`,
+  `isTrackingDecay`, under `@parity dsp/decay`. A confirmed guitar tap sets `tapPeakLevel` from the
+  engine's `recentPeakLevelDb` and starts tracking at the confirming chunk's audio time (from
+  `detectTap`'s fire branch until item 7 gives the web `handleTapDetection`). `processAudioFrame` calls
+  `trackDecayFast` after detection and outside its guards — Swift's order. The engine keeps only the peak
+  hold and the audio clock; `DecayTracker`, `startDecayFromPeak`, `decayTime`, `onDecay`, its wiring in
+  `useAudioEngine` and `src/dsp/decay.ts` are gone; `setDecayTime` is private. The web's self-regression
+  passes unchanged — the REG-G1 ring-out did not move.
+- *Done — tests:* the nine cases, all through `processAudioFrame`; T3, T8, T6, T7 arm the way the app does,
+  warm-up included, and reach their states by feeding audio. `decay-tracking.test.ts` drives the
+  analyzer's ring-out (vectors unchanged; the tracker's `reset` test went with the tracker — nothing in
+  production called it). The web's ring-out stop moved to `audio-clock-timers.test.ts`, the natives' case
+  exactly. Mutation checks, all caught: confirmation count (T1), the tap's stamp (T1b), the rising
+  comparison (T2), the warm-up (T3), the falling threshold (T5), the latch clear (T5b), the sync frame
+  (T8), relative detection (T6), the EMA (T7), the ring-out stop, the per-chunk ring-out feed (REG-G1).
+
+**2. Onset alignment is tested on the web only, and laid out differently there.** The web's first case tests
+`alignCaptureToOnset`, the gated capture's alignment. (First recorded as "not a detection decision" — but
+Swift's own tag, `@parity dsp/gated-capture tests=test/file-playback,test/tap-decisions`, names
+`tap-decisions` as where the gated capture is tested, so the case is where Swift says it belongs.) The
+natives have the same function (Swift `alignCaptureToOnset`, `+SpectrumCapture.swift:773`; Python
+`align_capture_to_onset`) and no test of it; Python's and the web's `dsp/gated-capture` tags name no tests.
+Layout: the natives' function is a method on the analyzer, in the spectrum-capture file; the web's is a
+free function in `src/dsp/gatedCapture.ts`.
+- *Proposed:* the web's case (10000-sample buffer, one transient at 5000, window 4096, pre-onset 1000 →
+  the transient at index 1032 = 1000 + the 32-sample backup, full amplitude) added to Swift's and Python's
+  `tap-decisions`; Python's and the web's tags gain Swift's `tests=`; mutation — remove the backup.
+- *Decision (owner, 2026-09-25):* the web's alignment moves onto the analyzer, unless there is a reason
+  not to ("probably should have done that in F49 as well").
+- *Open — scope, raised with the owner:* `gatedCapture.ts` holds more than the alignment, and Swift keeps
+  the rest on the analyzer too — `findDominantPeak` (`+SpectrumCapture.swift:1035`), the capture and
+  window durations and onset constants (`TapToneAnalyzer.swift` statics), the phase search bands. And
+  F49's gated FFT: Swift's `computeGatedFFT` is on its FFT analyzer (`RealtimeFFTAnalyzer+FFTProcessing`),
+  so the web's `gatedFFT.ts` would move onto the web ENGINE, not the analyzer.
+- *Decision (owner, 2026-09-25): scope (c)* — everything in `gatedCapture.ts` that Swift keeps on the
+  analyzer moves onto the web analyzer (alignment, `findDominantPeak`, the durations and onset constants,
+  the search bands; the shared types stay importable), and the gated FFT moves onto the web engine, as
+  Swift's `computeGatedFFT` is on its FFT analyzer. Plus the proposed test and tags.
+- *Done:* **web** — `alignCaptureToOnset` and `findDominantPeak` are analyzer methods, the
+  durations and onset constants analyzer statics under Swift's names (`gatedCaptureDuration`,
+  `gatedFFTWindowDuration`, `preOnsetDuration`, `onsetNoiseEstimateSamples`, `onsetThresholdMultiplier`,
+  `onsetMinThreshold`, `onsetBackupSamples`), the search bands the analyzer's `matSearch` laid out as
+  Swift's switch; `MaterialPeak`/`DetectedMaterialPeak` are exported from the analyzer module. The
+  gated transform is the engine's `computeGatedFFT` itself (with `GatedFFTResult`). `src/dsp/gatedCapture.ts`
+  and `src/dsp/gatedFFT.ts` are gone, with three dead leftovers in the former (`CHUNK`,
+  `LEVEL_CROSSING_CONFIRMATION_CHUNKS`, `chunkLevelDb`) and the engine's unused imports of the alignment
+  and the bands. With no engine attached (tests), the analyzer uses an uncalibrated engine for the
+  transform — the bare transform, as before. Tags: the web's `dsp/gated-capture` and `dsp/gated-fft` sit
+  on the analyzer, as Swift's and Python's sit on their spectrum-capture files; Python's
+  `dsp/gated-capture` gains `tests=test/file-playback,test/tap-decisions`. **Swift and Python** gain the
+  alignment case (`onsetAlignment_placesTheTransientAtPreOnsetPlusBackup` / `test_onset_alignment`); the
+  web's now calls the analyzer's method and pins the literal 1032. Mutation — the backup removed — fails
+  the case in all three. Web suite 663, all pass, the self-regression unchanged (no value moved); Swift
+  TapDetection 15, Python detection 20, pass. Parity map regenerated.
+
+**3. Two entry levels.** Swift and Python call `detectTap` directly, with the warm-up, sync flag,
+detection state and latch set by hand; the web drives `processAudioFrame` after `setSettings` and
+`startTapSequence`. Since #19 the natives have the same entry (`onRmsLevelChanged`) and a shared audio
+feed (`tooling/audio-clock-feed`).
+- *Decision:* all three the same, at the per-chunk production entry (standing decisions above).
+- *Consequence:* the natives' T5 fires a tap and then calls `detectTap` again; at the production entry a
+  fired tap turns detection off, so the next chunk never reaches the detector. Their T5 must start latched
+  above, as the web's does.
+- *Also to settle here:* the entries are not quite alike. Swift's `onRmsLevelChanged` does not feed the
+  ring-out (its handler closure does, after it); the web's `processAudioFrame` does, being the closure's
+  body as well; Python's `_on_rms_level_changed` does not (its `_on_chunk_level_on_main` does, since item 9).
+- *Decisions (owner, 2026-09-25):* (1) one per-chunk entry, the same in all three — Swift names its hop body
+  `onChunkLevel(_:audioTime:)` (the closure calls it), Python renames `_on_chunk_level_on_main` to
+  `_on_chunk_level`, the web's is `processAudioFrame`; the shared audio feed calls it in all three. One
+  setup: arm as the app does, feed the warm-up on quiet audio, then the case — no hand-set state; "latched
+  above" reached through a loud first chunk after the warm-up. One observable (a capture started), state
+  read only where the case is about state. One case list, identical in all three (T1, T1b, T1c–T1g, T2, T3,
+  T5, T5b, T6, T7, T8 and the three alignment cases). (2) Items 4 (for this file) and 5 are folded in:
+  Python's detection cases use production's margin, and the natives' T6 becomes the corrected case.
+- *Done:* **Entry** — Swift's `rmsLevelHandler` hop now calls `onChunkLevel(_:audioTime:)`
+  (`onRmsLevelChanged`, then `trackDecayFast`); Python's is `_on_chunk_level`; the shared feed
+  (`advanceAudio` / `advance_audio`) calls it in both, and Swift's `StatusMessageTests` (four direct calls
+  to `onRmsLevelChanged`) and four comments naming the old entry now use it. **Cases** — Swift
+  `TapDetectionTests.swift` and Python's detection cases rewritten to the web's setup, case for case:
+  `armed` (the app's `startTapSequence`, warm-up included), `settled` (warm-up on quiet audio + one
+  chunk), `latchedAbove` (warm-up, then a loud sync chunk), `chunks`; the web's cases moved to the same
+  setup (they had skipped the warm-up with `arm: false`). The same 14 detector cases in all three — T1,
+  T1b, T1c, T1d, T1e, T1f, T1g, T2, T3, T5, T5b, T6 (the corrected case, item 5), T7, T8 — with the same
+  numbers, and Python's at production's 3 dB margin (item 4, this file), plus the three alignment cases.
+  **Mutations** — eleven rules broken in turn, in all three: the confirmation count, the tap's stamp, the
+  configured threshold, the latch gate, the rising comparison, the warm-up, the falling threshold, the
+  latch clear, relative detection, the EMA, the sync frame. Every one caught in every edition, and the set
+  of cases each one fails is the same in all three but for one difference, which found item 13. Suites:
+  Swift 619, Python 731, web 665, all pass; parity map regenerated.
+
+**4. Python's cases use a hysteresis margin production never has.** `_make_sut` defaults to 5.0, and T6/T7
+set 5.0; production is 3.0 in all three and nothing writes it (Swift `let`, web `readonly`, Python a
+plain attribute). So Python's T5 feeds −43 against a falling threshold of −45, Swift's −42 against −43 —
+the same test name, a different case. Seven other Python test files set 5.0 as well (other slugs; the
+cause is the same).
+- *Done:* the detection cases moved to production's margin under item 3. The seven other files
+  (`test_measurement_complete_transitions`, `test_state_invariants`, `test_start_tap_sequence_race`,
+  `test_status_message`, `test_tap_count_change`, `test_wi10_qtimer_slots`, `test_scenario_state_trace`)
+  no longer set 5.0; every case passed unchanged at 3, so none depended on it. Also removed: the view's
+  own copy (`FftCanvas._hysteresis_margin`, from a local `_hyst = 3.0`), written and never read. Python
+  suite 731, all pass.
+- *Open question:* Python's `hysteresis_margin` is still a plain, writable attribute; Swift's is a `let`,
+  the web's `readonly`. Nothing in production writes it, but a test could again. Python declares Swift's
+  other `let` constants the same plain way (`noise_floor_alpha`, …), so making this one read-only would
+  be a pattern of its own.
+- *Decision (owner, 2026-09-25): (c)* — Python matches Swift on what is writable: every analyzer constant
+  Swift declares `let` is read-only in Python. (History: the margin used to be a user setting; the owner
+  made it a constant because it was not understood or particularly useful.)
+- *Done:* Swift's five instance `let` constants — `hysteresis_margin`, `noise_floor_alpha`,
+  `warmup_period`, `tap_cooldown`, `decay_tracking_duration` — are read-only properties on Python's
+  analyzer (writing one raises `AttributeError`); their docs moved with them, and `tap_cooldown`'s stale
+  "minimum inter-tap interval" is now what it is since #19 (the rest and the FLC hold, in audio). The web
+  already declares all five `readonly`. Python suite 731, all pass.
+- *Not enforceable in Python:* Swift's `static let`s (the capture durations, onset constants, status
+  strings) are upper-case class constants on Python's mixins. Making a class attribute read-only needs a
+  metaclass, and the analyzer is a QObject, whose metaclass it would have to combine with; the upper-case
+  name is Python's convention for "do not write". Left as is.
+- *Found — `captureWindow`:* Swift declared it `@Published var` (writable), the web `readonly`, Python a
+  plain attribute; nothing wrote or observed it in any edition. *Decision (owner, 2026-09-25):* a constant
+  in all three. *Done:* Swift `let captureWindow`, Python a read-only `capture_window` property; the web was
+  already `readonly`. Its doc in both natives described a "spectrum snapshot" taken after each tap; it is
+  the wait after the LAST tap before averaging, in audio (#19), as the web's doc says. Swift suite 619,
+  Python 731, all pass.
+
+**5. T6 ("plate mode uses relative detection") does not test relative detection** (Swift and Python).
+With the floor at −70 and the threshold at −40, the relative rising threshold is `max(threshold, floor +
+10)` = −40 — the absolute one — so the case passes under the absolute rule too. Its assertion, detection
+idle, is set before the tap is routed, so it also passes if the plate tap is ignored; Python's T6 sets no
+capture phase, and its tap is in fact ignored (the `NOT_STARTED` "unexpected tap" branch). The web's T6
+(item 1) is the corrected case.
+
+**6. Explanations that are wrong or stale:**
+- T1f in all three says the web "splits" latch and gate through `prevAbove`; the web no longer has it, yet
+  its two re-arm cases still write `s.prevAbove = true` — a field that does not exist.
+- The cooldown gate's removal is explained two ways. Swift's production comment and both natives' test
+  comments say nothing in production reached it; Python's says Python's file playback did — which is what
+  #19 measured. The Swift wording is my first, wrong claim.
+- Python: the module docstring still lists "cooldown"; `_make_sut` says "Mirrors Swift:
+  sut.analyzerStartTime = …" (no such field) and "ensure measurement_type is acoustic" while setting
+  CLASSICAL (Swift sets `.acoustic`, the web `'classical'`); five unused `import time` lines; "(Part 5)".
+- Swift: the suite's `init()` says settings are redirected "by TestRunner.setUp()" — `TestRunner` has no
+  `setUp`; `TapDisplaySettings` redirects itself. `detectTap` says the headroom is "clamped to at least
+  6 dB"; the code clamps to 10.
+- *Done:* the test-file items went with item 3's rewrite (T1f's `prevAbove` text and the
+  web's writes to it, the natives' cooldown comments, Python's docstring, `_make_sut`, unused imports,
+  "(Part 5)" there, Swift's `TestRunner.setUp` comment). Left in production and fixed: Swift's cooldown-gate
+  comment now tells what #19 measured — nothing reached the gate in Swift, Python's playback did, the
+  same audio was decided two ways, and the auto-advance's latch made the gate redundant in all three;
+  Swift's "clamped to at least 6 dB" now says 10. Also found and fixed, the same kind: Python cited a Swift
+  `analyzerStartTime` (gone since the warm-up moved to the audio clock) in four places — one stale
+  duplicate comment removed, three now name `warmupStartAudioTime = fftAnalyzer.audioElapsed`; and
+  `test_decay_tracking.py`'s "(Part 5)". Dead code found on the way and removed (the owner's standing
+  rule): Python's `reset_tap_detector` and the view's wrapper of it — the wrapper had no caller, the
+  analyzer's was called only by the wrapper, and its docstring ("called after device change, new tap
+  sequence, resume, cancel") was false. The web's `prevAbove` mentions are accurate history and stay.
+  Python suite 731, all pass.
+
+**7. Production is laid out three ways** (layout is architecture):
+- A confirmed tap: Swift and Python go `handleTapDetection` → (material) `handlePlateTapDetection`, which
+  checks the material phase and ignores a tap in `notStarted`/`reviewing…`/`complete` with a warning. The
+  web has neither function: `detectTap` turns detection off, starts the ring-out and calls one
+  `beginCapture` for both kinds, with no phase check.
+- Swift turns detection off twice for a material tap (both functions); Python once; the web once.
+- When the signal settles, Swift and Python rewrite the status to "Tap k/N captured. Tap again..." for k
+  between 1 and N−1; the web writes it only when a capture finishes.
+- `tapDetectionLevel` (Swift `@Published`, Python attribute) is written every chunk and read by nothing;
+  the web has none — the pattern F43 removed (`tapDetected`).
+- *Decision:* make the three the same; remove `tapDetectionLevel`. Details when the item is reached.
+- *Found while planning (probe, Python):* the settle rewrite is a DEFECT for plate — with 2 taps per phase,
+  after fL tap 1 the prompt "fL tap 1/2 captured. Tap again..." became the guitar "Tap 1/2 captured. Tap
+  again..." once the ring-out fell (the rewrite calls `guitarLoopStatus` whatever the mode). For guitar it
+  writes the string the capture's finish already set. Swift has the same code (not run there).
+- *Decisions (owner, 2026-09-25):* (7a) remove `tapDetectionLevel` from Swift and Python. (7b) remove
+  Swift's second, redundant idle in `handlePlateTapDetection` (its only caller, `handleTapDetection`, has
+  just set it). (7c) remove the settle rewrite from Swift and Python — the web's behaviour — with a test in
+  all three that a plate prompt survives the ring-out's fall and a guitar prompt is unchanged. (7d) the web
+  gains `handleTapDetection` and `handlePlateTapDetection` routed as Swift's, and its `beginCapture` splits
+  into Swift's `startGatedCapture(phase)` and `startGuitarGatedCapture()`.
+- *Done:* (7a) `tapDetectionLevel` removed from Swift (`@Published var` and its write) and
+  Python (attribute, docstring entry, write). (7b) Swift's `handlePlateTapDetection` no longer sets idle; a
+  comment says its only caller already has. (7c) the settle rewrite removed from Swift's `detectTap` and
+  Python's `detect_tap` (the falling edge keeps only its debug line). (7d) the web: `detectTap`'s fire
+  branch sets `tapPeakLevel` and calls `handleTapDetection(audioTime)` — detection idle, then plate/brace to
+  `handlePlateTapDetection` (the phase switch: a capturing phase or `waitingForFlcTap` opens the capture,
+  any other phase is ignored with a warning), guitar to `startDecayTracking`, the "capturing" status and
+  `startGuitarGatedCapture`; `beginCapture` is split into `startGatedCapture(phase)` and
+  `startGuitarGatedCapture()`, each choosing its buffer and scheduling its own stall timeout as Swift's do
+  (the shared pre-roll seeding is `openCaptureWindow`), replacing `scheduleCaptureSafetyTimeout`.
+  **Tests (all three):** `settle_leavesAPlatePromptAlone` and `settle_leavesAGuitarPromptAlone` (Python
+  `test_settle_leaves_a_plate/guitar_prompt_alone`, web "the settle leaves a plate/guitar prompt alone"): a
+  real tap, the real capture finish, the rest ending while it rings (latched above), the ring-out falling —
+  the prompt is unchanged. **Mutation:** the settle rewrite put back fails the plate case in all three —
+  in Swift that is its old code, so Swift had the defect too. Swift's guitar case sets up the frequency axis
+  first (`actualSampleRate`, `updateFrequencyBins`, a short wait), as `StateInvariantTests` does — without
+  it every peak lands at 0 Hz, which crashed the test process (item 14). Suites: Swift 621, Python 733, web
+  667, all pass; parity map regenerated.
+- *Not tested, noted:* the plate phase check (a tap in a non-capturing phase is ignored) has no case in any
+  edition.
+
+**8. Python's four pipeline cases are Python-only — because Python has a thread the others do not.** (First
+recorded as "the other editions deliver once by construction"; that overstated it.) Python's per-chunk
+path now has Swift's shape: one level outlet for the analyzer, one for the UI meter, one frame delivery.
+What is Python's alone is `_FftProcessingThread`: PortAudio's callback must return at once, so a QThread
+drains the queue, and — `RealtimeFFTAnalyzer` not being a QObject — that thread object carries the
+pipeline's Qt signals. Each `connect()` adds a receiver, and `fftFrameReady` is connected in two places:
+`_wire_pipeline_signals` (from `__init__`) and `recreate_proc_thread`, which `FftCanvas.start_analyzer`
+calls to replace a running thread. The four cases guard that risk and the exact float level (F44).
+- *Owner asked (2026-09-25): is this clearly documented?* No — the thread's docstring gave the reason it
+  exists, but not that it carries the signals (one signal's comment did); `recreate_proc_thread` said it
+  resets "all processing state" (the object holds none — `reset_state()` does the reset), that it returns
+  the thread "so FftCanvas can reconnect signals" (the analyzer reconnects its own; the view only
+  `finished`), and "Swift achieves equivalent reset via AVAudioEngine stop/start" without saying what;
+  the view said `fftFrameReady` is connected "inside TapToneAnalyzer.start()" (it is `__init__`, through
+  `_wire_pipeline_signals`); `_wire_pipeline_signals` still described the pre-#19 wiring; the test class
+  said "by construction".
+- *Done — documentation only (owner: "Clean up the documentation"):* the thread's docstring (it carries the
+  signals, what follows from that, it holds no state); `recreate_proc_thread` (when it runs, what is and
+  is not reset, which receivers it connects, the double-delivery rule); `_wire_pipeline_signals` (what it
+  wires, once, from `__init__`); the two connect sites; the view's `_connect_proc_thread_signals` and
+  `start_analyzer` comments; the test class docstring. No code changed.
+- *Defect — found while documenting:* `recreate_proc_thread` reconnected only `fftFrameReady` and
+  `gatedCaptureComplete`; `_wire_pipeline_signals` had also connected `clippingChanged` and
+  `inputAppearsDeadChanged` to the original thread, and nothing reconnected them — so after a replacement
+  the clipping and dead-input warnings would no longer reach the analyzer. Replacing the object was not
+  needed either: it holds no processing state, `reset_state()` does the reset, and a finished QThread can
+  be started again.
+- *Decision (owner, 2026-09-25):* stop replacing the thread — test first, to show the defect. A new case
+  ran the view's real `start_analyzer` on a RUNNING thread and **failed on the old code** ("the clipping
+  warning no longer reaches the analyzer"; a control without the restart delivered both).
+- *Then found: no user action reaches that path.* `start_analyzer` is called only when the thread is not
+  running — at startup, on the first file playback, and from New Tap's fallback if the thread has died —
+  and nothing stops the thread before shutdown (`stop_analyzer` had no caller). So the defect was real in
+  code no user could reach. The owner ran the app (live tap, live capture, playback, New Tap): all worked.
+- *Decision (owner, 2026-09-25):* "Dead code needs buried — remove it."
+- *Done (Python):* removed `recreate_proc_thread`, `start_analyzer`'s running-thread branch,
+  `stop_analyzer`, and the view's `finished` wiring (`_connect_proc_thread_signals` connected it to
+  `_on_proc_thread_finished`, whose body was `pass`). The thread is created once, with the mic, and never
+  replaced; every receiver is connected once, at construction. Docs match (the thread,
+  `_wire_pipeline_signals`, `start_analyzer`, the test class); a stale watchdog comment corrected (it said
+  the thread is rebuilt around a recovery restart; it is not). The case is now
+  `test_the_started_processing_thread_reaches_the_analyzer_once`: the view's real `start_analyzer` on a
+  thread not yet running — the app's path — then clipping, dead input and one frame reach the analyzer.
+  Mutations, both caught: a second frame connection in `start_analyzer` ("analysed 2 times"); bringing
+  back the replacement with two reconnects ("the clipping warning does not reach the analyzer"). Python
+  suite 728, all pass.
+
+**9. Python fed the ring-out before detection, Swift after.** Swift's rmsLevelHandler calls
+`onRmsLevelChanged` and then `trackDecayFast`, so the confirming chunk is recorded into the new ring-out;
+Python's `_on_rms_level_changed` called `track_decay_fast` before `detect_tap`, and from inside itself.
+- *Decision:* as Swift — after detection, from the main-thread delivery. If Python's REG-G1 ring-out
+  moves, that value is re-minted. (It did not: the self-regression passes unchanged.)
+- *Done:* the queued delivery is `_on_chunk_level_on_main` — `_on_rms_level_changed`, then
+  `track_decay_fast`, both with the chunk's audio time; docstrings and two test comments updated.
+
+**10. The web's detection guard omitted `isMeasurementComplete`**, which Swift's and Python's check.
+*Done:* `processAudioFrame` skips detection when the measurement is complete.
+
+**11. The web picked relative detection by `captureKind`**; Swift and Python by the measurement type.
+*Done:* `detectTap` decides by the measurement type (plate or brace).
+
+**12. Onset alignment's fallbacks differ** (found while doing item 2). When the buffer is shorter than the
+noise estimate (2048 samples), or no sample clears the onset threshold, Swift and Python return the buffer
+UNCHANGED — for a material capture the whole 0.5 s (24000 samples at 48 kHz); the web returns the first
+`windowSize` samples, zero-padded — 0.4 s. So in those cases the natives transform 0.5 s of audio and the
+web 0.4 s: different spectra from the same capture. Present before item 2 moved the code; not changed.
+- *Owner asked: which is the better answer?* The web's, for material (for guitar the two are the same
+  buffer — the capture is already the window length). The pipeline assumes every material tap reaches the
+  transform at one length: that fixes the bin grid (so a phase's taps can be averaged bin for bin) and the
+  window's gain (F49: the Hann spans the padded length, so the gain depends on how much of it the audio
+  fills). A short buffer returned unchanged (e.g. a capture the safety timeout closed early) pads to a
+  different grid; the full 0.5 s returned unchanged lands on a different gain. A concrete reason not to
+  follow Swift.
+- *Decision (owner, 2026-09-25):* Swift and Python follow the web — both fallbacks return exactly
+  `windowSize` samples, the start of the capture, zero-padded — with a test of each fallback in all three.
+- *Done:* Swift `alignCaptureToOnset` and Python `align_capture_to_onset` return the start
+  of the buffer, window-sized and zero-padded, in both fallbacks (a local `leadingWindow` /
+  `leading_window`, as the web's inline copy); their docs say why. All three gain the same two cases — a
+  1000-sample buffer (too short for the noise estimate) and a 10000-sample buffer with no onset — each
+  asserting the output is exactly the window, holding the buffer's start. Mutation — each fallback put
+  back to "return the buffer unchanged" — fails its case in all three. Swift's alignment cases use
+  `#require` on the length first: the first mutation run read past the end of the 1000-sample result and
+  trapped, crashing the test process (the owner saw the crash report); it now fails cleanly. Swift suite
+  619, all pass; Python suite 731, all pass; web tap-decisions 17.
+
+**13. The noise floor's seed when a sequence is armed differs** (found by item 3's mutations: with the
+warm-up or its sync frame broken, the natives' T7 fails and the web's does not). Swift and Python seed
+`noiseFloorEstimate` from the current input level (−100 when the warm-up is skipped — guitar file
+playback); the web seeds a fixed −60 (`noiseFloorInitialDb`). Normally invisible: the warm-up's exit
+re-anchors the floor to the real level. Same thing, a different way.
+- *Found while planning:* the web arms a new sequence and a resume through one `armWarmup`; Swift keeps them
+  apart, and the web's resume differs from Swift's in four ways — it resets the floor to −60 (Swift leaves
+  it), skips the warm-up in guitar file playback and then starts latched above (Swift always restarts the
+  warm-up with the latch down), and resets the tap-confirmation counter (Swift does not).
+- *The counter (owner asked what a resume does):* Swift and Python reset it only inside the detector (a
+  fall, a fired tap, a chunk below the rising threshold) — not at a pause, a resume or `startTapSequence`.
+  A pause taken just after one loud chunk leaves it at 1; after the resume's warm-up and sync frame, if the
+  first counted chunk is above the rising threshold, the tap fires on ONE chunk instead of two — the
+  two-chunk confirmation that rejects noise bumps is bypassed. The web resets it at both, so it always
+  needs two.
+- *Decisions (owner, 2026-09-25):* align the web to Swift — a new sequence seeds the floor from the current
+  input level (−100 when the warm-up is skipped); resume does exactly Swift's (warm-up restarted, latch
+  down, floor and sync flag left alone). And Swift and Python take the web's counter reset — on resume AND
+  when a new sequence starts (b): a concrete reason not to follow Swift.
+- *Done:* **web** — a new sequence seeds the floor as Swift's does (`skip ? -100 :
+  inputLevelDb`; the unused `noiseFloorInitialDb` constant removed); `resumeTapDetection` no longer goes
+  through `armWarmup` — it restarts the warm-up at the audio time, puts the latch down and resets the
+  counter, leaving the floor and the sync flag alone. **Swift and Python** — `startTapSequence` and
+  `resumeTapDetection` reset the confirmation counter. **Tests (all three):** a new sequence seeds the floor
+  from the input level (−100 with the warm-up skipped); a new sequence, and a resume, restart the tap
+  confirmation (one chunk counted before, one after — no tap; two — a tap); a resume keeps the floor and
+  puts the latch down. (A first draft of the new-sequence case fed quiet chunks between, which reset the
+  count by themselves; rewritten before the mutations ran.) **Mutations — all eight caught:** each counter
+  reset removed (Swift, Python, web; start and resume), the web's −60 seed put back, the web's floor reset
+  on resume put back. Suites: Swift 626, Python 741, web 675, all pass; parity map regenerated.
+- *Noticed:* the web also reset the counter at every material phase arm (`prepareMaterialCapture`) and
+  after each guitar capture (`finishGuitarGatedCapture`); the natives do not. *Owner asked: should the
+  natives do the same?* No — every one of those follows a fired tap, which sets the counter to 0, and
+  detection has been off since (Accept and Redo exist only in a reviewing phase; the FLC hold, the rest and
+  the auto-advance follow a capture), so a reset there does nothing. *Decision (owner, 2026-09-25):* remove
+  the web's if it does nothing. *Done:* the web's start reset moved into `startTapSequence`
+  itself, as Swift's and Python's are, and the resets in `prepareMaterialCapture`, `armGuitarDetection` and
+  `finishGuitarGatedCapture` removed — the web now resets the counter in exactly Swift's places (a new
+  sequence, a resume, and inside the detector). Mutation: the start reset removed fails "a new sequence
+  restarts the tap confirmation". Web suite 675, all pass.
+
+**14. Swift's `Pitch.pitch` traps on a 0 Hz (or NaN) frequency** (found by item 7's guitar settle test).
+`Int(round(12 * log2(frequency / c0)))` — `log2(0)` is −∞, and converting it to `Int` is a fatal error, so
+`findPeaks` → `makePeak` → `pitchCalculator.note` takes the process down if a peak's frequency is 0. It
+happened in a test because an unstarted analyzer's frequency axis is all zeros until
+`updateFrequencyBins()`'s main-queue block runs. In the app the axis is set long before a tap, so no user
+path is known to reach it. Checked in all three: Python's `log2(0)` raises `ValueError` on the same path; the
+web's `Math.log2(0)` gives the note "undefinedNaN" (no crash).
+- *Decision (owner, 2026-09-25):* "no pitch" — an empty note, 0 cents, 0 Hz.
+- *Done:* each edition's `Pitch` gains `hasPitch` / `has_pitch` (finite and positive), and
+  every function answers "no pitch" for a frequency without one: `note` and `formattedNote` empty, `cents`
+  and `freq0` 0, `pitchRange` (0, 0), `isInTune` false, `pitch` (0, 0) — no trap, no exception, no
+  garbage. The same parametrized case in all three (0, −5, NaN, +∞). Mutation — `note`'s guard removed, so
+  a frequency with no pitch reads "C0" — fails the case in all three (a mutation that brings the trap back
+  was not run: it would crash the Swift test process again). Suites: Swift 622, Python 737, web 671, all
+  pass.
+
+**15. Python's live Ring-Out box never shows a value** (found by run-review step 1: "Waiting…" on Python
+where Swift showed a value on the same input). Not from this finding's changes: the box listened only to
+`ringOutMeasured`, and nothing had emitted it since the old DecayTracker was removed (2026-04-05,
+`e3b6622`). The analyzer measured the ring-out (`current_decay_time`; file playback's REG-G1 passes, and
+it is saved with a measurement), but nothing told the view. Swift's `currentDecayTime` is `@Published`;
+the web's goes through its snapshot (checked by reading: engine → `processAudioFrame` → `trackDecayFast`
+→ `setDecayTime` → `notify` → snapshot → `AnalysisResults`).
+- *Decision (owner, 2026-09-25):* fix the Python.
+- *Done:* `current_decay_time` is a property whose setter emits `currentDecayTimeChanged`
+  (seconds, or None) on a change — Python's `@Published`; the canvas relays it, and the view's
+  `set_ring_out` shows the value or "Waiting…" for None. One connection now covers a live measurement, a
+  new tap clearing it, and a load (which writes the same property). Removed: `ringOutMeasured` (analyzer
+  and canvas), the view's separate load-time write, and `_ring_out_s` / `_on_ring_out_measured` (written,
+  never read). Test (Python-only — the mechanism is): `TestRingOutReachesTheView` — a decay fed through
+  `_on_chunk_level` is measured and reaches the signal; the next tap sends None. Mutation: the emit
+  removed fails it. Python suite 742, all pass.
 
 ## Stage 2 — move case lists into shared data
 
