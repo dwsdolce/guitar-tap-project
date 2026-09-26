@@ -3542,7 +3542,7 @@ Python 719, web 642 — all pass; parity map 103 groups.
 
 Status: ⏳ **In progress — started 2026-09-24.** `gated-fft` (F49) and `tap-decisions` (F50) done and
 committed; #19 finished between them (see [`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md)).
-**Next: `tap-progress`**, then `file-playback` — which also takes the playback-controls question F50's
+`tap-progress` (F51) done and committed. **Next: `file-playback`** — which also takes the playback-controls question F50's
 run-review raised — and `decay-tracking`. From #19's "Noticed while doing #19" list, two items remain for
 those slugs: the Python minter's missing settings sandbox, and timers leaking from one playback case into
 the next (F50 settled the other two).
@@ -3554,7 +3554,7 @@ or "clean" where none was filed. Each finding's status lives in the finding and 
 |---|---|---|
 | `gated-fft` (5/5/5) | ✅ | cases identical all three (GFFT1–5, from the oracle); **F49** |
 | `tap-decisions` (14/18/6) | ✅ | **F50** (closed) |
-| `tap-progress` | | |
+| `tap-progress` (12/12/14) | ✅ | **F51** (closed) |
 | `file-playback` | | |
 | `decay-tracking` | | |
 
@@ -4358,6 +4358,170 @@ the web's goes through its snapshot (checked by reading: engine → `processAudi
   never read). Test (Python-only — the mechanism is): `TestRingOutReachesTheView` — a decay fed through
   `_on_chunk_level` is measured and reaches the signal; the next tap sends None. Mutation: the emit
   removed fails it. Python suite 742, all pass.
+
+**F51 — `tap-progress`: the natives' progress cases test their own arithmetic, the editions test at
+different levels with hand-set state, and the web fakes an engine that no longer exists. (✅ CLOSED 2026-09-25 —
+all 7 items done and run-reviewed in all three. Commits: Swift `8d3e66d`, Python `97d4a8f`, web `6135ab2`)**
+
+Files: `TapProgressTests.swift` (12) / `test_tap_progress.py` (12) / `tap-progress.test.ts` (14).
+Production: `totalPlateTaps`, `tapProgress` and the cumulative material `currentTapCount`, written by the
+capture finishes, Accept/Redo and completion. The RULE is the same in all three — `totalPlateTaps` =
+taps × (brace 1 / plate 2 / plate+FLC 3); progress = count ÷ (guitar ? taps : totalPlateTaps), clamped;
+the material count cumulative across phases and rebased to the prior phases on Redo.
+
+| # | item | status |
+|---|---|---|
+| 1 | Five native cases assert the test's own arithmetic, not production's `tapProgress` | ✅ done (all three) |
+| 2 | Entry levels differ, and the natives hand-set state for Redo, the FLC cooldown and F34 | ✅ done (all three) |
+| 3 | The case lists differ | ✅ done (all three) |
+| 4 | The web's fake device fakes eight engine methods that no longer exist | ✅ done (web, under item 2) |
+| 5 | The web's `beginGuitarAccumulation` has no production caller | ✅ done (web) |
+| 6 | `tapProgress` is written two ways | ✅ done (all three) |
+| 7 | Stale references | ✅ done (all three) |
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after every build (see F30's steps).
+Same list per edition, canonical first. Watch the status-bar progress bar.
+
+1. Guitar, tap count 3. New Tap, tap three times. → The bar fills a third per tap and is full when the
+   measurement completes.
+2. With that measurement complete, set Taps to 5. → The bar stays full.
+3. Press New Tap. → The bar empties.
+4. Plate with FLC, 2 taps per phase. Tap L twice. → The bar is at a third. Accept. → Unchanged. Tap C twice,
+   press Redo. → Back to a third. Tap C twice, Accept, tap FLC twice, Accept. → Full; complete.
+5. Brace, 2 taps. Tap twice. → Half, then full; complete.
+6. Plate, tap L once, then load a saved measurement. → The bar and the Analyzing indicator go away.
+
+**Run-review progress.** All three editions passed steps 1–6 (owner, 2026-09-25).
+
+**1. Five native cases assert the test's own arithmetic.** Swift and Python's "guitar divides by
+numberOfTaps", "material divides by totalPlateTaps" and "clamped to 1" compute `min(1, count / total)`
+inside the test and assert that; Swift's and Python's guitar case even writes `tapProgress` itself and
+then reads it back. None reaches the code that writes `tapProgress`. The web's equivalents drive
+production (`recordGuitarTap` / `recordMaterialTap`) — except its "never exceeds 1", which records one
+tap of a 1-tap brace and asserts ≤ 1, and cannot fail.
+- *Decisions (owner, 2026-09-25):* the guitar case is rewritten in all three on real guitar taps through
+  the capture finish (¼, ½, ¾ of 4 taps). The material-denominator case is removed in all three: the
+  count-across-phases case asserts the same thing (2/6 after L) through production. The clamp case is
+  removed in all three: no production path reaches the clamp (a measurement completes on its last tap,
+  and the tap count is locked mid-sequence); the clamp stays in the code as a guard. The level real taps
+  enter at, for this suite (item 2's question): **(a) the capture finish** — progress changes only when a
+  capture finishes, so that is where it is decided.
+- *Done:* the guitar case in all three is now "guitar progress advances by numberOfTaps as
+  taps are captured": a 4-tap guitar sequence, three real taps through `finishGuitarGatedCapture`, ¼ → ½ → ¾
+  (Swift sets up the frequency axis first, as `StateInvariantTests` does). The natives' material and clamp
+  cases and the web's clamp case are removed; the web's guitar case no longer calls
+  `beginGuitarAccumulation` / `recordGuitarTap`. Mutation — the guitar denominator changed to taps + 1 —
+  fails the case in all three. Counts: Swift 10, Python 10, web 13.
+
+**2. Entry levels differ, and the natives hand-set state.** The natives' count-across-phases case drives
+the real finish (`finishGatedFFTCapture`); their Redo cases, FLC-cooldown case and F34 case set the
+spectra, count, phase and completion by hand. The web drives real taps everywhere, but one level below
+the finish (`recordMaterialTap` / `recordGuitarTap`, with synthetic spectra), although it has had the
+public finishes since F45. F50 settled the same question for `tap-decisions` (production entry, no
+hand-set state).
+- *Decision (owner, 2026-09-25):* test changes only, no app code: every case reaches its state through
+real taps at the capture finish (item 1's level (a)) — the natives' count case arms with
+`startTapSequence()`; their Redo, FLC-cooldown and F34 cases reach their phases through real taps, real
+Accepts and the real FLC hold fed in audio; the web's material cases move from `recordMaterialTap` to
+`finishGatedFFTCapture` with real samples, its Redo-FLC case stops skipping the hold by hand, and its F34
+case becomes the natives' (a real completed 1-tap measurement). A defect exposed on the way is raised, not
+fixed here.
+- *Done (tests only):* all three reach every state through real taps at the capture finish,
+real Accepts and the real FLC hold fed in audio — shared helpers `plateReviewingL` / `plateReviewingC`
+(Python `_plate_reviewing_l` / `_c`; web `tapL` / `tapC` / `tapFlc` / `tapBrace` on `finishGatedFFTCapture`
+with real samples). The natives' count case arms with `startTapSequence()`; Python's suite builds its
+analyzer with `for_testing` instead of attaching a mic by hand; F34 completes a real 1-tap measurement (a
+tap through the finish, then the capture window's audio) in all three. Removed: the hand-made spectrum
+helpers (Swift `spec()`, Python `_spec()`, the web's `spectrum()`; the web's load cases keep a small
+frozen spectrum as the load's input data). No defect exposed. **Mutations — all nine caught:** Redo's
+rebase set to 0, the FLC hold's phase guard removed, a tap-count change recomputing the bar — each in
+all three. Suites: Swift 624, Python 740, web 674, all pass.
+
+**3. The case lists differ.** Web-only: two `loadMeasurement` teardown cases, the count continuing
+through the FLC Accept, a brace case. The F34 case is a different case under one name: the natives
+hand-set a COMPLETE measurement, the web's never completes (`isMeasurementComplete` stays false). The
+FLC-cooldown case restarts with `cancelTapSequence()` in Swift, `start_tap_sequence()` in Python and
+`startTapSequence({ arm: false })` on the web.
+- *The F34 part is settled by item 2:* the web's case is now the natives' — a real completed 1-tap
+  measurement. Still open: the web-only cases, and the FLC-hold case's three restart calls.
+- *Decisions (owner, 2026-09-25):* (a) the FLC-hold case restarts with `cancelTapSequence()` in all three
+  — the user action it names (the web's `{ arm: false }` goes). (b) the web's two load-teardown cases are
+  kept and given to the natives: in all three, arm and tap for real, then the real `loadMeasurement` (the
+  web moves from `restoreSnapshot`, and stops setting detection to listening by hand) — the same steps and
+  assertions in all three. (c) the web's brace case is added to the natives, through real taps. (d) the
+  natives' count case continues through Accept C, as the web's does (the count stays 4 while waiting for
+  the FLC tap). With these the three case lists are identical.
+- *Done (tests only):* (a) Python and the web restart with `cancelTapSequence()`, as Swift did.
+  (b) the natives gain `LoadTearsDownInterruptedCaptureTests` (Python `TestLoadTearsDownInterruptedCapture`)
+  and the web's two cases move to the real `loadMeasurement` — in all three: a plate sequence to "waiting
+  for the FLC tap" through real taps and Accepts, then a load (count 0, progress 0, phase complete, not
+  detecting, complete); and a sequence re-armed by the real rest after one tap, then a load (detection
+  off). The measurement loaded is a saved classical one, built as each edition's MC7 test builds it.
+  (c) the natives gain the brace case (½ → 1, complete). (d) the natives' count case continues through
+  Accept C. No defect exposed. **Mutations — all caught, in all three:** the load's count reset removed,
+  the count zeroed at Accept C, the brace total doubled. The three case lists are now identical — 13 cases
+  each. Suites: Swift 627, Python 743, web 674, all pass; parity map regenerated.
+
+**4. The web's fake device fakes eight engine methods that no longer exist** — `armMaterial`, `arm`,
+`disarm`, `checkpointSession`, `redoSession`, `startSessionRecording`, `finishSessionRecording`,
+`cancelSessionRecording`. Detection and the session moved to the analyzer (F30); the fake passes only
+because nothing calls them.
+- *Done under item 2:* `finishGatedFFTCapture` asks the attached device for the gated
+  transform, which the fake lacked, so the fake is gone: the suite runs with no device (the analyzer's
+  uncalibrated-engine fallback — the bare transform), as `tap-decisions` does.
+
+**5. The web's `beginGuitarAccumulation` has no production caller** — only this suite and
+`tap-count-change.test.ts` call it (the pattern F43 removed).
+- *By the owner's standing rule* ("dead code needs buried", 2026-09-25): removed.
+- *Done:* the method is removed. This suite stopped calling it under item 1; the one other call,
+  in `tap-count-change.test.ts`, came straight after `startTapSequence()`, which already empties the
+  captured taps (`clearResult`), so it did nothing and is removed. Web suite 674, all pass.
+- *Noticed, not acted on:* that `tap-count-change` case (S6, closed) still records taps one level below the
+  capture finish (`recordGuitarTap` with a synthetic spectrum) — the question item 2 settled here.
+
+**6. `tapProgress` is written two ways.** Swift and Python write it explicitly at each site — the guitar
+and material finishes, Redo's rebases, completion (pinned to 1.0), a new sequence. The web recomputes it
+inside the `currentTapCount` setter on every write. The same values in every case here; a different
+mechanism.
+- *Found while planning:* Swift and Python write it at the SAME 11 sites (a new sequence 0; Accept completing
+  a plate 1.0 ×2; the three Redo rebases; a load 0; the guitar and material finishes, count ÷ total;
+  material and guitar completion 1.0). The web moved to the setter in F30 because explicit sites "missed
+  external writers" — no longer so: no view writes the count, and the one outside writer,
+  `setCurrentTapCount`, is called only by a `status-message` test. The web also rewrites the count at
+  Accept and at file playback's auto-advance, to the value it already holds.
+- *Decisions (owner, 2026-09-25 — "let's see if we can clean up the mess we made"):* (1) the web takes
+  Swift's layout — `currentTapCount` a plain field, `tapProgress` written explicitly at Swift's 11 sites;
+  (2) the web's no-op count rewrites at Accept and the auto-advance are removed; (3) `setCurrentTapCount`
+  (dead in production) is removed, and its `status-message` test sets the count through real taps. Each
+  of the 11 writes is removed in turn to confirm a case fails; where none does, a case is added in all
+  three.
+- *Done:* **web** — `currentTapCount` is a plain field; `tapProgress` is written at Swift's sites
+  (a new sequence, the guitar and material finishes, Redo's rebase, a load, Accept completing a plate,
+  brace completion, guitar completion); the setter, `syncTapProgress`, the count rewrites at Accept and at
+  the auto-advance, the guitar finish's two count rewrites (to the value `recordGuitarTap` had just set) and
+  `setCurrentTapCount` are gone; the `status-message` case that used it reaches its count through real
+  taps. **Each write removed in turn, in all three:** the three Redo rebases, the load and the guitar and
+  material finishes are caught; a new sequence's reset to 0 was NOT (every case started from a fresh
+  analyzer) — a case added in all three, "a new sequence resets the bar" (a completed 1-tap measurement,
+  then New Tap: 0), and removing the reset now fails it in all three. Web suite 674 → 675 with the new case.
+- *The four completion pins:* the two Accepts that complete a plate, brace completion and guitar completion
+  wrote 1.0. No case could catch their removal, in any edition: at each, the last tap had already written
+  count ÷ total = 1 (a measurement completes on its last tap, and the tap count is locked mid-sequence), so
+  the pin wrote the value the bar already had. *Decision (owner, 2026-09-25):* remove them from all three,
+  as writes that do nothing (as 7b's redundant idle). *Done:* removed in Swift (2 in `+Control`, 2 in
+  `+SpectrumCapture`), Python (2 in `_control`, 2 in `_spectrum_capture`) and the web (4); comments that said
+  "pinned to 1.0 at completion" now say the last tap leaves it at 1. Every remaining write in every edition
+  is caught by a case. Suites: Swift 628, Python 744, web 675, all pass.
+
+**7. Stale references.** All three headers cite "Swift TapDetection:360" for `totalPlateTaps` (now line
+447); Swift's cites "Controls:420" for the progress bar (now 428, with two more bars at Controls:516 and
+Layouts:698). The natives' count case sets `tapDetectionThreshold = -90 // accept the synthetic taps` —
+the finish path it drives does not read the threshold.
+- *Done (comments and test names only):* the threshold line went with item 2's rewrite. Each
+  line-number reference now names its symbol instead (`totalPlateTaps`, `redoCurrentPhase`, the status-bar
+  label in `TapToneAnalysisView+Controls`), in all three headers and in two of the web's `describe` names;
+  the web header's "rebases … on Accept/Redo" now says Redo (after item 6, Accept no longer rebases).
 
 ## Stage 2 — move case lists into shared data
 
