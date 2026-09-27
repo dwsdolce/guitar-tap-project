@@ -20,7 +20,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | slug | Swift | Python | Web | Equivalence |
 |---|---|---|---|---|
 | `audio/realtime-analyzer` | `GuitarTap/Models/RealtimeFFTAnalyzer.swift` | `src/guitar_tap/models/realtime_fft_analyzer.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
-| `audio/tap-analyzer` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/dsp/guitarFFT.ts`<br>`src/state/tapToneAnalyzer.ts` | tests |
+| `audio/tap-analyzer` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dead-input` | `GuitarTap/Models/DeadInput.swift`<br>`GuitarTapTests/DeadInputThresholdTests.swift` | `src/guitar_tap/models/dead_input.py`<br>`tests/test_dead_input_threshold.py` | `src/audio/deadInput.ts`<br>`test/dead-input-threshold.test.ts` | review only |
 | `dsp/analysis-quality` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/dsp/analysisQuality.ts` | tests |
 | `dsp/calibration` | `GuitarTap/Models/MicrophoneCalibration.swift` | `src/guitar_tap/models/microphone_calibration.py` | `src/dsp/calibration.ts` | tests |
@@ -146,7 +146,6 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `GuitarTapTests/GenerateParityOracle.swift` | swift |
 | `GuitarTapTests/SpectrumReplayProbeTests.swift` | swift |
 | `GuitarTapTests/SpectrumViewGestureTests.swift` | swift |
-| `GuitarTapTests/StateNotificationTests.swift` | swift |
 | `src/components/ReleaseNotes.tsx` | web |
 | `src/measurement/dumpWav.ts` | web |
 | `test/menu-placement.test.ts` | web |

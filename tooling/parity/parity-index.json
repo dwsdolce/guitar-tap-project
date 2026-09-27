@@ -26,7 +26,6 @@
         "src/guitar_tap/models/tap_tone_analyzer.py"
       ],
       "web": [
-        "src/dsp/guitarFFT.ts",
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
@@ -1605,10 +1604,6 @@
     {
       "repo": "swift",
       "path": "GuitarTapTests/SpectrumViewGestureTests.swift"
-    },
-    {
-      "repo": "swift",
-      "path": "GuitarTapTests/StateNotificationTests.swift"
     },
     {
       "repo": "web",

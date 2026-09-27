@@ -3553,9 +3553,9 @@ or "clean" where none was filed. Each finding's status lives in the finding and 
 | slug | read? | produced |
 |---|---|---|
 | `gated-fft` (5/5/5) | ✅ | cases identical all three (GFFT1–5, from the oracle); **F49** |
-| `tap-decisions` (14/18/6) | ✅ | **F50** (closed) |
-| `tap-progress` (12/12/14) | ✅ | **F51** (closed) |
-| `file-playback` | | |
+| `tap-decisions` (14/18/6) | ✅ | **F50** |
+| `tap-progress` (12/12/14) | ✅ | **F51** |
+| `file-playback` (8/8/11) | ✅ | **F52**; **F53** from F52 item 2 |
 | `decay-tracking` | | |
 
 **Counts, measured with the runners, 2026-09-24** (Swift: the ten S7 suites run with a result bundle,
@@ -4522,6 +4522,501 @@ the finish path it drives does not read the threshold.
   line-number reference now names its symbol instead (`totalPlateTaps`, `redoCurrentPhase`, the status-bar
   label in `TapToneAnalysisView+Controls`), in all three headers and in two of the web's `describe` names;
   the web header's "rebases … on Accept/Redo" now says Redo (after item 6, Accept no longer rebases).
+
+**F52 — `file-playback`: the web checks peaks it computes itself, the editions assert different things,
+and every file's explanation of OUT-4 is out of date. (open — items 1–7 done and committed 2026-09-27 before item 8: Swift `61dd996`, Python `f62d43d`, web `2c7d6d2`; item 8 and the run-review pending)**
+
+Files: `FilePlaybackRegressionTests.swift` (8) / `test_file_playback_regression.py` (8) /
+`file-playback.test.ts` (11). Production: the whole playback path — the file read and its pacing, detection,
+the gated captures, averaging, peak selection and mode classification, the material auto-advance. All three
+play the same fixtures against the same oracle (REG-G1, REG-G2, REG-B1, REG-B2, REG-P1, REG-P2, OUT-4).
+
+| # | item | status |
+|---|---|---|
+| 1 | The web's guitar cases check peaks the test computes, not the analyzer's | ✅ done (all three), uncommitted |
+| 2 | The assertions differ, and the web wraps results in a test-only type kept in the engine | ✅ done (all three), uncommitted |
+| 3 | The case lists differ | ✅ done (all three), uncommitted |
+| 4 | Tolerance use differs | ✅ done (all three), uncommitted |
+| 5 | The playback harness sits in production code in the natives, in the test on the web | ✅ done (all three), uncommitted |
+| 6 | Swift prints plate diagnostics and reads the debug log on every plate run | ✅ done (Swift), uncommitted |
+| 7 | Stale explanations | ✅ done (all three), uncommitted |
+| 8 | Carried in: the playback controls, and two items from #19 | open |
+
+**1. The web's guitar cases check peaks the test computes, not the analyzer's.** REG-G1 and REG-G2 run
+`modePeaksFromSpectrum` on the frozen spectrum, with the test's own Peak Min and guitar type, and assert
+that. The natives read what the app shows: `getPeak(for:)` — the Results panel's API — and, per tap,
+`TapEntry.resolvedModePeaks()`, the path the multi-tap view and the PDF take.
+- *Found while planning:* the web analyzer has both answers — `definitivePeak(mode)` (Swift's `getPeak(for:)`
+  rule; it feeds the Results panel and the Averaged row) and `tapEntries[i].peaks`, resolved by the free
+  function `resolvedModePeaks(peaks, guitarType)` (what the multi-tap view shows). `playGuitar` is shared
+  with the web's self-baseline mint, so the baseline's guitar values would switch to the analyzer's too.
+- *Decisions (owner, 2026-09-25):* the web's REG-G1/REG-G2 assert the analyzer's own peaks; and the web's
+  names and shape are aligned with Swift's — `definitivePeak` becomes `getPeak`, and per-tap resolution
+  becomes a method on the entry, `entry.resolvedModePeaks()`, as Swift's is. If the baseline's guitar values
+  move, stop and show the owner.
+- *Found while planning — behaviour, not only shape:* Swift's `TapEntry` (built in `processMultipleTaps`)
+  carries `id`, `tapIndex`, a `snapshot` recording the guitar type at capture, `peaks` and `selectedPeakIDs`
+  (`guitarModeSelectedPeakIDs`, one per mode); `resolvedModePeaks()` resolves over the SELECTED peaks with the
+  snapshot's guitar type, and a load restores all of it from the file. The web's entry has only a spectrum
+  and peaks: its rows resolve over ALL peaks, and a load re-finds the peaks from the saved spectra. (Both
+  classify the rows with the CURRENT guitar type: Swift's table passes `TapDisplaySettings.guitarType` to
+  `resolvedModePeaks(guitarType:)`; the snapshot's type is only the default. Corrected during implementation —
+  first recorded as a web-only difference.) The web's file model `TapEntryModel`
+  already has Swift's fields; the analyzer's `TapEntry` does not use them.
+- *Decision (owner, 2026-09-25 — "it also aligns the behavior with swift — that is a good thing"):* full
+  alignment — the web's `TapEntry` takes Swift's shape and behaviour (fields, construction, restore on load,
+  `entry.resolvedModePeaks(guitarType?)` over the selected peaks), and `definitivePeak` becomes `getPeak`.
+- *Found while planning:* the web already has a free `getPeak(peaks, mode, guitarType)` (`dsp/classify.ts`)
+  whose comment claims to mirror Swift's `getPeak(for:)` but does not — it resolves over ALL peaks, override-
+  blind. Its one production caller is `modePeaksFromSpectrum` (`dsp/guitarFFT.ts`), whose only callers are
+  the two test uses item 1 replaces. And a peak's id: Swift's `ResonantPeak.id` is a `UUID`, Python's a UUID
+  string, one type in memory and on file; the web alone keeps a numeric id in memory (unique only within one
+  `findPeaks` call) and mints UUIDs at save (`fromLive.ts`), mapping back on load, with a separate file type.
+- *Decisions (owner, 2026-09-25 — "We are cleaning up code by reviewing slugs. That is the whole point"):*
+  the free `getPeak` and `modePeaksFromSpectrum` are removed (their unit tests move onto
+  `resolvedModePeaks`); and the web's peak id becomes a UUID string, as Swift's is — in memory, in the
+  selection, overrides and annotation offsets, and in `TapEntry.selectedPeakIDs`.
+- *Done (web; Python: one docstring):* **ids** — `findPeaks` and the material store mint each peak's id with
+  `newId()`; save writes a peak under its own id and load restores it under that id (the numeric↔UUID maps
+  and the classification "adapters" in `fromLive`/`encode` are gone); every id-keyed map, set and chart type
+  is `string`. **`TapEntry`** — a class in `measurement/types.ts` (Swift keeps it in its measurement model
+  file) with `id`, `tapIndex`, `snapshot`, `peaks`, `selectedPeakIDs` and `resolvedModePeaks(guitarType?)`;
+  `processMultipleTaps` builds it as Swift does (floor peaks, `guitarModeSelectedPeakIds`, a snapshot of the
+  display settings and type at capture); save writes it as it is; load restores it (the re-find is gone).
+  `definitivePeak` → `getPeak`; the free `getPeak` and `modePeaksFromSpectrum` are removed (their classify
+  cases use `resolvedModePeaks`); `guitarTypeNameFromRaw` is one function (was a map in `fromLive` and a copy
+  in `encode`). **Tests** — REG-G1/G2 and the self-baseline read `analyzer.getPeak` and
+  `tapEntries[i].resolvedModePeaks()`; `playGuitar` returns the analyzer, sets the type to Generic and Peak
+  Min as the natives do, and runs the peak recalculation App runs at completion; the web's PR17 is now the
+  natives' case (a saved 777 Hz peak the snapshot cannot produce comes back on load); fixtures use string
+  ids. **The self-regression passes at zero tolerance — no baseline value moved.** Full web suite 677/677;
+  tsc clean. **Mutations — 9 of 10 caught:** `getPeak` ignoring selection, load or save minting fresh ids
+  (guitar and material), load re-detecting or dropping the entries, save dropping the selection, capture
+  selecting nothing, `resolvedModePeaks` ignoring the snapshot's type. **Survived:** `resolvedModePeaks`
+  over ALL of a tap's peaks — at capture the selection IS the strongest per mode, so no case tells them
+  apart. Uncommitted.
+- *Found while implementing:* (a) the surviving mutation above; (b) Swift's `processMultipleTaps` finds the
+  averaged peaks, auto-selects them, resets the selection state and sets "Analysis complete" itself — the
+  web does that in `recalculatePeaks`, which App calls after completion (with an `analysisAnnounced` latch),
+  so the harness has to make App's call; (c) Swift has one peak type, `ResonantPeak`, in memory and on file
+  — the web still has two, `Peak` and `ResonantPeakModel` (timestamp and pitch fields); (d) Swift's
+  `TapEntry.peaks` / `selectedPeakIDs` comments say they are recomputed when Peak Min changes — nothing
+  does.
+- *Decisions (owner, 2026-09-25):* all four. (a) a case in all three that tells the selected peaks from all
+  peaks; (b) the web's completion does what Swift's does, in `processMultipleTaps`; (c) one peak type on the
+  web, as Swift's; (d) fixed now, not left for item 7.
+- *Found while planning (b):* Swift sets the peaks at the event, and only there — a live frame
+  (`analyzeMagnitudes`), completion (`processMultipleTaps`), a load (`loadMeasurement`), Re-analyze
+  (`reanalyzePeaks`, the ONLY caller of `recalculateFrozenPeaksIfNeeded`), a guitar-type change
+  (`reclassifyForGuitarTypeChange` — re-classifies, never re-detects). The web recomputes from one App layout
+  effect on any change of frozen spectrum, loaded peaks, live spectrum, guitar type or material: it re-detects
+  on the frozen spectrum at completion (announcing through a latch) and on every guitar-type change (fresh ids,
+  per-peak state carried by frequency).
+- *Decision (owner, 2026-09-25):* the full event-driven version — the effect goes; the web sets the peaks at
+  Swift's events, in Swift's methods.
+- *Done (d):* Swift's comments say what happens — found once at capture, at the detection floor, never
+  re-derived.
+- *Done (a):* PR38 in all three (`FrozenPeakRecalculationTests` / `test_frozen_peak_recalculation` /
+  `frozen-peak-recalc`): a tap whose selected Top is the weaker of two Top-band peaks resolves to that one.
+  The surviving mutation (resolve over all of a tap's peaks) is now caught in all three.
+- *Done (b), web:* App's recalculation effect is gone. `onFftFrame` → `analyzeMagnitudes` (wired from the
+  engine's spectrum callback): live peaks at Peak Min, all selected, only while a sequence runs and never over
+  a complete result; material frames leave no guitar peaks. `processMultipleTaps` finds the averaged peaks
+  at the floor, auto-selects over the full set, resets the selection state and loaded peaks, classifies and
+  announces "Analysis complete!" (the `analysisAnnounced` latch is gone). A load sets the saved peaks and
+  classifies them (material and comparison loads clear them). `reanalyzePeaks` (App's Re-analyze calls it)
+  drops the loaded peaks and manual selection and runs `recalculateFrozenPeaksIfNeeded` — Swift's name and
+  guards, now reached only from there. `reclassifyForGuitarTypeChange` re-classifies (`reclassifyPeaks`)
+  instead of the effect re-detecting. The settle clears the live peaks. `playGuitar` no longer makes App's
+  call. The two status tests and PR12 now drive completion, Re-analyze and live frames.
+- *Done (c), web:* one peak type, `ResonantPeak`, in `measurement/types.ts` (where the web mirrors Swift's
+  model structs) — `Peak`, `ResonantPeakModel`, `MaterialPeak` and `DetectedMaterialPeak` are gone.
+  `makeResonantPeak` gives a new peak its id and time, as Swift's init does; `findPeaks` and
+  `findDominantPeak` fill the pitch fields (the analyzer has Swift's `pitchCalculator`), so a peak is saved
+  and loaded as it is — the save-time pitch/timestamp stamping, the load-time field stripping,
+  `identifyMaterialPeak`, the file-only `modeLabel` field (the writer derives the label; nothing read it)
+  and the save's now-unused `modeByPeak` argument are removed.
+- **Results:** web 677/677 + PR38, tsc clean, self-regression at zero tolerance unchanged; Python and Swift
+  PR38 pass. **Mutations, second round — caught:** PR38's in all three; completion finding no peaks or not
+  announcing; a live frame selecting nothing; a material frame keeping guitar peaks. **Survived:** a live
+  frame overwriting a complete result; a type change not re-classifying; a load not setting the peaks; the
+  settle keeping the peaks; Re-analyze keeping the loaded peaks; found peaks carrying no pitch. None of the
+  six is pinned in Swift or Python either (the nearest Swift cases check a neighbouring fact).
+- *Decision (owner, 2026-09-25):* a case for each, in all three.
+- *Done (the six cases):* PR39 (a live frame never overwrites a complete result), PR40 (a load puts the saved
+  peaks in place), PR41 (Re-analyze drops the loaded peaks and re-detects) in the frozen-peak-recalc suites;
+  a Phase7 case (a guitar-type change re-classifies — 160 Hz is Top on Acoustic, not on Classical); F17 in
+  find-peaks (a found peak carries its pitch: 440 Hz → A4); N8 now also checks that the settle clears the live
+  peaks. The web's N7 gained the peak check Swift's and Python's N7 already make. **Mutations — all 18 caught**
+  (each of the six, in each edition). Full suites: Swift 634, Python 750, web 683 — all pass; tsc clean;
+  parity map regenerated (`guitarFFT.ts` leaves `audio/tap-analyzer` with the tag it no longer carries).
+  Python's PR17 docstring names the web case it now mirrors.
+
+**2. The assertions differ.** The natives assert completion in every case — the phase `.complete`,
+`isMeasurementComplete`, the tap count or tap entries. The web asserts none of that for material (only how
+many phases produced a spectrum), and for guitar only implicitly (`playGuitar` returns null if the
+measurement did not complete). The web's material results come back as `MaterialCaptureResult`, a type
+declared in the production engine file (`realtimeFFTAnalyzer.ts`) that nothing in the app uses.
+- *Found while reading:* per case, the natives assert completion (`materialTapPhase == .complete`,
+  `isMeasurementComplete`), REG-G1's captured-tap count, each material phase's peak LIST non-empty, and OUT-4's
+  noise floor converged to −60…−40 dBFS; the web asserts none of those (its `noiseFloorEstimate` is private).
+  `MaterialCaptureResult.phase`'s comment says the engine sets it — the harness does. `engine.playFile`'s
+  `material` option now only sets the calibration (`brace`/`measureFlc` are unread) and its comment says the
+  engine owns the material session and auto-advances — the analyzer has since F30.
+- *Found while reading — architecture:* Swift keeps a full peak list per material phase (`longitudinalPeaks`,
+  `crossPeaks`, `flcPeaks`, built by `buildAllPeaks`) beside the selected peak, and `allPeaks` holds it; the web
+  keeps only the selected peak per phase (`matPeaks`). The natives' "peak list non-empty" has nothing to point
+  at on the web.
+- *Decision (owner, 2026-09-26):* the architectural divergence is fixed first — the web takes Swift's
+  per-phase peak lists — together with the rest: `playMaterial` returns the analyzer and
+  `MaterialCaptureResult` goes; the web asserts what the natives assert (completion, REG-G1's tap count,
+  OUT-4's noise floor — `noiseFloorEstimate` readable); `playFile`'s `material` option folds into
+  `calibration` and the stale comments are corrected.
+- *Corrected on tracing (2026-09-26 — the owner challenged "more peaks show"):* Swift's full per-phase lists
+  are never shown or saved. `allPeaks` holds a full list only between a phase's capture and its Accept
+  (`reviewing…`); at completion `finalisePlateNoFLC` / `finalisePlateWithFLC` set it to the 1–3 identified
+  peaks (`resolvedPlatePeaks`) and brace to `[selPeak]`, so the save writes 1–3 peaks — as the web does. The
+  chart draws `materialIdentifiedPeaks` (the 1–3 selected) and annotates the same (`visiblePeaks`); the
+  results panel shows the slot rows until complete, then `allPeaks` (1–3). Every other use — the PDF, the
+  results-view property calc, the chart-widening subscription — is a lookup of the identified peak by id,
+  which `selected…Peak` already holds (the web's `matPeaks`). So the web's material behaviour and file
+  content match Swift's; the difference is state Swift carries that nothing displays: the three lists, the
+  `autoSelected…PeakID`s, `buildAllPeaks`, `combinePlatePeaks`, the full `allPeaks` during review, and live
+  material frame peaks (`analyzeMagnitudes`' median-threshold path — the chart never draws them). Swift's
+  comments ("for display/manual override", "so the user can see and manually select any peak") describe a
+  manual selection that does not exist. Python mirrors all of it. The decision above rested on the wrong
+  reading and is reopened.
+- *History (Swift git):* `c0db6ea` (16 Feb) — `longitudinalPeaks` = `findPeaks` on the phase, strongest = fL,
+  the chart showed the list. `7032314` (26 Feb) — `buildAllPeaks` "so the user can see and manually select any
+  peak"; the panel listed every phase peak with fL/fC/fLC buttons (`selectLongitudinalPeak` …) to reassign.
+  `c88e5e1` (17 Apr) — the reassign buttons removed; badges display-only, Redo is the remedy. `0b5089a`
+  (18 Jul, 1.0.2) — no per-peak selection for material; chart and annotations draw the identified peaks; the
+  save writes the identified set. The lists outlived both changes. The web was written after 1.0.2.
+- *Decision (owner, 2026-09-26):* remove the unused per-phase peak sets from Swift and Python; the end state is
+  one consistent material-peak architecture across Swift, Python and the web. The other recommendations
+  above stand.
+- *Found while planning:* the natives hold a finished material measurement's identified peaks twice — the
+  three `selected…Peak`s, and a copy in `allPeaks` / `selectedPeakIDs` that `resolvedPlatePeaks` re-sets at
+  each phase end and at completion. The copy is not Redo's (Redo never touches `allPeaks`, which keeps the
+  rejected peak until the next phase end); it is left from the first version, where each phase wrote into the
+  guitar peak channel (`currentPeaks`), and the generic readers still read it for material — the save
+  (`allPeaks`, with `selectedPeakIDs` derived), the load (`allPeaks = measurement.peaks`, then `selected…Peak`
+  by id), the finished results panel (`peaksAbovePeakMin`), the PDF / property lookup. The chart and
+  annotations moved to `materialIdentifiedPeaks` in 1.0.2; these did not. The web holds them once
+  (`matPeaks`; `peaks` empty for material).
+- *Decision (owner, 2026-09-26) — option B, one source:* in all three the three selected peaks are the only
+  material peak state; `allPeaks` / `selectedPeakIDs` are guitar-only; the save, load, results panel, chart
+  and PDF read the identified peaks (Swift `materialIdentifiedPeaks`); the natives lose the copy and its
+  re-sync; the web takes Swift's names (`selectedLongitudinalPeak` / `selectedCrossPeak` / `selectedFlcPeak`)
+  for `matPeaks`. In all three: the per-phase lists, `buildAllPeaks`, `combinePlatePeaks`, the
+  `autoSelected…PeakID`s, the material live-frame peak finding and the "manually select" comments go.
+- *Found while planning:* the natives' material live-frame peaks are never drawn (owner confirmed on screen:
+  only fL/fC/fLC ever show). Their one effect is the results panel's switch — slot rows when `allPeaks` is
+  non-empty, otherwise an inline process block (plate) or "No peaks detected in visible range" (brace) —
+  reachable only before the first frame. *Decision (owner, 2026-09-26):* no effect that matters; material
+  shows the slot rows until complete, as the web does.
+- *Found while implementing (Swift):* the natives' material `peaksAbovePeakMin` also gates the Annotations
+  button (six sites, one per layout — enabled during a material capture by the live peaks) and fills the PDF
+  peak table (both export paths). The web gates Annotations on the identified peaks (`materialMarkers`) and
+  its PDF reads the identified peaks; Save is enabled only when complete in all three.
+- *Decision (owner, 2026-09-26):* the same mechanism in all three, nothing edition-only — Annotations is
+  enabled when `peaksAbovePeakMin` (guitar) / `materialIdentifiedPeaks` (material) is non-empty; the PDF
+  peak table reads the same; the web gains `materialIdentifiedPeaks` over the three `selected…Peak`s. In Swift
+  and Python, Annotations is then disabled during a material capture until fL is identified, as on the web.
+- *Found while implementing:* the web's Redo never cleared the redone phase's spectrum or identified peak
+  (Swift and Python do), so the old fL stayed in the slot row, chart and annotations while re-tapping;
+  Python's Redo cleared the peak but never told the view, so its dot and label stayed until the next event.
+  Both aligned to Swift here (the same material peak state). Python never gated Annotations on peaks at all
+  (only "not comparing") — now the agreed rule.
+- *Done (all three):* **Swift** — the per-phase lists, `autoSelected…PeakID`s, `buildAllPeaks`,
+  `resolvedPlatePeaks`, `combinePlatePeaks` and the material live-frame branch of `analyzeMagnitudes` are gone;
+  each phase end sets its `selected…Peak` and nothing else; the finalisers, Redo and the phase reset no longer
+  touch `allPeaks` / `selectedPeakIDs`; the save writes `materialIdentifiedPeaks` for material (all marked
+  selected); the load keeps `allPeaks`, `selectedPeakIDs` and `loadedMeasurementPeaks` guitar-only and restores
+  the three peaks by id from the file; the results panel shows the slot rows until complete, then the
+  identified peaks (the inline plate process block and the brace "No peaks detected" line are gone); the plate
+  and brace property calcs, both PDF paths (peak table and selection) and the six Annotations gates read the
+  identified peaks; the chart widening subscribes to `selected…Peak` (so it also runs on a load, as the web's
+  does); stale comments (the model header's "two-layer selection", `peakProximityHz`, `analyzeMagnitudes`,
+  `recalculateFrozenPeaksIfNeeded` "called from the Peak Min didSet") corrected. **Python** — the same, plus
+  Redo emits so the view drops the redone peak, the view emits that also fire for material (zoom, Peak Min,
+  leaving comparison) carry the identified peaks, a load emits `materialPeakIdentified` for each restored peak,
+  and Annotations is gated. **Web** — `matPeaks` → Swift's three `selected…Peak`s and `materialIdentifiedPeaks`
+  (analyzer, snapshot, material restore); Redo clears the phase's spectrum and peak; the Annotations gate is the
+  same rule (comparison, or no guitar projection / identified peaks — the `!running` term is gone); the chart
+  widening reads `materialIdentifiedPeaks`; `playFile`'s `material` option is gone (one `calibration` option; App
+  makes one call); `MaterialCaptureResult` is removed; `noiseFloorEstimate` is readable. **Tests** — the natives'
+  "peak list non-empty" became "the fL/fC/fLC peak is identified"; REG-B1 and the Swift minter read the
+  selected peak (no value moved — REG-B1 passes at zero tolerance); PR32 (Swift, Python) saves what the save now
+  writes; Python's effective-id twin drops the auto ids; the web's `playMaterial` / `playGuitar` return the
+  analyzer and REG-G1/G2, REG-B1/B2, REG-P1/P2 and OUT-4 assert what the natives assert (completion, the phase,
+  REG-G1's one captured tap, OUT-4's noise floor converged to −60…−40 dBFS). Full suites: Swift 634, Python 750,
+  web 683 — all pass; the web self-regression passes at zero tolerance.
+- *Mutations, first round (stopped early by owner decision — the answer was already clear):* every model
+  mutation survived in Swift (save writes `allPeaks` for material; load finds fL in `allPeaks`; material live
+  frames set peaks; a material load fills `allPeaks`; Redo keeps fL) and in Python (the same five) — the new
+  material peak model was pinned nowhere. *Decision (owner, 2026-09-26):* cases for them in all three.
+- *Done (cases):* PR42 (saving a material measurement writes its identified peaks, all selected), PR43 (loading
+  one restores the identified peaks by id and leaves the guitar peak state empty), PR44 (a material live frame
+  leaves no peaks — the web's existing "material mode yields no guitar peaks" case, renamed as the twin), PR45
+  (Redo clears the phase's identified peak and spectrum; Python also checks the view is told) — beside PR32 in
+  the frozen-peak-recalc suites. A shared capture helper per edition drives the real gated path; PR45 taps at
+  60 Hz, inside the plate fL band the web's route applies.
+- *Mutations, second round:* Swift 5/5 and Python 6/6 caught (Python's sixth: Redo not telling the view).
+  Web: Redo keeping fL caught; `materialIdentifiedPeaks` without its guitar guard survived — an equivalent
+  mutant (the three material peaks are always null in guitar mode; the paradigm switch resets them), and the
+  natives' guards are the same; a load dropping fC survived — PR43 was a brace, which has no fC.
+  *Decision (owner, 2026-09-26):* PR43 becomes a plate. *Done:* PR43 captures fL (60 Hz), Accepts, captures
+  fC (150 Hz), Accepts (no FLC — complete, as Save requires), saves, reloads, and checks both roles by id, in
+  all three. A load dropping fC is now caught in all three (web, and the matching Swift and Python mutations).
+- *Results:* full suites Swift 638, Python 754, web 686 — all pass; the web self-regression passes at zero
+  tolerance; parity map regenerated. The view-level changes (the material results panel, the Annotations gate,
+  the live material PDF, the chart widening on a material load, Redo clearing fL on the web and in Python) are
+  for the run-review. Uncommitted.
+- *Found while writing PR43:* Swift's and Python's `saveMeasurement` do not read the analyzer's own identified
+  peaks for the file's `selectedLongitudinalPeakID` / `…Cross…` / `…Flc…` — they take them as parameters
+  (default nil) that the view passes (`tap.effectiveLongitudinalPeakID` …); a model save called without them
+  writes no roles. The web's save is built in App from the analyzer's peaks. Raised, not changed.
+
+**3. The case lists differ.** REG-G2 is one case in the natives (averaged and per-tap), two on the web. The
+REG-G ring-out case is here in the natives but in `decay-tracking.test.ts` on the web. The web's three
+session-WAV cases (6f — one WAV labelled `Guitar_1tap` / `Guitar_8tap`, none when the diagnostic is off)
+have no native counterpart anywhere.
+- *Found while reading:* the web's first REG-G2 case alone asserts completion; `parityRunner.ts` plays the
+  ring-out a second time for the baseline mint (`ringOutSec`); Python's ring-out case is a module-level function
+  beside a class of methods; the natives' session-pre-roll suites test the recording buffer's bounds, not the
+  WAV emitted or its label; and the three editions order the cases differently (Swift: B2, B1, G1, ring-out, G2,
+  P1, OUT-4, P2).
+- *Decision (owner, 2026-09-26):* merge the web's REG-G2 into one case; move the web's ring-out case into
+  file-playback and share one playback with the baseline mint; Python's ring-out goes into the class; the
+  three session-WAV cases get native twins; the cases take Swift's order in all three.
+- *Found while planning the twins:* the natives' WAV dump folder is not sandboxed under tests — Swift's
+  `WavDumpFolder` resolves the user's custom folder (a bookmark in `UserDefaults.standard`) or the app's
+  `Documents/GuitarTap`, so a native case with dump on would write session WAVs into the owner's real folder.
+  The measurements file already has a test sandbox (`measurementsFileURL` → a per-process temp path when
+  `TestSandbox.isActive`). *Decision (owner, 2026-09-26):* sandbox the dump folder the same way in both natives;
+  the twins read back what lands there.
+- *Done (all three):* **web** — the two REG-G2 cases are one (averaged and per-tap, completion asserted);
+  the ring-out case moved from `decay-tracking.test.ts` into file-playback (the REG-G1 playback via
+  `playGuitar`), and the baseline mint reads the ring-out off the same REG-G1 playback — `ringOutSec`, its
+  second playback, is gone (the zero-tolerance self-regression is unchanged); every case is in one group in
+  Swift's order (B2, B1, G1, ring-out, G2, P1, OUT-4, P2), then the three session-WAV cases.
+  **Python** — the ring-out case is a method of the class (its constants beside the G1 ones); the cases take
+  Swift's order; the three session-WAV twins added. **Swift** — the three session-WAV twins added after P2.
+  **Both natives** — `WavDumpFolder`'s default folder is a per-process temp folder under test and a custom
+  folder is ignored there (Swift `hasCustomFolder` false under `TestSandbox`; Python via `sandbox_id`),
+  so no test writes into the owner's folder (checked: nothing new in `~/Documents` or the app container).
+  The twins turn "save capture audio" on (or off), play REG-G1 / REG-G2, and read the session WAVs back from
+  the sandbox folder: one `Guitar_1tap` at the file's rate, more than 8192 samples and no more than the file;
+  one `Guitar_8tap`; none with the setting off. **Mutations — all four caught:** the session label ignoring
+  the tap count, and the dump not gated by the setting, in Swift and in Python.
+  Full suites: Swift 641, Python 757, web 685 (the merge and the move leave the web one case fewer) — all
+  pass; the web self-regression passes at zero tolerance; parity map regenerated. Uncommitted.
+
+**4. Tolerance use differs.** Swift asserts at zero (it mints the oracle); Python and the web at the
+cross-edition tolerances; Swift compares with `≤`, Python and the web with `<`. The tolerances themselves
+are #16's; noted only.
+- *Found while reading:* the bars differ by design — Swift's playback cases ask "does Swift reproduce
+  itself" (`selfTolerances`, all zero, exact equality, so `≤`); Python's and the web's ask "do they agree with
+  Swift" (the cross-edition `tolerances`), their own zero-bar check being the self-regression (the oracle's
+  `_selfToleranceNote`). The differences: `<` vs `≤`; a dead per-case override — Python's `tol("REG-P2",
+  "magDb")` and the web's `reg.tolerances?.magDb ?? TOL.magDb` exist for a REG-P2 bar the oracle no longer
+  declares (both fall back to the global), and Swift keeps a `plate3TapMagTolerance` equal to `magTolerance`;
+  and comments describing the old bars ("same ±1 tolerances", "±0.5 dB … the single-tap cases allow 1.0",
+  "tighter than the generic ±1.0 dB", "0.0853 s ± 0.03 s … Python ~0.091").
+- *Decisions (owner, 2026-09-26):* `≤` in all three (Swift's); the per-case override path and the extra
+  constants removed — the global bar; the tolerance comments corrected here, with the code they describe.
+- *Done (tests only):* Python's and the web's playback comparisons are `≤` (37 in Python, 18 on the web);
+  Python's `tol()` (in `parity_oracle.py`) and `PLATE_3TAP_MAG_TOLERANCE`, the web's `P2_MAG_TOL` and Swift's
+  `plate3TapMagTolerance` are gone — REG-P2 uses the global magnitude bar like every case; the comments now
+  say what each edition's bar is (Swift: zero, it mints the oracle; Python/web: cross-edition, with their own
+  zero-bar self-regression) and the ring-out notes say it is measured on the audio clock with the oracle's
+  value; the "± 1" case docs say "match the oracle". No production code changes, so no mutation round.
+  Swift and web playback suites pass (11 each); Python's full suite 757. Uncommitted.
+
+**5. The playback harness sits in production code in the natives.** Swift's `playFileForTesting` and
+Python's `play_file_for_testing` are methods on the analyzer; the web's harness is in the test
+(`playGuitar` / `playMaterial` / `waitForCompletion` in `parityRunner.ts`), driving the real
+`engine.playFile`.
+- *Found while reading:* the natives' harnesses do not call the app's file path — they re-implement it. The
+  app's path is sequenced by the view (`openAudioFile` / `_open_audio_file`: the calibration, `startTapSequence`
+  with the warm-up rule, then `fft.startFromFile`); the harness repeats the first two, sets `mpmSampleRate` by
+  hand and calls `prepareForFilePlayback` / `processFileData` directly, skipping `startFromFile`'s engine stop,
+  drain and `postEngineStopHandler`. Every playback regression runs a parallel, hand-maintained path. Its
+  `plateTapPhase` parameter has no caller. The web's harness drives the app's `engine.playFile`, but repeats
+  App's arming steps. "Play a file" is sequenced by the view in all three — the F41 / F53 shape.
+- *Feasibility (checked):* Swift's `startFromFile` restarts the mic when playback ends (`try? self.start()`),
+  and `start()` does not check `isForTesting` — the one headless fix needed; Python's `start_from_file`
+  already tolerates no stream (its stream stop/start are guarded) and plays on a worker thread as in the app.
+- *Decision (owner, 2026-09-26 — option 2):* an analyzer "play a file" method in all three doing what the view
+  does (the file's calibration for the playback, arming with the warm-up rule, starting the file, restoring
+  the calibration at the end); the views and the tests call it; `playFileForTesting` / `play_file_for_testing`
+  and `plateTapPhase` are deleted; Swift's post-playback mic restart skips the hardware under test. If a
+  regression value moves, stop and show the owner.
+- *Progress (2026-09-26):* Swift and Python done — `playFile(url:calibrationURL:completion:)` /
+  `play_file(path, calibration_path, on_finished)` on the analyzer; the views call it; the harnesses are
+  deleted; the tests call `playFileAndWait` / `play_file_and_wait` (`PlaybackTestSupport.swift`,
+  `tests/playback_support.py`), which set the type and tap count, call the real method and wait. Python's
+  mic restart skips the hardware under test as Swift's does, and its main-thread event pump in
+  `process_file_data` (only the harness ran it on the main thread) is removed. FilePlaybackRegression 11/11 in
+  both, at zero tolerance — no value moved. Python's view no longer shows a dialog for an unreadable
+  calibration file; the model logs it, as Swift does.
+- *Found doing the web (raised 2026-09-26):* (a) the calibration is applied inside the engine's `playFile`, not
+  by the analyzer, and with no calibration file the web plays UNCALIBRATED (`{ calibration: null }` clears the
+  mic's calibration for the playback) where Swift and Python keep the mic's active calibration. (b)
+  `startTapSequence`'s `initialPhase` (all three) was only there for the deleted harness's `plateTapPhase`; no
+  caller passes anything but the default. Its comments say "phase-targeted file-playback tests". The web's
+  `arm: false` doc says it is "for file playback" — it is now used only by tests without a device.
+- *Decision (owner, 2026-09-26 — (a)):* a played file uses the calibration the user gives for it, or none. The
+  microphone that recorded the file is unknown, so the live input's calibration never applies. The web was
+  right; Swift and Python were wrong. (b) (owner, 2026-09-26): delete `initialPhase` in all three.
+- *Done (a) and the web's part:* in all three the analyzer's play-file method sets the playback's calibration —
+  the file's, or none (an unparsable file is logged and plays uncalibrated) — and restores the input's when
+  playback ends. Web: `TapToneAnalyzer.playFile(samples, rate, calibration)` arms and plays as Swift's does;
+  App and the tests (`playGuitar`, `playMaterial`, the session-WAV helper) call it; the engine's `playFile`
+  loses its `calibration` option, and App's redundant `clearResult` goes (`startTapSequence` clears). New twin
+  cases in all three: with no calibration file the playback is uncalibrated and the input's calibration
+  returns; with one, it is used and the input's returns. Mutation (skip the override when no file is given)
+  fails the first case in all three. Swift 13/13 and Python 13/13 playback cases (11 + 2), web 13/13; no
+  regression value moved.
+- *Done (b):* `startTapSequence`'s `initialPhase` / `initial_phase` deleted in all three; a material sequence
+  starts at its first phase. Swift's one test caller passed the default and now passes nothing. The web's
+  `arm: false` doc now says it is for tests without a device (the natives have no such parameter). Full suites:
+  Swift 643, Python 759, web 687 — all pass; tsc and eslint clean.
+
+**6. Swift prints plate diagnostics on every plate run.** `printPlateDiagnostics` (REG-P1, REG-P2) prints the
+analyzer's state and the tail of the debug log it reads from `~/Documents/GuitarTap`. No other edition does.
+- *Found (checked with a REG-P1 run, 2026-09-26):* the test host is the sandboxed app, so the log it reads is
+  the app container's real field log (`~/Library/Containers/com.dolcesfogato.GuitarTap/Data/Documents/
+  GuitarTap/GuitarTap-debug.log`, 3.2 MB). Under test the logger writes nothing (the XCTest guard in
+  `Logging.swift`), so the tail is always the owner's last app session — 466 lines of it in that run — never
+  the test's. The detection trace (`TAP_DEBUG`) is off anyway. The state block prints on pass and fail alike;
+  on a failure the assertions already give expected and actual. Nearby stale comments: the REG-B1 doc comment
+  sits above REG-B2's test; REG-P2's says its expected values are "the WEB capture's" (the oracle's, minted
+  by Swift); the helper's speaks of comparing "P1, P2, and P3" (no P3).
+- *Decision (owner, 2026-09-26 — option 1):* delete the helper and its two calls; clean up the stale comments.
+- *Done:* `printPlateDiagnostics` and its REG-P1/REG-P2 calls deleted (Swift `FilePlaybackRegressionTests.swift`).
+  REG-B1's comment moved to REG-B1; REG-B2 given its own; REG-P2's file-level and doc comments now say the
+  recording is the web app's and the values the oracle's; the `MARK: - Tests (REG-B1)` label corrected.
+  FilePlaybackRegression 13/13; no diagnostic output.
+
+**7. Stale explanations.**
+- OUT-4, in all three: "Swift/Python detect … against an EMA-tracked noise floor; the web port uses a fixed
+  absolute dBFS threshold", and the web "saturates … captures nothing". The web has had relative detection
+  since OUT-4, and its own OUT-4 case asserts all three phases captured. The analysis link,
+  `GuitarTapWeb/Development/OUT-4-DETECTION-SPEC.md`, is pre-migration (now hub
+  `docs/completed/OUT-4-DETECTION-SPEC.md`).
+- The ring-out (Swift, Python): "wall-clock decay … at real-time pace" and "0.0853 s ± 0.03 s" — the ring-out
+  runs on the audio clock, and the tolerance comes from the oracle.
+- Python's REG-B1 and REG-P1 blocks quote literal expected values and "±1.0 Hz, ±1.0 dB, ±1.0 Q".
+- The web header: "same ±1 tolerances", and the warm-up called wall-clock-dependent (audio clock since #19).
+- Swift's header lists "Hann window" for the whole pipeline (the guitar capture is rectangular — F49); its
+  REG-B1 doc comment sits above the REG-B2 test (done in item 6).
+- *Checked against the code (2026-09-26):* the ring-out text is already right in all three (fixed in items 3–4);
+  the "±1" wording is gone. Still stale:
+  - (a) OUT-4, all three: "the web port uses a fixed absolute dBFS threshold"; Swift's "(The web's counterpart
+    test asserts exactly that failure.)" and Python's "the web port does exactly that — this is its failing
+    counterpart test" — the web's case asserts all three phases captured. The analysis link is
+    `GuitarTapWeb/Development/…` (Swift, Python, web header) or `Development/…` (web) — that folder is gone;
+    the doc is hub `docs/completed/OUT-4-DETECTION-SPEC.md`.
+  - (b) Headers, Swift and Python: "Hann window" for the whole chain; "Unlike FilePlaybackPipelineTests
+    (FP1–FP5)" / "test_file_playback.py (FP1–FP15)" — neither file exists in any edition; "Expected values were
+    established by running the file through the app … Both Swift and Python … use the same … values" — the
+    values are the oracle's, minted by Swift and read by all three; the coverage list names six cases and
+    omits the ring-out, OUT-4, session-recording and playback-calibration cases.
+  - (c) Python's REG-B1 and REG-P1 blocks quote reference values from the `.guitartap` files; REG-P1's fC
+    (116.27016 Hz, −52.80130 dB) is not the oracle's (116.27019, −52.800247).
+  - (d) Python's REG-P2 block: "Expected values are the averaged-spectrum peaks (the web .guitartap …)" and the
+    history of the last-tap bug — the Swift twin was corrected in item 6.
+  - (e) Web header: the warm-up called "wall-clock-dependent" (audio clock since #19).
+- *Decision (owner, 2026-09-26):* correct (a), (b), (d), (e) in place, (b) and (d) matching Swift's wording;
+  for (c) remove the quoted numbers and keep the pointer to the source `.guitartap`.
+- *Done:* (a) the OUT-4 blocks in all three say all three editions detect against the noise floor; the claims
+  about the web's case are gone; the analysis link is hub `docs/completed/OUT-4-DETECTION-SPEC.md`. (b) The
+  Swift and Python headers give the chain with its two windows, say the values are the oracle's, and list
+  every case; the FP references are gone. (c) Python's REG-B1 and REG-P1 blocks name their source file only.
+  (d) Python's and the web's REG-P2 comments say the values are the oracle's. (e) The web header no longer
+  calls the warm-up wall-clock-dependent. The same "reference values from the .guitartap" wording on REG-G1,
+  REG-G2 and REG-P1 (Swift, Python) now says the oracle's values came from it. Playback suites 13/13 in all
+  three; tsc and eslint clean.
+- *Noticed (raised 2026-09-26):* 28 more pre-migration `Development/` / `Completed/` doc links across the three
+  editions' other files (Swift tests 5, Python tests 8, web src 8, web tests 7).
+- *Decision (owner, 2026-09-26):* the application code must not link to `Development/` or `Completed/` — remove
+  the references.
+- *Done:* all 28 removed, each sentence reworded to stand without the link (e.g. "D3 + D5 + D6 of …" → "The
+  duplicate-peak defect: fixture regressions."); the hub `docs/completed/OUT-4-DETECTION-SPEC.md` links this
+  item had just added went too. None remain in any edition. Full suites: Swift 643, Python 759, web 687; tsc
+  and eslint clean.
+- *Noticed (raised 2026-09-26):* bare doc-name references with no folder ("See OUT-4-DETECTION-SPEC.md", "See
+  SLUG-SWEEP.md F13") remain — about 97 across the three editions' code and tests (Swift app 13, Swift tests 10,
+  Python src 18, Python tests 17, web src 23, web tests 16), not counting the shipped `Documentation/` files.
+- *Decision (owner, 2026-09-26):* application code must not reference project documents — remove them too.
+- *Done:* all 95 removed (the count of 97 included two hits that were not references). "See SLUG-SWEEP.md
+  Fnn." phrases dropped; the others reworded so the comment stands alone — the silent-input incidents are
+  named by date instead of by their hub doc; Python's device-management header lost its "Recommendations from
+  docs/DEVICE_MANAGEMENT_REFACTORING.md" tracker (Rec 1–4, three DONE, one "PENDING" that is done). Kept:
+  the user manual (`Documentation/Manual/…`) and the other shipped `Documentation/` files, the release-notes
+  file the release guard reads, and "the canonical file in the hub" in the oracle-sync tests (a data file).
+  Full suites: Swift 643, Python 759, web 687; tsc and eslint clean.
+- *Decision (owner, 2026-09-26):* issue and finding references go too — "The documentation should NOT be in
+  the code - it should be in the project documents" — and a comment says what the code does: "not what it did
+  - not why it changed - but what it does."
+- *Done (2026-09-26/27):* in all three editions every comment carrying an issue or finding reference (`#17 F52`,
+  `(#19)`, `issue #8`, `guitar-tap-project#10`) was rewritten to say what the code does, or deleted where
+  nothing present-tense remained — about 600 lines. A second pass did the same for finding and project labels
+  without a `#` ("Phase N" of the peak-lifecycle work, `WI-n`, `6-TEST 3c-…`, `EG-n`, `PC-n`, `RA`/`RB`/`RC`,
+  `RESPIN-1.0.2, fix M/R`, "run-review", commit hashes, "project memory" pointers) and for the history
+  comments the first pass listed. `FILE-PATHS-AND-NAMES-SPEC §n`, `WEB-UI-GUIDELINES item 6` and bare `§n`
+  section numbers were removed. Kept: test-plan case IDs shared across the editions (F1–F17, A1–A5, PR*,
+  REG-*, D*, DL*, B*, IP-*, OUT-4 — `OUT-5` was removed in all three so the editions agree), mirror notes,
+  `@parity` tags, book citations (Gore & Gilet, Blevins), the shipped user manual and `Documentation/` files,
+  colour codes and note names. Also fixed along the way: Swift `resetToAutoSelection`'s doc comment sat on
+  the function above it (moved); Swift AnnotationStateTests' unclassified-peak comment sat on the wrong test
+  (moved); the web's unused `prevTaps` in `setConfig` deleted; Python's `test_status_message` module docstring
+  no longer contradicts what it pins. Full suites: Swift 643, Python 759, web 687; tsc and eslint clean.
+- *Noticed (2026-09-27):* Swift FrozenPeakRecalculationTests carried a PR4b comment ("the custom mode name on a
+  peak hidden by Peak Min SURVIVES") with no test in any edition — the comment is deleted; the behaviour is
+  untested. History comments with no reference or label in them may remain in parts of the code no pass
+  touched; the passes covered every comment that carried a reference, a label or a doc name.
+
+**8. Carried in.** The playback controls (F50's run-review): during a file playback New Tap, Pause/Resume
+and Cancel do nothing in all three — the owner's options (1) disable them, (2) make them control the
+playback. From #19's noticed list: timers scheduled in one playback case fire during the next, and the
+Python minter sets up no settings sandbox.
+
+**F53 — the save takes state the model already owns from the view, and the web's save is built in the
+view. (open — raised 2026-09-26 from F52 item 2; to be done within the file-playback slug; decisions
+pending)**
+
+Found writing F52's PR43. Files: Swift `TapToneAnalyzer+MeasurementManagement.swift` (`saveMeasurement`) and
+`TapToneAnalysisView+Actions.swift` (its caller) / Python `tap_tone_analyzer_measurement_management.py`
+(`save_measurement`) and `tap_tone_analysis_view.py` (its caller) / web `App.tsx` (the save handler) and
+`measurement/fromLive.ts` (`buildGuitarMeasurement` / `buildMaterialMeasurement`).
+
+| # | item | status |
+|---|---|---|
+| 1 | The natives' save takes the identified material peak ids from the view | open |
+| 2 | The natives' save takes other model-owned state from the view | open |
+| 3 | The web's save is built in App, not by the analyzer | open |
+
+**1. The natives' save takes the identified material peak ids from the view.** `saveMeasurement` (Python
+`save_measurement`) writes the file's `selectedLongitudinalPeakID` / `…Cross…` / `…Flc…` from parameters that
+default to nil; the view passes `tap.effectiveLongitudinalPeakID` and its siblings — the model's own state,
+read back and handed in. A save called without them writes no roles (PR43 did, until it passed them). The
+rest of the save already reads the model: the peaks, the guitar selection, overrides, decay, the per-phase
+spectra. Python's docstring says the save "reads … directly from model state — not passed by the view".
+- *Recommendation:* the save reads the identified peaks itself; the parameters go.
+
+**2. The natives' save takes other model-owned state from the view.** The view also passes
+`annotationOffsets: tap.peakAnnotationOffsets`, and the microphone name / UID, calibration name and sample
+rate from `fft` — the analyzer's own `fftAnalyzer`. (The measurement name, notes and the displayed axis range
+are the view's and stay parameters.) To be read in full, all three editions, before deciding.
+
+**3. The web's save is built in App, not by the analyzer.** App assembles the measurement from the snapshot
+and calls `buildGuitarMeasurement` / `buildMaterialMeasurement`; there is no analyzer save. It is the save-side
+counterpart of what F41 fixed for the load, which moved "load a measurement" out of App into
+`analyzer.loadMeasurement`.
+- *Recommendation:* an analyzer-owned save, as Swift's and Python's, reading its own state.
 
 ## Stage 2 — move case lists into shared data
 
