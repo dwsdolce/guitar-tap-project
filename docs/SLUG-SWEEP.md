@@ -4524,7 +4524,7 @@ the finish path it drives does not read the threshold.
   the web header's "rebases … on Accept/Redo" now says Redo (after item 6, Accept no longer rebases).
 
 **F52 — `file-playback`: the web checks peaks it computes itself, the editions assert different things,
-and every file's explanation of OUT-4 is out of date. (open — items 1–7 done and committed 2026-09-27 before item 8: Swift `61dd996`, Python `f62d43d`, web `2c7d6d2`; item 8 and the run-review pending)**
+and every file's explanation of OUT-4 is out of date. (CLOSED — all 9 items done and run-reviewed in all three. Commits: items 1–7 Swift `61dd996`, Python `f62d43d`, web `2c7d6d2`; items 8–9 with F53 Swift `835b39c`, Python `4980c01`, web `170f8eb`)**
 
 Files: `FilePlaybackRegressionTests.swift` (8) / `test_file_playback_regression.py` (8) /
 `file-playback.test.ts` (11). Production: the whole playback path — the file read and its pacing, detection,
@@ -4533,14 +4533,15 @@ play the same fixtures against the same oracle (REG-G1, REG-G2, REG-B1, REG-B2, 
 
 | # | item | status |
 |---|---|---|
-| 1 | The web's guitar cases check peaks the test computes, not the analyzer's | ✅ done (all three), uncommitted |
-| 2 | The assertions differ, and the web wraps results in a test-only type kept in the engine | ✅ done (all three), uncommitted |
-| 3 | The case lists differ | ✅ done (all three), uncommitted |
-| 4 | Tolerance use differs | ✅ done (all three), uncommitted |
-| 5 | The playback harness sits in production code in the natives, in the test on the web | ✅ done (all three), uncommitted |
-| 6 | Swift prints plate diagnostics and reads the debug log on every plate run | ✅ done (Swift), uncommitted |
-| 7 | Stale explanations | ✅ done (all three), uncommitted |
-| 8 | Carried in: the playback controls, and two items from #19 | open |
+| 1 | The web's guitar cases check peaks the test computes, not the analyzer's | ✅ done (all three) |
+| 2 | The assertions differ, and the web wraps results in a test-only type kept in the engine | ✅ done (all three) |
+| 3 | The case lists differ | ✅ done (all three) |
+| 4 | Tolerance use differs | ✅ done (all three) |
+| 5 | The playback harness sits in production code in the natives, in the test on the web | ✅ done (all three) |
+| 6 | Swift prints plate diagnostics and reads the debug log on every plate run | ✅ done (Swift) |
+| 7 | Stale explanations | ✅ done (all three) |
+| 8 | Carried in: the playback controls, and two items from #19 | ✅ done (all three) |
+| 9 | The web never names the file being played | ✅ done (web) |
 
 **1. The web's guitar cases check peaks the test computes, not the analyzer's.** REG-G1 and REG-G2 run
 `modePeaksFromSpectrum` on the frozen spectrum, with the test's own Peak Min and guitar type, and assert
@@ -4978,15 +4979,87 @@ analyzer's state and the tail of the debug log it reads from `~/Documents/Guitar
   peak hidden by Peak Min SURVIVES") with no test in any edition — the comment is deleted; the behaviour is
   untested. History comments with no reference or label in them may remain in parts of the code no pass
   touched; the passes covered every comment that carried a reference, a label or a doc name.
+- *Decision (owner, 2026-09-27):* no full sweep for the remaining unreferenced history comments — low payback.
+  The rule applies to every comment written or edited from now on.
 
 **8. Carried in.** The playback controls (F50's run-review): during a file playback New Tap, Pause/Resume
 and Cancel do nothing in all three — the owner's options (1) disable them, (2) make them control the
 playback. From #19's noticed list: timers scheduled in one playback case fire during the next, and the
 Python minter sets up no settings sandbox.
+- *Found (2026-09-27):* Pause does nothing during a playback because a recording delivers taps back to back:
+  after each tap the detector is idle (rest, capture, re-arm), Pause acts only while it is listening — so the
+  button is mostly disabled and a press in the gaps is a no-op, and the next re-arm carries on. A Python probe
+  (pause after tap 1 of REG-G2's 8-tap file) counted all eight taps. No edition can stop or pause a playback.
+  Changing the measurement type does not stop one either: Apply only re-arms a sequence (`requestStartTapSequence`),
+  the file plays on into the new measurement, and the chart keeps the file's title until it ends.
+- *Decision (owner, 2026-09-27 — option 2):* during a playback Cancel is enabled and stops the file — the partial
+  result is discarded and the app returns to live input; Pause/Resume are disabled ("make little sense during a
+  playback"); New Tap is disabled.
+- *Decision (owner, 2026-09-27):* a measurement-type change during a playback stops the file first, then arms
+  the new measurement.
+- *Done (playback controls):* the button rule takes whether a file is playing; while one plays, Cancel is
+  enabled and Pause/New Tap are disabled (B14–B16 in all three). Each engine gains "stop the file"
+  (Swift/Python `stopFilePlayback` / `stop_file_playback`, web `stopFilePlayback`): the generation token
+  ends the pump, nothing of the rest of the file is processed and no capture is flushed, the mic returns,
+  and the playback's completion runs (the input's calibration returns). Cancel stops the file, then
+  restarts on live input; a measurement-type change stops it before arming. Python moved from its flag +
+  thread-identity supersession to Swift's generation token (needed to stop without flushing). Python has
+  no `requestStartTapSequence`, so its stop sits in `FftCanvas.restart_tap_sequence` (New Tap and the
+  type change both re-arm there); the web gained `requestStartTapSequence`, App's Cancel now calls the
+  analyzer's `cancelTapSequence`, and the snapshot carries `isPlayingFile`. Tests: Cancel and a type
+  change mid-playback in all three; mutation (the stop removed) fails both in all three. Full suites:
+  Swift 648, Python 764, web 692.
+- *Noticed:* Play File stays enabled during a playback in all three; opening a second file replaces the
+  first without running the first's completion (unchanged). In Python a Cancel in the last milliseconds of
+  a file can still let that file's final capture through (its flush runs on the worker, not the main
+  thread as in Swift) — a window of one chunk.
+- *Found (carry-in: Python minter):* `Tooling/mint-baseline.py` sets no settings sandbox — a standalone
+  mint reads the user's real Python settings and, since item 5, writes to them: `play_file_and_wait` sets
+  the measurement type and tap count and does not restore them. Swift mints in its test target
+  (sandboxed); the web has no persisted settings under Node.
+- *Found (carry-in: timers across cases):* the lifecycle timers run on the audio clock and end with their
+  playback. What remains on the wall clock is the gated capture's stall check (all three) and, in Python,
+  the queued file-end release; a check can fire once into the next test case. Each re-checks that its
+  capture is still relevant and acts only on its own (previous) analyzer, so it cannot change a result.
+- *Found (2026-09-27):* the architectural difference behind both: Swift runs the end-of-file step — flush the
+  unfinished capture, finish it, release the pending audio actions — as ONE synchronous step on the main
+  thread (the worker waits in `DispatchQueue.main.sync`), guarded by the generation; the web does the same
+  on its one thread. Python runs the flush on the playback worker, finishes the capture through a queued
+  signal and releases through a second queued main-thread call. That queued release is the callback that
+  can outlive a test case, and the flush on the worker is what leaves Python's one-chunk Cancel window.
+- *Decision (owner, 2026-09-27):* fix the minter (sandbox it); align Python's end-of-file step with Swift's.
+- *Done:* `Tooling/mint-baseline.py` claims the per-process settings sandbox (`GT_TEST_SANDBOX`) before
+  anything imports settings, as `tests/conftest.py` does. Checked: a standalone `--check` run with no sandbox
+  variable set left the real `com.dolcesfogato.guitar_tap` settings unchanged (94 values, identical to the
+  baseline). Python's end-of-file step: the worker hands one step to the main thread and waits
+  (`runOnMainBlocking`, a BlockingQueuedConnection — Swift's `main.sync`); it checks the generation, flushes
+  the unfinished capture, finishes it directly (`finish_gated_fft_capture`, as Swift calls
+  `finishGatedFFTCapture`) and releases the pending actions (Swift's `defer`). The queued release is gone,
+  and the one-chunk Cancel window is closed. The mic restart and the finished callback run on the main
+  thread too (`runOnMain` — Swift's `main.async`). New Python test: the end-of-file step runs on the main
+  thread (mutation — the step run on the worker — fails it). Playback suite 16/16 at zero tolerance; full
+  Python suite 765. The gated capture's wall-clock stall check stays, as in Swift and the web.
+- *Noticed:* `~/Library/Preferences` holds ~35 leftover `com.dolcesfogato-tests-<name><n>` settings files
+  from earlier ad-hoc runs with named sandboxes (`g2alone`, `repeat`, `leak`, `busy`, `speed`, `probe`,
+  `mintcheck`, …); the conftest reaper removes only numeric-pid ones. *Owner (2026-09-27): clean them* —
+  all 35 deleted; the real settings files are untouched.
+
+**9. The web never names the file being played** (found at the web run-review, step 2, owner, 2026-09-27).
+Swift and Python title the chart `playingFileName ?? loadedMeasurementName ?? "New"`: the file's name is set
+when it starts, kept after it ends, and cleared by a new sequence, Stop or stopping the playback; Play File is
+tinted orange while a file plays. The web titled it `loadedName ?? 'New'`, its engine was never given the
+file's name, and Play File had no playing state — a divergence older than this slug.
+- *Decision (owner, 2026-09-27):* fix it now.
+- *Done (web):* the engine holds `playingFileName` (Swift's name): `playFile` takes it, keeps it after the file
+  ends, and `stopFilePlayback` clears it; `analyzer.playFile` passes the file's name (without its extension,
+  as Swift) and `startTapSequence` clears it, as Swift's does; the snapshot carries it. App's chart title and
+  the live PDF's use `playingFileName ?? loadedName ?? 'New'`, and Play File is tinted orange while
+  `isPlayingFile`. Tests: a played file is named while it plays and after it ends, a new sequence clears it,
+  and Cancel mid-playback clears it; mutation (neither clears it) fails both. Web suite 697; tsc and eslint
+  clean.
 
 **F53 — the save takes state the model already owns from the view, and the web's save is built in the
-view. (open — raised 2026-09-26 from F52 item 2; to be done within the file-playback slug; decisions
-pending)**
+view. (CLOSED — all 6 items done and run-reviewed in all three. Commits: Swift `835b39c`, Python `4980c01`, web `170f8eb`)**
 
 Found writing F52's PR43. Files: Swift `TapToneAnalyzer+MeasurementManagement.swift` (`saveMeasurement`) and
 `TapToneAnalysisView+Actions.swift` (its caller) / Python `tap_tone_analyzer_measurement_management.py`
@@ -4995,9 +5068,12 @@ Found writing F52's PR43. Files: Swift `TapToneAnalyzer+MeasurementManagement.sw
 
 | # | item | status |
 |---|---|---|
-| 1 | The natives' save takes the identified material peak ids from the view | open |
-| 2 | The natives' save takes other model-owned state from the view | open |
-| 3 | The web's save is built in App, not by the analyzer | open |
+| 1 | The natives' save takes the identified material peak ids from the view | ✅ done (all three) |
+| 2 | The natives' save takes other model-owned state from the view | ✅ done (all three) |
+| 3 | The web's save is built in App, not by the analyzer | ✅ done (all three) |
+| 4 | Two save parameters no caller uses; the save's docs are misplaced or wrong | ✅ done (all three) |
+| 5 | A measurement made from a played file records the live input's provenance | ✅ done (all three) |
+| 6 | The Results panel, a re-save and the live PDF show the live input for a loaded measurement | ✅ done (all three) |
 
 **1. The natives' save takes the identified material peak ids from the view.** `saveMeasurement` (Python
 `save_measurement`) writes the file's `selectedLongitudinalPeakID` / `…Cross…` / `…Flc…` from parameters that
@@ -5017,6 +5093,115 @@ and calls `buildGuitarMeasurement` / `buildMaterialMeasurement`; there is no ana
 counterpart of what F41 fixed for the load, which moved "load a measurement" out of App into
 `analyzer.loadMeasurement`.
 - *Recommendation:* an analyzer-owned save, as Swift's and Python's, reading its own state.
+
+*Read in full (2026-09-27), all three editions:*
+
+- **Item 1** stands as recorded, in both natives: the view reads `effective…PeakID` off the analyzer and hands
+  it back. On the web, App passes `matPeaks` (built from the analyzer's snapshot) to `buildMaterialMeasurement`.
+- **Item 2.** Swift's view passes `annotationOffsets: tap.peakAnnotationOffsets` (the save already falls back to
+  that); Python's view does not pass it. Both views pass the microphone name and UID, the calibration name and
+  the sample rate, read from the analyzer's own engine (`fft` / `analyzer.mic`, `analyzer._active_calibration_name`).
+  Swift documents `sampleRate: nil` as "falls back to the engine's actual rate"; the code writes nil. The
+  measurement name, notes and the displayed axis range are the view's and stay parameters.
+- **Item 4.** `includeSpectrum` / `include_spectrum` (the view passes `true`, the default) and
+  `spectrumSnapshot` / `spectrum_snapshot` (no caller) are unused in both natives. Python's docstring says
+  `spectrum_snapshot` is "used by the import path" — import builds its measurements directly and never calls
+  the save. Swift's parameter documentation for `saveMeasurement` sits above `guitarFullSavePeaks`, whose own
+  comment tells the history of how it came to return `allPeaks`.
+- **Item 3.** App's `buildCurrentMeasurement` assembles the measurement from the snapshot plus view state and
+  calls `buildGuitarMeasurement` / `buildMaterialMeasurement` (material dimensions fall back to the Settings
+  "defensively" if the measurement's own are unset); `saveMeasurement(m)` writes it to the store. The same
+  builder feeds the live PDF export. Swift's comparison save is `tap.saveComparison`; the web's is the same
+  builder's comparison branch.
+- **Item 5 (found reading item 2).** The save records the microphone, calibration and sample rate current at
+  SAVE time. After a playback those are the live input's again — the file's calibration is removed when the
+  playback ends — so a measurement made from a played file records the input's microphone and calibration,
+  not the recording's. All three editions.
+- *Found (item 5, 2026-09-27):* a measurement with no microphone recorded already reads as "unknown" on load, in
+  all three: no device switch, no microphone warning, and the calibration / sample-rate difference checks are
+  skipped (they run only when the recorded microphone is found). Display differs: Measurement Details shows
+  Microphone and Calibration as separate rows, each only when set; the PDF report shows the calibration only
+  as a suffix of the Microphone row ("… · calibrated (X)" / "… · uncalibrated"), which appears only when a
+  microphone is recorded — so without one the PDF shows neither.
+- *Decision (owner, 2026-09-27 — item 5 display):* when no microphone is recorded, present the microphone as
+  "unknown" — Details "Microphone: unknown", PDF "Microphone: unknown · calibrated (X)" / "… · uncalibrated".
+- *Decision (owner, 2026-09-27):* all five as recommended — "Yes. go".
+- *Done:*
+  - Items 1, 2, 4 (natives): `saveMeasurement` / `save_measurement` take only the view's state — the name, the
+    notes and the displayed axis range. The save reads the identified peaks (`selected…Peak?.id`), the
+    annotation offsets and the provenance itself; `includeSpectrum` / `spectrumSnapshot` and the id /
+    offsets / microphone / calibration / sample-rate parameters are gone, and the views pass only their own
+    state. Swift's parameter docs now sit on `saveMeasurement`; `guitarFullSavePeaks`'s comment says what it
+    does; Python's docstring no longer claims an import path; Python's identified-peak section lost its
+    history comments.
+  - Item 3 (web): `TapToneAnalyzer.buildMeasurement(name, notes, view)` builds the guitar or material
+    measurement from the analyzer's own state (its `measurementType` is the authority), and
+    `saveMeasurement(name, notes, view)` builds and stores it. App passes only the view's state; a comparison
+    stays App's, as Swift's view branches to `saveComparison`; the live PDF export uses the same builder.
+    The analyzer's gated-capture rate field was renamed `mpmSampleRate` (Swift's name), freeing
+    `captureSampleRate` for the provenance getter.
+  - Item 5 (all three): the analyzer holds `playbackProvenance` — the calibration a file was played with (or
+    none) and its sample rate — set by the play-file method and cleared by every new sequence. `capture…`
+    accessors (microphone name / UID, calibration name, sample rate) give the file's provenance with an
+    unknown microphone after a playback, the input's otherwise; the save and the live PDF export read them.
+    Measurement Details shows "Microphone: unknown" for a single measurement without one (not for a
+    comparison — it has no microphone of its own; owner, 2026-09-27), and the PDF's Microphone row always appears ("unknown · calibrated (X)" /
+    "… · uncalibrated"). Python's engine now sets the file's sample rate before its worker starts, as Swift's
+    `prepareForFilePlayback` does — the analyzer's frequency-axis recompute had been racing the worker for it.
+  - Tests: PR42/PR43 save through the model with no ids passed (all three); new: a save after a playback
+    records the file's provenance and an unknown microphone, and a new sequence saves the input's (all
+    three). Mutations — the fL role not written, the provenance not set — fail them in all three. Full
+    suites: Swift 650, Python 767, web 694; tsc and eslint clean.
+
+**6. The Results panel, a re-save and the live PDF show the live input for a loaded measurement.** Found at
+run-review step 7 (Swift, owner, 2026-09-27): after loading a saved plate made from a played file (no
+microphone), the Results panel named the built-in microphone. All three editions read the Results panel's
+microphone from the current input device (Swift `fftAnalyzer.selectedInputDevice?.name`, Python
+`_update_mic_name_label`, web App's `deviceLabel`), whatever the result came from. The item-5 provenance covers
+live input and a played file; a loaded measurement falls through to the live input, so a re-save of it and its
+live PDF export record the current microphone and calibration too.
+- *Decision (owner, 2026-09-27):* the analyzer's provenance covers the loaded measurement as a third source — on
+  load it takes the file's microphone name and UID, calibration and sample rate (a missing microphone is
+  unknown) — and the Results panel, the save and the live PDF export read the same `capture…` values: live →
+  the input device; a played file → unknown; a loaded measurement → its recorded microphone, or unknown.
+- *Done:* item 5's `playbackProvenance` became `resultProvenance` (Swift `ResultProvenance`, Python a
+  `ResultProvenance` named tuple, web an object) — microphone name and UID, calibration name, sample rate. The
+  play-file method sets it (no microphone); `loadMeasurement` sets it from the file (Python before anything the
+  load emits); a comparison load and every new sequence clear it. The `capture…` accessors return it when set,
+  the live input otherwise. The Results panel shows `captureMicrophoneName`, or "unknown" when a result's
+  provenance has no microphone (Swift `TapAnalysisResultsView`; Python `_update_mic_name_label`, now also
+  refreshed when a playback starts or ends; web App from the snapshot's `resultProvenance`, the live device
+  label otherwise). New test, all three: a loaded measurement reports its recorded provenance and a re-save
+  keeps it; mutation (load not setting it) fails it. Full suites: Swift 651, Python 768, web 695.
+
+**Run-review steps (F52 and F53).** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after every build (see F30's steps). Same
+list per edition, canonical first. The recordings are the test fixtures: `Recording.wav` (8 guitar taps),
+`plate-umik-1-swift-mac-1778816330.wav` (plate, L/C/FLC) and the calibration `7108913.txt`.
+
+1. Guitar, Taps 8. Play File `Recording.wav`, no calibration file. → While it plays: Pause and New Tap are
+   disabled, Cancel is enabled.
+2. Press Cancel partway through. → The file stops at once (Play File is no longer tinted, the chart title no
+   longer names the file), the result clears, and a live tap on the microphone is detected.
+3. Play `Recording.wav` again; partway through, change Measurement Type to Plate and Apply. → The file stops;
+   the status reads "Ready for fL tap"; no guitar tap from the file reaches the plate.
+4. Plate with FLC, 1 tap per phase. Play File the plate recording with `7108913.txt`. → The Results rows for L,
+   C and FLC show a dash until their phase is captured, then the identified peak; the measurement
+   completes. Annotations is enabled once a peak is shown.
+5. Save it; open its Measurement Details. → Microphone: unknown; Calibration: the `7108913` calibration.
+6. Export its PDF report. → The Microphone row reads "unknown · calibrated (…7108913…)".
+7. New Tap, then load the saved plate. → fL, fC and fLC are shown as saved; no microphone warning; the input
+   device is unchanged.
+8. Guitar, Taps 8. Play File `Recording.wav` (no calibration) to the end; Save; open Details. → Microphone:
+   unknown; no Calibration row. Its PDF → "unknown · uncalibrated".
+9. Live: New Tap, tap once, Save; open Details. → Your microphone and its calibration, as before.
+10. Plate, live: before any tap, Annotations is disabled; tap L. → The L row shows the peak; Annotations is
+    enabled.
+
+**Run-review progress.** Swift and Python passed steps 1–10 (owner, 2026-09-27), after item 6 (Swift, step 7)
+and the Python material-load fix (step 7: the view's load handler died on `_emit_loaded_peaks_at_threshold`'s
+assert — no Results rows, Annotations inert). The web passed steps 1–10 after F52 item 9 (step 2: it never
+named the played file). **Run-review complete — all three editions pass (owner, 2026-09-27).**
 
 ## Stage 2 — move case lists into shared data
 

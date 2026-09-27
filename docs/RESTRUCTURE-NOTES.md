@@ -253,19 +253,25 @@ is**, which is upstream of any mechanism difference. Do not read a naive set-dif
 as a divergence list — the names and the granularity do not line up, and an early attempt to diff
 them produced a meaningless overlap count.
 
-### Why Python keeps breaking and the other two do not
+### Three notification mechanisms — a three-way divergence
 
-Swift and web are **the same architecture**: one object, one change notification, the view re-derives
-whatever it read. `objectWillChange` and `notify()` are the same idea and neither names the field
-that changed. Swift cannot forget to notify because the language does it; web batches deliberately
-(`setStatusMessage`'s own comment: "Callers notify … so multi-field transitions render once"), so
-per-field notifying accessors would make it render *more*, not less — **web is not an instance of
-this defect and must not be "fixed" into one.**
+*Owner's decision, 2026-09-27 (from #17 F53's run-review): Swift and web are **divergent** here, not the
+same architecture. That supersedes this section's 2026-09-22 reading, which counted them as one because
+both end in the view re-reading state — the same function, not the same mechanism.*
 
-Python is the outlier, and not because Qt lacks reactivity: its notifications are **per-field to
-per-widget** (`tapCountChanged` → this label, `peaksChanged` → that scatter). That is why it needs 21
-signals where the others need one mechanism, why every new field is a fresh decision made by whoever
-adds it, and why the same defect has now been found four times.
+| edition | how a change reaches the view | what a missed notification does |
+|---|---|---|
+| Swift | automatic: setting any `@Published` property fires the object-wide `objectWillChange`; the views re-read the analyzer's state | cannot happen — the language raises it |
+| web | by hand: the analyzer calls `notify()` where it changes something; App re-reads a snapshot of the whole state | the view is stale until the next `notify()`, which re-reads everything |
+| Python | by hand, per field: specific signals push specific data into copies the view keeps (`tapCountChanged` → a label, `peaksChanged` → the peak list and scatter); nothing re-reads the model | the view's copy stays wrong until some other path happens to re-send it |
+
+The web's explicit `notify()` is deliberate batching (`setStatusMessage`'s own comment: "Callers notify …
+so multi-field transitions render once") — a fact the spec must weigh when choosing how the web aligns;
+it does not make the web's mechanism Swift's.
+
+Python is the furthest out, and not because Qt lacks reactivity: its notifications are **per-field to
+per-widget**. That is why it needs 21 signals where the others need one notification, why every new field
+is a fresh decision made by whoever adds it, and why the same defect has now been found five times.
 
 ### What alignment means here
 
@@ -279,7 +285,9 @@ The owner's answer, 2026-09-22, asked as a semantic question rather than an impl
   decision instead of a Python accident.
 - **Same way.** Python goes object-level — one `changed` signal, the view re-reads what it needs —
   so the three share a notification model and not merely a list. This is the larger half: it reworks
-  how every Python widget binds.
+  how every Python widget binds. The web's hand-called `notify()` against Swift's automatic
+  notification is part of this too (owner, 2026-09-27): the spec decides how the web raises its
+  notification, with Swift as the reference.
 
 Both, per the owner. The second is why this is #1's work and not a #17 finding: "It is a big job
 since there are a lot of other items that get attached to it."
@@ -300,6 +308,13 @@ since there are a lot of other items that get attached to it."
   the current design is not that it is broken — it is that correctness is re-established by hand at
   every write site, and the four findings above are what that costs over time.
 - Swift has **zero** instances. It is the reference for "cannot be forgotten".
+- **A fifth instance, 2026-09-27 (#17 F53 run-review, Python).** After F52 made a material load keep no
+  guitar peak set (`loaded_measurement_peaks` None, as Swift), the Python view's load handler still asked
+  for the loaded peaks through `_emit_loaded_peaks_at_threshold`, which asserted they existed. The handler
+  died inside Qt, so `peaksChanged` never carried the identified L/C/FLC: no Results rows, Annotations
+  cycling nothing, until a zoom's viewport refresh re-sent them. Swift's and the web's views read the
+  identified peaks from the analyzer and were unaffected. Fixed in the emit; the design that made it
+  possible — the view's copy fed only by the paths that remember to send — is what this section is about.
 - A guard was considered and NOT written: "assert every signal has a property" would only police
   Python's existing habit, where the real check is that the three surfaces match. The guard belongs
   with the spec, not ahead of it.
