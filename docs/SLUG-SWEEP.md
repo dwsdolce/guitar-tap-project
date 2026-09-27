@@ -3540,12 +3540,10 @@ Python 719, web 642 — all pass; parity map 103 groups.
 
 ### S7 — Capture / DSP pipeline (5 slugs)
 
-Status: ⏳ **In progress — started 2026-09-24.** `gated-fft` (F49) and `tap-decisions` (F50) done and
-committed; #19 finished between them (see [`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md)).
-`tap-progress` (F51) done and committed. **Next: `file-playback`** — which also takes the playback-controls question F50's
-run-review raised — and `decay-tracking`. From #19's "Noticed while doing #19" list, two items remain for
-those slugs: the Python minter's missing settings sandbox, and timers leaking from one playback case into
-the next (F50 settled the other two).
+Status: ✅ **CLOSED 2026-09-27** — all 5 slugs read; every finding it produced (F49–F54) fixed and run-reviewed
+in all three. #19 finished during it (see [`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md));
+its two remaining "noticed" items (the Python minter's settings sandbox, timers leaking between playback
+cases) were settled in F52 item 8.
 
 **Audit record.** As in S6, this table records only **what the reading produced** — a finding number,
 or "clean" where none was filed. Each finding's status lives in the finding and nowhere else.
@@ -3556,7 +3554,7 @@ or "clean" where none was filed. Each finding's status lives in the finding and 
 | `tap-decisions` (14/18/6) | ✅ | **F50** |
 | `tap-progress` (12/12/14) | ✅ | **F51** |
 | `file-playback` (8/8/11) | ✅ | **F52**; **F53** from F52 item 2 |
-| `decay-tracking` | | |
+| `decay-tracking` (7/8/8) | ✅ | **F54** |
 
 **Counts, measured with the runners, 2026-09-24** (Swift: the ten S7 suites run with a result bundle,
 47 tests, all pass, no argument expansion; Python: `pytest --collect-only`, 50; web: `vitest list`, 46):
@@ -4974,11 +4972,11 @@ analyzer's state and the tail of the debug log it reads from `~/Documents/Guitar
   colour codes and note names. Also fixed along the way: Swift `resetToAutoSelection`'s doc comment sat on
   the function above it (moved); Swift AnnotationStateTests' unclassified-peak comment sat on the wrong test
   (moved); the web's unused `prevTaps` in `setConfig` deleted; Python's `test_status_message` module docstring
-  no longer contradicts what it pins. Full suites: Swift 643, Python 759, web 687; tsc and eslint clean.
-- *Noticed (2026-09-27):* Swift FrozenPeakRecalculationTests carried a PR4b comment ("the custom mode name on a
-  peak hidden by Peak Min SURVIVES") with no test in any edition — the comment is deleted; the behaviour is
-  untested. History comments with no reference or label in them may remain in parts of the code no pass
-  touched; the passes covered every comment that carried a reference, a label or a doc name.
+  no longer contradicts what it pins; an orphaned Swift FrozenPeakRecalculationTests comment under its old id
+  PR4b ("the custom mode name on a peak hidden by Peak Min SURVIVES") was deleted — that behaviour is PR24,
+  tested in all three (Swift `PR24_loadedPath_overrideForFilteredOutPeak_survives`, Python `test_PR13_…`,
+  web `PR13/PR21/PR24`). Full suites: Swift 643, Python 759, web 687; tsc and eslint clean. The passes covered
+  every comment that carried a reference, a label or a doc name.
 - *Decision (owner, 2026-09-27):* no full sweep for the remaining unreferenced history comments — low payback.
   The rule applies to every comment written or edited from now on.
 
@@ -5202,6 +5200,118 @@ list per edition, canonical first. The recordings are the test fixtures: `Record
 and the Python material-load fix (step 7: the view's load handler died on `_emit_loaded_peaks_at_threshold`'s
 assert — no Results rows, Annotations inert). The web passed steps 1–10 after F52 item 9 (step 2: it never
 named the played file). **Run-review complete — all three editions pass (owner, 2026-09-27).**
+
+**F54 — `decay-tracking`: the web's new sequence keeps tracking the old tap's ring-out, the editions test
+different cases, and the natives' tests set state by hand. (CLOSED — all 6 items done and run-reviewed in all
+three. Commits: Swift `71049ad`, Python `eb0797c`, web `71a4d78`)**
+
+Files: `DecayTrackingTests.swift` (7) / `test_decay_tracking.py` (7 + 1 view case) / `decay-tracking.test.ts` (8).
+Production: `TapToneAnalyzer+DecayTracking.swift` / `tap_tone_analyzer_decay_tracking.py` / the web analyzer's
+"Ring-out (decay) tracking" section. The three implementations match: the ring-out lives on the analyzer in
+all three (the web's former engine-side `DecayTracker` is gone); `startDecayTracking` seeds the history with
+the tap's peak-held level at its audio time; `trackDecayFast` stops — without recording — once a chunk is
+3 s of audio after the tap, keeps 5 s of history and re-measures once it holds more than 10 entries;
+`measureDecayTime` goes from the post-tap peak to the first later entry below `peak − decayThreshold` (15 dB).
+
+| # | item | status |
+|---|---|---|
+| 1 | The web's new sequence does not stop the ring-out tracking or clear its history | ✅ done (all three) |
+| 2 | The case lists differ | ✅ done (all three) |
+| 3 | The natives' guard cases set the tracker's state by hand, one of them a state production never makes | ✅ done (all three) |
+| 4 | Assertions differ: tolerances where the value is exact, and a case that checks only "positive" | ✅ done (all three) |
+| 5 | Stale explanations in the natives | ✅ done (all three) |
+| 6 | The 5 s history trim is unreachable | ✅ done (all three) |
+
+**1. The web's new sequence does not stop the ring-out tracking or clear its history.** Swift's
+`startTapSequence` sets `currentDecayTime = nil`, `peakMagnitudeHistory = []` and calls `resetDecayTracking()`
+(`isTrackingDecay = false`); Python's does the same. The web's sets only `currentDecayTime = null`. A New Tap
+(or Cancel, or a type change) within 3 s of a tap leaves the tracker running on the old tap: the next chunks
+are recorded against it and `trackDecayFast` writes a ring-out back into the new sequence.
+- *Recommendation:* the web's `startTapSequence` resets the tracker as Swift's does — the history cleared and a
+  `resetDecayTracking()` that stops tracking. A case, all three: a new sequence within 3 s of a tap measures no
+  ring-out from the old tap.
+- *Decision (owner, 2026-09-27):* as recommended — fix it.
+- *Done:* the web's `startTapSequence` clears `peakMagnitudeHistory` and calls a new private
+  `resetDecayTracking()` (stops tracking), in Swift's order after `currentDecayTime = null`. New case DK8, all
+  three: a new sequence started within 3 s of a tap, then twelve below-threshold chunks through the production
+  per-chunk entry (Swift `onChunkLevel`, Python `_on_chunk_level`, web `processAudioFrame`) → not tracking, no
+  ring-out. It failed on the web before the fix; with the reset removed it fails in Swift and Python. Python's
+  `start_tap_sequence` also moved its `result_provenance` reset beside the playing-file-name clear, where
+  Swift has it (it sat between the ring-out clears). Full suites: Swift 652, Python 770, web 698.
+
+**2. The case lists differ.** Swift and Python: DK1 empty history, DK2 all samples before the tap, DK3 never
+decays, DK4 normal decay, DK5 immediate decay, DK6 not tracking is a no-op, DK7 tracking with no tap time.
+Web: DK4, DK5, the 15 dB default, never decays, the rising transient (measured from the post-tap peak, not the
+tap), samples before the tap ignored, a streamed ring-out through `startDecayTracking` + `trackDecayFast`, and
+a no-op before tracking starts. The web has no DK1 or DK7; the natives have no default-threshold, rising-
+transient or streamed case. No edition tests the 3 s stop, the 5 s trim, or the reset on a new sequence
+(item 1). Python also has `TestRingOutReachesTheView` — the ring-out reaching the Ring-Out box through
+`currentDecayTimeChanged`; Python-specific by nature (its view is fed by that signal).
+- *Recommendation:* one list in Swift's order, the same ids and the same cases in all three, including the
+  cases no edition has.
+- *Decision (owner, 2026-09-27):* items 2–5 together, as recommended.
+
+**3. The natives' guard cases set the tracker's state by hand.** DK6 sets `isTrackingDecay = false` and DK7
+sets `isTrackingDecay = true` with `decayTapAudioTime = nil` directly, then call `trackDecayFast`. DK7's state
+is one production never makes: `startDecayTracking` always sets both. The web's no-op case uses a fresh
+analyzer, and its streamed case goes through `startDecayTracking`.
+- *Recommendation:* the guard cases reach their state through production — a fresh analyzer (not tracking),
+  `startDecayTracking`, and the 3 s stop; DK7 goes.
+- *Decision (owner, 2026-09-27):* items 2–5 together, as recommended.
+
+**4. Assertions differ.** DK4 allows ±0.05 s around a value that is exactly 0.5 s (the web asserts it to six
+digits); DK5 asserts only "positive" where the value is exactly 0.1 s (the web asserts 0.1).
+- *Recommendation:* exact values in all three, as the web does.
+- *Decision (owner, 2026-09-27):* items 2–5 together, as recommended.
+
+**5. Stale explanations in the natives.**
+- Both headers: "The tracking timer runs for 3 seconds" — there is no timer; tracking stops on the audio
+  clock.
+- Both `trackDecayFast`s: "The web's DecayTracker stops here too" — the web has no `DecayTracker`.
+- Swift `stopDecayTracking`'s doc: "diagnostic information is printed to the console explaining whether the
+  signal never peaked…" — it prints nothing; it refers to `trackDecayFast(inputLevel:)`, the old signature.
+- Swift `trackDecayFast`'s doc: "called … from the `$inputLevelDB` Combine subscription" — it is called from
+  `onChunkLevel`. `startDecayTracking` ends in a "Debug output removed" comment.
+- Python `stop_decay_tracking` carries `@Slot()`, but nothing connects to it; it is called directly.
+- *Recommendation:* correct them to say what the code does; drop the unused decorator.
+- *Decision (owner, 2026-09-27):* items 2–5 together, as recommended.
+
+**6. The 5 s history trim is unreachable** (found designing item 2's list, 2026-09-27). `trackDecayFast` keeps
+only entries less than 5 s older than the current chunk. Only `startDecayTracking` turns tracking on, and it
+also sets the tap time and seeds the history with one entry at that time; `trackDecayFast` appends only while
+a chunk is under 3 s of audio after the tap and stops, without recording, at 3 s; nothing else writes the
+history but the clear on a new sequence. So the history never spans 3 s and the trim never removes an entry —
+in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer ended the tracking; #19
+(`58796ac`, 2026-09-25) replaced that timer with the audio-clock stop, which left the trim nothing to do.
+- *Decision (owner, 2026-09-27):* remove it, in all three.
+
+*Done — items 2–6, all three (2026-09-27):*
+- One list, the same ids, cases and values in Swift's order: DK1 empty history, DK2 all before the tap, DK3
+  never decays, DK4 normal (0.5 s), DK5 immediate (0.1 s), DK6 a fresh analyzer records nothing, DK7 a new
+  sequence stops the old tap's ring-out (item 1's case), DK8 the 15 dB default (0.3 s), DK9 the rising
+  transient timed from the peak (0.2 s), DK10 pre-tap entries ignored (0.2 s), DK11 a streamed ring-out
+  (0.4 s), DK12 tracking stops at 3 s of audio without recording, DK13 no ring-out until more than 10
+  entries. DK11–DK13 are new to the natives; DK1, DK2, DK12 and DK13 new to the web. The old DK7 (tracking
+  with no tap time) is gone.
+- The tracking cases (DK6, DK7, DK11–DK13) reach their state through production — a fresh analyzer,
+  `startDecayTracking`, `startTapSequence` and the per-chunk entry (Swift `onChunkLevel`, Python
+  `_on_chunk_level`, web `processAudioFrame`) — none sets tracker state by hand. Every value is asserted to
+  1e-6 in all three.
+- Comments say what the code does: the "3-second timer", the web `DecayTracker`, the Swift diagnostics claim,
+  the Combine caller, the old signature and the "Debug output removed" line are gone; Python's unused
+  `@Slot()` is dropped.
+- The 5 s trim is removed from all three.
+- Mutations: the 3 s stop made `>` instead of `>=` fails DK12, and "more than 10" made "10 or more" fails
+  DK13, in all three. Python keeps its view case. Full suites: Swift 657, Python 775, web 702; tsc and
+  eslint clean.
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after every build (see F30's steps).
+
+1. Guitar, Taps 1: New Tap, tap once and let it ring out; before 3 s have passed, press New Tap. → The
+   Ring-Out box goes back to "Waiting…" and stays there until the next tap.
+
+**Run-review progress.** All three editions passed step 1 (owner, 2026-09-27).
 
 ## Stage 2 — move case lists into shared data
 
