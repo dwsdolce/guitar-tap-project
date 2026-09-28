@@ -318,3 +318,18 @@ since there are a lot of other items that get attached to it."
 - A guard was considered and NOT written: "assert every signal has a property" would only police
   Python's existing habit, where the real check is that the three surfaces match. The guard belongs
   with the spec, not ahead of it.
+
+### Where settings are saved — the web's settings store (2026-09-28, from #21 item 14)
+
+Swift saves each setting in the model: the analyzer's properties write `TapDisplaySettings` in their
+`didSet` (e.g. `tapDetectionThreshold`, `peakMinThreshold`), so a change from any source — a slider, the
+Settings sheet, a loaded measurement — is saved the same way. Python now does the same for the two
+thresholds (#21 item 14). The web keeps every setting — thresholds, measurement type, display ranges,
+annotation mode and the rest — in one App-level store (`settings` / `updateSettings`); the analyzer holds
+none of them, and after a load it hands App a `loadedSettings` patch which App saves.
+
+Owner, 2026-09-28: architectural consistency is the bar, not correct behaviour; the web's store covers
+every setting, so moving two thresholds alone would split the web's mechanism. The spec decides where the
+web's settings live and who saves them, with Swift's model-owned settings as the reference. The owner's
+concern, recorded with it: that #1 is never done and divergences keep being carried here instead of fixed.
+
