@@ -472,7 +472,9 @@ being checked: **what Settings shows is what the next launch uses.**
    recorded with the USB mic. → The input switches to the USB mic; its calibration (or none) is shown; no
    "different calibration" warning for the built-in mic's calibration. Quit and relaunch. → The USB mic.
 8. Load a measurement recorded with a microphone that is not connected. → "Recorded with '…'. No connected
-   microphone matches that name…"; the input is unchanged.
+   microphone matches that name…". The Results panel shows the measurement's recorded (missing) microphone;
+   the input in use, the microphone shown in Settings and the saved setting are all unchanged — a relaunch
+   comes back on the same microphone.
 9. In Settings, choose a device that cannot be opened (e.g. one another app holds exclusively, if one is
    available). → "Microphone Unavailable — Could not open the microphone '…'. The previous input is still in
    use…"; Settings still shows the previous device. Quit and relaunch. → The previous device.
@@ -483,3 +485,7 @@ being checked: **what Settings shows is what the next launch uses.**
     the current settings (as for the measurement type).
 12. Windows (Python): steps 2 and 4. Then, with the saved mic unplugged, launch. → Windows' default
     recording device (not simply the first in the list).
+
+**Run-review progress.** Python on macOS: steps 1–11 passed (owner, 2026-09-28). Remaining: Swift, the web,
+and step 12 (Python on Windows).
+
