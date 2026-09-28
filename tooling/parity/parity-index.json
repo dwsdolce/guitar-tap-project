@@ -871,6 +871,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/mic-selection",
+      "swift": [
+        "GuitarTapTests/MicSelectionTests.swift"
+      ],
+      "python": [
+        "tests/test_mic_selection.py"
+      ],
+      "web": [
+        "test/mic-selection.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/mode-colors",
       "swift": [
         "GuitarTapTests/ModeColorsTests.swift"
