@@ -2,8 +2,9 @@
 
 **Issue:** [#21](https://github.com/dwsdolce/guitar-tap-project/issues/21)
 
-Status: **IMPLEMENTED 2026-09-27 (items 1–12), revised 2026-09-28 (items 13–14) — awaiting run-review.** Commits: Swift `fb1b27f`, Python
-`aecefc3`, web `6dc6f5c`; items 13–14: Swift `8b76a3c`, Python `d37fb9b`, web `a8faa6e`. All three editions (Swift, Python, web).
+Status: **IMPLEMENTED 2026-09-27 (items 1–12), revised 2026-09-28 (items 13–17) — awaiting run-review.** Commits: Swift `fb1b27f`, Python
+`aecefc3`, web `6dc6f5c`; items 13–14: Swift `8b76a3c`, Python `d37fb9b`, web `a8faa6e`; items 15–17: Swift `9beddbc`,
+Python `e348256`, web `34eec92`. All three editions (Swift, Python, web).
 
 ## Found
 
@@ -67,6 +68,9 @@ Three questions raised before implementation were taken as recommended with that
 | 12 | Choosing a calibration is saved by the model, not the view | ✅ | ✅ | ✅ |
 | 13 | Every selection is saved; an unplug falls to the default (revised decision) | ✅ | ✅ | ✅ |
 | 14 | A threshold is saved by the model's setter, so a load's thresholds are saved | — | ✅ | #1 |
+| 15 | Python: a renumbered device keeps its selection with its fresh index | — | ✅ | — |
+| 16 | Python: no PortAudio terminate while a close is pending; a failed watchdog restart retries | — | ✅ | — |
+| 17 | A device that fails to open is not selected or saved; the previous is kept; a popup says so | ✅ | ✅ | ✅ |
 
 **1. Startup.** The saved device if present; otherwise the system default input; otherwise the first device.
 
@@ -359,6 +363,92 @@ through App's settings store (`updateSettings`), fed after a load by the analyze
   counterpart). Mutation — the setters not saving — fails MS21, MS22 and the existing D3 / D5 persistence
   tests. Full suites: Swift 678, Python 798, web 711; tsc and eslint clean.
 
+## Run-review findings (2026-09-28, Python on macOS) — under decision
+
+From the owner's run-review, with the debug log (`guitar_tap-debug.log`, session 18:42 UTC):
+
+**15. Python reopens a device by a stale index after a hot-plug.** PortAudio numbers devices by their
+position and renumbers them when the app re-initialises it after a hot-plug. With the MacBook mic selected
+as index 2 (UMIK 0, BlackHole 1, MacBook 2), unplugging the UMIK made it index 1; the selection was still
+present, so the refresh left it alone, and the stream was reopened on the old index 2 — "Could not open
+'MacBook Pro Microphone' (Invalid number of channels)" — and the watchdog's recoveries failed in turn. A
+stale index can equally land on another device (BlackHole, which is silent) — a possible cause of the first
+failure seen (step 4: "No audio input", levels frozen). Swift and the web identify devices by stable ids
+(CoreAudio device id, browser `deviceId`); Python only. Proposed: when a list is applied, re-point the
+selection at the fresh entry for the same device.
+
+**16. An unplug went unnoticed.** After the UMIK was plugged in (t=136.9 s) no further device change was
+seen; a stream close before it had timed out (t=144.9 s, "abort/close timed out after 2 s"). At the load
+(t=188.2 s) the app still listed the UMIK, switched to it, failed to open it ("Internal PortAudio error
+-9986") and was left with no stream — New Tap hung, the watchdog restarting a device that was not there.
+- *Found (2026-09-28): the freeze.* At t=144.9 s, switching to the MacBook mic, closing the UMIK's stream hung
+  ("abort/close timed out after 2 s — proceeding without waiting"): the app went on, but PortAudio's abort on
+  CoreAudio's I/O thread never finished. At t=191.2 s the watchdog scheduled recovery attempt 1/6; the restart
+  runs on the main thread and starts by re-initialising PortAudio (`sd._terminate()` / `sd._initialize()`).
+  Terminating waits for every stream — including the half-closed one — so the main thread blocked: no
+  "stream restarted", no attempt 2, the window frozen. The file's own header records that `Pa_Terminate` can
+  deadlock on macOS when the CoreAudio I/O thread is stuck (the exit handler is guarded with a timeout); the
+  re-initialise used by the watchdog and the hot-plug refresh is not.
+- *Likely link:* the missed unplug came after the same hung close; CoreAudio's notification may not have
+  reached the app while its threads were stuck. Consistent with the log, not proven by it.
+- *Next (owner, 2026-09-28: "yes"):* investigate why the stream close hangs, and stop PortAudio being
+  terminated while a timed-out close is pending (or on the main thread) — the watchdog's re-initialise and the
+  hot-plug refresh's. Not introduced by #21; #21's extra switching (the load switch, unplug fallbacks) makes
+  the path more likely.
+
+**17. A device that fails to open.** Python and Swift select and save the device before opening it; on failure
+Python is left with no stream and Swift with the engine stopped. The web restores the previous input.
+- *Decision (owner, 2026-09-28):* a device that fails to open is not selected and not saved — "It cannot be
+  selected if it fails to open. And shouldn't be saved." The previous device stays selected and in use, and
+  a popup tells the user the chosen microphone cannot be used and to check it. This arises while the app
+  runs: choosing a device in Settings, or a load whose recorded microphone the system lists but which fails
+  to open (then as for a missing microphone: the current input is kept). A device plugged in while running
+  is switched to automatically and gets the same popup if it fails to open.
+- The load of a measurement whose microphone is not listed is unchanged: the current input is kept and the
+  "No connected microphone matches…" warning shown.
+
+*Decision (owner, 2026-09-28):* "Go" — on the proposed fixes: (1) re-point a renumbered selection, and look the
+selected device up again by fingerprint when re-initialising; (2) the Python watchdog restart reopens the
+selected device and counts a failed open as a failed attempt, as Swift's does; (3) a pending recovery is dropped
+if the input was switched since it was scheduled — Swift, Python and the web; (4) Python never terminates
+PortAudio while a timed-out close is pending; (5) item 17.
+
+- *Done (15, Python):* `apply_input_device_list` re-points a still-present selection at the fresh entry (same
+  device, new index; not a new selection — nothing saved or reloaded); `reinitialize_portaudio` looks the
+  selected device up again by fingerprint (`_listed_device`) before opening it.
+- *Done (16, Python):* `terminate_and_reinitialize_portaudio` does nothing — and logs it — while a timed-out
+  close (`_pending_stream_close`, recorded by `_close_stream_only`) is still alive; the hot-plug refresh and the
+  watchdog both go through it. `reinitialize_portaudio` raises `InputDeviceOpenError` when the device is not
+  listed or cannot be opened, and `_do_watchdog_restart` then retries through `_attempt_watchdog_recovery`
+  instead of logging a restart that did not happen. For the missed unplug: the log now records every device
+  change the system reports, a change dropped because no handler was connected, and a refresh dropped by the
+  1-second cooldown (which dropped silently before).
+- *Done (17, all three):* one message, "Could not open the microphone '…'. The previous input is still in use —
+  please check the microphone." Swift: `switchInputDevice(to:open:)` (used by `setInputDevice`) selects the
+  device, opens it, and on failure selects and reopens the previous one and rethrows; a switch through
+  `selectedInputDevice` (Settings, a plug-in, a fallback) that fails to restart is reverted by
+  `revertFailedInputSwitch(from:to:)`, which publishes `inputDeviceOpenFailure` — an alert on the main view and
+  on the Settings sheet ("Microphone Unavailable"). Python: `set_device` reverts and raises
+  `InputDeviceOpenError`; Settings shows the alert and returns the combo to the device in use; the refresh keeps
+  the previous device (`_keep_previous_after_failed_open`) and emits `inputDeviceOpenFailed` for the alert. Web:
+  `setInputDevice` already kept the previous input; a failed plug-in now keeps it too (it fell to the browser
+  default) and reports through `onInputOpenFailed`; Settings and a plug-in show "Microphone Unavailable". A load
+  whose recorded microphone cannot be opened keeps the input and its warning is the failed-open message, in all
+  three.
+- *Tests:* MS23 (a failed switch keeps the previous device, selected and saved — all three), MS24 (a failed
+  switch while running is reverted and reported — all three), MS25 (a load whose switch fails — Python, web; a
+  Swift test engine opens nothing), MS26 (a renumbered device), MS27 (no terminate while a close is pending),
+  MS28 (a failed watchdog restart retries) — Python only. Mutations — no revert, no report, no rebinding, no
+  pending-close guard, a failed restart reported as success — each fail their case. Full suites: Swift 680,
+  Python 804, web 714; tsc and eslint clean.
+- *Not done — fix (3), for the owner:* Swift's recovery stops the engine when it schedules the restart, and a
+  device switch while the engine is stopped does not restart it (`didSet` restarts only when running) — so in
+  Swift the pending recovery is what starts the engine on the newly selected device. Dropping it would leave
+  Swift stopped. In Python the late recovery was destructive only because it re-initialised PortAudio under a
+  fresh stream and reopened a stale index; with (1), (2) and (4) it now reopens the selected device, as Swift's
+  does. Dropping pending recoveries in Python and the web alone would make them differ from Swift. Proposed:
+  leave (3) undone in all three. *Decision (owner, 2026-09-28):* agreed — (3) is not done.
+
 ## Run-review steps
 
 Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`
@@ -396,3 +486,9 @@ being checked: **what Settings shows is what the next launch uses.**
 14. Move the Tap Threshold and Peak Min sliders; quit and relaunch. → Both keep the values you set. Settings →
     type a Peak Min value and Apply; quit and relaunch. → That value (Python: now saved by the model, under one
     key).
+15. (Python) With the MacBook mic selected and the UMIK connected, unplug the UMIK. → The input stays on the
+    MacBook mic and keeps working (no "Could not open", no watchdog restarts).
+16. With the app running, choose in Settings a device that cannot be opened (e.g. one another app holds
+    exclusively, if one is available). → "Microphone Unavailable — Could not open the microphone '…'. The
+    previous input is still in use…"; Settings still shows the previous device; relaunch → the previous device.
+
