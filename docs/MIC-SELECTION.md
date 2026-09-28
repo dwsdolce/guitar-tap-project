@@ -456,39 +456,30 @@ Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web `np
 (e.g. the UMIK-1); BlackHole installed reproduces the report. Same list per edition, canonical first. The rule
 being checked: **what Settings shows is what the next launch uses.**
 
-1. Settings → choose the built-in microphone. Quit and relaunch. → The built-in microphone (not BlackHole,
-   not the USB mic).
+1. Open Settings. → The device list shows the connected inputs with the current one selected; opening it
+   changes nothing. Choose the built-in microphone. Quit and relaunch. → The built-in microphone (not
+   BlackHole, not the USB mic).
 2. With the app running, plug in the USB mic. → The input switches to it; Settings shows it. Quit and
    relaunch. → The USB mic.
 3. Settings → choose the built-in microphone. Quit. Plug in the USB mic. Launch. → The built-in microphone.
 4. Settings → choose the USB mic. Unplug it while the app runs. → The input switches to the system default;
-   Settings shows it. Plug it back in. → The input switches back to the USB mic.
-5. Settings → choose the USB mic. Unplug it; quit. Plug it back in; launch. → The system default — what
-   Settings showed when you quit.
-6. Settings → choose the USB mic. Quit. Launch with it unplugged. → The system default; Settings shows it.
-   Quit; plug it in; launch. → Still the system default.
-7. With the built-in mic chosen and the USB mic connected, load a measurement recorded with the USB mic. →
-   The input switches to the USB mic; Settings shows it. Quit and relaunch. → The USB mic.
-8. Open Settings. → The device list shows the connected inputs and the current one selected; opening
-   Settings does not change the input.
-9. With the built-in mic chosen (and a calibration on it) and the USB mic connected, load a measurement
-   recorded with the USB mic. → The input switches to the USB mic, its calibration (or none) is shown, and
-   no "different calibration" warning appears for the built-in mic's calibration.
-10. Load a measurement recorded with a microphone that is not connected. → "Recorded with '…'. No connected
-    microphone matches that name…"; the input is unchanged.
-11. (Python, Windows) With the app running, plug in a USB mic. → The input switches to it and Settings lists
-    it. Quit and relaunch. → The USB mic. With nothing saved (or the saved mic gone) and the USB mic
-    unplugged, launch. → Windows' default recording device (not simply the first in the list).
-12. Load a measurement whose tap threshold and Peak Min differ from the current ones. Quit and relaunch. → The
-    loaded values are the current settings (as for the measurement type).
-13. Settings → with the USB mic in use, choose a calibration. Switch to the built-in mic. → No calibration (or
-    the built-in's own). Switch back to the USB mic. → The calibration chosen in the first step.
-14. Move the Tap Threshold and Peak Min sliders; quit and relaunch. → Both keep the values you set. Settings →
-    type a Peak Min value and Apply; quit and relaunch. → That value (Python: now saved by the model, under one
-    key).
-15. (Python) With the MacBook mic selected and the UMIK connected, unplug the UMIK. → The input stays on the
-    MacBook mic and keeps working (no "Could not open", no watchdog restarts).
-16. With the app running, choose in Settings a device that cannot be opened (e.g. one another app holds
-    exclusively, if one is available). → "Microphone Unavailable — Could not open the microphone '…'. The
-    previous input is still in use…"; Settings still shows the previous device; relaunch → the previous device.
-
+   Settings shows it. Plug it back in. → The input switches back to the USB mic. Unplug it again; quit; plug it
+   in; launch. → The system default — what Settings showed when you quit.
+5. Settings → choose the USB mic. Quit. Launch with it unplugged. → The system default; Settings shows it.
+6. With the built-in mic in use and the USB mic connected, unplug the USB mic. → The input stays on the
+   built-in mic and keeps working (no "Could not open", no watchdog restarts).
+7. With the built-in mic chosen (with a calibration on it) and the USB mic connected, load a measurement
+   recorded with the USB mic. → The input switches to the USB mic; its calibration (or none) is shown; no
+   "different calibration" warning for the built-in mic's calibration. Quit and relaunch. → The USB mic.
+8. Load a measurement recorded with a microphone that is not connected. → "Recorded with '…'. No connected
+   microphone matches that name…"; the input is unchanged.
+9. In Settings, choose a device that cannot be opened (e.g. one another app holds exclusively, if one is
+   available). → "Microphone Unavailable — Could not open the microphone '…'. The previous input is still in
+   use…"; Settings still shows the previous device. Quit and relaunch. → The previous device.
+10. With the USB mic in use, choose a calibration in Settings. Switch to the built-in mic. → Its own
+    calibration, or none. Switch back to the USB mic. → The calibration chosen.
+11. Move the Tap Threshold and Peak Min sliders; set a Peak Min value in Settings and Apply. Then load a
+    measurement whose tap threshold and Peak Min differ from those. Quit and relaunch. → The loaded values are
+    the current settings (as for the measurement type).
+12. Windows (Python): steps 2 and 4. Then, with the saved mic unplugged, launch. → Windows' default
+    recording device (not simply the first in the list).
