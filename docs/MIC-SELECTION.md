@@ -484,6 +484,99 @@ both showed under "Microphone Not Connected".
   or 48 kHz on the web. Proposed for separate investigation: the web asking the browser for the microphone's
   rate (`new AudioContext({ sampleRate })`).
 
+## 19. Windows watched the wrong notification (2026-09-28)
+
+Step 2 failed on Windows: with the app running, plugging the UMIK-1 in did not switch the input.
+Nothing in the selection logic was wrong — it was handed a device list that did not contain the
+microphone.
+
+**What the log showed.** Two notifications arrived, the refresh ran, and PortAudio still reported
+one device:
+
+```
+🔌 Device change reported by the system      <- notification 1
+🔌 Device change reported by the system      <- notification 2
+🎤 Found 1 audio input device(s) total       <- the UMIK is not there yet
+🔄 _on_devices_refreshed: suppressed (within 1 s of the last refresh)
+```
+
+So the refresh that ran was too early to see the microphone, and the one that would have seen it was
+dropped as a duplicate. `newly_connected` was empty, the array stayed selected, and the stream
+reopened on it.
+
+**Why.** `CM_Register_Notification` on `KSCATEGORY_AUDIO` reports that a USB **device interface**
+arrived. What the app needs is that an audio **endpoint became active**, which happens later. The
+0.5 s settle sleep in `_notify_devices_changed` was compensation for that gap, and the 1 s cooldown
+(Guard 2) existed because interface events cascade — `Pa_OpenStream` fires one itself. Both
+constants were treating a symptom.
+
+**Measured, with a standalone probe** registering `IMMNotificationClient` and re-enumerating
+PortAudio at each event (UMIK-1 plug-in, then unplug):
+
+```
+t=9.275  OnPropertyValueChanged x7      <- 28 ms EARLY
+t=9.303  OnDeviceStateChanged ACTIVE    <- the real event
+t=9.336  OnDefaultDeviceChanged x3 (capture: console/multimedia/communications)
+         PortAudio enumerates the device from here on
+t=18.067 OnDeviceStateChanged NOTPRESENT  (unplug; PortAudio agrees 85 ms later)
+```
+
+Three things that shaped the fix:
+
+* **The endpoint event and PortAudio agree.** PortAudio's WASAPI host API enumerates the MMDevice
+  enumerator's active endpoints — the very list that just changed — so a refresh triggered by
+  `ACTIVE` finds the device. **No settle constant is needed, and none was added.**
+* **`OnDeviceAdded` never fired.** The UMIK was already known to Windows, sitting at `NOTPRESENT`, so
+  its arrival is a *state change*. A monitor watching only `OnDeviceAdded` would miss every re-plug.
+* **`OnPropertyValueChanged` is the trap** — 21 of the 25 events, and the first burst precedes
+  `ACTIVE` by 28 ms. Acting on it reproduces the original race exactly.
+
+**The change (Windows only).** `_start_windows_monitor` registers an `IMMNotificationClient`, with
+the cfgmgr32 monitor kept as the fallback when comtypes is absent — the same optional-import shape as
+`pyudev` on Linux. `comtypes` is declared in `requirements.txt` and `pyproject.toml` under a
+`sys_platform == "win32"` marker. Registration happens on a dedicated thread that joins the **MTA**:
+comtypes CoInitializes the importing thread as an STA, and an STA callback object only receives calls
+while a message pump runs.
+
+Actionable events are exactly those that change the device list — added, removed, state-changed.
+Property changes and **default-device changes** are ignored. The latter cost a second round: acting
+on them ran four full refreshes per plug-in (one `ACTIVE` + three default-role changes), each a
+PortAudio re-init, stream reopen and detection reset. They report which device Windows now *prefers*,
+never a change to the list; the fallback that cares about the system default reads it at enumeration
+time.
+
+The Windows hand-off skips the 0.5 s sleep (`_notify_devices_changed_now`, separate so the shared
+`_notify_devices_changed` keeps the behaviour validated on macOS and Linux), and Guard 2 is skipped
+only while the MMDevice monitor is active, since opening a shared-mode stream neither adds, removes
+nor activates an endpoint. Guard 1 still prevents overlap, without a clock. `_start_coreaudio_monitor`,
+`_start_linux_monitor` and every shared selection path are untouched.
+
+**Result** — one event, one refresh, one restart, and audio flowing on the new device:
+
+```
+🔌 Audio endpoint change (state=1)
+🎤 Found 2 audio input device(s) total
+📊 Auto-loaded calibration for device 'Microphone (Umik-1  Gain: 18dB)'
+🎤 New device connected, selected: Microphone (Umik-1  Gain: 18dB)
+🔄 Detection re-enabled after route change (current level: -84.16 dB)
+```
+
+**Two incidental findings.**
+
+* `gt_log` printed its emoji markers straight to stdout, so with logging enabled on a cp1252 console
+  the app died at its first log line. Guarded with an ASCII fallback; the file log was always UTF-8.
+  Worth knowing because the log is the field diagnostic, and it is disabled by default — the failure
+  only appears when someone turns it on to investigate something else.
+* On the test machine the built-in **Intel Smart Sound array delivers digital silence through WASAPI**
+  (bit-exact zeros at 1 and 2 channels) while the same hardware returns signal through MME. The app's
+  filter prefers WASAPI, so the built-in mic is unusable there — the same pathology the filter already
+  documents for WDM-KS. Not part of #21, and not investigated further; noted because any run-review
+  step that lands on that machine's built-in mic will look like a failure.
+
+**Still open:** one case can produce two refreshes — a microphone Windows has never seen before, where
+`OnDeviceAdded` and `OnDeviceStateChanged(ACTIVE)` may both fire. Harmless, and left alone rather than
+suppressed with a timer.
+
 ## Run-review steps
 
 Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`
@@ -522,6 +615,11 @@ being checked: **what Settings shows is what the next launch uses.**
     recording device (not simply the first in the list).
 
 **Run-review progress.** macOS complete (owner, 2026-09-28): Swift, Python and the web (Safari) passed
-steps 1–11, including item 18's reworded messages. Remaining: Windows and Linux (step 12 and the steps it
-names).
+steps 1–11, including item 18's reworded messages. **Windows (Python) complete** (owner, 2026-09-28):
+step 12 — steps 2 and 4, and the launch with the saved mic unplugged — passed after the monitor was
+moved onto audio-endpoint events (item 19). Remaining: Linux.
+
+Note for a Windows or Linux run: `tests/test_self_regression.py` fails on those machines with a stale
+baseline, which is #16's work and unrelated to microphone selection — it waits on #17 finishing, since
+re-minting costs a pass on every configuration and is not worth doing twice.
 

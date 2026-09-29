@@ -1577,6 +1577,10 @@
   "platformSpecific": [
     {
       "repo": "python",
+      "path": "Tooling/mmdevice-probe.py"
+    },
+    {
+      "repo": "python",
       "path": "src/guitar_tap/models/update_checker.py"
     },
     {

@@ -136,6 +136,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 
 | File | Repo |
 |---|---|
+| `Tooling/mmdevice-probe.py` | python |
 | `src/guitar_tap/models/update_checker.py` | python |
 | `tests/test_import_identity.py` | python |
 | `tests/test_peak_card_identity.py` | python |
