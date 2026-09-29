@@ -577,6 +577,68 @@ nor activates an endpoint. Guard 1 still prevents overlap, without a clock. `_st
 `OnDeviceAdded` and `OnDeviceStateChanged(ACTIVE)` may both fire. Harmless, and left alone rather than
 suppressed with a timer.
 
+## 20. Linux: hot-plug disabled, deliberately (2026-09-28)
+
+**Decision (owner): disable microphone hot-plug on Linux and document it. Closed, not deferred —
+there is no follow-up issue and this is not to be revisited.** macOS and Windows both work; the
+Linux user base may well be empty, and the effort to make this correct is out of proportion to it.
+
+`_start_linux_monitor` is now an explicit no-op carrying the reasoning, rather than the silent
+`except ImportError: return` that hid the situation for six months.
+
+**It had never worked.** A udev monitor was written on 2026-03-22 behind `try: import pyudev`, and
+`pyudev` was never declared in `requirements.txt`, `pyproject.toml` or the PyInstaller spec. Every
+install — source or AppImage — took the early return, so no user has ever had Linux hot-plug, and
+the release notes only ever claimed it for Windows and macOS. Disabling it removes nothing anybody had.
+
+**The events were solved; that was the easy half.** Measured over six plug cycles with a standalone
+probe (the same approach item 19 used on Windows):
+
+- udev emits its `sound` events **3–20 ms after** the `/dev/snd` nodes already exist — the opposite
+  of Windows, where the notification preceded readiness by 28 ms.
+- `card1`, `pcmC1D0c` and `controlC1` arrive within ~11 ms of each other, so **no choice among them
+  marks readiness** — there is no Linux equivalent of `OnDeviceStateChanged(ACTIVE)`.
+- What actually gates PortAudio is the **uaccess ACL** making those nodes readable, landing 6–10 ms
+  after the event. In all three measured cycles the first enumeration begun after the ACL succeeded.
+- The node→ACL interval measured **20 ms, 42 ms and 214 ms** on consecutive cycles of one idle
+  machine — a 10× spread, which is what a fixed settle sleep has to cover blind.
+
+A Linux-only notify path waiting on that condition rather than a clock was written and worked. It
+was removed with the rest: correct code for a feature that is not shipping is a trap for the next
+reader.
+
+**The device list is why it cannot work as designed.**
+
+- PortAudio's Linux enumeration lists raw ALSA `hw:` devices *alongside* PipeWire's `default`,
+  `pipewire` and `sysdefault` aliases. `filter_input_devices` keeps everything with
+  `max_input_channels > 0` on non-Windows — the careful Windows pruning has no Linux counterpart.
+- Whenever PipeWire holds a card, that card reports 0 input channels and **drops out of the list**.
+  Confirmed directly: `fuser /dev/snd/pcmC0D0c` showed `pipewire` holding it while
+  `arecord -D hw:0,0` answered *"Device or resource busy"*.
+- PipeWire moves its active source on its own — auto-switching to a newly plugged microphone,
+  suspending idle ones — so devices enter and leave the list **with no hardware change at all**.
+  One session went 5 → 4 → 3 → 2 devices.
+- A device that reappears because PipeWire released it is indistinguishable from one just plugged
+  in, so `apply_input_device_list`'s `newly_connected` branch selects it — and every selection is
+  saved. Observed in the log: `🎤 New device connected, selected: Ensoniq AudioPCI…` with nothing
+  plugged in. **That is #21's own defect, reintroduced on a third platform**, which is why
+  half-working hot-plug is worse than none.
+
+Fixing it means deciding what Linux should enumerate at all — PipeWire's sources rather than raw
+`hw:` devices — a design change affecting what users can pick, needing verification on real
+hardware. Not done.
+
+**What Linux gets instead** is the contract Windows shipped with for a time: the list is built at
+startup, and a microphone connected later is chosen in Settings. Documented in the Python
+`docs/ReleaseNotes.md` (Known Limitations) and the user manual (§2.3 and the §10 troubleshooting
+table).
+
+**Incidental, and not chased:** measuring this was done in a VMware guest, which contributed its own
+noise — USB detach reached the audio layer ~6.7 s before the guest's udev, `_close_stream_only`
+timed out at 2 s on the emulated ES1371, and the buffer watchdog consequently raced the hot-plug
+refresh and left PortAudio un-reinitialised. That watchdog/refresh race is **not** Linux-specific and
+is the one thing here worth remembering for the other platforms.
+
 ## Run-review steps
 
 Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`
@@ -617,7 +679,9 @@ being checked: **what Settings shows is what the next launch uses.**
 **Run-review progress.** macOS complete (owner, 2026-09-28): Swift, Python and the web (Safari) passed
 steps 1–11, including item 18's reworded messages. **Windows (Python) complete** (owner, 2026-09-28):
 step 12 — steps 2 and 4, and the launch with the saved mic unplugged — passed after the monitor was
-moved onto audio-endpoint events (item 19). Remaining: Linux.
+moved onto audio-endpoint events (item 19). **Linux (Python):** steps 2, 4, 6 and 7 are **not
+applicable** — they test hot-plug, which is disabled on Linux by decision (item 20). The remaining
+steps — 1, 3, 5, 8, 9, 10, 11 — still apply and are what a Linux run covers.
 
 Note for a Windows or Linux run: `tests/test_self_regression.py` fails on those machines with a stale
 baseline, which is #16's work and unrelated to microphone selection — it waits on #17 finishing, since
