@@ -4,7 +4,7 @@
 
 Status: **IMPLEMENTED 2026-09-27 (items 1–12), revised 2026-09-28 (items 13–17) — awaiting run-review.** Commits: Swift `fb1b27f`, Python
 `aecefc3`, web `6dc6f5c`; items 13–14: Swift `8b76a3c`, Python `d37fb9b`, web `a8faa6e`; items 15–17: Swift `9beddbc`,
-Python `e348256`, web `34eec92`. All three editions (Swift, Python, web).
+Python `e348256`, web `34eec92`; item 18: Swift `4cf0987`, Python `9dfb7be`, web `c7850c9`. All three editions (Swift, Python, web).
 
 ## Found
 
@@ -71,6 +71,7 @@ Three questions raised before implementation were taken as recommended with that
 | 15 | Python: a renumbered device keeps its selection with its fresh index | — | ✅ | — |
 | 16 | Python: no PortAudio terminate while a close is pending; a failed watchdog restart retries | — | ✅ | — |
 | 17 | A device that fails to open is not selected or saved; the previous is kept; a popup says so | ✅ | ✅ | ✅ |
+| 18 | The load's two warnings reworded, each under its own title | ✅ | ✅ | ✅ |
 
 **1. Startup.** The saved device if present; otherwise the system default input; otherwise the first device.
 
@@ -449,10 +450,44 @@ PortAudio while a timed-out close is pending; (5) item 17.
   does. Dropping pending recoveries in Python and the web alone would make them differ from Swift. Proposed:
   leave (3) undone in all three. *Decision (owner, 2026-09-28):* agreed — (3) is not done.
 
+## 18. The load's warnings, reworded (2026-09-28)
+
+Run-review (web, Safari): with the UMIK connected and in use, a measurement from another browser warned
+"Microphone Not Connected — This measurement was recorded with a different sample rate". The web log showed
+the load had matched the UMIK by name and the input already was it; the rates were 48000 Hz recorded (Chrome)
+against 44100 Hz now (Safari — the browser's audio rate follows the output device, and the mic's 48 kHz is
+resampled to it). And (Swift) a measurement from Python on Windows — `Microphone (Umik-1  Gain: 18dB)` — found
+no microphone on the Mac, where the same UMIK is `Umik-1  Gain: 18dB`. Both behaviours are as decided (a
+measurement from another platform does not find its microphone); the popups did not make that clear, and
+both showed under "Microphone Not Connected".
+- *Decision (owner, 2026-09-28):* reword both popups to be "more blatant, informative, and explicit"; the
+  Results panel and the user documentation unchanged. The wording was agreed as drafted.
+- *Done (all three):* the load's warning carries its own title (Swift `microphoneWarningTitle`, Python
+  `microphone_warning_title`, web `microphoneWarningTitle`, set with the message):
+  - **Microphone Not Found** — "This measurement was recorded with a microphone named '…'. No connected
+    microphone has exactly that name, so the input has not been changed — you are still using '…'. / Each
+    computer names microphones its own way. A measurement made on another computer — especially one running a
+    different operating system — will usually not find its microphone even when the same one is connected. If
+    it is, choose it in Settings. / Peak frequencies are still comparable; input levels, the tap threshold,
+    and faint peaks (such as FLC) may differ."
+  - **Recording Setup Differs** — "This measurement was made with a different setup from the current one: /
+    • Calibration: recorded with '…'; the current microphone uses '…'. / • Sample rate: recorded at … Hz; audio
+    is now captured at … Hz. / A tap captured now may not match the saved result. The sample rate is set
+    outside Guitar Tap: in Audio MIDI Setup on a Mac, or Sound settings on Windows." (only the lines that
+    differ; the web's last sentence: "In a browser, the sample rate follows your output device: set the output
+    and input to the same rate in Audio MIDI Setup (Mac) or Sound settings (Windows).")
+  - **Microphone Unavailable** — a load whose microphone cannot be opened (item 17).
+- *Tests:* MS16 and MS17 check the title and the exact text (all three); the import tests check the folded
+  message's opening. Full suites: Swift 680, Python 804, web 714; tsc and eslint clean.
+- *Found, recorded, not changed:* the web captures at the browser's rate (the output device's), not the
+  microphone's as Swift and Python do — the same microphone gives 48 kHz measurements in the natives and 44.1
+  or 48 kHz on the web. Proposed for separate investigation: the web asking the browser for the microphone's
+  rate (`new AudioContext({ sampleRate })`).
+
 ## Run-review steps
 
 Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`
-(Chrome — Safari rotates device ids between sessions, so a saved device is not found there). Use a USB mic
+(Safari and Chrome; the browser console shows the web's device log). Use a USB mic
 (e.g. the UMIK-1); BlackHole installed reproduces the report. Same list per edition, canonical first. The rule
 being checked: **what Settings shows is what the next launch uses.**
 
@@ -486,6 +521,7 @@ being checked: **what Settings shows is what the next launch uses.**
 12. Windows (Python): steps 2 and 4. Then, with the saved mic unplugged, launch. → Windows' default
     recording device (not simply the first in the list).
 
-**Run-review progress.** Python on macOS: steps 1–11 passed (owner, 2026-09-28). Remaining: Swift, the web,
-and step 12 (Python on Windows).
+**Run-review progress.** macOS complete (owner, 2026-09-28): Swift, Python and the web (Safari) passed
+steps 1–11, including item 18's reworded messages. Remaining: Windows and Linux (step 12 and the steps it
+names).
 
