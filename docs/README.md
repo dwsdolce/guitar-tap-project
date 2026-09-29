@@ -22,7 +22,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
-- [#21](https://github.com/dwsdolce/guitar-tap-project/issues/21) · [`MIC-SELECTION.md`](MIC-SELECTION.md) — which input device each edition uses and what it remembers (implemented; awaiting run-review)
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#15](https://github.com/dwsdolce/guitar-tap-project/issues/15) · [`guitar_tap-manual-seo-handoff.md`](guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/` indexed as "Page with redirect"
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
@@ -34,6 +33,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#21 (microphone selection) is **closed**; its record is
+[`completed/MIC-SELECTION.md`](completed/MIC-SELECTION.md) — the saved microphone wins at launch, else the
+system default; every selection is saved, so what Settings shows is what the next launch uses; a device
+that cannot be opened is never selected; verified on macOS, Windows and Linux (Linux without hot-plug).
 
 #5 (multi-tap material divergence) is **closed**; its record is
 [`completed/MATERIAL-MULTITAP-DISCREPANCIES.md`](completed/MATERIAL-MULTITAP-DISCREPANCIES.md) — item 3's

@@ -2,7 +2,8 @@
 
 **Issue:** [#21](https://github.com/dwsdolce/guitar-tap-project/issues/21)
 
-Status: **IMPLEMENTED 2026-09-27 (items 1–12), revised 2026-09-28 (items 13–17) — awaiting run-review.** Commits: Swift `fb1b27f`, Python
+Status: **✅ COMPLETE 2026-09-28** — verified on macOS (Swift, Python, web), Windows (Python) and Linux (Python;
+hot-plug disabled by decision, item 20). Items 21–22 recorded and left, by decision. Commits: Swift `fb1b27f`, Python
 `aecefc3`, web `6dc6f5c`; items 13–14: Swift `8b76a3c`, Python `d37fb9b`, web `a8faa6e`; items 15–17: Swift `9beddbc`,
 Python `e348256`, web `34eec92`; item 18: Swift `4cf0987`, Python `9dfb7be`, web `c7850c9`. All three editions (Swift, Python, web).
 
@@ -72,6 +73,10 @@ Three questions raised before implementation were taken as recommended with that
 | 16 | Python: no PortAudio terminate while a close is pending; a failed watchdog restart retries | — | ✅ | — |
 | 17 | A device that fails to open is not selected or saved; the previous is kept; a popup says so | ✅ | ✅ | ✅ |
 | 18 | The load's two warnings reworded, each under its own title | ✅ | ✅ | ✅ |
+| 19 | Python on Windows: the monitor watches audio-endpoint events | — | ✅ | — |
+| 20 | Python on Linux: hot-plug disabled, deliberately | — | ✅ | — |
+| 21 | Python: a re-initialise skipped for a pending close is never retried | — | left | — |
+| 22 | Python: a pending watchdog recovery can run after a refresh has reopened the stream | — | left | — |
 
 **1. Startup.** The saved device if present; otherwise the system default input; otherwise the first device.
 
@@ -638,6 +643,26 @@ noise — USB detach reached the audio layer ~6.7 s before the guest's udev, `_c
 timed out at 2 s on the emulated ES1371, and the buffer watchdog consequently raced the hot-plug
 refresh and left PortAudio un-reinitialised. That watchdog/refresh race is **not** Linux-specific and
 is the one thing here worth remembering for the other platforms.
+
+## 21. A skipped re-initialise is never retried (Python) — left, by decision
+
+Item 16's guard skips terminating PortAudio while a timed-out stream close is still pending (terminating
+then would freeze the app). The skipped re-initialise is not retried, so PortAudio's device list stays as it
+was: a microphone connected afterwards may not appear until something else re-initialises it. Seen in the
+Linux VM (item 20: "left PortAudio un-reinitialised"); not Linux-specific. Possible fix: retry the refresh
+when the pending close finishes, or on a later watchdog tick, and log it.
+- *Decision (owner, 2026-09-28):* let it slide; recorded, not done.
+
+## 22. A pending watchdog recovery can run after a refresh (Python) — left, by decision
+
+The watchdog's restart and the hot-plug refresh both run on the main thread, but a recovery scheduled before
+a refresh still runs after it — tearing down the stream the refresh just opened and re-initialising
+PortAudio under it (macOS t=139.96 s, item 16; the Linux VM, item 20). Since items 15–16 it reopens the right
+device, but each needless teardown risks another hung close. This is fix (3) of items 15–17, not done because
+Swift's pending recovery is what starts its engine on a newly selected device; in Python the refresh opens
+the stream itself, so a completed refresh could satisfy a pending recovery — a difference from Swift in how
+a switch starts the audio.
+- *Decision (owner, 2026-09-28):* let it slide; recorded, not done.
 
 ## Run-review steps
 
