@@ -141,6 +141,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_import_identity.py` | python |
 | `tests/test_peak_card_identity.py` | python |
 | `tests/test_state_notification.py` | python |
+| `tests/test_stream_restart_coordination.py` | python |
 | `tests/test_update_checker.py` | python |
 | `tests/test_wi10_qtimer_slots.py` | python |
 | `GuitarTap/Models/ColorHex.swift` | swift |

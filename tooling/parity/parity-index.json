@@ -1597,6 +1597,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_stream_restart_coordination.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_update_checker.py"
     },
     {
