@@ -22,7 +22,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
-- [#24](https://github.com/dwsdolce/guitar-tap-project/issues/24) · [`STREAM-RESTART-COORDINATION.md`](STREAM-RESTART-COORDINATION.md) — Python: a skipped PortAudio re-initialise is retried; the watchdog's recovery and the hot-plug refresh follow Swift's ordering. Its run-review also found item 3, a status-settle divergence fixed in both natives
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#15](https://github.com/dwsdolce/guitar-tap-project/issues/15) · [`guitar_tap-manual-seo-handoff.md`](guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/` indexed as "Page with redirect"
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
@@ -34,6 +33,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#24 (Python stream-restart coordination) is **closed**; its record is
+[`completed/STREAM-RESTART-COORDINATION.md`](completed/STREAM-RESTART-COORDINATION.md) — a PortAudio
+re-initialise skipped for a stuck close is retried; the watchdog and the hot-plug refresh follow Swift's
+ordering; a settle no longer captures its own transient; Swift no longer ends up stopped after quick replugs.
 
 #21 (microphone selection) is **closed**; its record is
 [`completed/MIC-SELECTION.md`](completed/MIC-SELECTION.md) — the saved microphone wins at launch, else the

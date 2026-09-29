@@ -5313,6 +5313,212 @@ in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer
 
 **Run-review progress.** All three editions passed step 1 (owner, 2026-09-27).
 
+### S8 — Settings & presentation (4 slugs)
+
+Status: **IN PROGRESS** — all 4 slugs read (2026-09-29); findings F55–F58 recorded, awaiting the owner's
+decisions. Nothing changed.
+
+**Audit record.** As in S6–S7, this table records only what the reading produced.
+
+| slug | read? | produced |
+|---|---|---|
+| `display-range` (7/5/10) | ✅ | **F55** |
+| `field-precision` (14/14/14) | ✅ | **F56** |
+| `analysis-quality` (6/6/20) | ✅ | **F57** |
+| `wav-dump-folder` (4/5/—) | ✅ | **F58** |
+
+**Counts, measured 2026-09-29** (Swift: `@Test`s in the files, none argument-expanded; Python: `pytest
+--collect-only`; web: `vitest list`):
+
+| slug | Swift | Python | web | files (Swift / Python / web) |
+|---|---:|---:|---:|---|
+| `display-range` | 7 | 5 | 10 | `DisplayRangeExpansionTests.swift` + `DisplayRangeTests.swift` / `test_display_range_expansion.py` / `display-range.test.ts` |
+| `field-precision` | 14 | 14 | 14 | `FieldPrecisionTests.swift` / `test_field_precision.py` / `field-precision.test.ts` |
+| `analysis-quality` | 6 | 6 | 20 | `AnalysisQualityTests.swift` / `test_analysis_quality.py` / `analysis-quality.test.ts` |
+| `wav-dump-folder` | 4 | 5 | — | `WavDumpFolderTests.swift` / `test_wav_dump_folder.py` / — (the web downloads the WAV; no folder) |
+
+How it was read: one reader per slug across the editions, then the claims that decide a finding checked by hand
+(marked *checked*); the rest are the reading's, marked *to confirm* where a change would rest on them.
+
+**F55 — `display-range`: the widening rule is tested well in all three, but the slug also carries the per-type
+display-range store, the three editions trigger and land the widening differently, and comments cite code that
+does not exist. (OPEN)**
+
+Production: `DisplayRange.expanded(toInclude:min:max:)` / `expanded_to_include` / `expandedToInclude` — the same
+rule in all three (pad 10 %, widen only, floor 1 Hz); the app's only callers go through it. Tests: the five
+widening cases (above, below, inside, the 1 Hz floor, at the boundary) are the same in all three and call
+production.
+
+| # | item | status |
+|---|---|---|
+| 1 | The slug carries a second rule: the per-type display-range settings store | open |
+| 2 | Three mechanisms trigger the widening and three places receive it | open |
+| 3 | Nothing tests the caller (the guitar guard, the trigger) | open |
+| 4 | Comments: history, a nonexistent Swift publisher, a missing file, phase labels | open |
+
+**1. A second rule under this slug.** Swift `DisplayRangeTests.swift` tests `TapDisplaySettings`'s per-type
+ranges (defaults, set one type without clobbering another) — the file is tagged `test/display-range`, and
+`TapDisplaySettings.swift` says `@parity state/settings-store tests=test/display-range`. Python's twin of those
+two cases is in `test_wi6_tap_display_settings.py`, untagged. The web has five settings cases (three more than
+the natives: the default fallback, a stored read, a partial merge) and its "no clobber" case uses other values.
+- *Recommendation:* a `test/settings-store` slug for the store, in all three, with one case list.
+
+**2. Trigger and destination differ** (*to confirm*). Swift: the view's `.onReceive` of the analyzer's
+`$selectedLongitudinalPeak` / `$selectedCrossPeak` / `$selectedFlcPeak` writes view `@State` `minFreq`/`maxFreq`
+(Float). Python: the analyzer emits a dedicated `materialPeakIdentified` signal from capture and load, and the view
+calls `update_axis(int(lo), int(hi))` — truncated. Web: a `useEffect` over all identified peaks writes the
+persisted per-type settings (`updateDisplayRange`). Open questions: does Swift widen on a manual L/C/FLC
+reassignment (its publishers would fire; Python emits only at capture and load)? Does Swift persist the widened
+range, as the web does?
+- *Recommendation:* settle what Swift does on both questions, then bring Python and the web to its mechanism.
+
+**3. The wiring is untested** in every edition — only the pure rule is.
+- *Recommendation:* one case per edition through the analyzer: a material peak outside the range widens it; a
+  guitar measurement does not.
+
+**4. Comments.** `DisplayRange.swift:17-19` is project history ("Extracted from … on 2026-09-20 …"); `:25` speaks
+of a "log-ish axis" (log frequency was removed — *to confirm*); `TapToneAnalysisView+Actions.swift:236` gives
+project rationale; `DisplayRangeExpansionTests.swift:14` is history. Python `tap_tone_analysis_view.py:3742` and
+web `App.tsx:457` say Swift uses `.onReceive(tap.$autoSelected*PeakID)` — *checked*: no `autoSelected` exists in
+Swift. `DisplayRangeTests.swift:9` and `test_wi6…:220` cite `test/settings-display-range.test.ts`, which does not
+exist. `display-range.test.ts:12` and `test_wi6…:217` carry the phase label "(6h)". `test_wi6…:226-229` says
+"import via the bare `models.` path" and the code does not.
+
+**F56 — `field-precision`: identical tests on an identical table, but most of the table is used by nothing,
+every screen formats its own numbers, and the web rounds halfway values differently. (OPEN)**
+
+Production: `FieldPrecision` (Swift) / `field_precision` (Python) / `precision.ts` (web) — the same 13-entry
+table and `string` / `rounded` / `decimalsWithin` in all three. Tests: the same 14 cases, same inputs and expected
+values, all calling production.
+
+| # | item | status |
+|---|---|---|
+| 1 | Six computed-value precisions are used by no app code; screens and the PDF hard-code their own | open |
+| 2 | Python's field validation does not use the function the tests test | open |
+| 3 | The web's `string` rounds halfway values up; Swift and Python round them as C does | open |
+| 4 | Web: rounding on every keystroke, and re-display without the precision | open |
+| 5 | Python shows Q with 0 decimals; the table and Swift use 1 | open |
+| 6 | Tolerances differ; comments overstate what the table governs | open |
+
+**1. Unused precisions.** Of the computed-value entries only `peakMagnitudeDB` has a caller; `peakFrequencyHz`,
+`qFactor`, `youngsModulusGPa`, `speedOfSoundMS`, `densityGPerCm3` and `decayRatio` are read by nothing, and the
+Results panels, peak rows, PDF and details format those values with literals in all three (e.g. Swift
+`TapAnalysisResultsView.swift:591,657,667,886`, `PDFReportGenerator.swift:527-541,790-796`; Python
+`peak_card_widget.py`, `tap_analysis_results_view.py:895-919`; web `MaterialResults.tsx` `f1/f2/f3`,
+`PeakCard.tsx`, `pdfReport.ts`). Test 1 pins the unused values.
+- *Recommendation:* route those displays through the table (so one number changes one place), or remove the
+  unused entries — the owner's choice; the first is larger.
+
+**2. Python validation** uses `input_regex` (a `QRegularExpressionValidator`), never `decimals_within`, which only
+the tests call. Swift's field calls `decimalsWithin` (`ValidatedNumberField.swift:69,154`).
+- *Recommendation:* Python's validator calls `decimals_within`, as Swift's field does.
+
+**3. Halfway rounding** (*checked*): JavaScript's `toFixed` gives `(2.5).toFixed(0)` = "3" and `(0.125).toFixed(2)`
+= "0.13"; Python's formatting and C `printf` (Swift's `String(format:)`) give "2" and "0.12". No test covers it.
+- *Recommendation:* the web formats as the natives do; a halfway case in all three.
+
+**4. Web edit mechanism** (*to confirm*): `NumberField` rounds on every keystroke that validates (Swift rounds on
+commit) and re-displays with `String(value)` on blur ("29.4" where Swift shows "29.40").
+- *Recommendation:* round on commit and re-display with `FieldPrecision.string`, as Swift.
+
+**5. Python Q** — `peaks_model.py:452` formats Q with 0 decimals; Swift's peak row uses 1 (*to confirm*).
+
+**6.** Swift/Python compare `rounded` within 0.001, the web within 5e-6. Headers in all three say the table
+governs "…and the PDF/report" (true only for dimension rows); `FieldPrecision.swift:9` is history ("Replaces the
+scattered ad-hoc literals") and untrue; the `frequencyHz` doc disagrees with its own table.
+
+**F57 — `analysis-quality`: Swift's PDF grades a loaded guitar by the current guitar-type setting, the web's
+colours are not the natives', and values outside the bands differ. (OPEN)**
+
+Production: Swift `Float.decayQuality` / `decayQualityColor` / `tapToneRatioQuality` / `tapToneRatioQualityColor`
+(`Views/Utilities/Extensions.swift`), thresholds on `GuitarType.decayThresholds`; Python the same four functions,
+thresholds on `GuitarType`; web `dsp/analysisQuality.ts` with its own private threshold table (same values).
+Tests call production in all three; none reimplements it.
+
+| # | item | status |
+|---|---|---|
+| 1 | Swift's PDF uses the current guitar-type setting, not the measurement's | open |
+| 2 | The web's colours differ from the natives' | open |
+| 3 | Values outside the bands: Swift "Unknown"/grey, Python and web fall through | open |
+| 4 | The case lists differ | open |
+| 5 | Where the thresholds live, and the fallback type, differ | open |
+| 6 | Comments | open |
+
+**1. Swift PDF grading** (*checked*): `PDFReportGenerator.swift:716-729` uses `decay.decayQuality` /
+`decayQualityColor` — the no-argument form, which reads the global `TapDisplaySettings.guitarType` — although the
+report holds the measurement's own `guitarType` (`:153`). A loaded classical measurement exported while the
+setting is flamenco is graded as flamenco. Python and the web grade by the measurement's type. The on-screen bar
+also uses the no-argument form (*to confirm* whether that is right for a loaded measurement).
+- *Recommendation:* the PDF passes the report's `guitarType`.
+
+**2. Colours** (*checked*): Python hard-codes Swift's light-mode system colours (`#8E8E93`, `#FF9500`, `#FFCC00`,
+`#34C759`, `#007AFF`, `#FF3B30`); the web uses `#8a8a8e`, `#e08a00`, `#c0a000`, `#2c9c3c`, `#0a6cd8`, `#d83a30`
+while its header says they "match the native apps exactly". Swift's are semantic (adapt to dark mode).
+- *Recommendation:* the web uses the natives' values (and the theme work of #2 decides dark mode for all).
+
+**3. Out of band** (*to confirm*): Swift returns "Unknown"/grey for a negative or NaN value; Python and the web
+fall through — negative to "Very Short", NaN to "Excellent" (decay) and "High"/red (ratio). Untested everywhere.
+- *Recommendation:* Swift's behaviour in all three, with a case.
+
+**4. Case lists.** Swift lacks the ratio boundaries 1.7 and 2.3 (Python and web test them) and the upper orange
+colour band; the web tests only 3 of 5 ratio colours and does not pin its threshold table; nobody pins the
+flamenco/acoustic/generic thresholds beyond one 0.5 s case.
+- *Recommendation:* one full case list (every boundary, every band, every type), all three.
+
+**5. Thresholds and fallback.** The web keeps its own threshold table rather than on its guitar-type model.
+Fallback type: Swift the current setting; Python the measurement's, else CLASSICAL (PDF) or GENERIC (live); web
+generic.
+
+**6. Comments.** `analysisQuality.ts:5-7` ("used by the PDF report" — also the on-screen bar; "match … exactly"
+— false; project history); `analysis-quality.test.ts:11-12, 69-71` (stale, history); `extensions.py:7-8`
+(history); `AnalysisQualityTests.swift:8` ("Python/web port these exactly" — false for the web). The Python tag
+sits at the module top, so it also covers `vsep` / `hsep`.
+
+**F58 — `wav-dump-folder`: the Swift tests clear the user's real chosen dump folder, cannot reach the
+custom-folder branch, and the arm check lives in the model in Swift but in the view in Python. (OPEN)**
+
+Production: Swift `WavDumpFolder` (macOS: a security-scoped bookmark and the chosen path in `UserDefaults`);
+Python `wav_dump_folder` (a plain path in QSettings `dump/folder`). The capture's WAV write goes through it in
+both. The web downloads the file (`dumpWav.ts`, `@parity none`) — no folder, so "none" is right.
+
+| # | item | status |
+|---|---|---|
+| 1 | Swift's tests clear the user's real chosen dump folder | open |
+| 2 | Swift cannot test the custom-folder branch; its tests pass by construction | open |
+| 3 | The arm check: Swift in the model, Python in the view | open |
+| 4 | Python "Reveal" re-creates a custom folder that was renamed away | open |
+| 5 | Reachability does not check writability; Python's test hard-codes the settings key | open |
+| 6 | Comments | open |
+
+**1. Real settings cleared** (*checked*): `WavDumpFolderTests.init()` calls `WavDumpFolder.useDefaultFolder()`,
+which removes the bookmark and path keys from `UserDefaults.standard`. The tests are hosted in the app, and only
+reads are guarded (`hasCustomFolder` is false under test) — not this write. So every Swift test run clears a dump
+folder chosen in the real app. The standing rule is that tests never write the owner's real settings.
+`MeasurementFileExporter`'s last-used directory also uses `UserDefaults.standard`, but its test only reads.
+- *Recommendation:* keep the bookmark and path in `TapDisplaySettings.defaults` (an isolated suite under test), as
+  #21 did for the calibration store and the selected input device.
+
+**2. Untestable branch.** Because `hasCustomFolder` is forced false under test, the Swift reachable / current /
+acquire tests pass whatever is stored, and the gone-folder case exists only in Python (the Swift header says it is
+"checked by hand"). With item 1 the custom-folder branch becomes testable.
+- *Recommendation:* the gone-folder and custom-folder cases in both, through the isolated store.
+
+**3. The arm check** (*to confirm*): Swift's `requestStartTapSequence` sets a `@Published` flag the view alerts on
+(macOS only); Python's New Tap checks in the view (`_ensure_dump_folder_reachable`), and its launch uses a separate
+analyzer flag. Swift offers the custom folder and the check only on macOS; Python on every platform.
+- *Recommendation:* Python's check moves into the analyzer's `request_start_tap_sequence`, as Swift's.
+
+**4. Python Reveal** (*to confirm*): `mkdir` on `current_folder()` re-creates a renamed-away custom folder, against
+its own `is_reachable` docstring; Swift falls back to the default.
+- *Recommendation:* as Swift.
+
+**5.** Both `isReachable` docstrings say "can be written to"; neither checks. Python's gone-folder test writes the
+literal `"dump/folder"` into its own `QSettings(...)` rather than through production.
+
+**6. Comments.** Stale "~/Documents/GuitarTap" (Python `tap_tone_analyzer_spectrum_capture.py:160-161`; Swift
+`+SpectrumCapture.swift:137`); history in `wav_dump_folder.py:9-10`; the Python fixture credits the wrong sandbox
+mechanism.
+
 ## Stage 2 — move case lists into shared data
 
 Once Stage 1 has shown which slugs are case-shaped and what their cases need to express, move those

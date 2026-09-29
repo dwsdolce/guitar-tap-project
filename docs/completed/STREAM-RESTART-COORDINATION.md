@@ -2,11 +2,12 @@
 
 **Issue:** [#24](https://github.com/dwsdolce/guitar-tap-project/issues/24)
 
-Status: **IMPLEMENTED 2026-09-29 — run-review in progress.** Commits: items 1–2 Python `3b864e8`; item 3
-Swift `ac7ce47`, Python `82779a2`, web `0c77e56` (tests only). Items 1–2 are Python only (the PortAudio
+Status: **✅ COMPLETE 2026-09-29** — run-reviewed on Windows (Python) and macOS (Swift, Python, web). Commits: items
+1–2 Python `3b864e8`; item 3 Swift `ac7ce47`, Python `82779a2`, web `0c77e56` (tests only); item 4 and the corrected
+N13 Swift `075653f`; comments Python `d7104f6`, web `34d0f34`. Items 1–2 are Python only (the PortAudio
 edition); item 3, found BY the run-review, is Swift and Python. Follows
 [#21](https://github.com/dwsdolce/guitar-tap-project/issues/21), whose record
-([`completed/MIC-SELECTION.md`](completed/MIC-SELECTION.md)) found the first two problems and left them as
+([`MIC-SELECTION.md`](MIC-SELECTION.md)) found the first two problems and left them as
 items 21–22.
 
 ## Why now
@@ -23,6 +24,7 @@ anything we can to minimize that makes sense to me").
 | 1 | A PortAudio re-initialise skipped for a pending close is retried | n/a | ✅ | n/a |
 | 2 | The watchdog's recovery and the hot-plug refresh follow Swift's ordering | n/a | ✅ | n/a |
 | 3 | A route change during a settle does not capture the "reinitializing…" transient | ✅ | ✅ | already |
+| 4 | Swift: quick replugs leave the engine stopped for good (stale list, early-captured revert, no restart) | ✅ | — | — |
 
 Items 1–2 are PortAudio's, so they have no Swift or web counterpart. Item 3 is a divergence: web was
 right, both natives were wrong.
@@ -81,6 +83,36 @@ which is why only the brace half of the run showed it.
   pending. The natives schedule one restore per route change and cannot cancel them, so "has a settle
   already replaced the status" is the test that holds for a burst of any length.
 
+**4. Swift: quick replugs can leave the engine stopped for good.** Found by step 2's run-review on macOS
+(Swift, 2026-09-29): after several fast unplug/replug cycles the app sat "Stopped", status "Audio device changed -
+reinitializing…", for over a minute — recoverable only by relaunching. From the log, three faults:
+- **A — a stale device list is applied.** Swift reads the device list on the CoreAudio listener's thread and applies
+  it on the main queue. A replug and an unplug inside one restart's 0.2 s applied the older list (the UMIK present)
+  after the UMIK had gone: "New device connected, selected: Umik".
+- **B — the failed-open revert (#21 item 17) used values captured too early.** The restart captured "failed" and
+  "previous" when it was scheduled; the selection changed while it was pending, so when the start failed it
+  re-selected the vanished UMIK (and its alert would have named the wrong microphone).
+- **C — a failed start leaves Swift stopped with nothing to restart it.** A selection change restarts the engine only
+  when it is running, and the watchdog only watches a running engine; after the start failed, no selection, plug-in
+  or watchdog tick started it again. Python's `set_device` always opens a stream and the web keeps its audio context
+  across a failure, so neither has this path.
+- *Decision (owner, 2026-09-29):* fix all three (Swift).
+- *Done (Swift):* **A** — each enumeration is numbered as it begins (`beginDeviceListEnumeration`); a list is applied
+  only if no newer enumeration has begun (`applyEnumeratedInputDevices`), otherwise it is dropped and logged.
+  **B** — a failed restart calls `recoverFromFailedStart`, which decides at that moment: the device that failed is the
+  one now selected, and the fallback (`fallbackAfterFailedOpen(of:systemDefaultUID:)`) is the device the engine last
+  opened (`lastOpenedInputDevice`, recorded by every successful start) if still listed, otherwise the system default,
+  otherwise the first — never the failed device; `revertFailedInputSwitch` selects it and raises the alert.
+  **C** — `engineStartFailed` is set by a failed start and cleared by the next successful one; while it is set a
+  selection change restarts the engine (`restartsOnSelectionChange(isRunning:startFailed:)`), and a failed start on
+  the fallback too goes into the watchdog's bounded retries (`attemptWatchdogRecovery`, which also marks a failed
+  retry).
+- *Tests (Swift only):* MicSelectionTests MS29 (a superseded list is not applied; the newer one is), MS30 (the
+  fallback: last opened if listed, else the default, never the failed device), MS31 (a failed start lets the next
+  selection restart). Mutations — the generation check removed, the failed device allowed as fallback, the
+  failed-start flag ignored — each fail their case. Full Swift suite 684. CoreAudio's timing itself cannot be
+  produced in a test; step 2 on macOS is the check.
+
 ## Tests
 
 `tests/test_stream_restart_coordination.py` (Python only, `@parity none`):
@@ -124,16 +156,20 @@ Launch: `.venv/bin/python -m guitar_tap`, with debug logging on (`_gt_log_enable
    the device list is current afterwards (plugging the mic in is seen). The status bar must also come back to
    its prompt within ~3 s of the last replug — item 3, which this step found on Windows.
    - **Windows, 2026-09-29 — items 1–2 pass.** Twelve route changes, twelve restores, no pending-close line,
-     the device list current throughout. Item 3 failed here and is now fixed; **step 2 needs re-running on
-     Windows with the fix**, and on macOS once Swift is built.
+     the device list current throughout. Item 3 failed here, was fixed, and step 2 then passed (Python).
+   - **macOS, 2026-09-29 — passes** in Python and the web; in Swift it found item 4, and passes with it fixed.
 3. *(Observational — a pending recovery cannot be triggered by hand; SR4–SR6 test the ordering.)* If a log
    shows a watchdog recovery attempt followed by a device change before it runs, it also shows "Device refresh
    during a pending watchdog restart — the restart opens '…'", then a single restart on that device.
 
-## Still to do
+## Close-out
 
-- **Swift is unbuilt.** The item-3 change and its N13 case were written on Windows, where there is no Xcode.
-  Build and run `StateNotificationTests` on macOS before this is called done, and mutate the guard there as
-  the other two editions were mutated.
-- **Re-run step 2** on Windows with the fix, and on macOS.
-- Steps 1 and 3 remain observational.
+- **Swift built and tested on macOS** (2026-09-29): item 3's N13 did not test what it claimed — it asked what the
+  settle restores while the settle still had detection idle, so the derived "Ready" hid the capture. It now puts
+  detection back to listening first, as the settle's completion does; it passes, and removing the guard fails both
+  its expectations. Full Swift suite 684.
+- **Step 1 (observational):** Windows ran for about an hour with no audio lost (owner, 2026-09-29).
+- **Step 3** stays observational; SR4–SR6 test the ordering.
+- **Comments:** the settle guard and N13 in all three say what the code does, without the bug's history or issue
+  numbers; three issue references in Python's Windows/Linux hot-plug comments were removed too.
+- *Decision (owner, 2026-09-29):* close #24.
