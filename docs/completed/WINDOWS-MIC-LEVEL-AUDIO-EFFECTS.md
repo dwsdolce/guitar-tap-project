@@ -3,10 +3,11 @@
 **Issue:** [#20](https://github.com/dwsdolce/guitar-tap-project/issues/20) · customer thread
 [dwsdolce/guitar_tap#2](https://github.com/dwsdolce/guitar_tap/issues/2)
 
-Status: **FIX COMMITTED, not yet verified by the customer.** Cause confirmed, and the customer has a
-settings workaround. Python `3892bf2` (RAW mode) and `b5b98e3` (fallback hardening and tests), web
-`bdd70d8`. Swift needs no change. Still open: the customer runs a build with the fix while his audio
-effects are switched back on (see [Verification](#verification)).
+Status: **✅ COMPLETE 2026-09-30** — closed by the owner. The customer is working, with Audio enhancements
+set to Off. The fix that makes the setting unnecessary is committed: Python `3892bf2` (RAW mode) and
+`b5b98e3` (fallback hardening and tests), web `bdd70d8`; Swift needs no change. It is not verified on
+affected hardware: the development Windows machine has no audio-enhancements setting, so the check is the
+customer's run of a beta with the setting back on (see [Verification](#verification)).
 
 ## The customer's problem
 
@@ -100,7 +101,7 @@ silence in between. That explains both the low taps and the impossibly low noise
 | Python, macOS / Linux | none: PortAudio opens Core Audio / ALSA with no system effects in the path | — |
 | Web | add `voiceIsolation: false` to the `getUserMedia` constraints | `bdd70d8` |
 | Swift, iOS | none: the session already uses mode `.measurement`, which minimises system processing | — |
-| Swift, macOS | none: voice processing is never enabled, and mic modes apply only to voice-processing apps | — |
+| Swift, macOS | none: voice processing is never enabled; mic modes appear to apply only to voice processing (the macOS SDK describes the "Standard" mode as "standard voice DSP") — read from the SDK, not tested | — |
 
 **Python.** `_open_input_stream` in `realtime_fft_analyzer_device_management.py` is now the one place
 all three opens go through: start, device switch (`_open_device`) and the PortAudio re-initialise. On
@@ -141,9 +142,10 @@ Done:
 - **Tests:** `tests/test_wasapi_raw_open.py` (`b5b98e3`, runs on any OS). It covers: not Windows; a
   non-WASAPI device; a WASAPI device opened RAW; RAW refused, so a plain open; a device that can't be
   queried, so a plain open; a failed plain open raises. Mutations (no RAW option, no fallback, no query
-  guard) each fail a test. Python full suite 823 passed. Web `tsc` clean. In both repos, the
-  self-regression baseline tests fail only because the baselines have not been re-minted, which is
-  unrelated.
+  guard) each fail a test. Python full suite: 823 passed on macOS, but on a tree that also held
+  uncommitted work with 6 more tests (the `b5b98e3` commit message's 823 is that run); `b5b98e3`
+  itself has 817. Web `tsc` clean. On Windows, the Python and web self-regression tests fail only
+  because their baselines have not been minted on Windows, which is unrelated.
 
 Not done yet:
 - **A Guitar Tap build with `3892bf2` + `b5b98e3` on the customer's laptop, with Audio enhancements back
@@ -152,6 +154,10 @@ Not done yet:
 
 ## Follow-ups
 
+- **User manual — done** (Swift `033c9cb`): §10.7 Common Problems has a Windows row for this: taps barely
+  register and the chart is unnaturally silent between taps; set Audio enhancements to Off and turn off
+  the laptop maker's noise-reduction app. Reaches shipped users once the manual is regenerated and
+  republished.
 - **Pin sounddevice for the Windows build.** RAW sets sounddevice's private `_streaminfo`. A release
   that renames it would silently bring the effects back: the app logs a warning and keeps working
   without RAW. `requirements.txt` still says `sounddevice>=0.5.5`.

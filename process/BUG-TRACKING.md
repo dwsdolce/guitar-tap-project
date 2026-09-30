@@ -35,7 +35,28 @@ in one place; talk to each user where they reached you.
 - **`needs-verification`** encodes the standing rule that nothing is done until the user has *run* it.
 - Commits in any repo reference the item cross-repo: `refs dwsdolce/guitar-tap-project#N`.
 - The Issue is the **addressable index**; the meaty analysis is a detail doc in the hub (`docs/`), linked from
-  the Issue — even for a single-platform bug.
+  the Issue — even for a single-platform bug. See [the lifecycle](#issue-lifecycle--the-detail-doc) below.
+
+## Issue lifecycle — the detail doc
+This holds on every machine and in every session. Session memory is local to one machine and invisible to the
+others, so anything a later session needs — the diagnosis, the measurements, the decisions — goes in the hub
+doc, not only in a conversation or a commit message.
+
+**Opening.** The detail doc is written **when the Issue is opened**, before the work starts — not afterwards.
+- The doc goes in hub `docs/`. Its header is the Issue link, then a `Status:` line, as in the existing docs.
+- The Issue body is an **overview** that starts with the doc link, in this form:
+  `Detail doc: [`docs/NAME.md`](docs/NAME.md)`. The full information lives in the doc.
+- The doc is added to the **open index** in `docs/README.md`.
+
+**Working.** The doc is kept current as the work goes: findings, decisions (with who decided and when), each
+item's Done with its commit hashes, and the verification. Commit process: code → hash → doc.
+
+**Closing** — all in one pass:
+1. Close the Issue on GitHub with a resolution comment listing the commit hashes.
+2. Close the loop on the origin (see [Reply-on-origin](#reply-on-origin)): for a platform Issue, a
+   plain-language closing comment there — the reporter reads it, so no hashes or internal detail.
+3. `git mv` the doc to `docs/completed/` and mark its `Status:` **✅ COMPLETE** with the date.
+4. Fix the links: the `docs/README.md` index entry and the Issue body's `Detail doc:` link.
 
 ## Reply-on-origin
 The source label says where to close the loop — GitHub comment, email reply, or App Store developer
