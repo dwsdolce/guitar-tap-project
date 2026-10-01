@@ -5315,8 +5315,8 @@ in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer
 
 ### S8 — Settings & presentation (4 slugs)
 
-Status: **IN PROGRESS** — all 4 slugs read (2026-09-29); findings F55–F58 recorded, awaiting the owner's
-decisions. Nothing changed.
+Status: **IN PROGRESS** — all 4 slugs read (2026-09-29); findings F55–F58 recorded. F58 closed 2026-09-30 (Swift
+`b23445e`, Python `0d2279e`, web `d8aa7c8`); F55–F57 await the owner's decisions.
 
 **Audit record.** As in S6–S7, this table records only what the reading produced.
 
@@ -5475,7 +5475,8 @@ generic.
 sits at the module top, so it also covers `vsep` / `hsep`.
 
 **F58 — `wav-dump-folder`: the Swift tests clear the user's real chosen dump folder, cannot reach the
-custom-folder branch, and the arm check lives in the model in Swift but in the view in Python. (OPEN)**
+custom-folder branch, and the arm check lives in the model in Swift but in the view in Python. (CLOSED — all 9 items
+done and run-reviewed in all three. Commits: Swift `b23445e`, Python `0d2279e`, web `d8aa7c8`)**
 
 Production: Swift `WavDumpFolder` (macOS: a security-scoped bookmark and the chosen path in `UserDefaults`);
 Python `wav_dump_folder` (a plain path in QSettings `dump/folder`). The capture's WAV write goes through it in
@@ -5483,12 +5484,21 @@ both. The web downloads the file (`dumpWav.ts`, `@parity none`) — no folder, s
 
 | # | item | status |
 |---|---|---|
-| 1 | Swift's tests clear the user's real chosen dump folder | open |
-| 2 | Swift cannot test the custom-folder branch; its tests pass by construction | open |
-| 3 | The arm check: Swift in the model, Python in the view | open |
-| 4 | Python "Reveal" re-creates a custom folder that was renamed away | open |
-| 5 | Reachability does not check writability; Python's test hard-codes the settings key | open |
-| 6 | Comments | open |
+| 1 | Swift's tests clear the user's real chosen dump folder | done |
+| 2 | Swift cannot test the custom-folder branch; its tests pass by construction | done |
+| 3 | The arm check: Swift in the model, Python in the view | done |
+| 4 | Python "Reveal" re-creates a custom folder that was renamed away | done |
+| 5 | Reachability does not check writability; Python's test hard-codes the settings key | done |
+| 6 | Comments | done |
+| 7 | The folder button: "Show in Finder" in Swift (selects the folder in its parent), "Open Folder" in Python (opens it) | done |
+| 8 | A capture's audio could be lost with no sign: dropped when the folder went away mid-sequence (natives); not recorded when saving was turned on mid-sequence (web) | done |
+| 9 | A successful save shows nothing on Swift and Python (the web, since item 8, says "Capture audio saved"); a forgotten Dump Capture Audio writes files unnoticed | done |
+
+*Decision (owner, 2026-09-29):* all six as recommended — "Do them all." Items 3 and 4, marked *to confirm*, were
+confirmed first: Python has no `request_start_tap_sequence` (New Tap checks in the view, the launch through a
+separate `pending_dump_folder_prompt` flag); Python's `reveal_in_finder` calls `mkdir` on the current folder,
+Swift's falls back to the default. Item 5: correct the docstrings to what is checked rather than add a
+writability check. Swift's custom folder being macOS-only is a platform difference, left as it is.
 
 **1. Real settings cleared** (*checked*): `WavDumpFolderTests.init()` calls `WavDumpFolder.useDefaultFolder()`,
 which removes the bookmark and path keys from `UserDefaults.standard`. The tests are hosted in the app, and only
@@ -5518,6 +5528,183 @@ literal `"dump/folder"` into its own `QSettings(...)` rather than through produc
 **6. Comments.** Stale "~/Documents/GuitarTap" (Python `tap_tone_analyzer_spectrum_capture.py:160-161`; Swift
 `+SpectrumCapture.swift:137`); history in `wav_dump_folder.py:9-10`; the Python fixture credits the wrong sandbox
 mechanism.
+
+**7. The folder button** (found writing the run-review steps, 2026-09-30). Swift's Settings folder row has *Show in
+Finder*, which opens Finder with the folder selected in its parent (`activateFileViewerSelecting`); Python's has
+*Open Folder*, which opens the folder itself (`QDesktopServices.openUrl`). The manual (§8.8) listed them per edition
+and called Python's "the same" controls. It is the only place either edition names the file manager.
+- *Decision (owner, 2026-09-30):* *Open Folder* in every edition and on every platform — accurate everywhere,
+  with no need to name each desktop's file manager. Swift changes to open the folder itself; the code names follow
+  (`openFolder` / `open_folder`, `folderToOpen` / `folder_to_open`); the manual describes one desktop control.
+
+**8. A capture's audio lost with no sign** (found at the Swift run-review, step 3, owner, 2026-09-30). The owner turned
+saving on while a sequence was listening, the folder was then renamed, and the tap's recording was not saved — only
+the log said so ("WAV dump skipped — the chosen folder is no longer reachable"). The arm-time check had passed
+before saving was on, and a folder that goes away after arming is never checked: the write was skipped by design,
+with nothing shown. The web can lose a recording differently: it recorded a session only if saving was on when the
+sequence started, so turning saving on mid-sequence saved nothing (and turning it off mid-sequence still downloaded);
+and it released the download's file at the click, which can cut the download off. A browser can also block an
+automatic download without the page being told.
+- *Decision (owner, 2026-09-30):* a recording is never lost without the user being told. Swift and Python hold a
+  recording that can't be written and show the same alert — Change Location… writes it to the chosen folder, Turn
+  Off Saving and Cancel let it go. The web records every sequence and reads the setting when the session finishes
+  (Swift's mechanism), keeps the file alive after the click, and names the file it handed to the browser.
+
+**9. A save is not shown** (owner, 2026-09-30). With Dump Capture Audio on, Swift and Python write each measurement's
+WAV with nothing on screen, so a setting left on is easy to forget; since item 8 the web shows "Capture audio saved:
+… (Downloads)" above the status bar.
+- *Decision (owner, 2026-09-30):* "I like the web message. Do the same in swift and python."
+
+*Done — items 1–9 (2026-09-29/30; items 8–9 also on the web). Swift `b23445e`, Python `0d2279e`, web `d8aa7c8`:*
+- **1.** Swift's bookmark and path keys are kept in `TapDisplaySettings.defaults` (an isolated suite under test),
+  not `UserDefaults.standard`; `hasCustomFolder` no longer needs its under-test guard. A new
+  `setCustomFolder(_:)` stores a folder; `chooseFolder` uses it. Python gains `set_custom_folder` the same way.
+- **2.** The same nine cases in both: default folder; no custom folder reachable and current; no custom folder
+  by default; acquire with none; a custom folder reachable, current and acquired; renamed — unreachable, acquire
+  skips, current still names it; deleted — unreachable, acquire skips; Reveal with a renamed folder opens the
+  default and does not re-create it; Use Default forgets the folder. Plus the arm check (item 3): unreachable —
+  flagged, not armed; reachable — armed. 11 each. The Swift header's "checked by hand" now covers only the picker.
+- **3.** Python `request_start_tap_sequence()` on the analyzer: stops a playing file, checks the folder, emits a
+  new `dumpFolderUnreachable` signal and returns without arming, or arms. New Tap, the settings re-arm, the launch
+  auto-arm and the prompt's Change Location retry go through it (via `FftCanvas.restart_tap_sequence`); Turn Off
+  Saving arms directly (`FftCanvas.start_tap_sequence`), as Swift's calls `startTapSequence`. Both canvas paths
+  share the ring-buffer reset. The launch auto-arm is now scheduled on the main loop, as Swift's
+  `DispatchQueue.main.async`, so the view is connected when the signal fires; `pending_dump_folder_prompt` is
+  gone. The view's prompt is a slot on the signal. The settings re-arm in Python did not check the folder before;
+  it does now, as Swift's. The playback type-change test now calls `request_start_tap_sequence()`, as Swift's.
+  - *Decision (owner, 2026-09-29):* New Tap's hand reset of view copies moved onto the model's signals, so the
+    view follows the model on every arm, as Swift's view does: the comparison curves are removed in the canvas's
+    `comparisonChanged(False)` slot (its `clear_comparison` wrapper is gone); the loaded measurement is dropped on
+    `measurementComplete(False)`, which only `start_tap_sequence` emits (before, only New Tap dropped it); the
+    tap count and bar follow `tapCountChanged` alone (the hand resets in New Tap, Cancel and the settings restart
+    are gone); "paused" is read from the analyzer's `detection_state`, as Swift derives it, instead of a stored
+    copy.
+- **4.** The folder button in both goes through `folderToOpen` / `folder_to_open` (named after item 7): the
+  custom folder if reachable, else the default, created if missing; a renamed-away folder is never re-created.
+- **5.** Both `isReachable` docstrings say what is checked (still at the chosen path; write permission not checked,
+  a failed write is logged). Python's tests store a folder through `set_custom_folder`, not the literal key.
+- **6.** Both capture comments name the dump folder instead of `Documents/GuitarTap`; the history line and the
+  fixture's sandbox credit are gone.
+- **7.** *Open Folder* in both. Swift's button was *Show in Finder* and selected the folder in its parent; it now
+  opens the folder itself (`NSWorkspace.shared.open`), as Python's does. Renamed: `revealInFinder` →
+  `openFolder`, `folderToReveal` → `folderToOpen` (Python `reveal_in_finder` → `open_folder`,
+  `folder_to_reveal` → `folder_to_open`), and the test in both (`…opensTheDefault_notANewOne`). Manual §8.8:
+  one desktop bullet for *Open Folder* / *Change…* / *Use Default*, the default folder per build, and the
+  fallback to the default when the chosen folder is gone. Swift 11 and Python 11 dump-folder tests pass.
+- **8.** Swift and Python: `dumpCaptureWAV` / `_dump_capture_wav` builds a `CaptureRecording` (samples, rate, label,
+  capture time — the file is named for when it was captured) and `writeCaptureRecording` / `write_capture_recording`
+  writes it, returning whether it did. One that isn't written is appended to `heldCaptureRecordings` /
+  `held_capture_recordings` and `captureRecordingHeld` is raised (Swift `@Published`, Python a signal relayed by the
+  canvas). The view's alert, "Capture Audio Folder Unavailable" ("The captured audio of this measurement couldn't be
+  saved to: …"): Change Location… → choose a folder, then `saveHeldCaptureRecordings` / `save_held_…` (raises the
+  alert again if still not written, e.g. the picker was cancelled); Turn Off Saving → setting off and
+  `discardHeldCaptureRecordings` / `discard_held_…`; Cancel → discard. Swift holds on macOS only — on iOS the folder
+  is the app's own Documents and can't go away; it keeps its log line. Web: `startSessionRecording` records every
+  sequence and `finishSessionRecording` reads the setting; `dumpCaptureWav` returns the file name and releases the
+  file's URL after 60 s; the analyzer's `captureAudioSaved` drives a dismissible notice above the status bar
+  ("Capture audio saved: … (Downloads)"), cleared by a new sequence. Removed as dead: the web engine's
+  `dumpCaptureAudio` config and its plumbing (`useAudioEngine`'s `dumpCaptureRef`, App's sync effect), and App's
+  unused copy of `dumpCaptureWav`. Tests — Swift and Python: saving turned on after arming saves that sequence; an
+  unwritable recording is held and flagged; a held recording is saved to the folder the user then chooses; a
+  discarded one is not written (Swift 15, Python 15 dump-folder tests). Web (`test/capture-audio.test.ts`): saving
+  turned on mid-sequence saves; turned off mid-sequence saves nothing; the file is named, and dismiss or a new
+  sequence clears it; the URL is not released at the click. Mutations, each killed — Swift and Python: drop instead
+  of hold; save without writing; record only if saving was on at arming. Web: gate at start; no check at finish;
+  release at the click; notice not cleared by a new sequence. Suites: Swift 695, Python 827, web 719.
+- **9.** Swift and Python show the web's notice. The analyzer's `captureAudioSaved` / `capture_audio_saved` (Swift
+  `@Published`; Python with `captureAudioSavedChanged`, relayed by the canvas) is the file name of the last WAV
+  written — set by `writeCaptureRecording` / `write_capture_recording`, so a held recording saved later shows too;
+  cleared by `dismissCaptureAudioSaved` / `dismiss_capture_audio_saved` and by a new sequence. The row sits under the
+  loaded-settings warning, above the status line: "Capture audio saved: `<file>` (`<folder name>`)" with a dismiss
+  button. Swift shows it in the full status bar (macOS, iPad); the iPhone's compact bar is a fixed single row and
+  does not. Tests, both: the notice names the file, until dismissed or a new sequence; not shown with saving off;
+  a held recording saved later is named (Swift 17, Python 17 dump-folder tests). Mutations, each killed, both: not
+  set on a write; not cleared by a new sequence. Suites: Swift 697, Python 829.
+- Mutations, each killed: Swift's path comparison removed (renamed case fails); Swift's arm check removed
+  (unreachable case fails); Python's folder button on the current folder (its renamed-folder case fails); Python's arm check removed
+  (unreachable case fails). Suites: Swift 691 passed, Python 817 passed.
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap`. Swift and Python —
+the web has no capture-audio folder. Steps 1–9 in both, Swift first; steps 10–14 exercise Python's view
+following the model (item 3's decision) and are run in Python, with Swift as the reference.
+
+The controls are in Settings, below Peak Min: the **Dump Capture Audio** checkbox and, while it is checked, a
+"Saved to" folder row with **Open Folder**, **Change…** and **Use Default**. The checkbox takes effect when
+Settings is closed with **Done**; the three folder buttons act at once.
+
+1. Settings: check **Dump Capture Audio**; **Change…** → create and choose a new folder `~/Desktop/GTDump`;
+   **Done**. → Reopening Settings, the folder row reads "Saved to" `…/Desktop/GTDump`.
+2. Settings → **Open Folder**. → Finder opens the `GTDump` folder itself (not its parent with it selected).
+3. Close Settings. Set **Taps:** to 1 and tap once, so the measurement completes (New Tap is disabled while
+   a sequence is listening). In Finder, rename `GTDump` to `GTDump2`; press **New Tap**. → An alert "Capture
+   Audio Folder Unavailable", naming `…/Desktop/GTDump`, with Change Location…, Turn Off Saving and Cancel.
+4. **Cancel**. → The screen is unchanged; no new sequence starts.
+5. Settings → **Open Folder**. → Finder opens the default folder (`Documents/GuitarTap`
+   — on macOS Swift, the app's container Documents); no `GTDump` folder is re-created on the Desktop.
+6. Close Settings; **New Tap** → alert → **Change Location…** → choose `GTDump2`. → A sequence starts; tap
+   once. → A `.wav` file appears in `GTDump2`.
+7. Rename `GTDump2` to `GTDump3` in Finder; quit and relaunch Guitar Tap. → The alert appears at launch.
+   **Turn Off Saving**. → A sequence starts; in Settings, **Dump Capture Audio** is unchecked.
+8. Settings: check **Dump Capture Audio** again (the chosen folder is still the renamed-away `GTDump2`); set
+   Measurement Type Guitar → Plate; **Done**. → The alert appears (Python did not check here before).
+   **Cancel**; set Measurement Type back to Guitar; **Done**. → The alert appears again (every re-arm
+   checks). **Turn Off Saving**. → A guitar sequence starts; Dump Capture Audio is off for the steps below.
+9. Swift only: run the test suite (Product → Test), then open Settings. → The folder chosen in step 6 is
+   still shown — the tests no longer clear it.
+10. Open two saved guitar measurements in a comparison (select two in the Measurements list → **Compare**);
+    then **New Tap**. → The comparison curves go; a fresh sequence starts.
+11. Compare two saved guitar measurements again; Settings → Measurement Type Guitar → Plate → **Done**.
+    → The comparison curves go. (Set it back to Guitar.)
+12. Load a saved guitar measurement; then **Play File** `Recording.wav` (no calibration) to the end;
+    **Export PDF**. → The PDF shows the played file's result, not the loaded measurement's.
+13. **New Tap**; **Pause**; **Cancel**; **Pause**. → Detection pauses (the status reads paused), rather
+    than trying to resume. **Cancel**. → Listening again.
+14. Set the **Taps:** stepper (beside New Tap) to 4. Tap twice. → The tap count reads 2 of 4 and the progress
+    bar shows it. **Cancel**. → The tap count and the progress bar disappear, and come back at 1 of 4 on the
+    next tap. Tap four times. → The measurement completes. **New Tap**. → The tap count and the progress bar
+    disappear, and come back at 1 of 4 on the next tap.
+
+Item 8 — a recording that can't be written is held, and the user is asked (Swift and Python):
+
+15. Settings: check **Dump Capture Audio**; **Change…** → create and choose a new folder `~/Desktop/GTDumpW`;
+    **Done**. Set **Taps:** to 1; if the measurement is complete, press **New Tap**, so a sequence is listening.
+    In Finder, rename `GTDumpW` to `GTDumpW2`. Tap once. → When the measurement completes, an alert "Capture
+    Audio Folder Unavailable": the captured audio of this measurement couldn't be saved to `…/Desktop/GTDumpW`.
+16. **Change Location…** → choose `GTDumpW2`. → A WAV named for the time of the tap
+    (`…_session_Guitar_1tap_<time>.wav`) appears in `GTDumpW2`; no further alert.
+17. **New Tap**; rename `GTDumpW2` to `GTDumpW3` in Finder; tap once. → The alert. **Change Location…**, then
+    cancel the folder picker. → The alert appears again. **Cancel**. → No WAV is written; the log reads "WAV
+    dump discarded by the user — 1 recording(s) not saved".
+18. Settings: uncheck **Dump Capture Audio**; **Done**; **New Tap**, so a sequence is listening with saving
+    off. Settings: check **Dump Capture Audio**; **Use Default**; **Done**. Tap once. → A WAV for that tap
+    appears in the default folder (**Open Folder**).
+
+19. (Swift, Python) Settings: **Dump Capture Audio** on, **Use Default**; **Done**. Complete a measurement. → Under
+    the status-bar warnings, "Capture audio saved: `…_session_Guitar_1tap_<time>.wav` (`GuitarTap`)". The × closes
+    it. Complete another; **New Tap**. → The notice goes when the new sequence starts.
+
+Web — the save is visible (build: `npm run build && npm run preview`, clearing the service worker after the
+build; run in Safari and in Chrome):
+
+**W1.** Settings: check **Dump Capture Audio**; **Done**. Complete a measurement (Taps 1, one tap). → A WAV
+    downloads, and a notice above the status bar reads "Capture audio saved: `web_session_Guitar_1tap_….wav`
+    (Downloads)". × dismisses it.
+
+**W2.** **New Tap**; tap. → The notice goes at New Tap; after the tap a second WAV arrives in Downloads and the
+    notice names it. (If the browser asks to allow multiple downloads, allow it.)
+
+**W3.** Settings: uncheck **Dump Capture Audio**; **Done**. **New Tap**, and don't tap. → A sequence is listening
+    with saving off.
+
+**W4.** Without tapping yet: Settings: check **Dump Capture Audio**; **Done**. Now tap. → A WAV downloads for
+    that tap, and the notice names it (before, a sequence started with saving off saved nothing).
+
+Turn **Dump Capture Audio** off (or leave it on, with the folder at **Use Default**) when done.
+
+**Run-review progress.** Python passed steps 1–14 (owner, 2026-09-30), after corrections to the steps
+themselves (steps 3, 8, 13 and 14; the app's behaviour was right). Swift stopped at step 3, which found item 8.
+After items 8–9: Swift from step 1; Python steps 15–19; web W1–W4. **Run-review complete — all three editions pass
+(owner, 2026-09-30):** Swift steps 1–19, Python 15–19, web W1–W4.
 
 ## Stage 2 — move case lists into shared data
 
