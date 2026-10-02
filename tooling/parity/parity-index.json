@@ -478,7 +478,7 @@
         "src/settings.ts"
       ],
       "tests": [
-        "test/display-range"
+        "test/settings-store"
       ],
       "equivalence": "tests"
     },
@@ -651,13 +651,17 @@
       "slug": "test/display-range",
       "swift": [
         "GuitarTapTests/DisplayRangeExpansionTests.swift",
-        "GuitarTapTests/DisplayRangeTests.swift"
+        "GuitarTapTests/LoadedRangeTests.swift",
+        "GuitarTapTests/MaterialPeakAnnouncementTests.swift"
       ],
       "python": [
-        "tests/test_display_range_expansion.py"
+        "tests/test_display_range_expansion.py",
+        "tests/test_loaded_range.py",
+        "tests/test_material_peak_announcement.py"
       ],
       "web": [
-        "test/display-range.test.ts"
+        "test/display-range.test.ts",
+        "test/material-peak-announcement.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -726,6 +730,20 @@
       ],
       "web": [
         "test/file-playback.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/frequency-format",
+      "swift": [
+        "GuitarTapTests/FrequencyFormatTests.swift"
+      ],
+      "python": [
+        "tests/test_frequency_format.py"
+      ],
+      "web": [
+        "test/frequency-format.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1041,6 +1059,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/settings-store",
+      "swift": [
+        "GuitarTapTests/SettingsStoreTests.swift"
+      ],
+      "python": [
+        "tests/test_settings_store.py"
+      ],
+      "web": [
+        "test/settings-store.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/start-tap-race",
       "swift": [
         "GuitarTapTests/StartTapSequenceRaceTests.swift"
@@ -1337,6 +1369,22 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/frequency-format",
+      "swift": [
+        "GuitarTap/Views/Utilities/Extensions.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/extensions.py"
+      ],
+      "web": [
+        "src/presentation/frequencyFormat.ts"
+      ],
+      "tests": [
+        "test/frequency-format"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/guitar-summary",
       "swift": [
         "GuitarTap/Views/TapAnalysisResultsView.swift"
@@ -1585,6 +1633,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_chart_zoom_limits.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_import_identity.py"
     },
     {
@@ -1605,11 +1657,19 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_wasapi_raw_open.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_wi10_qtimer_slots.py"
     },
     {
       "repo": "swift",
       "path": "GuitarTap/Models/ColorHex.swift"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTapTests/DrawnPointsTests.swift"
     },
     {
       "repo": "swift",
@@ -1634,6 +1694,22 @@
     {
       "repo": "web",
       "path": "src/measurement/dumpWav.ts"
+    },
+    {
+      "repo": "web",
+      "path": "src/presentation/chartLimits.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/capture-audio.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/chart-zoom-limits.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/drawn-points.test.ts"
     },
     {
       "repo": "web",

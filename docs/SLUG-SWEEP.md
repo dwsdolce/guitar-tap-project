@@ -5316,7 +5316,8 @@ in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer
 ### S8 — Settings & presentation (4 slugs)
 
 Status: **IN PROGRESS** — all 4 slugs read (2026-09-29); findings F55–F58 recorded. F58 closed 2026-09-30 (Swift
-`b23445e`, Python `0d2279e`, web `d8aa7c8`); F55–F57 await the owner's decisions.
+`b23445e`, Python `0d2279e`, web `d8aa7c8`); F55 closed 2026-10-01 (Swift `e3d52ec`, Python `272b361`, web
+`b7de553`); F56–F57 await the owner's decisions.
 
 **Audit record.** As in S6–S7, this table records only what the reading produced.
 
@@ -5342,7 +5343,8 @@ How it was read: one reader per slug across the editions, then the claims that d
 
 **F55 — `display-range`: the widening rule is tested well in all three, but the slug also carries the per-type
 display-range store, the three editions trigger and land the widening differently, and comments cite code that
-does not exist. (OPEN)**
+does not exist. (CLOSED — all 23 items done and run-reviewed in all three. Commits: Swift `e3d52ec`,
+Python `272b361`, web `b7de553`)**
 
 Production: `DisplayRange.expanded(toInclude:min:max:)` / `expanded_to_include` / `expandedToInclude` — the same
 rule in all three (pad 10 %, widen only, floor 1 Hz); the app's only callers go through it. Tests: the five
@@ -5351,10 +5353,29 @@ production.
 
 | # | item | status |
 |---|---|---|
-| 1 | The slug carries a second rule: the per-type display-range settings store | open |
-| 2 | Three mechanisms trigger the widening and three places receive it | open |
-| 3 | Nothing tests the caller (the guitar guard, the trigger) | open |
-| 4 | Comments: history, a nonexistent Swift publisher, a missing file, phase labels | open |
+| 1 | The slug carries a second rule: the per-type display-range settings store | done |
+| 2 | Three mechanisms trigger the widening and three places receive it | done |
+| 3 | Nothing tests the caller (the guitar guard, the trigger) | done |
+| 4 | Comments: history, a nonexistent Swift publisher, a missing file, phase labels | done |
+| 5 | The stored range: Swift's Save Current View stores it unrounded; Python truncates to whole Hz; the web rounds | done — revised: stored exactly |
+| 6 | Python's chart range is whole Hz (canvas `minFreq`/`maxFreq` are `int`; a load sets the axis with `int(...)`); Swift's is `Float` | done |
+| 7 | Swift falls back to an untyped range key no other edition has | done |
+| 8 | Settings' Done moves the chart to the saved range even when the range did not change (Swift, Python) | done |
+| 9 | After a load, New Tap / Play File: the web returns to the saved range; Swift and Python keep the loaded range | done |
+| 10 | Python's Settings validates the range differently from Swift (the web not yet checked) | done |
+| 11 | A load widened the chart onto the peaks it restored, so a saved view did not come back as saved | done |
+| 12 | Python enforces the chart's 50 Hz / 10 dB minimum span on every range, not only on zoom | done |
+| 13 | Swift and the web drop the spectrum's points beyond the range, leaving the line short of the edges; Swift also flattens magnitudes onto the dB edges | done |
+| 14 | Settings, zoom/pan and widening each enforce their own chart limits; a 20–30 Hz range cannot be zoomed at all | done |
+| 15 | Python's load does not publish the loaded range, and its measurement-type handling resets the chart | done |
+| 16 | The return to the saved view fires on different events; the web's comparison sets the chart, not the loaded range | done |
+| 17 | Python's chart starts from the untyped range keys Swift removed (item 7) | done |
+| 18 | The "Showing …" label above the peak list shows a different range, formatted differently, in each edition | done |
+| 19 | The web's guitar peak list is filtered by the saved range; Swift's and Python's by the chart's live range | done |
+| 20 | Python re-detects the peaks whenever it applies a range; a plate's peak list and dot vanish on Reset to Saved | done — test parked in #1 |
+| 21 | The web shows the range line, and its selection buttons, only in the guitar peak view; Swift and Python always show the line, and Swift shows the buttons by its results list | done |
+| 22 | The annotation and crosshair frequencies are formatted three ways; Python's annotations never show kHz | done |
+| 23 | The web lists a completed plate's peaks as fL, fC, fLC; Swift and Python by frequency | done |
 
 **1. A second rule under this slug.** Swift `DisplayRangeTests.swift` tests `TapDisplaySettings`'s per-type
 ranges (defaults, set one type without clobbering another) — the file is tagged `test/display-range`, and
@@ -5362,6 +5383,13 @@ ranges (defaults, set one type without clobbering another) — the file is tagge
 two cases is in `test_wi6_tap_display_settings.py`, untagged. The web has five settings cases (three more than
 the natives: the default fallback, a stored read, a partial merge) and its "no clobber" case uses other values.
 - *Recommendation:* a `test/settings-store` slug for the store, in all three, with one case list.
+- *Revised (2026-10-01, against the owner's rules — the same algorithm in every edition, and the same architecture
+  except where a platform forces a difference):* the web's five cases all test behaviour every store has (factory
+  defaults; the default when nothing is stored; a stored value read back; one type not clobbering another; a partial
+  edit keeping the other bound). The web store's shape — one `{minHz, maxHz}` object per type behind
+  `displayRangeFor` / `setDisplayRangePatch` — is an architecture difference no platform requires. The web store
+  takes Swift's shape (per-type min and max accessors with the default fallback, Swift's names), and all five cases
+  run in all three under `test/settings-store`; the partial edit becomes "setting the minimum leaves the maximum".
 
 **2. Trigger and destination differ** (*to confirm*). Swift: the view's `.onReceive` of the analyzer's
 `$selectedLongitudinalPeak` / `$selectedCrossPeak` / `$selectedFlcPeak` writes view `@State` `minFreq`/`maxFreq`
@@ -5371,10 +5399,26 @@ persisted per-type settings (`updateDisplayRange`). Open questions: does Swift w
 reassignment (its publishers would fire; Python emits only at capture and load)? Does Swift persist the widened
 range, as the web does?
 - *Recommendation:* settle what Swift does on both questions, then bring Python and the web to its mechanism.
+- *Settled (2026-10-01):* Swift widens at capture and at load — the three peaks are written only there and by the
+  redo's clear (ignored); material has no manual L/C/FLC reassignment in any edition. Swift never saves the widened
+  range: only Settings writes the per-type store. So the web, which saves it, differs in behaviour; Python truncates
+  to whole Hz (`int(lo)`), Swift does not; and Python's dedicated `materialPeakIdentified` signal is a different
+  mechanism from observing the peaks, though it fires at the same moments.
+- *Revised:* Python gives the three peaks a change signal emitted at every write (the Qt counterpart of
+  `@Published`), and the view's slot widens the canvas's live range — no truncation; `materialPeakIdentified` goes.
+  The web moves the widening into `useChartView`, which owns the live chart range (Swift's `@State`), observing the
+  analyzer's three peaks — the `App.tsx` effect that widened the saved settings goes.
 
 **3. The wiring is untested** in every edition — only the pure rule is.
 - *Recommendation:* one case per edition through the analyzer: a material peak outside the range widens it; a
   guitar measurement does not.
+- *Revised:* no edition can test its view's widening — Swift's `.onReceive` and `@State` work only in a rendered
+  view, the web's tests run in Node without React rendering, and nothing builds Python's main window. So the same
+  split in all three: one shared function in `DisplayRange` / `display_range` / `displayRange.ts` makes the whole
+  decision — given a peak, the measurement type and the current range, the widened range, or the range unchanged
+  for a guitar (the guitar check moves into it from each view) — and each view only observes the peaks and applies
+  the result to its live range. Tests, one case list: the function (material outside widens, inside unchanged,
+  guitar unchanged, with the five rule cases); the analyzer announces each peak change (capture, load, clear).
 
 **4. Comments.** `DisplayRange.swift:17-19` is project history ("Extracted from … on 2026-09-20 …"); `:25` speaks
 of a "log-ish axis" (log frequency was removed — *to confirm*); `TapToneAnalysisView+Actions.swift:236` gives
@@ -5382,7 +5426,461 @@ project rationale; `DisplayRangeExpansionTests.swift:14` is history. Python `tap
 web `App.tsx:457` say Swift uses `.onReceive(tap.$autoSelected*PeakID)` — *checked*: no `autoSelected` exists in
 Swift. `DisplayRangeTests.swift:9` and `test_wi6…:220` cite `test/settings-display-range.test.ts`, which does not
 exist. `display-range.test.ts:12` and `test_wi6…:217` carry the phase label "(6h)". `test_wi6…:226-229` says
-"import via the bare `models.` path" and the code does not.
+"import via the bare `models.` path" and the code does not. *Checked:* the log-frequency axis was removed, so
+"log-ish axis" is stale.
+
+*Decision (owner, 2026-10-01):* all four as revised — "Please update your recommendations in the SLUG-SWEEP.md and
+then implement them", and "Yes" to the shared-function split for item 3.
+
+**5–7. The range's precision and an old key** (found implementing items 1–3, 2026-10-01). **5.** Swift stores the
+range as given (`setMinFrequency(_:for:)` takes a `Float`); Python stores whole Hz (`set_f_min(int(v))`, read back
+with `int(...)`); the web stores what Settings' fields give, but Save Current View rounds to whole Hz. **6.** Python's
+canvas reports its range as whole Hz (`minFreq` / `maxFreq` return `int`) and a load sets the axis with
+`int(snap.min_freq)`; Swift's chart range is `Float` throughout, rounded only where it is shown as text (`"%.0f"`).
+**7.** Swift reads a type's range, when none is stored, from the untyped key `displayMinFreq` / `displayMaxFreq`
+before the default. Swift wrote that key from `19f5184` (2026-02-14) to `7b037c5` (2026-02-26) — only
+`Beta_release_1.0` (2026-02-20) shipped with it; 1.0.1 onward write per-type keys. Python and the web never had it.
+- *Decision (owner, 2026-10-01):* 5–6 — the range is a float everywhere, stored and on the chart, rounded only where
+  shown as text, as Swift; 7 — remove Swift's fallback, so all three read the per-type value or the type's default.
+- *Revised (owner, 2026-10-01), item 5:* `FieldPrecision` — the same table in all three — says one precision per field
+  governs "input (round-on-commit), storage, and display", and the display frequency range is 0 dp: the stored range
+  is whole Hz by that rule. Swift's Settings keeps it (whole-number fields); Swift's Save Current View breaks it
+  (stores the chart range unrounded); Python truncates rather than rounds; the web keeps it. "(a). If it is really
+  an integer then store it as such — this is on range only — clearly captured frequencies are float." So the stored
+  range is whole Hz, rounded half away from zero, stored as an integer, in all three; the chart's live range and
+  captured frequencies stay float (item 6 stands).
+- *Revised again (owner, 2026-10-01), item 5 — superseding the whole-Hz rule above:* at the Swift run-review the
+  owner noted that pan and zoom make ranges between whole numbers, so rounding a saved view moves its edges by up to
+  half a unit — a peak sitting on the edge of a zoomed view appears or disappears, from the chart and the results
+  list, when the view is saved and restored. "We need to change our minds and save the ranges in their native values
+  … limit data entry to integral numbers in the settings panel but the value actually stored is full range — same in
+  what goes on disk." Checked: the range is display-only (the chart's dots, the exported chart, the results list);
+  no analysis result reads it. The editions' native widths differ (Swift `Float`, Python/web 64-bit), and the file
+  format already resolves that by storing Swift's `Float` fields at 32 bits in every edition. So: the saved range —
+  frequency per type and the dB range — is stored exactly, in Swift's `Float` (Python and the web round to 32 bits at
+  the store, as they do for files); Settings' fields take whole numbers and display at their precision, and Done
+  writes a bound only if its field was edited — an untouched field keeps the exact stored value. The 32-bit vs
+  64-bit arithmetic of the editions is recorded for #1 (`RESTRUCTURE-NOTES.md`, "The numeric model"). "Yes to
+  both."
+
+**8–10. When the chart's range moves** (found at the Swift run-review, step 4, 2026-10-01). The owner pressed
+**New Tap** expecting the chart to return to the saved range; it did not. Traced in all three:
+
+| Behaviour | Swift | Python | Web |
+|---|---|---|---|
+| Settings **Done** | always writes the saved range to the chart (`applySettings`) | always (`update_axis`) | only when the saved range changed (the view follows `effectiveDefault`) |
+| A peak re-widening after Done | no (run-review check, owner) | no — signals fire on writes only | no — each effect runs when its peak changes |
+| **New Tap** / **Play File** after a play | leaves the range | leaves it | leaves it |
+| **New Tap** / **Play File** after a load | leaves the loaded range | leaves it | returns to the saved range (`setLoadedView(null)`) |
+| Load | the loaded range, then the peaks widen it | same order | same result |
+| Settings range validation | clamp 20–20000 Hz, ≥ 10 Hz apart, else keep the saved | ≥ 1 Hz apart only | not yet checked |
+
+The owner's questions, and the answers agreed (2026-10-01):
+- *Should Done with no range change reset the chart?* No. Swift does it because `applySettings` writes every
+  field back, changed or not — a side effect, not a design; it throws away a zoom whenever Settings is closed for an
+  unrelated change. Done moves the chart only when the range changed (the web's behaviour).
+- *What range should New Tap and Play File give?* The one on the chart: a new tap or a played file is more data in
+  the same view, and a view zoomed to repeat a tap must survive it. After a load, the loaded range was the
+  measurement's, not the user's — as the manual says New Tap starts "fresh with your own values" — so the chart
+  returns to the saved view, unless the user has zoomed or panned since the load.
+- *What is the saved range for?* Each measurement type's home view: where the chart starts at launch and on a type
+  switch, and what Reset to Saved returns to. A starting point, not a limit; changed only by Settings' range fields
+  and Save Current View.
+
+The principle: the chart's live range moves only when the user moves it (zoom, pan, a reset, a new range in
+Settings), when the app must show something (a loaded measurement's range; a newly identified plate or brace peak),
+or on a measurement-type switch (to that type's saved view). Nothing else — not New Tap, not Play File, not a Done
+that changed no range.
+- *Decision (owner, 2026-10-01):* "I do agree with everything you said." The principle goes in the user manual (§6.8,
+  rewritten; §8.4) as the intent described to the user. Items 8–10 implement it. Presented, then: Play File after a
+  load follows the New Tap rule — "Yes"; the magnitude range follows items 8 and 10 as the frequency range does —
+  "Yes"; "Go ahead and implement".
+
+**11. A load widened the chart** (found at the Swift run-review, step 6, owner, 2026-10-01). A plate saved with the
+chart at 20–50 Hz loaded widened to its peaks. The load restores the three peaks, and the view cannot tell a restore
+from a capture's identification, so it widened — Swift's original behaviour, carried into all three, and against
+the principle (widening is for a *newly identified* peak; the manual's §6.8 already says a load "shows the range
+that measurement was saved with"). "I would have thought that the idea of saving a chart includes any zoom so that
+when I restore the chart it is identical to the image that was saved."
+- *Decision (owner, 2026-10-01):* (b) — the analyzer records whether its material peaks came from a load (one
+  flag, set by a load before it writes the peaks, cleared when a sequence starts), and the widening decision does
+  not widen a restored peak. Not (a), skipping widening while a load is in progress: the web's effects run after the
+  load has finished, so that would need a different mechanism there.
+
+**12. Python's minimum span** (found at the Python run-review, step 1, owner, 2026-10-01): a 20–50 Hz range showed as
+10–60. All three refuse a zoom step that would leave the span at 50 Hz / 10 dB or less (Swift `applyFrequencyZoom`:
+`if newMaxFreq > newMinFreq + 50`; the web's `FREQ_MIN_SPAN` / `DB_MIN_SPAN`), but Python sets the limit on the
+pyqtgraph ViewBox (`setLimits(minXRange=50, minYRange=10)`), which widens *every* range — Settings, Reset to Saved, a
+load, a widening — about its centre.
+- *Decision (owner, 2026-10-01):* as Swift — the minimum applies to zoom gestures only.
+
+**13. The spectrum at the chart's edges** (found at the Swift run-review, owner, 2026-10-01: a 28–38 Hz view's line
+stopped short of both sides). Swift (`SpectrumView.chartData`, the plate/brace series, `ExportableSpectrumChart`) and
+the web (`spectrumRender.ts` `drawCurve`) draw only the points inside the range, so the segments that cross an edge
+are missing — a gap of up to one bin at each side. Swift also clamps magnitudes into the dB range
+(`clampedMagnitude`), so a peak above the top is drawn flat along it; the web clips (`ctx.clip()`). Python gives
+pyqtgraph the whole spectrum and the view clips it — correct on both axes.
+- *Decision (owner, 2026-10-01):* draw through the edges and clip, as Python does, in all three.
+
+**14. One set of chart limits** (found at the Swift run-review, owner, 2026-10-01: with the range set to 20–30 Hz,
+the mouse-wheel zoom did nothing). Zoom refused any step whose result was not wider than 50 Hz — zooming *out* from a
+10 Hz range included, since one step reaches only ~11.5 Hz — in all three (Python since item 12). And the limits
+differed by control:
+
+| | Lowest frequency | Highest | Minimum span | Magnitude | Minimum dB span |
+|---|---|---|---|---|---|
+| Settings (Done) | 20 Hz | 20000 Hz | 10 Hz (≥) | −120…20 dB | 10 dB (≥) |
+| Zoom / pan | 0 Hz | 5000 Hz | 50 Hz (>) | −120…20 dB | 10 dB (>) |
+| Widening onto a peak | 1 Hz | none | none | — | — |
+
+- *Decision (owner, 2026-10-01):* one set of limits for Settings' validation, zoom, pan and widening, in all three:
+  frequency 1–5000 Hz ("there is no useful data and the displays get funky if it is so high" above 5 kHz; 20 kHz
+  came from the analysis range, no longer a setting), magnitude −120…20 dB, a minimum span of 10 Hz and 10 dB ("now
+  that display is fixed … I see no reason to limit zoom to 50 Hz instead of 10"), compared the same way everywhere
+  (a span of exactly 10 is allowed).
+
+**15. Python's load does not publish its range** (found at the Python run-review, step 6, owner, 2026-10-01: after a
+load, New Tap stayed on the loaded view). Swift's load calls `setLoadedAxisRange` with the snapshot's four bounds (or,
+with no snapshot, the saved range), and the view remembers that as the loaded range. Python's load set the axis
+itself, from the view (`canvas.update_axis(int(…))`, `setYRange`), never through `loadedAxisRangeChanged`, so the
+canvas had no loaded range to compare at New Tap; a comparison's range was truncated to whole Hz. And Python's
+measurement-type handling (`_apply_measurement_type_to_ui`, which a load also runs) reset the chart to the saved
+range — a second move Swift does not make; Swift moves the chart on a type switch only through Settings' Done.
+- *Decision (owner, 2026-10-01):* "Go" — as Swift; then "Yes" to removing the type handling's reset.
+
+**16. What returns the chart to the saved view** (found from the owner's question, 2026-10-01: "Why was it based on a
+complete measurement before? Also, if I do a comparison measurement from the measurement browser what is the
+display range that is used?"). Swift watched `isMeasurementComplete` change from true to false, and the web an
+effect on the same transition; Python's canvas acts on every `start_tap_sequence`. So a sequence start that found
+the measurement already not complete — Cancel, a re-arm, New Tap during a comparison, which is not a complete
+measurement — returned to the saved view in Python only. Swift's `startTapSequence` sets
+`isMeasurementComplete = false` on every start, so the event is there; only `.onChange` hides the repeats. And the
+web's two comparison paths (`onLoadMeasurement` with comparison entries, `onCompare`) set the chart directly
+(`setView`), so it never held a loaded range and New Tap after a comparison stayed on the comparison's range;
+Swift's `loadComparison` and Python's go through `setLoadedAxisRange`.
+- *Decision (owner, 2026-10-01):* every sequence start is the event, in all three ("The fact that it is a simple
+  change does not mean it has simple implications"; then "Go"), with the web's comparison fix.
+
+**17. Python's startup range** (found while doing item 7). Python's window reads `AppSettings.f_min()` /
+`f_max()` with no measurement type at startup (`tap_tone_analysis_view.py`, `self._f_range`), which reads the
+untyped `display/f_min` / `display/f_max` keys — the keys Swift's item 7 removed — and the canvas sets its first range
+from them (`fft_canvas.py`, `setXRange(frange["f_min"], …)`) before the startup reset moves it to the type's saved
+range. The web has no untyped key.
+- *Decision (owner, 2026-10-01):* "Yes" — as Swift and the web: the chart is built on the current type's saved range,
+  with no startup move, and the untyped keys go.
+
+**18. The "Showing …" label** (found while doing item 17), above the peak list:
+
+| | Range shown | Format | Source |
+|---|---|---|---|
+| Swift | the chart's live range — follows zoom, pan, a load, a widening | `formattedAsFrequency`: "25.0 Hz - 45.0 Hz", kHz from 1000 | `TapAnalysisResultsView` `minFreq` / `maxFreq` |
+| Python | the chart's live range | after a view change, whole Hz, truncated (`freqRangeChanged` is `Signal(int, int)`); after Settings' Done and at startup, `FieldPrecision` ("25") | `_on_canvas_freq_range_changed`, `_update_freq_range_label` |
+| web | the **saved** range — does not follow zoom, pan or a load | the number as stored | `App.tsx` `displayMinHz` / `displayMaxHz` |
+
+- *Decision (owner, 2026-10-01):* "Yes" — all three show the chart's live range the Swift way
+  (`formattedAsFrequency`, which Python and the web gain); Python's signal carries floats.
+
+**19. The web's guitar peak list** (found while doing item 18). Swift lists a guitar's peaks within the chart's live
+range (`TapAnalysisResultsView`: `peak.frequency >= minFreq && peak.frequency <= maxFreq`, the view's range), and
+Python re-filters on every view change (`_refresh_results_peaks` on `freqRangeChanged`). The web filters by the
+saved range (`App.tsx` `displayPeaksInRange`, on `displayMinHz` / `displayMaxHz`), so zooming, panning, a load or
+a widening does not change which peaks are listed — the list and the label (now the live range) can disagree.
+- *Decision (owner, 2026-10-01):* "Fix the web as well to match swift."
+
+**20. Python re-detects the peaks when the chart moves** (found at the Python run-review, step 13, owner,
+2026-10-01: after Reset Frequency Axis to Saved, a completed plate's peak list and its fFLC dot disappeared; zooming
+to the same view brought them back). Python's `FftCanvas.update_axis` called
+`analyzer.recalculate_frozen_peaks_if_needed()` on every range it applied — the resets, a load's range, a widening, Settings' Done — and Settings' Done
+called it again directly ("mirroring Swift's recalculateFrozenPeaksIfNeeded() calls in applySettings()", which
+have none). For a plate, that re-ran `find_peaks` on the frozen spectrum (new peak ids) and emitted
+`peaks_above_peak_min`, the guitar projection, so the list and the dot matched nothing. A zoom or pan
+(`_refresh_peaks_for_viewport`) emits `material_identified_peaks` and never re-detects. In Swift and the web the
+recalculation has one caller, Re-analyze (`reanalyzePeaks`); applying a range changes the view only. Older than
+F55 — from when the analysis range followed the display range; it is now the constant 30–2000 Hz.
+- *Decision (owner, 2026-10-01):* "So, please fix python."
+
+**21. Where the web shows the range line** (found at the web run-review, owner, 2026-10-01: a plate in review showed
+no "Showing …" line). Swift's `TapAnalysisResultsView` shows the line in its results header with no condition —
+guitar, plate, brace, a comparison, the per-tap table — and Python's `freq_range_label` is always shown. The web
+wrapped the whole row, the line and the selection buttons, in `!comparison && !material && !showMultiTap`. Not from
+F55: the committed code has the same condition. The buttons' rule differed too: Swift shows them when
+`!sortedPeaksWithModes.isEmpty && !showingMultiTapComparison` — its results list, which is empty in a saved
+comparison, a plate's or brace's every peak above Peak Min, a guitar's listed peaks — with Deselect All disabled
+for a plate or brace and Reset to Auto guitar-only; the web showed them in the guitar view even with no peaks.
+- *Decision (owner, 2026-10-01):* "Both please" — the line always, and the buttons by Swift's rule.
+
+**22. The annotation and crosshair frequency** (found at the run-review, owner, 2026-10-01: Python's annotations show
+Hz where Swift's and the web's show kHz). Annotations: Swift `formattedAsFrequency` ("1.4 kHz"); Python
+`peaks_model.py` `f"{freq:.1f} Hz"`, never kHz; the web `spectrumRender.ts` `fmtFreq`, kHz with two decimals
+("1.40 kHz"). Crosshair: two decimals in kHz in all three, each its own code (Swift `formatCursorFrequency` /
+`formatCrosshairFrequency`, Python `fft_canvas.py`, the web `spectrumRender.ts`). Also found: two Swift doc comments
+still gave the old limits (`SpectrumView.swift`: 20 Hz – 20 kHz; `SpectrumView+GestureHandlers.swift`: 0 Hz – 5 kHz,
+minimum span 50 Hz), and the web's `spectrumExport.ts` cited `fmtFreq` in `pdfReport.ts`, gone since item 18.
+- *Decision (owner, 2026-10-01):* "the crosshair should be the same precision as well. So, use a shared formatter for
+  both annotation and crosshair frequency. Clean up the comments."
+
+**23. A completed plate's peak rows** (found at the run-review, owner, 2026-10-01). Swift's `materialPeakRows`
+lists the fixed slot rows during capture and, once complete, the identified peaks in frequency order; Python the
+same. The web's `MaterialResults` always listed the slots in fL, fC, fLC order.
+- *Decision (owner, 2026-10-01):* "re-order the plate peaks by frequency to agree with swift."
+
+**Moved out: the annotation default position** (found at the run-review, owner, 2026-10-01). The three editions place
+an untouched label differently, and its behaviour under zoom differs from a dragged label's. Not a display-range
+question, and more to settle than this finding can: hub Issue #25, `docs/ANNOTATION-DEFAULT-POSITION.md`.
+
+*Done — items 1–14 (2026-10-01):*
+- **1.** The web store takes Swift's shape: `defaultMinFrequency` / `defaultMaxFrequency`, `minFrequency` /
+  `maxFrequency` (stored or default), `setMinFrequency` / `setMaxFrequency` (each bound per type; returning the
+  settings patch, since web settings are an immutable value), and `setFrequencyRange` composing the two for the
+  callers that store both (Settings' Reset, Save Current View, `updateDisplayRange`). Each bound is stored on its
+  own, so one never stored reads its default as in Swift; the saved JSON shape is unchanged. `displayRangeFor`,
+  `setDisplayRangePatch` and `defaultDisplayRange` are gone. The store's tests have their own slug,
+  `test/settings-store` — Swift `SettingsStoreTests.swift` (was `DisplayRangeTests.swift`), Python
+  `test_settings_store.py` (moved out of `test_wi6_tap_display_settings.py`), web `settings-store.test.ts` — the same
+  five cases: the per-type defaults; a type with nothing stored reads its default; a stored range reads back;
+  storing one type does not change another; storing one bound leaves the other. The store's production tag points
+  at it in all three (`tests=test/settings-store`).
+- **2–3.** One decision function in all three — Swift `DisplayRange.widened(onto:for:min:max:)`, Python
+  `widened_onto`, web `widenedOnto`: for a plate or brace, `expanded`; for a guitar, the range unchanged. Each view
+  only applies it: Swift's `expandFreqRangeToInclude` (its guitar check moved into the function); Python's
+  `_on_material_peak_changed`, connected to new `selectedLongitudinalPeakChanged` / `selectedCrossPeakChanged` /
+  `selectedFlcPeakChanged` signals that the analyzer's three peak properties emit on every write (capture, load,
+  redo's clear) — `materialPeakIdentified` and its four emits are gone, and the range is no longer truncated to whole
+  Hz; the web's `useChartView`, which observes the snapshot's three peaks (one effect each) and widens its live view —
+  the `App.tsx` effect that widened the saved settings is gone, so the saved range no longer changes. Tests, the
+  same in all three: the decision (material outside widens, inside unchanged, guitar unchanged — with the five rule
+  cases); the announcement (`MaterialPeakAnnouncementTests.swift`, `test_material_peak_announcement.py`,
+  `material-peak-announcement.test.ts`): loading a plate announces each of its peaks; redoing a phase announces its
+  peak cleared.
+- **4.** The history and the "log-ish axis" are gone from `DisplayRange.swift`; the project rationale from
+  `TapToneAnalysisView+Actions.swift`; the history from `DisplayRangeExpansionTests.swift`; the citations of
+  `$autoSelected*PeakID` (Python view and analyzer signal comments; the web's went with its effect); the nonexistent
+  `test/settings-display-range.test.ts`; the "(6h)" labels; the import note.
+- **5.** The store rounds at its one write point, so Settings and Save Current View both go through it: Swift
+  `setMinFrequency` / `setMaxFrequency` store `Int(FieldPrecision.rounded(value, frequencyHz))`; Python
+  `AppSettings.set_f_min` / `set_f_max` store `int(fp.rounded(v, FREQUENCY_HZ))` (was `int(v)`, truncating); web
+  `setMinFrequency` / `setMaxFrequency` store `FieldPrecision.rounded(value, frequencyHz)`, and the two
+  `Math.round`s in Save Current View are gone. Python's Save Current View and Apply show the values through
+  `FieldPrecision` (`fp.string`). A sixth `settings-store` case in all three: a stored range is whole Hz (15.5 → 16,
+  180.4 → 180).
+- **5, as revised.** The store keeps the range exactly: Swift `setMinFrequency` / `setMaxFrequency` store the `Float`
+  as given (the whole-Hz rounding is gone); Python `AppSettings.set_f_min` / `set_f_max` / `set_db_min` /
+  `set_db_max` store `float(np.float32(v))`; web `setMinFrequency` / `setMaxFrequency` and a new `setMagnitudeRange`
+  store `Math.fround(v)`, and Save Current View's `Math.round`s are gone. One shared rule for a Settings field on
+  Done — `DisplayRange.enteredValue(text, stored, decimals)` / `entered_value` / `enteredValue`: the stored value,
+  exactly, if the field still shows it; otherwise the number typed; none if not a number. Swift's `applySettings`
+  and Python's `_apply_settings` read all four range fields through it; the web's Done through it on the draft's
+  display; the web's range fields display through `FieldPrecision.string`. Tests, all three: "a stored range keeps
+  its exact value" (15.37 / 180.43 read back at `Float` precision) replaces the whole-Hz case; an untouched field keeps
+  the exact stored value; an edited field is the number typed; a field that is not a number gives none. Mutation:
+  the rule always reading the text (each edition) — killed. Suites: Swift 732, Python 852, web 751; with items
+  12–13, Swift 735, Python 855, web 754; with item 14, Swift 739, Python 857, web 760.
+- **6.** Python's canvas `minFreq` / `maxFreq` return the float range (`update_axis` takes floats); a load sets the axis
+  from the snapshot's range as is; `AppSettings.f_min` / `f_max` read as float; the "Showing … Hz" label formats
+  through `FieldPrecision`.
+- **7.** Swift's `minFrequency(for:)` / `maxFrequency(for:)` read the per-type key or the type's default; the untyped
+  keys and their fallback are gone, and the header's key note says so.
+- **6, completed with 8–10.** Python's canvas also rounded its range to whole Hz whenever the view changed
+  (`_refresh_peaks_for_viewport`: `int(round(x0))`), right after a load or a widening set it; it now keeps the
+  view's floats. The model's `loadedAxisRangeChanged` signal carried the frequencies as `int`; now `float`.
+- **8–10.** The decisions are shared, in `DisplayRange` / `display_range` / `displayRange.ts`, with the chart's four
+  bounds as `ChartRange` (Swift, Python) / the web's existing `ChartView`: `onSettingsDone(saved, previouslySaved,
+  typeChanged)` — the saved range if it or the type changed, else none; `onNewMeasurement(current, loaded, saved)` —
+  the saved range if the chart is still showing the loaded range, else none; `loadedAfterWidening(loaded, before,
+  after)` — a widening of the loaded view is remembered as the loaded view. Each view keeps the loaded range it is
+  showing (Swift `@State loadedChartRange`, Python canvas `_loaded_chart_range`, web `useChartView`'s `loadedRef`):
+  set when a load's range is applied, carried through a widening, compared with the chart when the measurement
+  stops being complete (Swift `.onChange(of: isMeasurementComplete)`, Python `set_measurement_complete(False)`, web an
+  effect on the snapshot's `isMeasurementComplete`) and then cleared. A user move needs no hook: the chart no
+  longer equals the loaded range. Settings' Done: Swift `applySettings` and Python `_apply_settings` persist, read
+  the saved range back and apply `onSettingsDone`; the web's chart applies it when its saved range or type changes,
+  and no longer follows "loaded range, else saved". Python no longer resets the dB axis to −100…0 at every new
+  measurement (`set_measurement_complete(False)`). Validation: Python's Done calls `validate_frequency_range` /
+  `validate_magnitude_range` (it had its own ±1 rule); the web gains `validateFrequencyRange` /
+  `validateMagnitudeRange` in `settings.ts`, which its Done applies (it had none). Python's Done shows the ranges
+  through `FieldPrecision`. Tests, the same in all three: nine decision cases (`test/display-range`) — Done with
+  nothing changed / a changed frequency range / a changed magnitude range / a changed type; a new measurement with
+  no load / while showing the load / after the user moved the chart; widening while showing the load / after a move —
+  and twelve validation cases (`test/settings-store`; moved from Python's `test_wi6`, new in Swift and the web):
+  frequency and magnitude — valid, clamped low, clamped high, inverted and too narrow read the saved range, exactly
+  10 apart accepted.
+- **11.** `materialPeaksFromLoad` / `material_peaks_from_load` on the analyzer (web: in the snapshot), set by a load
+  before it writes the peaks and cleared in `startTapSequence` / `start_tap_sequence`. The decision takes it:
+  `widened(onto:for:fromLoad:min:max:)` / `widened_onto(frequency, type, from_load, …)` / `widenedOnto(frequency,
+  type, fromLoad, …)` leaves the range unchanged for a restored peak; each view passes the analyzer's flag (the web
+  reads it from the same snapshot as the peaks). Tests, all three: a peak restored by a load leaves the range; loaded
+  peaks are marked as from a load until a new sequence. Mutation: the decision ignoring the flag (each edition)
+  — killed.
+- **12.** Python's `setLimits` keeps only the bounds (0–5000 Hz, −120…20 dB); the minimum span moved to the zoom
+  gestures: the ViewBox's `scaleBy` (which pyqtgraph's wheel, drag and axis zooms all call) is wrapped to refuse, per
+  axis, a step that would leave 50 Hz / 10 dB or less, and the ⌘/Ctrl-scroll zoom applies the same check —
+  `zoom_keeps_minimum_span(lo, hi, scale, min_span)`, Swift's `newMax > newMin + 50`. Tests:
+  `test_chart_zoom_limits.py` (`@parity none` — Swift's twin is `SpectrumViewGestureTests` C3 and its magnitude case).
+  Mutation: `>` → `>=` — killed.
+- **13.** `DisplayRange.drawnIndices(of:min:max:)` / web `drawnIndices` — every point inside the range plus the one
+  beyond each edge. Swift's `chartData`, plate/brace series and both export charts use it; the magnitude clamps are
+  gone and the plot area is `.clipped()` (live chart and export). The web's `drawCurve` uses it inside its existing
+  clip. Python unchanged. Tests: `DrawnPointsTests.swift` / `drawn-points.test.ts` (`@parity none` — pyqtgraph clips
+  the whole spectrum itself): the point beyond each edge is included; a range between two points draws the segment
+  across it; a range wider than the spectrum draws every point. Mutation: no beyond-the-edge point (Swift, web) —
+  killed.
+- **14.** The limits are defined once per edition: Swift `DisplayRange.frequencyBounds` (1…5000), `magnitudeBounds`
+  (−120…20), `minFrequencySpan` / `minMagnitudeSpan` (10); Python `display_range.MIN_/MAX_FREQUENCY_HZ`,
+  `MIN_/MAX_MAGNITUDE_DB`, `MIN_FREQUENCY_SPAN_HZ` / `MIN_MAGNITUDE_SPAN_DB`; the web `presentation/chartLimits.ts`
+  (a module of its own so `settings.ts` and `displayRange.ts` need not import each other). Settings' validation
+  (`validateFrequencyRange` / `validateMagnitudeRange` in all three), zoom (Swift `applyFrequencyZoom` /
+  `applyMagnitudeZoom`; Python's wrapped `scaleBy` and ⌘/Ctrl-scroll; the web's new `zoomedRange`, pulled out of
+  `SpectrumChart` so it can be tested), pan (Swift `handlePan`; Python `setLimits`; the web's `panFreqBy` / `panDbBy`)
+  and the widening (`expanded` now stops at 5000 Hz) all read them, and the span is compared the same way everywhere
+  (`>=`): a zoom to exactly 10 is allowed, and a 10 Hz range can be zoomed out. Swift's global
+  `maxDisplayFrequency` is gone; its gesture doc no longer claims 20 Hz–20 kHz. Tests: the validation cases'
+  bounds (below 1 Hz, above 5 kHz) in all three; a widening stops at 5 kHz (all three); zoom — Swift
+  `SpectrumViewGestureTests` (zoom-in refused at the minimum, zoom to exactly the minimum allowed, zoom-out from the
+  minimum allowed, frequency and dB; pan stops at 1 Hz), Python `test_chart_zoom_limits.py`, the web's new
+  `chart-zoom-limits.test.ts` (`@parity none`, as Swift's and Python's gesture tests). Mutation: `>=` → `>` (each
+  edition) — killed.
+- Parity map regenerated (`tooling/parity`): `test/settings-store` in all three; `test/display-range` gains the
+  announcement tests; `--check` clean. It also now lists the two edition-only test files from #20 and F58.
+- Mutations, each killed: the guitar check removed from the decision (Swift, Python, web); the Python peak setter not
+  announcing; the web max setter overwriting the stored min (after the one-bound case was made to store a min first
+  — from nothing stored it could not tell); the rounding removed from each store's setter (Swift, Python, web);
+  `onSettingsDone` always moving (Swift), `onNewMeasurement` ignoring a move (Python), the web's validation not
+  clamping. Suites (with item 11): Swift 729, Python 849, web 748.
+
+*Done — items 15–16 (2026-10-01):*
+- **15.** Python's load publishes the snapshot's four bounds through `set_loaded_axis_range` (with no snapshot, the
+  saved range), as Swift; `loadedAxisRangeChanged` carries four floats and the canvas applies them and remembers
+  them as its loaded range. A comparison's range is no longer truncated to whole Hz. The view's own axis setting
+  during a load is gone, and `_apply_measurement_type_to_ui` no longer resets the chart — the one startup reset
+  moved to startup. `test_loaded_range.py`: a load publishes its snapshot's range; a load with no snapshot
+  publishes the saved range.
+- **16.** Swift: `.onReceive(tapToneAnalyzer.$isMeasurementComplete) { if !$0 { applyNewMeasurementRange() } }`,
+  which hears every `startTapSequence`, replaces the `.onChange`. Python unchanged (`start_tap_sequence`). Web: the
+  analyzer counts sequence starts (`sequenceStarts`, in the snapshot, advanced in `startTapSequence`), and
+  `useChartView` acts when the count changes — a snapshot can show only a change, so the count stands for Swift's
+  repeated `false`. Both web comparison paths set the loaded range (`setLoadedView`), as Swift's
+  `setLoadedAxisRange`. `test_comparison_mode.py` now drives `TapToneAnalyzer.for_testing()` (it had three stand-in
+  classes of its own). Web test: each sequence start is counted, even when the measurement was not complete.
+  Suites: web 761.
+
+*Done — item 17 (2026-10-01):* Python's window builds the chart from `TapDisplaySettings.min_frequency()`
+/ `max_frequency()` — the current type's saved range, as Swift's `@State` from `TapDisplaySettings.minFrequency` and
+the web's initial `defaultView` — and the startup `_reset_both_to_saved()` is gone. The startup "Showing …" label
+formats through `FieldPrecision`, as the label's Settings path (item 18 is the label's own difference). `AppSettings.f_min` / `f_max` / `set_f_min` / `set_f_max` require the type; the
+untyped `display/f_min` / `display/f_max` keys are gone. Suites: Python 860.
+
+*Done — item 18 (2026-10-01):* Swift unchanged. Python gains `formatted_as_frequency` in
+`views/utilities/extensions.py` (Python's `Extensions.swift`), and the web `formattedAsFrequency` in
+`presentation/frequencyFormat.ts`; each PDF's private copy of the same function (Python `_fmt_freq` in
+`tap_analysis_results_view.py`, web `fmtFreq` in `pdfReport.ts`) is replaced by it — the same output. The label
+reads "Showing 25.0 Hz - 45.0 Hz" in all three: Python's three writers (startup, Settings' Done, a view change) use
+it, and `freqRangeChanged` is `Signal(float, float)`; the web's label shows `view.minHz` / `view.maxHz`, the chart's
+live range.
+- *Tests (owner, 2026-10-01: "The fact that swift does not have one is not sufficient reason not to have one"):*
+  the label is one function in all three — Swift `displayRangeLabel(minFreq:maxFreq:)` in `Extensions.swift`, Python
+  `display_range_label` in `extensions.py`, web `displayRangeLabel` in `frequencyFormat.ts` — which Swift's
+  `TapAnalysisResultsView`, Python's three writers and the web's `App.tsx` call. New slug `view/frequency-format`
+  (the formatter and the label) with `test/frequency-format`: `FrequencyFormatTests.swift` /
+  `test_frequency_format.py` / `frequency-format.test.ts`, the same five cases — below 1 kHz is Hz with one decimal;
+  from 1 kHz is kHz with one decimal; the label shows both bounds; a zoomed range keeps its fraction (25.37–44.81 →
+  "Showing 25.4 Hz - 44.8 Hz"); a range crossing 1 kHz mixes units. Parity map regenerated; `--check` clean.
+  Suites (with item 19): Swift 747, Python 865, web 766.
+
+*Done — item 20 (2026-10-01):* `update_axis` sets the range only (its `init` flag, which skipped the
+recalculation, is gone). Settings' Done applies Peak Min through the canvas's `set_threshold` — the slider's path,
+which re-projects the displayed peaks and tells the view — instead of re-detecting. The recalculation's only caller
+is now `reanalyze_peaks`, as in Swift and the web. Swift and the web unchanged. Suites: Python 865.
+- *Test — parked in #1 (owner, 2026-10-01: "I agree"):* the canvas cannot be built in a test, since it creates and
+  starts the analyzer itself and so opens the audio device; Swift's and the web's views are handed theirs. Handing
+  Python's canvas the analyzer moves Python's startup, which is #1's work, so the test waits for it
+  (`RESTRUCTURE-NOTES.md`, "Who owns the analyzer"). Until then, run-review step 13 covers item 20.
+
+*Done — item 21 (2026-10-01):* web `App.tsx` — the range line is always shown; the buttons show when
+`resultsListPeaks` (Swift's `sortedPeaksWithModes`: none in a saved comparison, `peaksAbovePeakMin` for a plate or
+brace, `displayPeaksInRange` for a guitar) has peaks and the per-tap table is not up; Deselect All is disabled for a
+plate or brace, with Swift's help text, and Reset to Auto is guitar-only. Swift and Python unchanged. No unit test:
+the rule is inline in the view in all three; run-review step 1. Suites: web 766.
+
+*Done — items 22–23 (2026-10-01):*
+- **22.** The annotation label and the crosshair readout use item 18's shared formatter in all three: Swift
+  `formattedAsFrequency` (its two private crosshair formatters are gone; the macOS cursor and the iOS crosshair both
+  call it); Python `formatted_as_frequency` (`peaks_model.py`, `fft_canvas.py`); the web `formattedAsFrequency`
+  (`spectrumRender.ts`; its `fmtFreq` is gone). So the crosshair now reads one decimal in kHz, as the labels. The two
+  Swift comments give `DisplayRange`'s limits (1 Hz – 5 kHz, 10 Hz / 10 dB spans); the web's `spectrumExport.ts`
+  comment names `formattedAsFrequency`. The formatter is tested (`test/frequency-format`); the call sites are inline in
+  the views.
+- **23.** The web's `MaterialResults`: once complete, the identified peaks in frequency order; the slot rows during
+  capture unchanged. Swift and Python unchanged.
+- Builds: Swift macOS and iOS Simulator. Suites: Swift 747, Python 865, web 766.
+
+*Done — item 19 (2026-10-01):* the web's `displayPeaksInRange` filters on `view.minHz` / `view.maxHz`,
+the chart's live range, as Swift's `sortedPeaksWithModes` on the view's `minFreq` / `maxFreq` (it moved below
+`useChartView`, which provides the view). Swift and Python unchanged. No unit test: in all three the filter is
+inline in the view; run-review step 20.
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after the build. Same list per edition, Swift first.
+The plate recording is `plate-umik-1-swift-mac-1778816330.wav` with the calibration `7108913.txt`. The chart's
+range is reset from the chart's menu (right-click, or its … button): **Reset Frequency Axis to Saved**.
+
+1. Settings: Measurement Type Plate; set the frequency range to 20–50 Hz; **Done**. → The chart shows 20–50 Hz, and
+   the line above the peak list reads "Showing 20.0 Hz - 50.0 Hz".
+2. **Play File** the plate recording with `7108913.txt`. → As each of fL, fC (and fFLC) is identified, the chart
+   widens to show it, with a little room past the peak.
+3. Open Settings. → The range still reads 20–50 Hz. **Done** without changing anything. → The chart stays widened.
+4. **Reset Frequency Axis to Saved**. → The chart shows 20–50 Hz.
+5. Zoom the chart to about 25–45 Hz; **Save** the measurement. **New Tap**. → The chart stays as you zoomed it.
+6. Load the saved plate. → The chart shows exactly the range it was saved with (about 25–45 Hz) — not widened to
+   its peaks — and the peak list shows its peaks in frequency order. **New Tap**. → The chart returns to the saved view, 20–50 Hz.
+7. Load it again; zoom or pan the chart; **New Tap**. → The chart stays where you put it.
+8. Load it again; **Play File** the plate recording. → The chart returns to 20–50 Hz, then widens as each peak is
+   identified.
+9. Settings: change the range to 20–60 Hz; **Done**. → The chart moves to 20–60 Hz.
+10. Settings: Measurement Type Generic; **Done**. → The chart moves to Generic's saved range. Tap a guitar whose
+    peaks reach above it. → The chart is not widened.
+11. Settings (Generic): set the range to 80–300; **Done**. Reopen Settings and enter minimum 500, maximum 100
+    (inverted); **Done**; reopen Settings. → The range reads 80–300 — the saved range, kept because the entry was
+    invalid; not 100–500 (the entry is never swapped).
+    Then enter minimum 0, maximum 300; **Done**; reopen Settings. → The range reads 1–300: a minimum below 1 Hz is
+    raised to 1 (the chart's limits are 1–5000 Hz). Enter maximum 6000; **Done**; reopen. → 1–5000.
+12. Settings: enter magnitude minimum −50, maximum −45 (the right way round, but only 5 dB apart — the bounds must
+    be at least 10 apart); **Done**; reopen Settings. → The magnitude range reads the saved range again, not −50 to
+    −45.
+13. Plate: zoom in until an identified peak sits just inside the chart's edge; Settings → **Save Current View**;
+    **Done**. → The chart does not move, and the peak is still just inside. Pan away, then **Reset Frequency Axis to
+    Saved**. → The same view comes back, with the peak still just inside. Reopen Settings. → The range fields show
+    whole numbers; **Done** without editing them. → The chart does not move.
+14. Settings (Plate): set the range to 28–38 Hz (10 Hz — the narrowest allowed); **Done**. → The chart shows
+    28–38 Hz. Scroll to zoom in. → Nothing changes (it is already at the minimum). Scroll to zoom out. → The chart
+    widens. Try a range of 28–35 in Settings. → It is refused: the saved range is kept.
+15. Plate, still at 28–38 Hz: **Play File** the plate recording (the chart widens onto its peaks), then **Reset
+    Frequency Axis to Saved**. → The chart shows 28–38 Hz, and the line reaches both side edges, with no gap.
+    Settings: set the magnitude range so a peak rises above its top; **Done**. → The line is cut off at the top edge
+    where it crosses it, not drawn flat along the edge.
+16. Put the ranges back: Settings → Display → **Reset to Defaults**, once with Plate selected and once with Generic.
+17. Settings: Measurement Type Generic; **Done**. Measurements → **Compare…** → select two guitar measurements saved
+    with different ranges. → The chart shows a range covering both. **New Tap**. → The chart returns to Generic's
+    saved range, 75–350 Hz. Compare the same two again; zoom or pan; **New Tap**. → The chart stays where you put it.
+18. Settings: Measurement Type Plate; set the range to 25–45 Hz; **Done**. Quit and relaunch. → The chart opens at
+    25–45 Hz. Settings → Display → **Reset to Defaults** (Plate).
+19. Settings: Measurement Type Generic; **Done**. → The line above the peak list reads "Showing 75.0 Hz - 350.0 Hz".
+    Zoom and pan the chart. → The line follows the chart, still one decimal. Zoom out until the chart's right edge
+    passes 1000 Hz. → The upper bound reads in kHz (e.g. "1.2 kHz"); a peak label above 1000 Hz and the crosshair
+    readout over it read the same way, one decimal.
+20. Generic: tap a guitar, or load a guitar measurement, so peaks are listed. Zoom the chart so some listed peaks fall
+    outside it. → They leave the peak list; the list holds only peaks within the "Showing …" range. Zoom back out. →
+    They return.
+
+**Run-review progress.** Swift passed steps 1–14 (owner, 2026-10-01) — before item 5 was revised to exact storage;
+steps 11–13 were reworded during the run. After the revision: Swift passed step 13 again (owner, 2026-10-01).
+Python stopped at step 1 (item 12). Swift found item 13, and item 14 (a 20–30 Hz range would not zoom). After items
+12–14: Swift steps 11, 14–15; Python and the web steps 1–16. Python passed steps 6–7 after item 15 (owner,
+2026-10-01). After items 15–19: Swift steps 6–8 (Swift's trigger changed, item 16), 11 and 14–20; Python steps 1–5
+and 8–20; the web steps 1–20. Python found item 20 at step 13 (owner, 2026-10-01). Swift and Python done (owner,
+2026-10-01). The web found item 21 at step 1; after it, the web steps 1–20. **All three editions pass steps 1–20 (owner,
+2026-10-01).** Items 22–23 came after that pass; their checks are step 6 (the plate's rows) and step 19 (the labels
+and the crosshair). All three pass steps 6 and 19 after items 22–23 (owner, 2026-10-01). **Run-review complete —
+all three editions pass.**
 
 **F56 — `field-precision`: identical tests on an identical table, but most of the table is used by nothing,
 every screen formats its own numbers, and the web rounds halfway values differently. (OPEN)**
@@ -5399,6 +5897,7 @@ values, all calling production.
 | 4 | Web: rounding on every keystroke, and re-display without the precision | open |
 | 5 | Python shows Q with 0 decimals; the table and Swift use 1 | open |
 | 6 | Tolerances differ; comments overstate what the table governs | open |
+| 7 | The stored magnitude range: Swift's and Python's Save Current View store it unrounded; the web rounds | open |
 
 **1. Unused precisions.** Of the computed-value entries only `peakMagnitudeDB` has a caller; `peakFrequencyHz`,
 `qFactor`, `youngsModulusGPa`, `speedOfSoundMS`, `densityGPerCm3` and `decayRatio` are read by nothing, and the
@@ -5426,6 +5925,18 @@ commit) and re-displays with `String(value)` on blur ("29.4" where Swift shows "
 **6.** Swift/Python compare `rounded` within 0.001, the web within 5e-6. Headers in all three say the table
 governs "…and the PDF/report" (true only for dimension rows); `FieldPrecision.swift:9` is history ("Replaces the
 scattered ad-hoc literals") and untrue; the `frequencyHz` doc disagrees with its own table.
+
+**7. The stored magnitude range** (found in F55, 2026-10-01). `magnitudeDB` is 0 dp and the table governs storage,
+but Swift's Save Current View stores `minDB` / `maxDB` as the chart has them and Python's stores `y_range` as is; the
+web rounds (`Math.round`). F55 item 5 settled the same question for the frequency range (whole, rounded, at the
+store's write point, in all three).
+- *Recommendation:* as F55 item 5 — the store rounds the magnitude range to `magnitudeDB` at its write point, in all
+  three; a case pins it.
+- *Superseded (2026-10-01):* F55 item 5 was revised to store the range exactly, and it covers the dB range: all three
+  now store the magnitude range in Swift's `Float` (Python and the web at 32 bits), with Settings' untouched fields
+  keeping it exactly. What remains for F56: the precision table's display-range rows govern input and display, not
+  storage — the comments should say so.
+
 
 **F57 — `analysis-quality`: Swift's PDF grades a loaded guitar by the current guitar-type setting, the web's
 colours are not the natives', and values outside the bands differ. (OPEN)**

@@ -333,3 +333,70 @@ every setting, so moving two thresholds alone would split the web's mechanism. T
 web's settings live and who saves them, with Swift's model-owned settings as the reference. The owner's
 concern, recorded with it: that #1 is never done and divergences keep being carried here instead of fixed.
 
+
+## The numeric model — 32-bit in Swift, 64-bit in Python and the web (2026-10-01, from #17 F55)
+
+Found while deciding how precisely the saved display range is stored (#17 F55 item 5). The editions do not compute
+the same numbers:
+
+- **Swift** holds audio, spectra, peak frequencies / magnitudes / Q / bandwidth, and the chart's range as `Float`
+  (IEEE-754 binary32), and computes the FFT in single precision (`vDSP_DFT_zrop`, Accelerate).
+- **Python** computes the FFT with `numpy.fft.fft`, in 64-bit (the padded buffer is created `float64`,
+  `realtime_fft_analyzer.py`); its peaks and ranges are Python `float` (64-bit).
+- **The web** computes its own FFT on `Float64Array` (`dsp/fft.ts`); every `number` is 64-bit.
+
+All three start from the same 32-bit audio samples. The differences come from 32-bit vs 64-bit arithmetic: for a
+real signal the magnitudes differ by around 10⁻⁶ dB, degrading only near the 32-bit FFT's floor (about 140 dB below
+full scale, under any real microphone's noise); interpolated peak frequencies differ by small fractions of a hertz,
+far below the 0.1 Hz shown. The cross-edition parity tests compare within tolerances (the oracle's `freqHz`,
+`magDb`, `q`) for this reason. Every result is a short, one-pass computation — an FFT, peak interpolation,
+averaging — with nothing iterated or integrated over time, so the differences do not grow.
+
+What is already the same: the saved files. `.guitartap` stores Swift's `Float` fields at 32 bits in every
+edition — Swift's `JSONEncoder` writes the shortest decimal that round-trips to the `Float`; Python quantises with
+`np.float32` when writing (`ResonantPeak.to_dict` and the snapshot encoders), the web with `Math.fround`
+(`measurement/floatJson.ts`, `f32()`); fields Swift declares `Double` (pitch, sample rate, annotation positions) stay
+64-bit everywhere. F55 item 5 stores the saved display range the same way: Swift's `Float`, with Python and the web
+rounding to 32 bits at the store. So the editions agree on everything saved, and differ in arithmetic.
+
+**For the spec — the decision to make:** one numeric model for all three. Either Swift moves to 64-bit (a
+double-precision FFT, `Double` for spectra, peaks and ranges, and the file format's `Float` fields — compatible as
+JSON), or Python and the web emulate 32-bit throughout (`numpy.float32` arithmetic; `Math.fround` after every
+operation — fragile, since one missed site lets a 64-bit value through). The owner's background in numerical
+simulation (stiff systems, where precision differences grow) is the reason this is recorded rather than accepted:
+"in that domain this would cause major differences."
+
+
+## Who owns the analyzer — Python's chart builds it (2026-10-01, from #17 F55 item 20)
+
+Swift's `TapToneAnalysisView.init` creates the `RealtimeFFTAnalyzer` and the `TapToneAnalyzer` and owns them;
+`SpectrumView` never sees the analyzer — it is given the spectrum, the peaks and range bindings. The web's `App`
+owns the analyzer (`useTapToneAnalyzer`) and the chart gets props. Python's chart owns it: `FftCanvas.__init__`
+creates the engine (which picks the input device), looks up that device's calibration, creates the
+`TapToneAnalyzer`, calls `analyzer.start(parent_widget=self, …)`, sets Peak Min, and re-emits 26 of the analyzer's
+signals as its own. The main window then reaches the analyzer through the canvas — about 100
+`fft_canvas.analyzer` / `canvas.analyzer` references in `tap_tone_analysis_view.py`, 37 connections to the
+canvas's re-emitted signals, and 3 references in `fft_analysis_metrics_view.py`.
+
+What it costs today: the canvas cannot be built in a test, since its constructor opens the audio device. F55
+item 20 (Python re-detected the peaks whenever it applied a chart range, so a completed plate's peak list and dot
+vanished on Reset to Saved) is fixed in the code but untested for that reason.
+
+The hand-in, sized for the spec:
+
+1. The main window creates the engine and the analyzer, does the calibration lookup and `start()`, then builds the
+   canvas — as Swift's view `init`. The ordering needs care: the canvas is built in a deferred step behind the
+   loading overlay, and `start()` is given the canvas as its `parent_widget` today.
+2. The canvas takes the analyzer: `FftCanvas(analyzer, …)`, so a test can hand it `TapToneAnalyzer.for_testing()`.
+3. The main window uses its own `self.analyzer`; the canvas's 26 re-emitted signals go, and the 37 connections go to
+   the analyzer's signals — or, once Python moves to one object-level `changed` signal (above), to that.
+4. The metrics view is handed the engine, as Swift's `FFTAnalysisMetricsView(analyzer:)`.
+
+Then the parked test, Python: for a completed plate, applying a chart range (a reset, a load's range, a widening,
+Settings' Done) leaves the identified peaks and their ids unchanged; for a guitar, it does not re-detect. If the
+spec makes the chart data-only, as Swift's `SpectrumView`, the chart can no longer re-detect at all and the test
+moves to the view that applies the range.
+
+Owner, 2026-10-01: parked here rather than done in F55 — the hand-in moves Python's startup (device selection,
+calibration, `start()`), which is unrelated to the display range, and #1 does it as part of the planned
+restructure. Item 20 is covered by F55's run-review (step 13) until then.

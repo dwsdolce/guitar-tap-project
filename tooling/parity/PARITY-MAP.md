@@ -60,12 +60,13 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/classify` | `GuitarTapTests/GuitarModeTests.swift` | `tests/test_guitar_mode.py` | `test/classify.test.ts` | test suite |
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
 | `test/decay-tracking` | `GuitarTapTests/DecayTrackingTests.swift` | `tests/test_decay_tracking.py` | `test/decay-tracking.test.ts` | test suite |
-| `test/display-range` | `GuitarTapTests/DisplayRangeExpansionTests.swift`<br>`GuitarTapTests/DisplayRangeTests.swift` | `tests/test_display_range_expansion.py` | `test/display-range.test.ts` | test suite |
+| `test/display-range` | `GuitarTapTests/DisplayRangeExpansionTests.swift`<br>`GuitarTapTests/LoadedRangeTests.swift`<br>`GuitarTapTests/MaterialPeakAnnouncementTests.swift` | `tests/test_display_range_expansion.py`<br>`tests/test_loaded_range.py`<br>`tests/test_material_peak_announcement.py` | `test/display-range.test.ts`<br>`test/material-peak-announcement.test.ts` | test suite |
 | `test/dsp` | `GuitarTapTests/DSPTests.swift` | `tests/test_dsp.py` | `test/dsp.test.ts` | test suite |
 | `test/effective-peak-id` | `GuitarTapTests/EffectivePeakIDTests.swift` | `tests/test_wi2_effective_peak_id.py` | — | test suite |
 | `test/export-filename` | `GuitarTapTests/ExportFilenameTests.swift` | `tests/test_export_filename.py` | `test/export-filename.test.ts` | test suite |
 | `test/field-precision` | `GuitarTapTests/FieldPrecisionTests.swift` | `tests/test_field_precision.py` | `test/field-precision.test.ts` | test suite |
 | `test/file-playback` | `GuitarTapTests/FilePlaybackRegressionTests.swift` | `tests/test_file_playback_regression.py` | `test/file-playback.test.ts` | test suite |
+| `test/frequency-format` | `GuitarTapTests/FrequencyFormatTests.swift` | `tests/test_frequency_format.py` | `test/frequency-format.test.ts` | test suite |
 | `test/frozen-peak-recalc` | `GuitarTapTests/FrozenPeakRecalculationTests.swift` | `tests/test_frozen_peak_recalculation.py` | `test/frozen-peak-recalc.test.ts` | test suite |
 | `test/gated-fft` | `GuitarTapTests/GatedFFTParityTests.swift` | `tests/test_gated_fft_parity.py` | `test/gated-fft.test.ts` | test suite |
 | `test/import-persistence` | `GuitarTapTests/ImportPersistenceTests.swift` | `tests/test_import_persistence.py` | `test/import-persistence.test.ts` | test suite |
@@ -88,6 +89,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/scenario-trace` | `GuitarTapTests/ScenarioStateTraceTests.swift` | `tests/test_scenario_state_trace.py` | `test/scenario-trace.test.ts` | test suite |
 | `test/self-regression` | — | `tests/test_self_regression.py` | `test/self-regression.test.ts` | test suite |
 | `test/session-pre-roll` | `GuitarTapTests/SessionPreRollTests.swift` | `tests/test_session_pre_roll.py` | `test/session-pre-roll.test.ts` | test suite |
+| `test/settings-store` | `GuitarTapTests/SettingsStoreTests.swift` | `tests/test_settings_store.py` | `test/settings-store.test.ts` | test suite |
 | `test/start-tap-race` | `GuitarTapTests/StartTapSequenceRaceTests.swift` | `tests/test_start_tap_sequence_race.py` | `test/start-tap-race.test.ts` | test suite |
 | `test/state-invariants` | `GuitarTapTests/StateInvariantTests.swift` | `tests/test_state_invariants.py` | `test/state-invariants.test.ts` | test suite |
 | `test/status-message` | `GuitarTapTests/StatusMessageTests.swift` | `tests/test_status_message.py` | `test/status-message.test.ts` | test suite |
@@ -110,6 +112,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
 | `view/dot-layer` | `GuitarTap/Views/SpectrumView.swift`<br>`GuitarTapTests/DotLayerTests.swift` | `src/guitar_tap/views/fft_canvas.py`<br>`tests/test_dot_layer.py` | `src/App.tsx`<br>`src/dsp/guitarModes.ts`<br>`test/dot-layer.test.ts` | review only |
 | `view/edit-sheet` | `GuitarTap/Views/Measurements/EditMeasurementView.swift` | `src/guitar_tap/views/measurements/edit_measurement_view.py` | `src/components/EditMeasurementSheet.tsx` | review only |
+| `view/frequency-format` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/presentation/frequencyFormat.ts` | tests |
 | `view/guitar-summary` | `GuitarTap/Views/TapAnalysisResultsView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/components/AnalysisResults.tsx` | review only |
 | `view/help` | `GuitarTap/Views/HelpView.swift` | `src/guitar_tap/views/help_view.py` | `src/components/QuickStartGuide.tsx` | review only |
 | `view/main` | `GuitarTap/Views/TapToneAnalysisView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/App.tsx` | review only |
@@ -138,17 +141,24 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 |---|---|
 | `Tooling/mmdevice-probe.py` | python |
 | `src/guitar_tap/models/update_checker.py` | python |
+| `tests/test_chart_zoom_limits.py` | python |
 | `tests/test_import_identity.py` | python |
 | `tests/test_peak_card_identity.py` | python |
 | `tests/test_state_notification.py` | python |
 | `tests/test_stream_restart_coordination.py` | python |
 | `tests/test_update_checker.py` | python |
+| `tests/test_wasapi_raw_open.py` | python |
 | `tests/test_wi10_qtimer_slots.py` | python |
 | `GuitarTap/Models/ColorHex.swift` | swift |
+| `GuitarTapTests/DrawnPointsTests.swift` | swift |
 | `GuitarTapTests/ExportDirectoryTests.swift` | swift |
 | `GuitarTapTests/GenerateParityOracle.swift` | swift |
 | `GuitarTapTests/SpectrumReplayProbeTests.swift` | swift |
 | `GuitarTapTests/SpectrumViewGestureTests.swift` | swift |
 | `src/components/ReleaseNotes.tsx` | web |
 | `src/measurement/dumpWav.ts` | web |
+| `src/presentation/chartLimits.ts` | web |
+| `test/capture-audio.test.ts` | web |
+| `test/chart-zoom-limits.test.ts` | web |
+| `test/drawn-points.test.ts` | web |
 | `test/menu-placement.test.ts` | web |
