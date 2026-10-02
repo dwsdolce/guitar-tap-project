@@ -122,6 +122,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/measurement-detail` | `GuitarTap/Views/Measurements/MeasurementDetailView.swift` | `src/guitar_tap/views/measurements/measurement_detail_view.py` | `src/components/MeasurementDetail.tsx` | review only |
 | `view/measurements-list` | `GuitarTap/Views/Measurements/MeasurementRowView.swift`<br>`GuitarTap/Views/Measurements/MeasurementsListView.swift` | `src/guitar_tap/views/measurements/measurement_row_view.py`<br>`src/guitar_tap/views/measurements/measurements_list_view.py` | `src/components/MeasurementsPanel.tsx` | review only |
 | `view/multi-tap-results` | `GuitarTap/Views/MultiTapComparisonResultsView.swift` | `src/guitar_tap/views/multi_tap_comparison_results_view.py` | `src/components/MultiTapComparisonResultsView.tsx` | review only |
+| `view/palette` | `GuitarTap/Views/Utilities/Palette.swift` | `src/guitar_tap/views/utilities/palette.py` | `src/presentation/palette.ts` | tests |
 | `view/peak-card` | `GuitarTap/Views/Shared/CombinedPeakModeRowView.swift` | `src/guitar_tap/views/shared/combined_peak_mode_row_view.py`<br>`src/guitar_tap/views/shared/peak_card_widget.py` | `src/components/PeakCard.tsx` | review only |
 | `view/plate-body-dimensions-editor` | `GuitarTap/Views/PlateBodyDimensionsEditor.swift` | `src/guitar_tap/views/plate_body_dimensions_editor.py` | — | review only |
 | `view/save-sheet` | `GuitarTap/Views/SaveMeasurementSheet.swift` | `src/guitar_tap/views/save_measurement_sheet.py` | `src/components/SaveSheet.tsx` | review only |

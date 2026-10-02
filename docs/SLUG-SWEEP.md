@@ -5317,7 +5317,7 @@ in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer
 
 Status: **IN PROGRESS** — the 4 tagged slugs read (2026-09-29); findings F55–F58 recorded. F58 closed 2026-09-30
 (Swift `b23445e`, Python `0d2279e`, web `d8aa7c8`); F55 closed 2026-10-01 (Swift `e3d52ec`, Python `272b361`, web
-`b7de553`); F56 closed 2026-10-01 (Swift `a8ff669`, Python `0ca9d22`, web `2e84a8d`); F57 awaits the owner's decisions. A fifth slug, `view/pdf-report`, added
+`b7de553`); F56 closed 2026-10-01 (Swift `a8ff669`, Python `0ca9d22`, web `2e84a8d`); F57 closed 2026-10-02 (Swift `6a5e500`, Python `0104cf0`, web `ac95203`). A fifth slug, `view/pdf-report`, added
 2026-10-01 for the PDF report, which no slug covered (F59, open). S8 — and so #17 — closes only when F59 does.
 
 **Audit record.** As in S6–S7, this table records only what the reading produced.
@@ -6110,51 +6110,174 @@ build. Same list per edition, Swift first.
 they pass." **Run-review complete.**
 
 **F57 — `analysis-quality`: Swift's PDF grades a loaded guitar by the current guitar-type setting, the web's
-colours are not the natives', and values outside the bands differ. (OPEN)**
+colours are not the natives', and values outside the bands differ. (CLOSED — all 6 items done and run-reviewed in all three. Commits: Swift `6a5e500`,
+Python `0104cf0`, web `ac95203`)**
 
 Production: Swift `Float.decayQuality` / `decayQualityColor` / `tapToneRatioQuality` / `tapToneRatioQualityColor`
 (`Views/Utilities/Extensions.swift`), thresholds on `GuitarType.decayThresholds`; Python the same four functions,
 thresholds on `GuitarType`; web `dsp/analysisQuality.ts` with its own private threshold table (same values).
-Tests call production in all three; none reimplements it.
+Tests call production in all three; none reimplements it. Reviewed again 2026-10-02 at the owner's request: item 2's
+first recommendation ignored the backgrounds, items 5 and 6 had none, and item 4 did not say it meant the tests.
 
 | # | item | status |
 |---|---|---|
-| 1 | Swift's PDF uses the current guitar-type setting, not the measurement's | open |
-| 2 | The web's colours differ from the natives' | open |
-| 3 | Values outside the bands: Swift "Unknown"/grey, Python and web fall through | open |
-| 4 | The case lists differ | open |
-| 5 | Where the thresholds live, and the fallback type, differ | open |
-| 6 | Comments | open |
+| 1 | Swift's PDF uses the current guitar-type setting, not the measurement's | done |
+| 2 | The web's colours differ from the natives' | done |
+| 3 | Values outside the bands: Swift "Unknown"/grey, Python and web fall through | done |
+| 4 | The test case lists differ | done |
+| 5 | Where the thresholds live, and the fallback type, differ | done |
+| 6 | Comments | done |
 
-**1. Swift PDF grading** (*checked*): `PDFReportGenerator.swift:716-729` uses `decay.decayQuality` /
-`decayQualityColor` — the no-argument form, which reads the global `TapDisplaySettings.guitarType` — although the
-report holds the measurement's own `guitarType` (`:153`). A loaded classical measurement exported while the
-setting is flamenco is graded as flamenco. Python and the web grade by the measurement's type. The on-screen bar
-also uses the no-argument form (*to confirm* whether that is right for a loaded measurement).
-- *Recommendation:* the PDF passes the report's `guitarType`.
+**1. Swift PDF grading** (*checked*). On screen Swift is right: a load sets `TapDisplaySettings.guitarType` to the
+measurement's type (`TapToneAnalyzer+MeasurementManagement.swift`), and the live screen grades by the current type.
+A PDF exported from the measurement list or detail without loading is not: `PDFReportData.from(measurement:)` holds
+the measurement's `guitarType`, but the report grades with the no-argument `decayQuality` / `decayQualityColor`
+(`PDFReportGenerator.swift`), which read the current setting — a classical measurement exported while the setting
+is flamenco is graded as flamenco. Python and the web grade a PDF by the measurement's type.
+- *Recommendation:* the PDF grades with the report's type — `decay.decayQuality(for: data.guitarType)` and its
+  colour; F59's PDF tests pin it.
+- *Decision (owner, 2026-10-02):* approved.
 
-**2. Colours** (*checked*): Python hard-codes Swift's light-mode system colours (`#8E8E93`, `#FF9500`, `#FFCC00`,
-`#34C759`, `#007AFF`, `#FF3B30`); the web uses `#8a8a8e`, `#e08a00`, `#c0a000`, `#2c9c3c`, `#0a6cd8`, `#d83a30`
-while its header says they "match the native apps exactly". Swift's are semantic (adapt to dark mode).
-- *Recommendation:* the web uses the natives' values (and the theme work of #2 decides dark mode for all).
+**2. Colours** (*checked*). Python hard-codes Swift's light-mode system colours; the web uses its own (`#8a8a8e`,
+`#e08a00`, `#c0a000`, `#2c9c3c`, `#0a6cd8`, `#d83a30`) while its header says they "match the native apps exactly".
+Swift's are semantic: each has a light and a dark value, chosen by the appearance. The backgrounds differ — Swift and
+Python draw on a light window, the web on a dark one (`#0b0e13`) — so copying the natives' light values to the web
+would not make them look the same (owner, 2026-10-02: "Changing the web to the native colors can only work if the
+background is the same"). The precedent: Swift's system blue is mirrored as a light/dark pair — the web's
+`--system-blue` (dark by default, light under `prefers-color-scheme: light`), Python's `_system_blue` (by the
+window's lightness).
 
-**3. Out of band** (*to confirm*): Swift returns "Unknown"/grey for a negative or NaN value; Python and the web
-fall through — negative to "Very Short", NaN to "Excellent" (decay) and "High"/red (ratio). Untested everywhere.
-- *Recommendation:* Swift's behaviour in all three, with a case.
+| band | light | dark |
+|---|---|---|
+| gray | `#8E8E93` | `#8E8E93` |
+| orange | `#FF9500` | `#FF9F0A` |
+| yellow | `#FFCC00` | `#FFD60A` |
+| green | `#34C759` | `#30D158` |
+| blue | `#007AFF` | `#0A84FF` |
+| red | `#FF3B30` | `#FF453A` |
 
-**4. Case lists.** Swift lacks the ratio boundaries 1.7 and 2.3 (Python and web test them) and the upper orange
-colour band; the web tests only 3 of 5 ratio colours and does not pin its threshold table; nobody pins the
-flamenco/acoustic/generic thresholds beyond one 0.5 s case.
-- *Recommendation:* one full case list (every boundary, every band, every type), all three.
+- *Recommendation:* one table of Apple's system colours with both values, chosen by the background as system blue
+  is: on screen, Swift as now, Python by the window's lightness, the web dark by default and light under
+  `prefers-color-scheme: light`. A PDF is printed on white, so all three use the light values. To confirm: that
+  Swift's PDF renderer draws with the light values when the Mac is in dark mode; if not, it is pinned to light.
+- *Decision (owner, 2026-10-02):* "have the PDF use the same color as the app — which should be the same on all
+  platforms when printing on light background": the light values, Apple's yellow included, in every PDF; the
+  rest as recommended.
+- *Found while implementing (2026-10-02):* Swift's system colours are semantic, so they follow the running OS, and
+  Apple changed several in its newest release. On this Mac SwiftUI resolves orange to `#FF8D28` / `#FF9230`, blue
+  `#0088FF` / `#0091FF`, red `#FF383C` / `#FF4245`, dark gray `#98989D`, dark yellow `#FFD600` — not the table's
+  long-standing values, which an older OS still shows and which Python and the web pin. Swift's `.tint(.blue)`
+  progress bar likewise no longer matches the pinned system blue of Python and the web.
+- *Decision (owner, 2026-10-02):* pin the colours in Swift too — one fixed table in all three (option 1 of three
+  presented). "We are not a graphic arts application — we are a scientific application — color is just meant for
+  discrimination between values — the exact color is really irrelevant — we just want it consistent." The table's
+  long-standing values are the pinned set (what Python and the web's system blue already use); system blue follows
+  the same table.
 
-**5. Thresholds and fallback.** The web keeps its own threshold table rather than on its guitar-type model.
-Fallback type: Swift the current setting; Python the measurement's, else CLASSICAL (PDF) or GENERIC (live); web
-generic.
+**3. Out of band** (*checked*). Swift returns "Unknown" / grey for a negative or NaN value; Python and the web fall
+through — a negative decay reads "Very Short", a NaN decay "Excellent", a NaN ratio "High" in red. Neither occurs in
+normal use; untested everywhere.
+- *Recommendation:* Swift's behaviour in all three, with cases.
+- *Decision (owner, 2026-10-02):* approved.
 
-**6. Comments.** `analysisQuality.ts:5-7` ("used by the PDF report" — also the on-screen bar; "match … exactly"
-— false; project history); `analysis-quality.test.ts:11-12, 69-71` (stale, history); `extensions.py:7-8`
-(history); `AnalysisQualityTests.swift:8` ("Python/web port these exactly" — false for the web). The Python tag
-sits at the module top, so it also covers `vsep` / `hsep`.
+**4. The test case lists** (the tests, not the application code — all three applications have every band). Swift does
+not test the ratio boundaries 1.7 and 2.3 or the upper orange band (2.1–2.3); the web tests three of the five ratio
+colours and does not pin its threshold table; no edition tests the flamenco, acoustic or generic thresholds beyond
+one 0.5 s case.
+- *Recommendation:* one case list, the same in all three: the thresholds of all four guitar types; every label
+  boundary; every colour band, decay and ratio; item 3's out-of-band cases; both colour values of item 2.
+- *Decision (owner, 2026-10-02):* approved.
+
+**5. Thresholds and fallback.** Swift keeps the thresholds on `GuitarType.decayThresholds`, Python on `GuitarType`;
+the web in a private table in `analysisQuality.ts`, apart from its other per-type data (the mode ranges in
+`guitarModes.ts`, its counterpart of Swift's `GuitarType`). The fallback type, for a measurement with none: a PDF —
+Swift Classical (`PDFReportData.from`), Python Classical (`pdf_report_data_from_measurement`), the web Generic
+(`measurementImage.ts`); on screen the ring-out and ratio show only for guitar types, so no fallback is reached.
+- *Recommendation:* the web's thresholds move into `guitarModes.ts` beside the mode ranges; a PDF falls back to
+  Classical in all three, as Swift; on screen no change.
+- *Decision (owner, 2026-10-02):* the thresholds as recommended; "make the fall back Generic in all 3 instead of
+  Classical" — Swift's and Python's PDF fall back to Generic, as the web's.
+- *Decision, widened (owner, 2026-10-02):* "the fallback for no type should be generic throughout. The change is due
+  to there originally being no generic type and classical made sense. When generic was added it should have become
+  the default/fallback everywhere but it was not. It is currently the recommended setting to start with." Every
+  default and every fallback for a missing or unreadable measurement type or guitar type becomes Generic, in all
+  three. Found by survey (2026-10-02):
+  - **Swift** — the settings already default to Generic (`TapDisplaySettings.measurementType` / `guitarType`).
+    Classical: `PDFReportData.from` (measurement type and guitar type); `ExportableSpectrumChart` — the
+    single-measurement export's `snap.measurementType ?? .classical`, and the comparison and multi-tap exports, which
+    pass `.classical`; the export chart's `measurementType` defaults to `.acoustic` (property and parameter).
+  - **Python** — the settings' measurement type defaults to **Acoustic** (`AppSettings.measurement_type`; Swift's
+    is Generic; the stored guitar type already defaults to Generic). The analyzer starts at Classical
+    (`_measurement_type`). Classical fallbacks: the PDF data (`pdf_report_data_from_measurement`, measurement and
+    guitar type, and its comparison twin); the measurement model's classification (`tap_tone_measurement.py`, three
+    places); the analyzer's peak analysis and save path; the canvas's dot filter; the measurement list and detail
+    views (`_resolve_guitar_type`); the export chart. `MeasurementType.from_string` already falls back to Generic.
+  - **web** — the settings already default to Generic, and so do its guitar-type and PDF fallbacks. The analyzer
+    starts at Classical (`measurementType = 'classical'`); `buttonEnablement` falls back to Classical; App passes
+    `'classical'` as the stand-in guitar type to the button rule.
+
+**6. Comments.** `analysisQuality.ts:1-7` ("used by the PDF report" — the screen uses it too; "match … exactly" —
+false; port history); `analysis-quality.test.ts:10-12` and its closing note (stale, history); `extensions.py:7-8`
+(history); `AnalysisQualityTests.swift` ("Python/web port these exactly" — false for the web). The Python tag sits at
+the module top, so it also covers `vsep` / `hsep`.
+- *Recommendation:* each comment says what the code does. The tag stays: tags are per file, and Swift's
+  `Extensions.swift` likewise holds more than this slug (frequency formatting, view helpers), so the files
+  correspond.
+- *Decision (owner, 2026-10-02):* approved.
+
+*Done — items 1–6 (2026-10-02):*
+- **2.** One pinned palette in all three, slug `view/palette` (tested in `test/analysis-quality`): Swift
+  `Views/Utilities/Palette.swift` (`Palette.gray` … `Palette.red`, each a `Color` that takes its light or dark value
+  by the colour scheme — `NSColor` / `UIColor` dynamic providers over fixed sRGB values), Python
+  `views/utilities/palette.py` (`ColorPair`; `on(widget)` takes the value for the window's lightness), web
+  `presentation/palette.ts` (`PALETTE`). The quality colours come from it in all three: Swift's
+  `decayQualityColor` / `tapToneRatioQualityColor` return `Palette` colours; Python's and the web's return the pair,
+  and the caller takes the value for its background — Python `on(self)` on screen, the web `dark` on screen (its
+  background is dark, as `qualityColors.ts` does for wood quality), both `light` in the PDF. Swift's PDF renderers
+  draw in the light scheme (`.environment(\.colorScheme, .light)` on the report views), so its PDF prints the light
+  values whatever the Mac's appearance. System blue: Swift's progress bars and the status-bar phase and peak
+  labels use `Palette.blue`; Python's `_system_blue` is `palette.BLUE.on(widget)`; the web's `--system-blue` holds
+  the same pair.
+- **1.** Swift's PDF grades the ring-out by the report's `guitarType` (`decayQuality(for:)` /
+  `decayQualityColor(for:)`).
+- **3.** Python and the web return "Unknown" / gray for a negative or NaN decay or ratio, as Swift.
+- **4.** The same eight cases in all three: the thresholds of every guitar type; classical decay labels at every
+  boundary; each other type at its thresholds; every decay colour; ratio labels at every boundary; every ratio
+  colour; negative and NaN; the palette's light and dark values (Swift reads them back through SwiftUI's colour
+  resolution in each scheme).
+- **5.** The web's decay thresholds moved to `guitarModes.ts` (`decayThresholds(type)`, beside the mode ranges).
+  Generic throughout: Swift — `PDFReportData.from` (measurement and guitar type), the chart export's fallback, the
+  comparison and multi-tap exports (were Classical), the export chart's default (was Acoustic); Python — the settings'
+  measurement-type default (was Acoustic), the analyzer's starting type, the PDF data, the measurement model's
+  classification, peak analysis and the save path, the canvas's dot filter, the measurement list and detail, the
+  export chart (all were Classical); web — the analyzer's starting type, the button rule's fallback and App's
+  stand-in type (were Classical).
+- **6.** The comments say what the code does: `analysisQuality.ts`, `analysis-quality.test.ts`, `extensions.py`
+  (module docstring and the helpers' header), `AnalysisQualityTests.swift`, and Swift's quality-colour doc
+  comments. The Python tag stays at the module top.
+- Builds: Swift macOS and iOS Simulator. Suites: Swift 753, Python 871, web 758 (the web file had one test per case; it now has the eight shared cases). Parity map: 112 groups, `--check` clean.
+
+- *Moved to the theme spec (owner, 2026-10-02):* three colour questions found while doing item 2 — the web's
+  `--system-blue` follows the OS appearance while its background stays dark; Swift's other semantic `.blue` uses;
+  the wood-quality colours, semantic in Swift — are in #2's `THEME-SPEC.md` §3.7 and its open decisions.
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after the build. Same list per edition, Swift first.
+
+1. Settings: Measurement Type Generic; tap a guitar so Ring-Out and Tap Ratio show their quality words. → Each word
+   is coloured (gray, orange, yellow, green or blue for Ring-Out; red, orange or green for Tap Ratio), and the
+   same word has the same hue in all three editions.
+2. **Export PDF** of that result. → The quality words in the Analysis Results boxes are coloured, in the same colours
+   in all three editions.
+3. Swift only: switch macOS to Dark appearance; **Export PDF** again. → The colours in the PDF are the same as in
+   step 2 (the PDF ignores the screen's appearance).
+4. Swift only: Settings: Measurement Type Classical; tap and save a measurement whose Ring-Out is between 0.35 and
+   0.55 s (it reads "Moderate").
+   Settings: Measurement Type Flamenco; Measurements → that measurement → **Export PDF**. → Its Ring-Out reads
+   "Moderate", graded as classical (as flamenco it would read "Good").
+5. Tap a few times. → The progress bar and the tap/phase label beside it are the same blue in all three editions.
+
+**Run-review progress.** All three editions pass steps 1–5 (owner, 2026-10-02). **Run-review complete.**
 
 **F58 — `wav-dump-folder`: the Swift tests clear the user's real chosen dump folder, cannot reach the
 custom-folder branch, and the arm check lives in the model in Swift but in the view in Python. (CLOSED — all 9 items

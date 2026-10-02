@@ -110,15 +110,46 @@ caveat as §3.4, since Swift's source is adaptive).
 | 5 · teal | `#5ac8fa` | `#40c8e0` |
 | Averaged row | `#ffd900` | `#ffd900` | <!-- gold, fixed in both themes (Swift Color(1.0,0.85,0.0)) -->
 
-### 3.6 Analysis-quality labels (guitar-summary Ring-Out / Tap-Ratio)
-The Ring-Out (`decayQuality`) and Tap-Ratio (`tapToneRatioQuality`) quality labels are tinted by
-a third divergent color set: **Swift** uses **system colors** (`.gray/.orange/.yellow/.green/.blue`
-for decay; `.red/.orange/.green` for ratio — adaptive, no fixed hex), **Python** uses **Material**
-hexes (`#9E9E9E/#FF9800/#FFC107/#4CAF50` decay; `#F44336/#FF9800/#4CAF50` ratio), and **web** uses
-its **own tuned** hexes (`#8a8a8e/…` decay; `#d83a30/#e08a00/#2c9c3c` ratio). Same appearance-adaptive
-situation as §3.3–§3.5 — unify to explicit per-theme hex. (The quality **thresholds/labels** already
-match across platforms — this is colors only; the acoustic decay threshold drift found during the
-guitar-summary review was a separate value bug, fixed there.)
+### 3.6 Analysis-quality labels (guitar-summary Ring-Out / Tap-Ratio) — resolved by #17 F57
+Done in #17 F57 (2026-10-02): the Ring-Out and Tap-Ratio quality colours come from one pinned palette in all
+three — Swift `Palette.swift`, Python `views/utilities/palette.py`, web `presentation/palette.ts`, slug
+`view/palette` — each colour a fixed light/dark pair:
+
+| band | light | dark |
+|---|---|---|
+| gray | `#8E8E93` | `#8E8E93` |
+| orange | `#FF9500` | `#FF9F0A` |
+| yellow | `#FFCC00` | `#FFD60A` |
+| green | `#34C759` | `#30D158` |
+| blue | `#007AFF` | `#0A84FF` |
+| red | `#FF3B30` | `#FF453A` |
+
+On screen each edition takes the value for its background (Swift by colour scheme, Python by the window's
+lightness, the web `dark`); every PDF takes `light`. The theme work only changes how the screen's choice is
+made — the palette itself is settled.
+
+### 3.7 Colours still taken from the system (from #17 F57, 2026-10-02)
+**Why it matters.** Swift's system colours (`.blue`, `.orange`, …) are semantic: they follow the running OS, and
+Apple changed several in its newest release. On a 2026 macOS SwiftUI resolves orange to `#FF8D28` / `#FF9230`,
+blue `#0088FF` / `#0091FF`, red `#FF383C` / `#FF4245`, dark gray `#98989D`, dark yellow `#FFD600` — not the
+long-standing values an older OS shows and Python and the web pin. So any Swift colour left semantic drifts
+from the other two, and between OS versions. The owner's rule (2026-10-02): "We are not a graphic arts
+application — we are a scientific application — color is just meant for discrimination between values — the
+exact color is really irrelevant — we just want it consistent." That is, pin colours rather than take them from
+the system. F57 pinned the analysis-quality colours and system blue's progress bar and status labels; three
+things remain for this spec:
+
+1. **The web's `--system-blue` follows the OS appearance, its background does not.** `index.css` sets the dark
+   value and switches to the light one under `prefers-color-scheme: light`, but the web's background stays dark
+   (`color-scheme: dark`, `--bg: #0b0e13`), so in light OS mode the bar is drawn with the light blue on the dark
+   background. The screen choice should follow the app's background, which this spec's setting decides.
+2. **Swift's other `.blue` uses are still semantic:** the toolbar button tints (Play File, Auto dB, Crosshair,
+   Annotations — `TapToneAnalysisView+Layouts.swift`, `+Controls.swift`), the tap-threshold readouts
+   (`+Controls.swift`, `+Layouts.swift`), the Gore target value, and the "saved" notice — where Python hard-codes
+   `#007AFF` / `rgb(0,122,255)`. To pin to `Palette.blue` (or a role of this spec) in all three.
+3. **The wood-quality colours (`model/quality-colors`) are semantic in Swift** (`WoodQuality.color`), so they
+   drift the same way; the web already keeps a light/dark table (`presentation/qualityColors.ts`) and Python fixed
+   values. To pin in all three, from one table, as the analysis-quality colours now are.
 
 ## 4. Per-platform implementation
 
@@ -189,3 +220,7 @@ Dominant cost: Python step 4. Everything else is small-to-medium.
 5. Optional: add the per-repo "colors match spec" guard test (§6) — yes/no.
 6. §3.5 multi-tap palette light values — the frozen Python constants (same adaptive-source
    caveat as §3.4); confirm visually.
+7. §3.7 — the web's `--system-blue` follows the app's background, not the OS appearance.
+8. §3.7 — Swift's remaining semantic `.blue` uses (toolbar tints, threshold readouts, Gore value, saved notice)
+   pinned in all three.
+9. §3.7 — the wood-quality colours pinned in all three from one table.

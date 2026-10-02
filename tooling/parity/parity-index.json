@@ -1511,6 +1511,22 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/palette",
+      "swift": [
+        "GuitarTap/Views/Utilities/Palette.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/palette.py"
+      ],
+      "web": [
+        "src/presentation/palette.ts"
+      ],
+      "tests": [
+        "test/analysis-quality"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/peak-card",
       "swift": [
         "GuitarTap/Views/Shared/CombinedPeakModeRowView.swift"
