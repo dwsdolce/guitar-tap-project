@@ -931,6 +931,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/pdf-report",
+      "swift": [
+        "GuitarTapTests/PDFReportTests.swift"
+      ],
+      "python": [
+        "tests/test_pdf_report.py"
+      ],
+      "web": [
+        "test/pdf-report.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/peak-heal",
       "swift": [
         "GuitarTapTests/PeakDuplicateHealTests.swift"
@@ -1068,6 +1082,20 @@
       ],
       "web": [
         "test/settings-store.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/spectrum-export",
+      "swift": [
+        "GuitarTapTests/SpectrumExportTests.swift"
+      ],
+      "python": [
+        "tests/test_spectrum_export.py"
+      ],
+      "web": [
+        "test/spectrum-export.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1527,6 +1555,23 @@
       "equivalence": "tests"
     },
     {
+      "slug": "view/pdf-report",
+      "swift": [
+        "GuitarTap/Views/Utilities/PDFReportGenerator.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/tap_analysis_results_view.py"
+      ],
+      "web": [
+        "src/presentation/measurementImage.ts",
+        "src/presentation/pdfReport.ts"
+      ],
+      "tests": [
+        "test/pdf-report"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/peak-card",
       "swift": [
         "GuitarTap/Views/Shared/CombinedPeakModeRowView.swift"
@@ -1594,6 +1639,22 @@
       ],
       "tests": [],
       "equivalence": "review only"
+    },
+    {
+      "slug": "view/spectrum-export",
+      "swift": [
+        "GuitarTap/Views/ExportableSpectrumChart.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/exportable_spectrum_chart.py"
+      ],
+      "web": [
+        "src/presentation/spectrumExport.ts"
+      ],
+      "tests": [
+        "test/spectrum-export"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "view/spectrum-gestures",
@@ -1717,6 +1778,10 @@
     },
     {
       "repo": "web",
+      "path": "src/presentation/pngPixelsPerInch.ts"
+    },
+    {
+      "repo": "web",
       "path": "test/capture-audio.test.ts"
     },
     {
@@ -1730,6 +1795,10 @@
     {
       "repo": "web",
       "path": "test/menu-placement.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/png-pixels-per-inch.test.ts"
     }
   ]
 }

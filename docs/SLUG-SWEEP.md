@@ -1,6 +1,6 @@
 # Sweep every `@parity` slug
 
-**Issue:** [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · **Status:** ⏳ Stage 1 in progress
+**Issue:** [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · **Status:** ⏳ Stage 2 next — Stage 1 complete 2026-10-02
 
 ## The problem
 
@@ -5313,12 +5313,15 @@ in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer
 
 **Run-review progress.** All three editions passed step 1 (owner, 2026-09-27).
 
-### S8 — Settings & presentation (5 slugs)
+### S8 — Settings & presentation (6 slugs)
 
-Status: **IN PROGRESS** — the 4 tagged slugs read (2026-09-29); findings F55–F58 recorded. F58 closed 2026-09-30
-(Swift `b23445e`, Python `0d2279e`, web `d8aa7c8`); F55 closed 2026-10-01 (Swift `e3d52ec`, Python `272b361`, web
-`b7de553`); F56 closed 2026-10-01 (Swift `a8ff669`, Python `0ca9d22`, web `2e84a8d`); F57 closed 2026-10-02 (Swift `6a5e500`, Python `0104cf0`, web `ac95203`). A fifth slug, `view/pdf-report`, added
-2026-10-01 for the PDF report, which no slug covered (F59, open). S8 — and so #17 — closes only when F59 does.
+Status: ✅ **CLOSED 2026-10-02** — all 6 slugs read; every finding it produced (F55–F59) fixed and run-reviewed in
+all three. F58 closed 2026-09-30 (Swift `b23445e`, Python `0d2279e`, web `d8aa7c8`); F55 closed 2026-10-01 (Swift
+`e3d52ec`, Python `272b361`, web `b7de553`); F56 closed 2026-10-01 (Swift `a8ff669`, Python `0ca9d22`, web
+`2e84a8d`); F57 closed 2026-10-02 (Swift `6a5e500`, Python `0104cf0`, web `ac95203`); F59 closed 2026-10-02 (Swift
+`c4fdc3d`, Python `c5c6ce9`, web `a4c5ad7`). The fifth and sixth slugs, `view/pdf-report` (added 2026-10-01) and
+`view/spectrum-export` (2026-10-02), were added in F59 for the PDF report and the image it embeds, which no slug
+covered. S8 completes Stage 1; #17 has Stage 2 (the shared case lists) to do.
 
 **Audit record.** As in S6–S7, this table records only what the reading produced.
 
@@ -5328,7 +5331,8 @@ Status: **IN PROGRESS** — the 4 tagged slugs read (2026-09-29); findings F55�
 | `field-precision` (14/14/14) | ✅ | **F56** |
 | `analysis-quality` (6/6/20) | ✅ | **F57** |
 | `wav-dump-folder` (4/5/—) | ✅ | **F58** |
-| `view/pdf-report` (—/—/—; added 2026-10-01) | — untagged until F59 | **F59** |
+| `view/pdf-report` (1/18/18; added 2026-10-01) | tagged in F59, with `test/pdf-report` | **F59** |
+| `view/spectrum-export` (1/3/3; added 2026-10-02) | tagged in F59, with `test/spectrum-export` | **F59** (item 7) |
 
 **Counts, measured 2026-09-29** (Swift: `@Test`s in the files, none argument-expanded; Python: `pytest
 --collect-only`; web: `vitest list`):
@@ -5339,6 +5343,8 @@ Status: **IN PROGRESS** — the 4 tagged slugs read (2026-09-29); findings F55�
 | `field-precision` | 14 | 14 | 14 | `FieldPrecisionTests.swift` / `test_field_precision.py` / `field-precision.test.ts` |
 | `analysis-quality` | 6 | 6 | 20 | `AnalysisQualityTests.swift` / `test_analysis_quality.py` / `analysis-quality.test.ts` |
 | `wav-dump-folder` | 4 | 5 | — | `WavDumpFolderTests.swift` / `test_wav_dump_folder.py` / — (the web downloads the WAV; no folder) |
+| `view/pdf-report` (tests `test/pdf-report`, measured 2026-10-02) | 1 | 18 | 18 | `PDFReportTests.swift` (one `@Test` over 18 fixtures) / `test_pdf_report.py` / `pdf-report.test.ts` |
+| `view/spectrum-export` (tests `test/spectrum-export`, measured 2026-10-02) | 1 | 3 | 3 | `SpectrumExportTests.swift` (one `@Test` over 3 cases) / `test_spectrum_export.py` / `spectrum-export.test.ts` |
 
 How it was read: one reader per slug across the editions, then the claims that decide a finding checked by hand
 (marked *checked*); the rest are the reading's, marked *to confirm* where a change would rest on them.
@@ -6512,7 +6518,8 @@ After items 8–9: Swift from step 1; Python steps 15–19; web W1–W4. **Run-r
 (owner, 2026-09-30):** Swift steps 1–19, Python 15–19, web W1–W4.
 
 **F59 — `view/pdf-report`: the PDF report is in no slug and has no tests in any edition, and Python's plate
-report lists fewer peaks than Swift's and the web's. (OPEN — recorded 2026-10-01, to be analysed)**
+report lists fewer peaks than Swift's and the web's. (CLOSED — all 7 items done and run-reviewed in all three. Commits:
+Swift `c4fdc3d`, Python `c5c6ce9`, web `a4c5ad7`)**
 
 Found while checking F56 (2026-10-01): to show that F56's routing changed no output, each edition wrote the PDF of
 every `.guitartap` fixture before and after, through a throwaway harness. That showed the report is untested
@@ -6520,29 +6527,284 @@ everywhere, and it showed the peak-list difference below.
 
 Production: Swift `PDFReportGenerator.swift` (`PDFReportData.from(measurement:)`, `generate(data:)`,
 `generateMultiTapReport`, `generateComparison`); Python `tap_analysis_results_view.py` (`pdf_report_data_from_measurement`,
-`export_pdf`, `export_comparison_pdf`, `export_multi_tap_pdf`); web `presentation/pdfReport.ts`
-(`generatePdfReport`, `generateMultiTapPdfReport`) with `presentation/measurementImage.ts` (`measurementToPdfData`,
-`multiTapPdfData`). None carries an `@parity` tag. Tests: none.
+`export_pdf`, `comparison_pdf_report_data_from_measurement`, `export_comparison_pdf`, `export_multi_tap_pdf`); web
+`presentation/pdfReport.ts` (`generatePdfReport`, `generateMultiTapPdfReport`) with `presentation/measurementImage.ts`
+(`measurementToPdfData`, `multiTapPdfData`). None carries an `@parity` tag. Tests: none.
 
 | # | item | status |
 |---|---|---|
-| 1 | The PDF report is in no slug — untagged in all three, so the parity map does not see it | open |
-| 2 | No edition tests its PDF | open |
-| 3 | Python's plate report lists one peak where Swift's and the web's list three | open |
+| 1 | The PDF report is in no slug — untagged in all three, so the parity map does not see it | done |
+| 2 | No edition tests its PDF | done |
+| 3 | Python's plate report lists one peak where Swift's and the web's list three; Python's exported chart likewise | done |
+| 4 | The web builds a material report's peak rows from the L/C/FLC roles; Swift filters the peaks by the effective selection | done |
+| 5 | Which measurements the PDF tests use | done |
+| 6 | The three editions lay the report out differently | done |
+| 7 | The exported spectrum PNG's resolution and its stated pixels per inch differ | done |
 
-**1. No slug.** The report files carry no `@parity` tag, so the sweep — slug by slug — never reaches them, and
-`--check` cannot report a difference.
-- *To do:* tag the report in all three as `view/pdf-report`, with its test slug (item 2).
+**1. No slug** (*checked*). The report files carry no `@parity` tag, so the sweep — slug by slug — never reaches them,
+and `--check` cannot report a difference. Neither does the exported spectrum chart, which the PDF embeds and Export
+Spectrum saves: Swift `ExportableSpectrumChart.swift`, Python `exportable_spectrum_chart.py`, web
+`presentation/spectrumExport.ts`.
+- *Recommendation:* tag the report `view/pdf-report` (tests `test/pdf-report`) — Swift `PDFReportGenerator.swift`;
+  Python `tap_analysis_results_view.py` (it holds the report's functions, and also the measurement persistence — a
+  file can carry more than one slug); web `pdfReport.ts` and `measurementImage.ts`. Tag the exported chart
+  `view/spectrum-export` in the same way, so it too is in the map; its tests are a separate question (its text is
+  drawn into an image, which a test cannot read back except on the web).
+- *Decision (owner, 2026-10-02):* "I agree with all the recommendations."
 
-**2. No tests.** Owner, 2026-10-01: "I want … a set of tests for PDF files."
-- *To do:* tests that generate each fixture's PDF and check its text, the same cases in all three. The F56 harness
-  shows it can be done: Swift writes the PDF and reads its text with PDFKit; Python's report renders headlessly
-  (offscreen Qt); the web's needs a recording stand-in for the chart canvas and the build-time version constants.
-  The text extractor for Python and the web is to be chosen when the tests are designed.
+**2. No tests.** Owner, 2026-10-01: "I want … a set of tests for PDF files." The F56 harness shows what each edition
+needs: Swift renders the report and reads its text with PDFKit; Python renders it headlessly (offscreen Qt) and
+needs a text extractor; the web renders it under Node only with a stand-in for the browser's chart canvas and the
+build-time version constants, and needs a text extractor. The editions lay the text out differently — line breaks
+and order differ (Swift breaks "f_vs" across lines; the web puts several properties on one line) — so the three
+texts cannot be compared whole — until item 6 makes the layout one.
+- *Recommendation (revised with item 6):*
+  - **What is checked.** For each shared fixture, the report's text, line by line, against one ordered list of
+    expected lines — the same list in all three, since the layout is the same (item 6). Whitespace within a line is
+    normalised, since each edition's PDF reader groups words on a line its own way. The date and the
+    "Generated by … (build)" line are not checked. The expected lines are Swift's, once items 3 and 6 are done.
+  - **The same cases in all three**, as a row list (fixture → expected strings) with one loop — the `pitch.test.ts`
+    pattern — so Stage 2 can move it into shared data unchanged.
+  - **Each fixture through the report its kind uses:** single, multi-tap (two pages), comparison.
+  - **Text extraction:** Swift PDFKit (built in); Python `pypdf` (pure Python, a test-only dependency); web
+    `pdfjs-dist` (Mozilla's PDF.js, a dev-only dependency).
+  - **The web's environment:** the version constants defined in the test config; a test helper standing in for
+    the browser canvas (it records the text the chart draws and returns an empty image) — a stand-in for the
+    browser, not for app code.
+- *Decision (owner, 2026-10-02):* "I agree with all the recommendations."
 
-**3. Python's plate peaks.** For `plate-umik-1-3-tap-swift-ipad-1784314709.guitartap` the "Detected Peaks" table lists
-36.3, 67.2 and 117.2 Hz in Swift and the web, and only 117.2 Hz in Python.
-- *To do:* diagnose before proposing a fix; item 2's tests pin the peak list in all three.
+**3. Python's plate peaks** (*checked*). For `plate-umik-1-3-tap-swift-ipad-1784314709.guitartap` the "Detected
+Peaks" table lists 36.3, 67.2 and 117.2 Hz in Swift and the web, and only 117.2 Hz in Python. The file's
+`selectedPeakIDs` holds one id (117.2 Hz, the fC peak) — the corrupt aggregate an intermittent iPad
+phase-transition write leaves. The rule all three already have (`effectiveSelectedPeakIDs` /
+`effective_selected_peak_ids` / the web's): a material measurement shows all its peaks, ignoring the saved
+selection. Swift's report uses it (`PDFReportData.from`: `measurement.effectiveSelectedPeakIDs`); Python's
+`pdf_report_data_from_measurement` reads `m.selected_peak_ids` raw, and so does Python's exported chart
+(`exportable_spectrum_chart.py`).
+- *Recommendation:* both use `m.effective_selected_peak_ids`, as Swift; item 2's tests pin the peak list.
+- *Decision (owner, 2026-10-02):* "I agree with all the recommendations."
+
+**4. The web's material peak rows** (*checked*). Swift's report lists `data.peaks` filtered by the effective
+selection and sorted by frequency; for a plate or brace that is the measurement's peaks. The web's
+`measurementToPdfData` builds a material report's rows from the selected L / C / FLC peaks and their roles. The
+same rows for a well-formed file — but a different mechanism, and a file whose peaks include more than the three
+would differ.
+- *Recommendation:* the web lists the material peaks the way Swift does — the measurement's peaks by the effective
+  selection, sorted, each with its role — so the mechanism is the same.
+- *Decision (owner, 2026-10-02):* "I agree with all the recommendations."
+
+**5. Fixtures** (*checked*; first reading corrected by the owner, 2026-10-02: "Look at ALL the tests in the hub").
+The seven fixtures vendored into all three editions' test folders are one plate, four single guitar measurements and
+two multi-tap guitar measurements — no brace and no comparison. But the hub's `Tests/` holds far more (counted by
+measurement, library files included): 20 braces, 26 plates, 3 comparisons (`5-guitar-comparison-1776708138.guitartap`
+and two `guitartap-library-*` files), 20 multi-tap guitars and 52 single guitars. `Tests/AllPlatforms/` has the same
+brace, plate and DWS 2024 guitar measured on every edition and device — Swift on Mac, iPad and iPhone; Python on
+Mac, PC and Linux; the web on Mac — each single and 3-tap. Some measurements already have an exported PDF beside
+them (`brace-1774731638.pdf`, `5 tap test.pdf`, `plate-classical-1774731675.pdf`, …), from older builds.
+- *Recommendation:* the PDF tests use a set chosen from the hub's `Tests/`, vendored into each edition's fixtures
+  as the existing ones are: from `AllPlatforms/`, the brace, plate and guitar — single and 3-tap — as saved by one
+  edition, and the same measurement as saved by another edition, so a report is checked against a file from each;
+  plus `5-guitar-comparison-1776708138.guitartap` for the comparison report. The exact list is set when the tests
+  are written and recorded here.
+- *Decision (owner, 2026-10-02):* "I agree with all the recommendations."
+
+**6. The layout** (found while answering the owner, 2026-10-02: "all three editions should lay out the PDF
+identically. Is this not possible?"). The F56 captures of the plate report show real differences, not only how each
+PDF reader groups text: Python lists Mass first in Sample Dimensions where Swift and the web start with Length; the
+web sets the plate properties several to a line ("Young's Modulus (L):6.13 GPa", a space missing) where Swift and
+Python set one per line, and places GLC differently; Python's plate report adds the "Three-Tap Measurement Process"
+instructions; Python writes "Young’s" with a curly apostrophe. And the fonts differ: Swift draws in Apple's system
+font, which Python and the web cannot use.
+- *Recommendation:* one layout in all three — Swift's: the same page size and margins, sections in the same order,
+  the same labels and punctuation, the same rows and columns, the same font sizes — in Helvetica, which all three
+  have (jsPDF's and reportlab's default; on macOS and iOS), so Swift's report changes typeface slightly. Python's
+  report and the web's are rebuilt section by section to follow Swift's. With one font, sizes and widths, long text
+  (notes, instructions) wraps in the same places but for each library's own wrapping rule. Then item 2's tests
+  check one ordered list of lines.
+- *Decision (owner, 2026-10-02):* "Yes."
+- *Run-review (owner, 2026-10-02):* the text read the same in all three and Swift's and Python's pages looked alike,
+  but the web's chart image was shorter and its lines spaced differently — "ignore the chart differences and just
+  deal with image height, spacing from swift, and a position check in the tests." The image's height comes from
+  Export Spectrum's proportions: Swift renders its export at a fixed 1464 × 1069 pt (a 1400 × 800 chart frame with
+  its header and legend; 1188 with the peak summary), whatever the on-screen chart, and its PDF embeds that image at
+  the content width. Python's export was 1448 × 1076 / 1192; the web's 1480 × 876 / 986, and its PDF re-rendered the
+  chart shorter still. *Recommendation:* the web's and Python's Export Spectrum take Swift's fixed size, and their
+  PDFs embed that image, as Swift's. *Decision (owner, 2026-10-02):* "Do your recommendation."
+
+**7. The exported PNG's resolution** (found at run-review step 7, owner, 2026-10-02: "The DPI is different on
+swift from the other two … all 3 behave differently when I tell it is zoom all in Preview"). With item 6 the three
+PNGs have the same proportions, but not the same pixels or the same stated size: Swift renders at 2×, 2928 × 2376
+pixels, and writes 144 pixels per inch in the PNG (`pHYs` 5669 per metre); Python renders the same pixels but
+writes 72 (Qt's default), so a viewer that honours the figure shows it twice Swift's size; the web draws at 1×,
+1464 × 1188, and writes none (read as 72) — Swift's size, half its detail. The figure is written by each edition,
+not taken from the screen or the system, so each edition's file is the same on every machine; macOS Preview and
+document editors (Word, Pages, LibreOffice) honour it, most Windows and Linux viewers and browsers show pixels
+1:1. The PDFs are unaffected (each scales the image to the page width).
+- *Recommendation:* the web and Python write Swift's file: 2928 × 2376 (2928 × 2138 without the peak summary)
+  marked 144 pixels per inch. Python sets the mark on its image; the web draws at 2× and adds the mark to the PNG
+  after the browser encodes it (the browser's encoder cannot set it).
+- *Decision (owner, 2026-10-02):* "Sounds good. Please do so." And: "a test could be created so that checks the
+  DPI and resolution."
+- *Done (2026-10-02):* Python marks its image 144 pixels per inch (`exportable_spectrum_chart.py`,
+  `setDotsPerMeterX/Y` 5669). The web draws its export at 2× (`spectrumExport.ts`, `PIXEL_SCALE`) and marks the PNG
+  in `spectrumPng`, which Export Spectrum saves, through a web-only helper that adds the `pHYs` chunk after the
+  browser encodes the file (`pngPixelsPerInch.ts`, `@parity none`, with its own test of the chunk, its checksum and
+  its replacing an earlier one). The PDF embeds the 2× image, as Swift's. A new test slug, `test/spectrum-export`
+  (the export tagged `tests=test/spectrum-export`): `SpectrumExportTests.swift` / `test_spectrum_export.py` /
+  `spectrum-export.test.ts`, the same three cases — the iPad plate and a single guitar, 2928 × 2376, and the
+  5-guitar comparison, 2928 × 2138 — each at 144 pixels per inch, through the renderer Export Spectrum uses (the
+  web reads the pixels from its canvas, since under Node the browser's encoder is a stand-in). Mutation, killed:
+  Python marking 72. Parity map: 116 groups, 25 platform-specific, `--check` clean.
+
+*Done — items 1–6 (2026-10-02):*
+- **One entry point per edition for a saved measurement's report**, so the tests run production: Swift
+  `PDFReportGenerator.report(for:)` (with `multiTapComparisonData(for:)` and `comparisonData(for:)`), which the
+  measurement list and detail now call — the three builders that were inline in `MeasurementsListView` and
+  `MeasurementDetailView` moved there; Python `export_report_for_measurement(m, path)` (with
+  `multi_tap_comparison_pdf_report_data_from_measurement` and `report_basename`), which the measurement list now
+  calls — its inline multi-tap builder moved there; web `reportForMeasurement(m)` in `measurementImage.ts`, which
+  the measurement list now calls. A measurement with tap entries gets the two-page report in all three, as Swift
+  (the web's list and live export required more than one); Python's list asks for the file once, as Swift's.
+- **1.** Tagged `view/pdf-report` (tests `test/pdf-report`): Swift `PDFReportGenerator.swift`; Python
+  `tap_analysis_results_view.py`; web `pdfReport.ts`, `measurementImage.ts`. Tagged `view/spectrum-export`: Swift
+  `ExportableSpectrumChart.swift`, Python `exportable_spectrum_chart.py`, web `spectrumExport.ts`. Parity map: 115
+  groups, `--check` clean.
+- **2.** `PDFReportTests.swift` / `test_pdf_report.py` / `pdf-report.test.ts`: the same fixtures (a row list and
+  one loop), each through `report(for:)` and its counterparts — 17, and 18 with the long-name comparison — read back line by line — PDFKit in Swift, `pypdf` in
+  Python (a test dependency, in `requirements-dev.txt` and `pyproject.toml`), `pdfjs-dist` on the web (a dev
+  dependency) — and compared with `<fixture>.guitartap.pdf.txt`, Swift's lines, vendored beside the fixtures in all
+  three. Each expected line is its page, its height on the page and its words: the height is its baseline's distance
+  from the page's top (for a line mixing sizes, the baseline of its largest text, since PDFKit reads such a line as
+  one) and must be within 1 pt; the words are compared with whitespace removed, in Unicode compatibility form. The
+  measurement's date and the "Generated by" line are checked by position only (`<date>`, `<generated>`). The web's
+  test runs the chart's drawing against a canvas stand-in (`test/support/canvasStandIn.ts`), and `vitest.config.ts`
+  defines the build-time version constants. Mutations, each killed: Python's report reading the raw selection (the
+  iPad plate fails); the web computing the note (the web-saved plate fails); the web's metadata rows 1 pt further
+  apart (all 17 fail); Python's gap after the metadata 2 pt larger (all but the comparison, which it does not
+  touch).
+- **3.** Python's report and its exported chart read `m.effective_selected_peak_ids`; so does the multi-tap
+  averaged row, which also read the raw selection.
+- **4.** The web's material peak rows are the measurement's peaks in the frequency range by the effective selection,
+  sorted, each with its role by id (fL, fC, fLC for a plate; fL for a brace) or "–", as Swift's `peakRoleCell`.
+  Every peak row prints the peak's stored note, as Swift (`peak.pitchNote ?? "–"`) — the web computed it, so a file
+  saved without notes (an older web build) read differently.
+- **5.** Ten measurements from the hub's `Tests/` vendored into all three: from `AllPlatforms/` the brace, plate and
+  DWS 2024 guitar, single and 3-tap, as saved by Swift on Mac, and the brace (Python), plate (web) and 3-tap guitar
+  (web) as saved by another edition; `5-guitar-comparison-1776708138`. With the seven already shared: 17.
+- **6.** Swift's report draws in Helvetica (`pdfFont`: Helvetica, Helvetica-Bold, Helvetica-Oblique). Comparing the
+  three editions' reports of all 17 fixtures line by line (read by position) found, and fixed to Swift's layout:
+  Python — "Young’s" with a curly apostrophe; the analysis box's "Ideal: 1.9–2.1" at the box's foot rather than
+  under the quality words; the comparison page's date as "2026-04-20 18:02" (now the display format), its header
+  laid out apart from the main report's (now the same), its range as "75 Hz" (now `formatted_as_frequency`), and its
+  date the time of export (now the measurement's, as Swift). Web — the header date on the title's line (now
+  top-aligned, as Swift); the comparison page with the single report's header (now "Comparison Report",
+  "Comparison:", Notes before Spectra); the meta values 2 pt left of Swift's column; no gap between a property's
+  label and value; the analysis box's rows; the footer dated with the measurement's date (now the time of export,
+  as Swift).
+  Then, from the run-review: the web's and Python's Export Spectrum are a fixed 1464 × 1069 pt (1188 with the peak
+  summary), as Swift's — the web's bands resized to add up to it (`spectrumExport.ts`, its unused `width` and
+  `chartHeight` options removed); Python's composite set to that size with Swift's 32 pt sides
+  (`exportable_spectrum_chart.py`) — and both PDFs embed it at the content width, the dark matte the size of Swift's
+  image. Both renderers place text as SwiftUI does: a line exactly its font size tall, the baseline 0.77 × the size
+  below its top, wrapped lines a font size apart, and every gap Swift's stack spacing or padding. The web
+  (`pdfReport.ts`) places each line by its top (`textAt`); its pagination code, never run since every page grows to
+  fit, is removed. Python (`tap_analysis_results_view.py`) uses a Paragraph raised to Swift's baseline (`_text`) in
+  tables with no cell padding (`_grid`), its two reports sharing the header, metadata and footer. Also to Swift:
+  Python's peak tables lose their row striping, its Sample Dimensions heading is 10 pt bold, a lone analysis box spans
+  the width, and the separator after the Gore target stays when there is no target; the web's quality words in the
+  analysis boxes are regular weight. And Swift's text never leaves one word alone on a paragraph's last line (Apple's
+  push-out line breaking: the plate instructions end "Measures / shear stiffness.", not "Measures shear /
+  stiffness."); the web's and Python's wrapping now do the same (`wrapLines`, `_SwiftText.breakLines`). Every line
+  of all 17 reports is at Swift's height within 1 pt, with Swift's words.
+- *Raised (2026-10-02), not changed:* two differences no fixture reaches. With no ring-out time and no tap ratio,
+  Swift's Analysis Results is empty; the web writes "No analysis values available." A long spectrum name on the
+  comparison page is cut to one line with "…" in Swift; the web cuts it at a word with no "…", and Python wraps it.
+- *Decision (owner, 2026-10-02):* "We need to make swift/python/web the same." The empty analysis: "follow swift"
+  — the web drops its sentence. The long name: "I like the wrap idea because it does not loose information while
+  swift and web throw information away" — all three wrap it.
+- *Recommendation (the wrap's alignment):* a wrapped name makes its row taller. Swift's row is an HStack centred
+  vertically, so as it stands the dot and the Air / Top / Back values would sit level with the middle of the name.
+  Recommended: top-align the row — the dot and the three values level with the name's first line, as the tap
+  instructions' dot sits beside its title — in all three.
+- *Decision (owner, 2026-10-02):* "I agree with your top alignment."
+- *Done (2026-10-02):* the web's Analysis Results with no box is the heading alone, as Swift's.
+  The comparison page's name wraps in all three: Swift's row is top-aligned (`HStack(alignment: .top)`, the dot
+  1 pt down to sit on the first line, no line limit); the web wraps it (`wrapLines`) and grows the row; Python
+  already wrapped and top-aligned, but over 6 pt more than Swift's column (now the column padded 6 each side). A
+  new fixture, `comparison-long-name-1776708138.guitartap` — the 5-guitar comparison with one spectrum named
+  "DWS 2024 dreadnought, Adirondack spruce top with scalloped X bracing, Indian rosewood back and sides" — is in
+  all three PDF tests: three lines, the values on the first; the other 17 reports are unchanged.
+- Builds: Swift macOS and iOS Simulator. Suites: Swift 755 (its PDF test is one test of 18 cases, its export test one of 3), Python 892, web 782, after the run-review work, the long-name case and item 7. Parity map: 116 groups, `--check` clean.
+- *Raised (2026-10-02):* the web's footer read "Generated by GuitarTap Web 1.0.3 (build)", Swift's and Python's
+  "Generated by GuitarTap 1.0.3 (build)". And Swift's `MeasurementDetailView` has no PDF or export control, so its
+  `generatePDFReport` — rewritten in this finding to call `report(for:)` — and its `exportMeasurement` were never
+  called, before this finding as after. The owner: "Why does any detail view have export controls? … Are the detail
+  views not identical?" — they are: all three are read-only, with Load / Edit / Export / PDF on the list row's menu
+  (Swift `MeasurementDetailView.swift`, Python `measurement_detail_view.py`, web `MeasurementDetail.tsx` each say so);
+  only Swift carried the unused code.
+- *Decision (owner, 2026-10-02):* the footer names the edition — "GuitarTap Web / Python / Swift (as appropriate)";
+  Swift's unused export code goes. The owner also asked whether the header date is the measurement's and the footer
+  date the report's, in all three: Swift yes; the web's footers showed the measurement's date (fixed above, item 6);
+  Python's comparison page — page 2 of a multi-tap report too — showed the measurement's date and no version.
+- *Done (2026-10-02):* footers read "Generated by GuitarTap Swift …" (both Swift reports), "GuitarTap
+  Python …" (both Python reports), "GuitarTap Web …" (unchanged). Python's comparison footer gives the version and
+  the time of export, as its single report's. Swift's `MeasurementDetailView` loses `exportMeasurement`,
+  `generatePDFReport` and their `isExporting` / `isGeneratingReport` flags, and its header comment no longer
+  describes toolbar Load / Export / PDF actions. Swift's `loadMeasurement()` there was likewise never called (its
+  `showingLoadConfirmation` drove nothing); the owner: "Dead code needs buried." — removed with its flag. Run-review step 5 checks the footers.
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, clearing the service worker after the build. Import into each edition from its
+own test folder — Swift `GuitarTap/GuitarTapTests/`, Python `guitar_tap/tests/`, web `GuitarTapWeb/test/fixtures/`:
+`plate-umik-1-3-tap-swift-ipad-1784314709.guitartap`, `brace-umik-1-swift-mac-1785359411.guitartap`,
+`dws-2024-umik-1-3-tap-swift-mac-1785359425.guitartap`, `5-guitar-comparison-1776708138.guitartap` and
+`comparison-long-name-1776708138.guitartap`. Same list per edition, Swift first; lay the three PDFs of each step side
+by side.
+
+1. Measurements → the iPad plate → **Export PDF Report**. → The three PDFs look the same: header, meta, chart, a
+   Detected Peaks table listing 36.3, 67.2 and 117.2 Hz with their roles, the dimensions, the plate properties, the
+   instructions. Python lists all three peaks (it listed one).
+2. Measurements → the brace → **Export PDF Report**. → The same in all three; "Young's Modulus (E): 10.64 GPa" with
+   a straight apostrophe and a gap after the colon.
+3. Measurements → the 3-tap DWS 2024 guitar → **Export PDF Report**. → Two pages in all three. Page 1's Ring-Out and
+   Tap Ratio boxes read the same, with "Sustain quality" and "Ideal: 1.9–2.1" under the quality words. Page 2 is
+   headed "Comparison Report", then "Comparison: DWS 2024 UMIK-1 3 Tap Swift Mac", dated with the measurement's date.
+4. Measurements → the 5-guitar comparison → **Export PDF Report**. → The same in all three: "Comparison Report",
+   "Comparison:", "Notes:", "Spectra: 5 spectra compared", "Frequency Range: 75.0 Hz – 350.0 Hz", the measurement's
+   date in the header.
+5. Each PDF's footer. → "Generated by GuitarTap Swift …", "GuitarTap Python …" or "GuitarTap Web …", and the time
+   you exported it — on both pages of the 3-tap guitar and on the comparison; the header's date is the
+   measurement's.
+6. Lay each step's three PDFs side by side at the same zoom. → The chart image is the same height in all three, and
+   every line sits at the same height; the plate's last instruction ends "Measures / shear stiffness.".
+7. Measurements → the iPad plate → **Export Spectrum**, in each edition. → The three PNGs have the same
+   proportions (the chart inside them still differs, as agreed), and Python's chart labels all three peaks, as Swift's
+   and the web's (item 3).
+8. Measurements → the long-name comparison → **Export PDF Report**. → In all three the second spectrum's name wraps
+   over three lines ("… spruce top / with scalloped X bracing, Indian rosewood back / and sides"), its dot and its
+   Air / Top / Back values level with the first line; the rows below move down to make room.
+9. Measurements → the iPad plate → **Export Spectrum**, in each edition; open each PNG's Get Info (or Preview's
+   Inspector). → All three 2928 × 2376 pixels at 144 pixels per inch; in Preview at Actual Size they show at the
+   same size.
+
+**Run-review progress.** All three editions passed steps 1–9 (owner, 2026-10-02). Step 7's Python check — the chart
+labels all three peaks — was a separate step that an edit of this list displaced below it, so it was not run as a
+step; the owner's step-7 PNGs show it (36.3, 67.2 and 117.2 Hz labelled in all three).
+
+*Noticed at run-review (owner, 2026-10-02), not taken up:* the app's comparison table (`view/comparison-results`)
+cuts a long spectrum name in all three — Swift and Python with "…", the web after a few letters — with no way to
+read the rest but the chart's legend. *Decision (owner, 2026-10-02):* "I do not agree with doing an F60. I think the
+web is so narrow that wrapping is useless. There is a way to find the name - look at the graph legend. I think we
+ignore it for now."
+
+### S9 — Oracle / baseline infrastructure (5 slugs, classification only)
+
+Status: ✅ **CLOSED 2026-09-20** — scoped by the owner to classification only (what its five slugs are called); the
+oracle and baseline machinery is #16, not #17. Settled by two findings at the start of the sweep:
+F2 (fixed, Swift `6ead450`, Python `e6e7ddc`, web `363776f`) — `parity-runner`, `self-baseline`,
+`parity-oracle` and `oracle-sync` were not tests, and are now `tooling/*`; and F4 (closed, not a finding) —
+`test/self-regression` is a test, run by Python and the web and absent from Swift by design, since Swift's baseline
+is the oracle. Recorded here 2026-10-02, when Stage 1 closed; it had no section of its own until then.
 
 ## Stage 2 — move case lists into shared data
 

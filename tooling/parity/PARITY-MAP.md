@@ -80,6 +80,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/mic-selection` | `GuitarTapTests/MicSelectionTests.swift` | `tests/test_mic_selection.py` | `test/mic-selection.test.ts` | test suite |
 | `test/mode-colors` | `GuitarTapTests/ModeColorsTests.swift` | `tests/test_mode_colors.py` | `test/mode-colors.test.ts` | test suite |
 | `test/notification` | `GuitarTapTests/StateNotificationTests.swift` | `tests/test_state_notification.py` | `test/state-notification.test.ts` | test suite |
+| `test/pdf-report` | `GuitarTapTests/PDFReportTests.swift` | `tests/test_pdf_report.py` | `test/pdf-report.test.ts` | test suite |
 | `test/peak-heal` | `GuitarTapTests/PeakDuplicateHealTests.swift` | `tests/test_peak_duplicate_heal.py` | `test/peak-duplicate-heal.test.ts` | test suite |
 | `test/peak-selection-persistence` | `GuitarTapTests/PeakSelectionPersistenceTests.swift` | `tests/test_peak_selection_persistence.py` | `test/peak-selection-persistence.test.ts` | test suite |
 | `test/peaks` | `GuitarTapTests/PeakFindingTests.swift`<br>`GuitarTapTests/PeakFixtureRegressionTests.swift` | `tests/test_peak_finding.py`<br>`tests/test_peak_fixture_regression.py` | `test/peak-fixture-regression.test.ts`<br>`test/peak-fullset-save.test.ts`<br>`test/peaks.test.ts` | test suite |
@@ -90,6 +91,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/self-regression` | — | `tests/test_self_regression.py` | `test/self-regression.test.ts` | test suite |
 | `test/session-pre-roll` | `GuitarTapTests/SessionPreRollTests.swift` | `tests/test_session_pre_roll.py` | `test/session-pre-roll.test.ts` | test suite |
 | `test/settings-store` | `GuitarTapTests/SettingsStoreTests.swift` | `tests/test_settings_store.py` | `test/settings-store.test.ts` | test suite |
+| `test/spectrum-export` | `GuitarTapTests/SpectrumExportTests.swift` | `tests/test_spectrum_export.py` | `test/spectrum-export.test.ts` | test suite |
 | `test/start-tap-race` | `GuitarTapTests/StartTapSequenceRaceTests.swift` | `tests/test_start_tap_sequence_race.py` | `test/start-tap-race.test.ts` | test suite |
 | `test/state-invariants` | `GuitarTapTests/StateInvariantTests.swift` | `tests/test_state_invariants.py` | `test/state-invariants.test.ts` | test suite |
 | `test/status-message` | `GuitarTapTests/StatusMessageTests.swift` | `tests/test_status_message.py` | `test/status-message.test.ts` | test suite |
@@ -123,11 +125,13 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/measurements-list` | `GuitarTap/Views/Measurements/MeasurementRowView.swift`<br>`GuitarTap/Views/Measurements/MeasurementsListView.swift` | `src/guitar_tap/views/measurements/measurement_row_view.py`<br>`src/guitar_tap/views/measurements/measurements_list_view.py` | `src/components/MeasurementsPanel.tsx` | review only |
 | `view/multi-tap-results` | `GuitarTap/Views/MultiTapComparisonResultsView.swift` | `src/guitar_tap/views/multi_tap_comparison_results_view.py` | `src/components/MultiTapComparisonResultsView.tsx` | review only |
 | `view/palette` | `GuitarTap/Views/Utilities/Palette.swift` | `src/guitar_tap/views/utilities/palette.py` | `src/presentation/palette.ts` | tests |
+| `view/pdf-report` | `GuitarTap/Views/Utilities/PDFReportGenerator.swift` | `src/guitar_tap/views/tap_analysis_results_view.py` | `src/presentation/measurementImage.ts`<br>`src/presentation/pdfReport.ts` | tests |
 | `view/peak-card` | `GuitarTap/Views/Shared/CombinedPeakModeRowView.swift` | `src/guitar_tap/views/shared/combined_peak_mode_row_view.py`<br>`src/guitar_tap/views/shared/peak_card_widget.py` | `src/components/PeakCard.tsx` | review only |
 | `view/plate-body-dimensions-editor` | `GuitarTap/Views/PlateBodyDimensionsEditor.swift` | `src/guitar_tap/views/plate_body_dimensions_editor.py` | — | review only |
 | `view/save-sheet` | `GuitarTap/Views/SaveMeasurementSheet.swift` | `src/guitar_tap/views/save_measurement_sheet.py` | `src/components/SaveSheet.tsx` | review only |
 | `view/settings` | `GuitarTap/Views/Utilities/TapSettingsView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/components/SettingsPanel.tsx` | review only |
 | `view/spectrum-chart` | `GuitarTap/Views/SpectrumView.swift` | `src/guitar_tap/views/fft_canvas.py` | `src/components/SpectrumChart.tsx` | review only |
+| `view/spectrum-export` | `GuitarTap/Views/ExportableSpectrumChart.swift` | `src/guitar_tap/views/exportable_spectrum_chart.py` | `src/presentation/spectrumExport.ts` | tests |
 | `view/spectrum-gestures` | `GuitarTap/Views/SpectrumView+GestureHandlers.swift` | `src/guitar_tap/views/spectrum_view_gesture_handlers.py` | `src/components/SpectrumChart.tsx` | review only |
 | `view/threshold-slider` | `GuitarTap/Views/Shared/ThresholdSlider.swift` | `src/guitar_tap/views/shared/threshold_slider.py` | `src/components/ThresholdMeter.tsx` | review only |
 | `view/validated-number-field` | `GuitarTap/Views/Utilities/ValidatedNumberField.swift` | `src/guitar_tap/views/shared/validated_number_field.py` | `src/components/NumberField.tsx` | review only |
@@ -159,7 +163,9 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `src/components/ReleaseNotes.tsx` | web |
 | `src/measurement/dumpWav.ts` | web |
 | `src/presentation/chartLimits.ts` | web |
+| `src/presentation/pngPixelsPerInch.ts` | web |
 | `test/capture-audio.test.ts` | web |
 | `test/chart-zoom-limits.test.ts` | web |
 | `test/drawn-points.test.ts` | web |
 | `test/menu-placement.test.ts` | web |
+| `test/png-pixels-per-inch.test.ts` | web |
