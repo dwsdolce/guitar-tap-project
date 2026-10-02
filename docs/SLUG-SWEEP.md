@@ -5313,11 +5313,12 @@ in all three. It was added 2026-04-01 (Swift `f505c6d`), when a wall-clock timer
 
 **Run-review progress.** All three editions passed step 1 (owner, 2026-09-27).
 
-### S8 — Settings & presentation (4 slugs)
+### S8 — Settings & presentation (5 slugs)
 
-Status: **IN PROGRESS** — all 4 slugs read (2026-09-29); findings F55–F58 recorded. F58 closed 2026-09-30 (Swift
-`b23445e`, Python `0d2279e`, web `d8aa7c8`); F55 closed 2026-10-01 (Swift `e3d52ec`, Python `272b361`, web
-`b7de553`); F56–F57 await the owner's decisions.
+Status: **IN PROGRESS** — the 4 tagged slugs read (2026-09-29); findings F55–F58 recorded. F58 closed 2026-09-30
+(Swift `b23445e`, Python `0d2279e`, web `d8aa7c8`); F55 closed 2026-10-01 (Swift `e3d52ec`, Python `272b361`, web
+`b7de553`); F56 closed 2026-10-01 (Swift `a8ff669`, Python `0ca9d22`, web `2e84a8d`); F57 awaits the owner's decisions. A fifth slug, `view/pdf-report`, added
+2026-10-01 for the PDF report, which no slug covered (F59, open). S8 — and so #17 — closes only when F59 does.
 
 **Audit record.** As in S6–S7, this table records only what the reading produced.
 
@@ -5327,6 +5328,7 @@ Status: **IN PROGRESS** — all 4 slugs read (2026-09-29); findings F55–F58 re
 | `field-precision` (14/14/14) | ✅ | **F56** |
 | `analysis-quality` (6/6/20) | ✅ | **F57** |
 | `wav-dump-folder` (4/5/—) | ✅ | **F58** |
+| `view/pdf-report` (—/—/—; added 2026-10-01) | — untagged until F59 | **F59** |
 
 **Counts, measured 2026-09-29** (Swift: `@Test`s in the files, none argument-expanded; Python: `pytest
 --collect-only`; web: `vitest list`):
@@ -5883,60 +5885,229 @@ and the crosshair). All three pass steps 6 and 19 after items 22–23 (owner, 20
 all three editions pass.**
 
 **F56 — `field-precision`: identical tests on an identical table, but most of the table is used by nothing,
-every screen formats its own numbers, and the web rounds halfway values differently. (OPEN)**
+every screen formats its own numbers, and the web rounds halfway values differently. (CLOSED — all items done and run-reviewed in all three. Commits: Swift `a8ff669`,
+Python `0ca9d22`, web `2e84a8d`)**
 
 Production: `FieldPrecision` (Swift) / `field_precision` (Python) / `precision.ts` (web) — the same 13-entry
 table and `string` / `rounded` / `decimalsWithin` in all three. Tests: the same 14 cases, same inputs and expected
 values, all calling production.
 
+How it was analysed (2026-10-01): a census, per edition, of every place the app shows a computed value — peak
+frequency and magnitude, Q and bandwidth, the moduli, speed of sound, density, ring-out and tap ratio, Gore
+thickness — with its format, and every reference to each table constant; the claims below checked by hand
+(*checked*), the rounding by running each language's formatter.
+
 | # | item | status |
 |---|---|---|
-| 1 | Six computed-value precisions are used by no app code; screens and the PDF hard-code their own | open |
-| 2 | Python's field validation does not use the function the tests test | open |
-| 3 | The web's `string` rounds halfway values up; Swift and Python round them as C does | open |
-| 4 | Web: rounding on every keystroke, and re-display without the precision | open |
-| 5 | Python shows Q with 0 decimals; the table and Swift use 1 | open |
-| 6 | Tolerances differ; comments overstate what the table governs | open |
-| 7 | The stored magnitude range: Swift's and Python's Save Current View store it unrounded; the web rounds | open |
+| 1 | The computed-value entries are used by nothing; every display hard-codes its decimals | done |
+| 2 | Python's field validation does not call the function the tests test | done |
+| 3 | Halfway values and 32-bit values format differently in the three | done |
+| 4 | The web's number fields show the value without its precision ("557.5" for 557.50) | done |
+| 5 | Python's peak table text gives Q 0 decimals — but no screen shows that text | done |
+| 6 | Test tolerances differ; the headers overstate what the table governs | done |
+| 7 | The stored magnitude range | superseded by F55 item 5 — what remains was done with item 6 |
+| 8 | Python's Save Current View and Reset write the dB fields with 1 decimal into 0-decimal fields | done |
+| 9 | The Metrics panel's frequencies: Sample Rate in Hz but Bandwidth (half of it) in kHz with 2 decimals; Settings shows the sample rate three more ways | done |
+| 10 | Swift's compact status line shows the level with 0 decimals; its other layout and the others with 1 | done |
+| 11 | Dead code: Swift `TapToneAnalysisView+Actions.formatFrequency`; Python's peak CSV export | done |
+| 12 | Python's Metrics Bin Count always uses a comma; Swift and the web follow the locale | done |
 
-**1. Unused precisions.** Of the computed-value entries only `peakMagnitudeDB` has a caller; `peakFrequencyHz`,
-`qFactor`, `youngsModulusGPa`, `speedOfSoundMS`, `densityGPerCm3` and `decayRatio` are read by nothing, and the
-Results panels, peak rows, PDF and details format those values with literals in all three (e.g. Swift
-`TapAnalysisResultsView.swift:591,657,667,886`, `PDFReportGenerator.swift:527-541,790-796`; Python
-`peak_card_widget.py`, `tap_analysis_results_view.py:895-919`; web `MaterialResults.tsx` `f1/f2/f3`,
-`PeakCard.tsx`, `pdfReport.ts`). Test 1 pins the unused values.
-- *Recommendation:* route those displays through the table (so one number changes one place), or remove the
-  unused entries — the owner's choice; the first is larger.
+**1. The computed-value entries are used by nothing** (*checked*, all three). Of the seven computed entries only
+`peakMagnitudeDB` has callers (Swift: the Metrics panel; Python: the status bar and Metrics; web: the level readout,
+status bar and Metrics). `peakFrequencyHz`, `qFactor`, `youngsModulusGPa`, `speedOfSoundMS`, `densityGPerCm3` and
+`decayRatio` have none. Every other display hard-codes its decimals — about 50 sites per edition: the peak rows and
+cards, the material rows, annotations, exports, the comparison and multi-tap tables, the measurement list and
+detail, the results panel and the PDF.
+- The decimals agree across the three at every site the census found, and with the table where it has an entry. So
+  the editions show the same numbers today; what is missing is the single source the table claims to be.
+- Values with no entry, each the same in all three: shear modulus GLC 3, specific modulus 1, bandwidth 1, Gore
+  thickness 2, radiation ratio 1, cross/long ratio 3, long/cross ratio 1, ring-out time 2 (`decayRatio` is the tap
+  ratio).
+- Infinity: `FieldPrecision.string` shows "-∞"; sites that bypass it show the language's own — Swift's C formatter
+  "-inf" (the crosshair magnitude, the material peak rows, the PDF peak table), Python's "-inf", the web's
+  "-Infinity".
+- *Recommendation:* route every display of a computed value through `FieldPrecision.string` with its entry, in all
+  three, and add the missing entries. Item 3's fix lives in `string`, so it reaches only the displays that go
+  through it — without this, the web's halfway rounding stays wrong at ~50 sites. The suffixes stay as each screen
+  has them ("1.23s" on screen, "1.23 s" in the PDF — the same in all three).
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
 
-**2. Python validation** uses `input_regex` (a `QRegularExpressionValidator`), never `decimals_within`, which only
-the tests call. Swift's field calls `decimalsWithin` (`ValidatedNumberField.swift:69,154`).
-- *Recommendation:* Python's validator calls `decimals_within`, as Swift's field does.
+**2. Python's field validation** (*checked*). Swift's field asks `FieldPrecision.decimalsWithin` on each keystroke
+(`ValidatedNumberField`: the iOS delegate and the macOS formatter's `isPartialStringValid`); the web's `NumberField`
+does the same. Python's field installs a `QRegularExpressionValidator` built from `input_regex` — the same pattern,
+but Qt applies it, and `decimals_within` is called only by the tests. The behaviour is the same (every prefix of an
+accepted entry is accepted, so Qt's "intermediate" changes nothing); the mechanism is not.
+- *Recommendation:* Python's field gets a `QValidator` whose `validate` calls `decimals_within`, as Swift's
+  formatter does; the tests then test the function the field uses.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
 
-**3. Halfway rounding** (*checked*): JavaScript's `toFixed` gives `(2.5).toFixed(0)` = "3" and `(0.125).toFixed(2)`
-= "0.13"; Python's formatting and C `printf` (Swift's `String(format:)`) give "2" and "0.12". No test covers it.
-- *Recommendation:* the web formats as the natives do; a halfway case in all three.
+**3. Halfway values and 32-bit values** (*checked*, by running each formatter):
 
-**4. Web edit mechanism** (*to confirm*): `NumberField` rounds on every keystroke that validates (Swift rounds on
-commit) and re-displays with `String(value)` on blur ("29.4" where Swift shows "29.40").
-- *Recommendation:* round on commit and re-display with `FieldPrecision.string`, as Swift.
+| value, decimals | Swift (`Float`, `String(format:)`) | Python (`float`, f-string) | web (`toFixed`) |
+|---|---|---|---|
+| 2.5, 0 | 2 | 2 | **3** |
+| 0.125, 2 | 0.12 | 0.12 | **0.13** |
+| 0.15, 1 | **0.2** | 0.1 | 0.1 |
 
-**5. Python Q** — `peaks_model.py:452` formats Q with 0 decimals; Swift's peak row uses 1 (*to confirm*).
+Two causes. The web's `toFixed` rounds an exact tie up; C and Python round it to even. And Swift formats a 32-bit
+`Float` — 0.15 as a `Float` is 0.150000006, which rounds up, where the 64-bit 0.15 is 0.149999999999999994 — so
+Python and the web show "0.1" where Swift shows "0.2". (The numeric model is recorded for #1 in
+`RESTRUCTURE-NOTES.md`; this is where it reaches the screen.) `Intl.NumberFormat` with `roundingMode: 'halfEven'`
+does not fix the web: it rounds the shortest decimal form, giving "0.2" for the 64-bit 0.15.
+- *Recommendation:* `string` formats the value as Swift's `Float`, rounding exact ties to even, in all three —
+  Python formats `float(np.float32(v))`; the web formats `Math.fround(v)` from its exact decimal expansion
+  (`toPrecision`) with ties to even. Tests, all three: 2.5 → "2", 0.125 → "0.12", 0.15 → "0.2".
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
 
-**6.** Swift/Python compare `rounded` within 0.001, the web within 5e-6. Headers in all three say the table
-governs "…and the PDF/report" (true only for dimension rows); `FieldPrecision.swift:9` is history ("Replaces the
-scattered ad-hoc literals") and untrue; the `frequencyHz` doc disagrees with its own table.
+**4. The web's number fields** (*checked*; the record's first reading corrected). All three commit a field's value
+on every edit, rounded to its precision (Swift `MaterialDimensionsEditor` `.onChange`, Python `textEdited`, web
+`onChange`) — not a difference. The difference is the display: Swift and Python seed a field with
+`FieldPrecision.string` whenever the value differs from what the field reads (Swift `seedField`, Python
+`_seed_field`), so a plate length reads "600.00" and a mass "208.0"; the web's `NumberField` seeds and re-syncs on
+blur with `String(value)`, so it reads "600" / "557.5" / "208" — visible in the F55 run-review screenshots.
+- *Recommendation:* the web's `NumberField` seeds with `FieldPrecision.string`, and only when the value differs from
+  the field's number, as Swift's `seedField`.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
 
-**7. The stored magnitude range** (found in F55, 2026-10-01). `magnitudeDB` is 0 dp and the table governs storage,
-but Swift's Save Current View stores `minDB` / `maxDB` as the chart has them and Python's stores `y_range` as is; the
-web rounds (`Math.round`). F55 item 5 settled the same question for the frequency range (whole, rounded, at the
-store's write point, in all three).
-- *Recommendation:* as F55 item 5 — the store rounds the magnitude range to `magnitudeDB` at its write point, in all
-  three; a case pins it.
-- *Superseded (2026-10-01):* F55 item 5 was revised to store the range exactly, and it covers the dB range: all three
-  now store the magnitude range in Swift's `Float` (Python and the web at 32 bits), with Settings' untouched fields
-  keeping it exactly. What remains for F56: the precision table's display-range rows govern input and display, not
-  storage — the comments should say so.
+**5. Python's Q with 0 decimals** (*checked*). `peaks_model.py` gives the Q column's display text with 0 decimals,
+but nothing shows that text: the peak list draws cards (`peak_card_widget.py`, Q with 1 decimal, as Swift and the
+web), and the model's CSV export writes raw values (`data_value`). The display text is left from the old table view.
+- *Recommendation:* remove the model's unused display-text formatting (or route it through `string` if it is kept
+  for accessibility). No visible change.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation." — removed (not routed).
 
+**6. Tolerances and comments** (*checked*). The `rounded` cases compare within 0.001 in Swift and Python and within
+5e-6 in the web (`toBeCloseTo(x, 5)`). The headers in all three say one precision "governs input, storage, and
+display … the saved measurement, and the PDF" — storage holds for the dimensions (rounded on entry) but not for the
+display range (F55 item 5: stored exactly), and display is true only once item 1 is done. Swift's header has
+history ("Replaces the scattered ad-hoc literals"). `frequencyHz`'s doc says it covers "tap/peak thresholds" —
+thresholds are dB, under `magnitudeDB`.
+- *Recommendation:* one tolerance in all three (1e-5 — tight enough to catch an unrounded result, loose enough for
+  `Float`); the headers say what the table governs once items 1–3 are decided; the history line and the
+  `frequencyHz` doc corrected.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
+
+**7. The stored magnitude range** (found in F55, 2026-10-01). *Superseded:* F55 item 5 stores the range exactly in
+all three; what remains — the comments — is in item 6.
+
+**8. Python's dB fields after Save Current View and Reset** (found by the census). Swift writes the four range
+fields with `FieldPrecision.string` at `frequencyHz` / `magnitudeDB` (0 decimals). Python's Save Current View writes
+the dB fields with 1 decimal (`tap_tone_analysis_view.py`, `f"{y_range[0]:.1f}"`) and its Reset writes the dB
+defaults the same way — "-45.3" in a field that accepts no decimal point.
+- *Recommendation:* Python writes them with `fp.string(…, fp.MAGNITUDE_DB)`, as Swift.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
+
+**9. The Metrics panel's frequencies** (found by the census; corrected by the owner, 2026-10-01). The panel shows
+five values in Hz or kHz, the same way in all three:
+
+| Value | Shown as | Code |
+|---|---|---|
+| Frequency Resolution | "0.7 Hz" | the panel's private formatter (below) |
+| Sample Rate | "48,000 Hz" — whole Hz, thousands separator | Swift `Int.formatted()`, Python `f"{sr:,.0f}"`, web `toLocaleString()` |
+| Bandwidth | "24.00 kHz" | the private formatter |
+| Frame Rate | "21.5 Hz" | 1 decimal, its own format |
+| Peak Frequency | "123.4 Hz" | the private formatter |
+
+The private formatter — Swift `FFTAnalysisMetricsView.formatFrequency`, Python `fft_analysis_metrics_view._fmt_freq`,
+web `MetricsPanel` `freq` — gives 1 decimal in Hz below 1000 and **2 decimals in kHz from 1000**. So Peak Frequency
+reads "1.23 kHz" only for a peak at or above 1 kHz, which a guitar tap's strongest peak rarely is (this item first
+said it was the peak frequency that showed 2 decimals; the owner did not see it, rightly — it is rare). Bandwidth
+is always above 1 kHz, so it always shows 2 decimals. The owner's point: "bandwidth is 1/2 of sample rate and one is
+in Hz and the other KHz. That is the inconsistency."
+
+Settings shows the sample rate differently again: Swift's device list "Sample Rate: 48 kHz" (`%.0f` of kHz, so
+44.1 kHz reads "44 kHz"), Swift's selected-device row "48000 Hz" (`%.0f`, no separator), Python's "48000 Hz"
+(`f"{…:.0f} Hz"`, no separator), the web's "48.0 kHz" (`toFixed(1)`).
+- *Decision (owner, 2026-10-01):*
+  - "sample rate and bandwidth in Hz with , everywhere on all editions" — whole Hz with the thousands separator,
+    following the locale ("Follow the locale"), through one shared function per edition, used by the Metrics panel
+    and Settings. Python's always-comma `f"{sr:,.0f}"` changes to the locale's separator.
+  - Peak Frequency uses `formattedAsFrequency`, as the annotations and the crosshair ("I meant formattedAsFrequency —
+    same as the crosshairs/annotations"); Frequency Resolution and Frame Rate use it too — always below 1000, so 1
+    decimal in Hz, as today. No new table entries.
+  - `formattedAsFrequency` takes its decimal from the table: `FieldPrecision.string(…, peakFrequencyHz)`, so every
+    displayed frequency's precision comes from one place.
+  - The panel's private formatters go.
+
+**10. Swift's compact status line** (found by the census). `TapToneAnalysisView+Controls.swift` shows the level with
+0 decimals in one layout (`specifier: "%.0f"`) and 1 in the other; Python and the web show it with
+`peakMagnitudeDB` (1).
+- *Recommendation:* both Swift layouts use `FieldPrecision.string(…, peakMagnitudeDB)`.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
+
+**11. Dead code** (found by the census). Swift `TapToneAnalysisView+Actions.formatFrequency` has no callers.
+Python's `PeakListWidget.save_peaks` (a CSV export of the peak list) has no callers, and no other edition has one.
+- *Recommendation:* remove both.
+- *Decision (owner, 2026-10-01):* "Agreed on 1-8, 10, 11 with your recommendation."
+
+**12. Python's Bin Count** (found while doing item 9, 2026-10-01). The Metrics panel's Bin Count is grouped by the
+locale in Swift (`frequencies.count.formatted()`) and the web (`toLocaleString()`), but always with a comma in Python
+(`f"{bin_count:,}"`).
+- *Decision (owner, 2026-10-01):* fixed in #17 under item 9's decision ("Follow the locale").
+
+*Done — items 1–6 and 8–12 (2026-10-01):*
+- **Before/after check.** Before any change, each edition wrote the PDF of every `.guitartap` fixture (seven files —
+  plates and guitars) and, on the web, the text its chart canvas draws; after the change, again. Their text is
+  identical in all three but for the PDF's generation time. A throwaway harness in the scratchpad (a temporary test
+  per edition, deleted), not committed.
+- **1.** The table gains `bandwidthHz` 1, `shearModulusGPa` 3, `specificModulus` 1, `radiationRatio` 1,
+  `crossLongRatio` 3, `longCrossRatio` 1, `goreThicknessMM` 2, `decayTimeS` 2 (Python `BANDWIDTH_HZ` …), with
+  `decayRatio` documented as the tap-tone ratio. Every display of a computed value formats through `string` with its
+  entry, in all three: the peak rows and cards, the material peak rows, annotations, the crosshair magnitude, exports,
+  the comparison and multi-tap tables, the measurement list and detail, the results panels, the status bar and
+  material status messages, and the PDF. The web's `f0`–`f3` helpers and the local `hz` helpers' literals are gone.
+  Swift's range-field strings in `TapToneAnalysisView` use `string` with `frequencyHz` / `magnitudeDB`. The crosshair
+  magnitude, the material peak rows and the PDF now show infinity as "-∞" in Swift (they used the C formatter's
+  "-inf").
+- **2.** Python's `ValidatedNumberField` installs a `QValidator` whose `validate` calls `decimals_within` (the
+  `QRegularExpressionValidator` is gone); typing behaves as before (checked: "29.356" stops at "29.35", "abc" is
+  refused, "-" and "29." are accepted, a 0-decimal field refuses the point).
+- **3.** `string` formats the value as Swift's `Float`, an exact tie to even: Python `f"{float(np.float32(v)):.Nf}"`;
+  the web `fixedHalfEven(Math.fround(v), N)`, from the double's exact binary value (BigInt); Swift unchanged.
+  Checked on 14 values (ties, 32-bit cases, negatives, -0, large and tiny values) — Python and the web identical.
+  Tests, all three: an exact tie rounds to even (2.5 → "2", 0.125 → "0.12"); the 32-bit value is shown (0.15 → "0.2").
+- **4.** The web's `NumberField` fills its text with `FieldPrecision.string` when the value differs from the number the
+  field reads (Swift `seedField`), so a plate's length reads "557.50" and its mass "208.0"; the focus tracking and the
+  re-fill on blur are gone.
+- **5.** Python's peaks model no longer formats display text for the frequency, magnitude, Q, pitch and cents
+  columns, nor keeps `data_value` and `q_value`, which only the export used.
+- **6.** One tolerance, 1e-5, for the `rounded` cases in all three. The headers say what the table governs — input
+  precision and the decimals every display shows; the saved display range is stored exactly — and the history line
+  and `frequencyHz`'s "thresholds" are gone.
+- **8.** Python's Save Current View and Reset write the dB fields with `fp.string(…, fp.MAGNITUDE_DB)`.
+- **9.** `formattedAsFrequency` takes its decimals from `peakFrequencyHz`; a new `formattedAsWholeHertz` (Swift
+  `formattedAsWholeHertz(_:locale:)` in `Extensions.swift`, Python `formatted_as_whole_hertz` with a `QLocale`, web
+  `formattedAsWholeHertz` with the browser's locale) gives whole hertz with the locale's separator. The Metrics panel:
+  Sample Rate and Bandwidth whole hertz; Frequency Resolution, Frame Rate and Peak Frequency `formattedAsFrequency`;
+  the panel's private formatters gone. Settings' sample rate: whole hertz in all three (Swift's device list and
+  selected-device row, Python's label, the web's readout). Tests (`test/frequency-format`, all three): grouped by the
+  locale (en-US "48,000 Hz", "22,050 Hz"; de-DE "48.000 Hz"); rounded to the nearest hertz (44100.4 → "44,100 Hz").
+- **10.** Swift's compact (iPhone) status line shows the level with `string` at `peakMagnitudeDB`, as the full one.
+- **11.** Removed: Swift `TapToneAnalysisView+Actions.formatFrequency`; Python `PeakListWidget.save_peaks`.
+- **12.** Python's Bin Count reads `QtCore.QLocale().toString(bin_count)` ("32,768"; "32.768" in German), as Swift and
+  the web.
+- Mutations, each killed: Python's `string` without the 32-bit step (the 0.15 case fails); the web's `string` back
+  to `toFixed` (the tie and 32-bit cases fail).
+- Builds: Swift macOS and iOS Simulator. Suites: Swift 751, Python 869, web 770. Parity map `--check` clean.
+
+**Run-review steps.** Launch: Xcode scheme `guitar_tap` (macOS; step 5 on an iPhone or the iPhone simulator) ·
+`.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`, clearing the service worker after the
+build. Same list per edition, Swift first.
+
+1. Open **Metrics**. → Bin Count reads with your region's separator ("32,768"); Sample Rate and Bandwidth read whole
+   hertz the same way ("48,000 Hz", "24,000 Hz"); Frequency Resolution, Frame Rate and Peak Frequency read one decimal in Hz (a peak at or above
+   1000 Hz reads in kHz, one decimal).
+2. Settings → Audio Input & Calibration. → The sample rate reads the same way ("48,000 Hz") — in Swift both in the
+   device list and on the selected device.
+3. Settings: Measurement Type Plate; load a plate measurement. → In the results, the sample dimensions read with all
+   their decimals ("557.50 mm", "4.85 mm", "208.0 g"). Change one (e.g. thickness to 4.9). → The results recompute.
+4. Python only: Settings → **Save Current View**. → The magnitude fields show whole numbers (no decimal point).
+5. Swift on iPhone: watch the status line at the bottom while tapping. → The level reads with one decimal ("-45.3 dB").
+6. With the plate loaded, look over the results and **Export PDF**. → The speeds, moduli, density, ratios and Gore
+   thickness read as before (whole m/s; GPa with two decimals, GLC three; density three).
+
+**Run-review progress.** All three editions pass steps 1–6 (owner, 2026-10-01): "all tests on all platforms done and
+they pass." **Run-review complete.**
 
 **F57 — `analysis-quality`: Swift's PDF grades a loaded guitar by the current guitar-type setting, the web's
 colours are not the natives', and values outside the bands differ. (OPEN)**
@@ -6216,6 +6387,39 @@ Turn **Dump Capture Audio** off (or leave it on, with the folder at **Use Defaul
 themselves (steps 3, 8, 13 and 14; the app's behaviour was right). Swift stopped at step 3, which found item 8.
 After items 8–9: Swift from step 1; Python steps 15–19; web W1–W4. **Run-review complete — all three editions pass
 (owner, 2026-09-30):** Swift steps 1–19, Python 15–19, web W1–W4.
+
+**F59 — `view/pdf-report`: the PDF report is in no slug and has no tests in any edition, and Python's plate
+report lists fewer peaks than Swift's and the web's. (OPEN — recorded 2026-10-01, to be analysed)**
+
+Found while checking F56 (2026-10-01): to show that F56's routing changed no output, each edition wrote the PDF of
+every `.guitartap` fixture before and after, through a throwaway harness. That showed the report is untested
+everywhere, and it showed the peak-list difference below.
+
+Production: Swift `PDFReportGenerator.swift` (`PDFReportData.from(measurement:)`, `generate(data:)`,
+`generateMultiTapReport`, `generateComparison`); Python `tap_analysis_results_view.py` (`pdf_report_data_from_measurement`,
+`export_pdf`, `export_comparison_pdf`, `export_multi_tap_pdf`); web `presentation/pdfReport.ts`
+(`generatePdfReport`, `generateMultiTapPdfReport`) with `presentation/measurementImage.ts` (`measurementToPdfData`,
+`multiTapPdfData`). None carries an `@parity` tag. Tests: none.
+
+| # | item | status |
+|---|---|---|
+| 1 | The PDF report is in no slug — untagged in all three, so the parity map does not see it | open |
+| 2 | No edition tests its PDF | open |
+| 3 | Python's plate report lists one peak where Swift's and the web's list three | open |
+
+**1. No slug.** The report files carry no `@parity` tag, so the sweep — slug by slug — never reaches them, and
+`--check` cannot report a difference.
+- *To do:* tag the report in all three as `view/pdf-report`, with its test slug (item 2).
+
+**2. No tests.** Owner, 2026-10-01: "I want … a set of tests for PDF files."
+- *To do:* tests that generate each fixture's PDF and check its text, the same cases in all three. The F56 harness
+  shows it can be done: Swift writes the PDF and reads its text with PDFKit; Python's report renders headlessly
+  (offscreen Qt); the web's needs a recording stand-in for the chart canvas and the build-time version constants.
+  The text extractor for Python and the web is to be chosen when the tests are designed.
+
+**3. Python's plate peaks.** For `plate-umik-1-3-tap-swift-ipad-1784314709.guitartap` the "Detected Peaks" table lists
+36.3, 67.2 and 117.2 Hz in Swift and the web, and only 117.2 Hz in Python.
+- *To do:* diagnose before proposing a fix; item 2's tests pin the peak list in all three.
 
 ## Stage 2 — move case lists into shared data
 
