@@ -6885,7 +6885,8 @@ below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all 
 | A, batch 3 | `peaks` (fixtures) | done — the fixture list is `peak-baseline-expected.json`'s keys (already shared) | same |
 | oracle | `gated-fft` | done — the tone cases are one test over the oracle's own case list (GFFT1–3, 5) | same |
 | oracle | `file-playback` | done — `file-playback.json` names what each REG case checks; one runner per kind of check in each edition; the playing file's name tested in all three | same |
-| B | `pitch`, `plate`, `brace`, `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
+| B | `pitch` | done — `pitch.json`, 56 cases, identical in all three; Swift floors below C0; Python and the web round the half-step count as Swift; `formatCents` in all three | Swift `5a22fda`, Python `3f03523`, web `d39196d` |
+| B | `plate`, `brace`, `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
 | C | the scenario slugs (survey table) | stay as code | — |
 
 ### Stage 2 survey — what is still not the same (2026-10-02)
@@ -7121,6 +7122,43 @@ values move into shared files; the checks stay in each runner.
   tests became 1, plus the file-name test), Python 1095, web 974 (the separate cancel file-name test folded into the
   cancel test); Swift macOS and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 64
   shared fixtures, no drift.
+
+**Group B — `pitch` (2026-10-02; Swift `5a22fda`, Python `3f03523`, web `d39196d`).** `pitch.json` is the union of the three editions' inputs (Swift 32,
+Python 32 and web 26 tests, with different frequencies, tolerances and checks), plus new cases for the two findings
+below. Each frequency row checks every function at once: `hasPitch`, `pitch` (note index and octave), `note`,
+`cents`, `freq0`, `pitchRange`, `formattedNote` and `isInTune`. Other rows check a threshold, the inclusive
+comparison (in tune at exactly its own offset, not a hair under), `freq(note, octave)` and `formatCents`. The
+expected values were minted by compiling Swift's `Pitch.swift` with a driver; the tolerance is 1e-9.
+
+| | cases | Swift | Python | web |
+|---|---|---|---|---|
+| frequencies (440 and 432, sharp/flat branches, octave crossings, below C0, no pitch) | 44 | pass | pass (failed 1 before item 2) | pass (failed 2 before item 2) |
+| `isInTune` at a threshold | 5 | pass | pass | pass |
+| `isInTune` at its own offset (inclusive) | 1 | pass | pass | pass |
+| `freq(note, octave)` | 5 | pass | pass | pass |
+| `formatCents`, 12 values including the half ties | 1 | pass | pass | pass |
+
+1. **Swift traps below C0.** `pitch(frequency:)` split the half-step count with `/` and `%`, which truncate. Below
+   about 15.9 Hz the count is negative, the note index goes negative and `noteNames[note]` traps. The analysis range
+   reaches 1 Hz (`DisplayRange.frequencyBounds`), and every found peak gets a note, so the app can reach it. Python
+   and the web floor: 12 Hz is G-1, 10 Hz D#-1. *Recommendation:* Swift floors as they do (the alternative: below
+   C0 is "no pitch", as 0 Hz is). *Decision (owner, 2026-10-02):* "Item 1 I agree with your suggestion."
+   *Done:* Swift floors the octave and the note.
+2. **The half-step count's rounding differs at an exact half.** Swift rounds a half away from zero, Python to even,
+   the web up (`Math.round`). At 427.47 Hz (50 cents below A4, exactly 56.5 half-steps) Swift and the web give
+   "A4 (−50 cents)", Python "G#4 (+50 cents)". Below C0 the web's `Math.round` gives the integer −0 (16 Hz:
+   octave −0), which Swift's `Int` cannot be; it prints as 0, but it is a different value. *Recommendation:*
+   Python and the web round as Swift does. *Decision (owner, 2026-10-02):* "Your recommendation on item 2 as
+   well." *Done:* Python `_round_half_away_from_zero`, web `roundHalfAwayFromZero` (a plain integer, never −0).
+- Suites after `pitch`: Swift 598 (Swift Testing counts each parameterised test once), Python 1119, web 1006; Swift
+  macOS and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 65 shared fixtures, no
+  drift.
+3. **The cents rounding was testable only in the web.** `formattedNote` rounds the cents offset half to even
+   (C's `%.0f` in Swift, `:.0f` in Python); the web hand-wrote that rounding (`roundTiesToEven`, since `toFixed`
+   rounds a half away from zero) and tested it at exact halves, which no frequency can reach. *Options:* (a) each
+   edition gets a cents formatter and the half-tie rows go in the shared file; (b) drop the web's test.
+   *Decision (owner, 2026-10-02):* "I like (a)." *Done:* `Pitch.formatCents(_:)` (Swift), `Pitch.format_cents`
+   (Python), `Pitch.formatCents` (web, replacing `roundTiesToEven`); `formattedNote` uses it in all three.
 
 ## Expect production defects, not just test cleanup
 
