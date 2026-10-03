@@ -6858,6 +6858,31 @@ Stage 2 is a mechanical move of the case-shaped subset. This bears on what #17 s
 [`ANDROID-PLAN.md`](ANDROID-PLAN.md), which records that how much of #17 gates the Android port is a
 judgement, not a given.
 
+### Stage 2 progress
+
+The status of every slug Stage 2 moves, kept current. Details are in the survey, the pilot and the batch entries
+below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all three editions, and pass.
+
+| group | slug | status | commits (Swift / Python / web) |
+|---|---|---|---|
+| pilot | `classify` | done — Python's label resolver and empty-override rule fixed; duplicate claiming algorithm, legacy modes and `normalized` removed | `8fdd350` / `7c20911` / `9b49fc2` |
+| A, batch 1 | `field-precision` | done — identical | `3d6eeba` / `2cbca0e` / `2446bdf` |
+| A, batch 1 | `frequency-format` | done — identical | same |
+| A, batch 1 | `analysis-quality` | done — identical | same |
+| A, batch 1 | `quality-colors` | done — identical | same |
+| A, batch 1 | `measurement-name` | done — identical | same |
+| A, batch 1 | `export-filename` | done — Python and web stem functions now keep whole seconds, as Swift | same |
+| A, batch 2 | `display-range` (the widening rule and range moves) | done — identical in all three | `2e8a208` / `e693b46` / `937b172` |
+| A, batch 2 | `button-enablement` (B1–B16) | done — identical in all three, defaults included | same |
+| A, batch 2 | `measurement-type-name` | done — Python and web fixed to Swift's type resolution (word, flag, save path) | same |
+| A, batch 2 | `measurement-amend` (`isAmended`) | done — identical in all three | same |
+| A, batch 2 | `settings-store` (validation, entered value, defaults) | done — identical in all three | same |
+| A, batch 2 | `decay-tracking` (DK1–5, DK8–10) | done — identical in all three | same |
+| A, batch 3 | `material-selection`, `peak-heal`, `pdf-report`, `spectrum-export`, `peaks` (fixtures) | in progress — fixture lists | — |
+| oracle | `gated-fft`, `file-playback` | to do — expected values already in `parity-oracle.json`; the case lists become a loop | — |
+| B | `pitch`, `plate`, `brace`, `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
+| C | the scenario slugs (survey table) | stay as code | — |
+
 ### Stage 2 survey — what is still not the same (2026-10-02)
 
 **What Stage 1 did and did not establish.** Stage 1 asked, slug by slug: does each edition's test reach production,
@@ -6987,7 +7012,7 @@ the name/notes agreement checks read their inputs from the code under test — t
 | `analysis-quality` | 53 | pass | pass | pass |
 | `quality-colors` | 5 grades | pass | pass | pass |
 | `measurement-name` | 35 | pass | pass | pass |
-| `export-filename` | 11 stems, 3 measurements | pass | **1 fails** | **1 fails** |
+| `export-filename` | 11 stems, 3 measurements | pass | pass — failed 1 until fixed (below) | pass — failed 1 until fixed (below) |
 
 - **`export-filename`:** Swift's `ExportFilename.stem` takes the time and keeps whole seconds itself
   (`Int(timestamp.timeIntervalSince1970)`); Python's `export_stem` and the web's `exportStem` take seconds and print
@@ -7005,6 +7030,48 @@ the name/notes agreement checks read their inputs from the code under test — t
   ignores `parity-oracle.json`. It now reports no drift: 53 shared fixtures, all byte-identical.
 - Suites: Swift 690 (its batch-1 tests now parameterised over the shared files), Python 1072, web 958; Swift macOS
   and iOS Simulator build; parity map 116 groups, `--check` clean.
+
+**Group A, batch 2 (2026-10-02; Swift `2e8a208`, Python `e693b46`, web `937b172`)** — the slugs where part of the file is a table. Each table moves into its
+shared file; the rest of the file (scenarios, signals) stays as code.
+
+| slug | cases | Swift | Python | web |
+|---|---|---|---|---|
+| `display-range` — `DisplayRangeExpansion` (widening; Settings Done; a new measurement; widening while showing a load) | 24 | pass | pass | pass |
+| `button-enablement` — B1–B16, each giving only the fields it sets, so the editions' defaults are checked too (the Save / export scenario stays as code) | 16 | pass | pass | pass |
+| `measurement-type-name` — the Details pane's type word and the material flag (in-memory measurements) | 19 | pass | pass — MT08 failed until fixed (below) | pass — MT08 failed until fixed (below) |
+| `measurement-amend` — `isAmended`, the gate on Save (the amend itself, which mints an id, stays as code) | 8 | pass | pass | pass |
+| `settings-store` — per-type default ranges, a range field's entered value, validation of an entered range (the store's read and write stay as code) | 21 | pass | pass | pass |
+| `decay-tracking` — `measureDecayTime` on given histories, DK1–DK5 and DK8–DK10, and the default threshold (one tolerance, 1e-6, for all three; the web used 5e-7); the tracker driven chunk by chunk stays as code | 9 | pass | pass | pass |
+
+- **`measurement-type-name`:** Swift resolves a measurement's type field by field —
+  `spectrumSnapshot?.measurementType ?? longitudinalSnapshot?.measurementType` (`resolvedMeasurementType`) — and its
+  Details word (`measurementTypeShortName`) and material flag both read that. Python's `_type_name` and the web's
+  `measurementTypeName` take the first snapshot that exists and read its type, so a spectrum snapshot with no type
+  hides the longitudinal snapshot's: MT08 (spectrum snapshot untyped, longitudinal "Material (Brace)") is "Brace" in
+  Swift and "—" in both. Each port also has a second resolution that disagrees with its first: the web's
+  `resolvedMeasurementType` is Swift's chain (its `isMaterialMeasurement` uses it), and Python's model
+  `resolved_measurement_type` takes the first snapshot and then falls back to the top-level type, which Swift has no
+  field for. And the word lives on the model in Swift (`measurementTypeShortName`), in a view helper over stand-in
+  objects in Python, and in `fromLive.ts` on the web. MT09–MT11 (an unrecognised type, a loaded file's top-level
+  type) run only in Python and the web — Swift's enum cannot hold an unknown type and its model has no top-level type.
+  *Recommendation:* one resolution, Swift's, for the word and the flag in every edition — the web's
+  `measurementTypeName` reads `resolvedMeasurementType`; Python's model `resolved_measurement_type` follows Swift's
+  chain, a model property `measurement_type_short_name` (Swift's `measurementTypeShortName`) gives the word, and the
+  Details view calls it. Open: Python's fallback to the top-level type. *Owner (2026-10-02):* "Check all the
+  measurements in the hub and in the editions - does it have the problem case? If not then make it the same as
+  swift." Checked: 157 `.guitartap` files in the hub's `Tests/` and the three editions' test folders, 176
+  measurements (9 comparisons); every other one has exactly one snapshot, typed — 99 a spectrum snapshot, 68 a
+  longitudinal one. None has an untyped snapshot beside a typed one, none relies on the top-level type, and none has
+  a top-level type that differs from its snapshot's. So: the same as Swift, the fallback dropped.
+  The guitar type, which the save path resolves the same way, checked too: every measurement's snapshot carries it.
+  *Done:* Python — `resolved_measurement_type` is Swift's chain (no top-level fallback); a new
+  `measurement_type_short_name` (Swift's `measurementTypeShortName`) gives the word and the Details view shows it
+  (`_type_name`, the view's own resolver, removed); `to_dict` writes the top-level `measurementType` and `guitarType`
+  by the same chain. Web — `measurementTypeName`, the save path's top-level copies and the mode-label builder all
+  read `resolvedMeasurementType` (the save path's guitar type by the same chain). Python's runner now tests the
+  model property on real `TapToneMeasurement`s, not stand-ins. All 19 cases pass in all three.
+- Suites after batch 2: Swift 631 (more tests parameterised over the shared files), Python 1094, web 975; Swift macOS
+  and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 59 shared fixtures, no drift.
 
 ## Expect production defects, not just test cleanup
 
