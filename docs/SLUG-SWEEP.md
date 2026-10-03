@@ -6858,6 +6858,121 @@ Stage 2 is a mechanical move of the case-shaped subset. This bears on what #17 s
 [`ANDROID-PLAN.md`](ANDROID-PLAN.md), which records that how much of #17 gates the Android port is a
 judgement, not a given.
 
+### Stage 2 survey — what is still not the same (2026-10-02)
+
+**What Stage 1 did and did not establish.** Stage 1 asked, slug by slug: does each edition's test reach production,
+does it test something that still exists, and do the productions agree as far as the tests show. It did **not**
+require the three editions to test the same cases — F18 deferred that here on purpose. Reading all 48 `test/*`
+slugs again (three readers, one per third, each reading all three editions' test files) shows how much that leaves:
+many slugs test the same rule with different inputs, tolerances or checks, so no one has shown the productions agree
+on the cases one edition tests and another does not. Some differences are weaker tests that Stage 1 should have
+caught (below).
+
+**The slugs by shape** (counts are cases Swift / Python / web):
+
+| group | slugs | what it means |
+|---|---|---|
+| A — the same cases in all three, input → expected output | `field-precision` (16/16/16), `frequency-format` (7/7/7), `analysis-quality` (8/8/8), `button-enablement` B1–B16, `measurement-name`, `measurement-type-name` (six-type table), `measurement-amend` (`isAmended`), `settings-store` (validation, entered value, defaults), `quality-colors` (5 grades), `decay-tracking` DK1–5 and DK8–10, `display-range` (`DisplayRangeExpansion`, 19/19/19), `export-filename` (the 9 shared rows), `material-selection`, `peak-heal`, `pdf-report`, `spectrum-export`, `peaks` (the 3 fixtures and `peak-baseline-expected.json`) | can move as they are |
+| B — the same rule, different cases per edition | `pitch` (32/32/26; tolerances, inputs and A4 differ), `plate` (39/41/34; free functions on the web, properties in the natives), `brace` (web lacks "higher fL gives equal-or-better quality"), `classify` (below), `dsp` (F1–F5, F9: web's F9 checks only not-NaN where the natives check bandwidth 990 and Q 0.505; Swift F6 1024 bins against 2048), `peaks` synthetic F10–F16 and averaging (widths, thresholds, tolerances and frequencies differ in each), `mode-colors` (the web's values differ by design), `mic-selection` MS1–5 (the web has no pure `inputDeviceToUse`), `measurement-codable` (ratio and heal inputs differ: Swift classical 95/210, Python generic 100/150, web classical 90/200), and F18's carried-in slugs | need one agreed case set first |
+| C — scenarios (sequences of calls on the analyzer, timers, signals, storage) | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `material-measurement-inputs`, `import-persistence`, `peak-selection-persistence`, `effective-peak-id`, `display-range` (`LoadedRange`, `MaterialPeakAnnouncement`) | stay as code; `scenario-trace` and `tap-decisions` could take a shared step list, but each edition would still need its own interpreter and its own waiting |
+| already shared data | `gated-fft`, `file-playback` — expected values in `parity-oracle.json` | only the case list in code becomes a loop |
+| cannot be shared | `self-regression` (per-machine baselines), `uuid-case` (random draws, a source scan), `wav-dump-folder` (filesystem) | stay per edition |
+
+**Raised by the survey, not changed:** web `measurement-type-name.test.ts` says the Swift counterpart is deferred —
+it exists; Swift `PitchTests`' header counts are stale; `gated-fft` checks at 0 in Swift and 0.001 in the others (by
+design — Swift's baseline is the oracle); the web's `7108913.txt` has CRLF line endings again (Swift and Python LF;
+`check-fixtures.py` reports it, with the per-machine self-baselines).
+
+**The method (proposed 2026-10-02; the owner: pilot it on `classify`).** Reading cannot settle whether the
+productions agree on cases only one edition tests; running them can. For each slug: gather the **union** of every
+edition's cases into one data file (Swift's spellings), take the expected values from **Swift's production** (run
+Swift — it is canonical), and run all three editions against the file. Each case then either passes (identical —
+it stays on the shared list), fails (a production difference — a finding, fixed to Swift), or cannot be run by an
+edition (a missing or different API — a mechanism difference, the owner's decision). The shared-data runner is
+therefore the tool that produces the remaining list, verified by execution; Stage 2's move is its by-product. The
+data files: one JSON file per slug, canonical in the hub (`tooling/parity/cases/`), copied into each edition's
+fixture folder and kept identical by `check-fixtures.py`; Swift's spellings, mapped by each runner; NaN and
+±infinity as `"NaN"`, `"Infinity"`, `"-Infinity"`, as the oracle writes them.
+
+**`classify` — which function** (owner: "Make sure it is classify or classify all since there use to be two
+different ones"). Checked in the code:
+
+| | per-frequency band lookup | whole-set claiming (the app's) | other |
+|---|---|---|---|
+| Swift | `classify(frequency:guitarType:)` — **private** | `classifyAll(_:guitarType:)` — every app caller | — |
+| Python | `GuitarMode.classify(freq, type)` — public; `classify_peak(freq, type)` — public, exported, no app caller | `GuitarMode.classify_all(peaks, type)` — every analyzer caller | `GuitarMode._classify_all_tuples` — a **second copy of the claiming algorithm** over (freq, mag) tuples, used by the results table's model (`views/shared/peaks_model.py`) |
+| web | `classifySingle(freq, type)` — exported, called only inside `classifyAll` and by tests | `classifyAll(peaks, type)` — every app caller | `resolvedModePeaks` (strongest peak per mode, from `classifyAll`) |
+
+The app classifies only through the whole-set claiming in all three. Swift tests it only through `classifyAll` (28
+calls; single-peak sets stand in for the band lookup); Python calls `classify` directly 14 times and `classify_all`
+9; the web calls `classifySingle` in 4 places and `classifyAll` in 9. Two Swift doc comments
+(`UserAssignedMode.swift`, `TapToneAnalyzer+PeakAnalysis.swift`) and two Python ones (`user_assigned_mode.py`) still
+say labels are re-evaluated "by `classify(frequency:)`" — the code calls `classifyAll`.
+
+*Recommendation (the pilot):* the shared cases test `classifyAll` only, as Swift — each band-lookup case becomes a
+one-peak set; then (after the run, and after the owner has seen its results) the per-frequency lookup becomes
+private in Python and the web as in Swift, Python's results table calls `classify_all` and `_classify_all_tuples`
+and the unused `classify_peak` go, and the four comments are corrected. *Decision (owner, 2026-10-02):* "I think
+so. Let's see how it works."
+
+**Pilot run — `classify` (2026-10-02).** `tooling/parity/cases/classify.json` (copied into Swift
+`GuitarTapTests/`, Python `tests/`, web `test/fixtures/`) holds the union of the three editions' cases, 95 in all:
+45 `classifyAll` sets (each band-lookup case as a one-peak set), 3 `resolvedModePeaks` (the strongest peak per mode,
+which is where the equal-magnitude tie shows — Swift's and Python's tie tests recomputed the maximum inside the test,
+so they could not fail), the four types' bands, the override labels, `effectiveMode`, display names and
+normalisation; each case notes which editions' tests it came from. Runners: `ClassifyCasesTests.swift`,
+`test_classify_cases.py`, `classify-cases.test.ts`. Swift passes all 95 — the expected values are Swift's answers.
+
+| | Swift | Python | web |
+|---|---|---|---|
+| `classifyAll`, 45 sets — every band, overlap, claiming, tie and empty case | pass | pass | pass |
+| `resolvedModePeaks`, 3 (incl. the tie: the first peak wins) | pass | pass | pass |
+| bands, all four types | pass | pass | pass |
+| override labels → mode, 15 | pass | **2 fail** | pass |
+| `effectiveMode`, 5 | pass | **1 fails** | pass |
+| display names and normalisation, 22 | pass | pass | **8 cannot run** |
+
+- **The classifier is identical in all three** on every case any edition tested — the question the pilot was for.
+- **Python, labels:** `from_mode_string("Helmholtz T(1,1)_1")` gives the legacy `HELMHOLTZ`, not `AIR` (the old test
+  compared after normalising, so it passed); and an unresolvable label ("Wolf note") gives `UNKNOWN` where Swift's
+  `fromDisplayName` gives nil — Python cannot tell an unknown label from the label "Unknown".
+- **Python, `effectiveMode`:** an empty override `""` keeps the auto mode (`if override:`); Swift and the web treat it
+  as a label that resolves to nothing — `unknown`.
+- **Legacy modes** (`helmholtz`, `crossGrain`, `longGrain`, `monopole`): the web has none. In Swift nothing creates or
+  reads them — no saved model has a `GuitarMode` field, the file's `modeLabel` is ignored on decode, and no file in
+  the hub's `Tests/` holds a legacy name; only Python's label resolver produces one (above).
+- *Recommendation:* (1) Python's resolver as Swift's — the academic labels give the current modes, an unresolvable
+  label `None`, its callers checked; (2) Python's `effective_mode` resolves any override present, `""` included, as
+  Swift; (3) the legacy modes removed from Swift and Python, unused, as the web never had them; (4) the pilot's
+  clean-up — the per-frequency lookup private in Python and the web, Python's `_classify_all_tuples` and
+  `classify_peak` gone, the stale comments fixed (and Python's "falling back to Classical", which falls back to
+  Generic); (5) each edition's old `classify` cases deleted, the shared file holding them, the old files keeping only
+  what the data cannot express. *Decision (owner, 2026-10-02):* "Yes to all."
+- *Raised while doing it:* with the legacy modes gone, `normalized` (legacy → current) does nothing — every mode is
+  its own normal form; about 20 call sites in each native, none on the web. And Python's one remaining old test pinned
+  the UNKNOWN mode's range (0–20,000 Hz), which no caller reads — the natives' range function must return something
+  for every case, the web models "unknown" as no band. The legacy modes (`helmholtz` "Helmholtz (Air)", `crossGrain`
+  "Cross-Grain", `longGrain` "Long-Grain", `monopole` "Monopole" — old names for Air, Air, Top, Back) are not the
+  override picker's academic labels: the picker stores a label, resolved by `fromDisplayName` to a current mode; the
+  only link was Python's resolver turning "Helmholtz T(1,1)_1" into `helmholtz`. *Recommendation:* remove
+  `normalized` with the legacy modes, and the unknown-range test. *Decision (owner, 2026-10-02):* "Yes".
+- *Done (2026-10-02; Swift `8fdd350`, Python `7c20911`, web `9b49fc2`):* `classify.json` — 45 `classifyAll` sets, 3 `resolvedModePeaks`, the four types'
+  bands, 15 override labels and the seven academic labels' order, 5 `effectiveMode`, 7 display names, 7
+  abbreviations (all three have the same; added) — passes in all three. Python: `GuitarMode.from_display_name`
+  (Swift's `fromDisplayName`: `None` for a label it cannot resolve; the academic labels give current modes) replaces
+  `from_mode_string`, its callers checking for `None` where they compared with `UNKNOWN` and "Unknown"; `effective_mode`
+  resolves any override present; the per-frequency lookup is `_classify`; `_classify_all_tuples` and `classify_peak`
+  removed, the results table's model calls `classify_all`. Web: `classifySingle` no longer exported. Swift and
+  Python: the four legacy modes and `normalized` removed (about 20 call sites each; the switches over the mode now
+  exhaustive without a fallback); the legacy-colour tests removed from `test/mode-colors`. Comments: Swift
+  `UserAssignedMode.swift`, `TapToneAnalyzer+PeakAnalysis.swift`; Python `user_assigned_mode.py`, the analyzer's
+  "falling back to Classical" (it falls back to Generic) and two that named `classify_peak`. The move: Swift
+  `GuitarModeTests.swift` and Python `test_guitar_mode.py` deleted (every case is in the shared file); the web's
+  `classify.test.ts` keeps one test the data cannot express (the band list is a fresh copy). Parity map: `test/classify`
+  is the three runners plus that web file; 116 groups, `--check` clean; `check-fixtures.py` keeps the three copies of
+  `classify.json` identical. Suites: Swift 717 (its classification tests are now 6 parameterised), Python 935, web
+  826; Swift macOS and iOS Simulator build.
+
 ## Expect production defects, not just test cleanup
 
 #8 was opened as a test-infrastructure issue. It ended having fixed a data-loss bug, two architecture

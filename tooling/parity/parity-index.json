@@ -608,12 +608,13 @@
     {
       "slug": "test/classify",
       "swift": [
-        "GuitarTapTests/GuitarModeTests.swift"
+        "GuitarTapTests/ClassifyCasesTests.swift"
       ],
       "python": [
-        "tests/test_guitar_mode.py"
+        "tests/test_classify_cases.py"
       ],
       "web": [
+        "test/classify-cases.test.ts",
         "test/classify.test.ts"
       ],
       "tests": [],
