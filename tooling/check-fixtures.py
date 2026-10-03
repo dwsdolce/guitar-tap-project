@@ -33,6 +33,9 @@ import platforms  # noqa: E402
 FIXTURE_EXT = {".wav", ".guitartap", ".txt", ".cal", ".json"}
 # Generated or edition-local files that legitimately differ / are not shared fixtures.
 IGNORE_NAMES = {"parity-oracle.json", "package.json", "tsconfig.json"}
+# Each edition's own regression baselines (test/self-regression): one per edition per machine, each minted
+# from that edition's output, so the same name in two editions is two different files by design.
+IGNORE_PREFIXES = ("self-baseline-",)
 
 
 def sha(path: Path) -> str:
@@ -55,7 +58,7 @@ def collect() -> dict[str, dict[str, Path]]:
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix.lower() not in FIXTURE_EXT:
                 continue
-            if path.name in IGNORE_NAMES:
+            if path.name in IGNORE_NAMES or path.name.startswith(IGNORE_PREFIXES):
                 continue
             found[path.name][plat.key] = path
     return found

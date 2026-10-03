@@ -6973,6 +6973,39 @@ normalisation; each case notes which editions' tests it came from. Runners: `Cla
   `classify.json` identical. Suites: Swift 717 (its classification tests are now 6 parameterised), Python 935, web
   826; Swift macOS and iOS Simulator build.
 
+**Group A, batch 1 (2026-10-02; Swift `3d6eeba`, Python `2cbca0e`, web `2446bdf`)** — `field-precision`, `frequency-format`, `analysis-quality`, `quality-colors`,
+`measurement-name`, `export-filename`. Each slug's cases moved into `tooling/parity/cases/<slug>.json` (copied into
+the three editions' fixtures) and run by one file per edition, in the old test file's place; what the data cannot
+express stays beside it (Swift: the quality colour is built from the pinned hex, not a system colour; web: the dark
+quality colours, which only the web has). Two rewrites on the way: the "each type at its thresholds" decay cases and
+the name/notes agreement checks read their inputs from the code under test — they are literal rows now.
+
+| slug | cases | Swift | Python | web |
+|---|---|---|---|---|
+| `field-precision` | 59 | pass | pass | pass |
+| `frequency-format` | 12 | pass | pass | pass |
+| `analysis-quality` | 53 | pass | pass | pass |
+| `quality-colors` | 5 grades | pass | pass | pass |
+| `measurement-name` | 35 | pass | pass | pass |
+| `export-filename` | 11 stems, 3 measurements | pass | **1 fails** | **1 fails** |
+
+- **`export-filename`:** Swift's `ExportFilename.stem` takes the time and keeps whole seconds itself
+  (`Int(timestamp.timeIntervalSince1970)`); Python's `export_stem` and the web's `exportStem` take seconds and print
+  them as given — a fractional time gives `x-1784060789.123456`. Every caller in Python and the web passes whole
+  seconds today (each truncates first), so no filename is wrong; the rule lives in the callers rather than the
+  function. *Recommendation:* the two functions keep whole seconds themselves (truncating, as Swift's `Int()` does),
+  so the rule is where Swift has it.
+  *Decision (owner, 2026-10-02):* "Yes please". *Done:* `export_stem` writes `int(epoch_seconds)`, `exportStem`
+  `Math.trunc(epochSeconds)`; the fractional case passes in all three.
+- **The fixture check's four "drifts"** (raised in the survey): `7108913.txt` was CRLF only in this machine's web
+  working copy — the repository holds it LF, as Swift's and Python's; the copy predates the web's `.gitattributes`
+  and had never been rewritten. The three `self-baseline-*.json` are each edition's own per-machine baselines
+  (`test/self-regression`), different by design but compared by name. *Decision (owner, 2026-10-02):* "Yes" —
+  the working copy refreshed from git (nothing to commit), and `check-fixtures.py` ignores `self-baseline-*` as it
+  ignores `parity-oracle.json`. It now reports no drift: 53 shared fixtures, all byte-identical.
+- Suites: Swift 690 (its batch-1 tests now parameterised over the shared files), Python 1072, web 958; Swift macOS
+  and iOS Simulator build; parity map 116 groups, `--check` clean.
+
 ## Expect production defects, not just test cleanup
 
 #8 was opened as a test-infrastructure issue. It ended having fixed a data-loss bug, two architecture
