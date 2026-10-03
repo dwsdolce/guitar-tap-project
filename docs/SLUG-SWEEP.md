@@ -6886,7 +6886,8 @@ below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all 
 | oracle | `gated-fft` | done — the tone cases are one test over the oracle's own case list (GFFT1–3, 5) | same |
 | oracle | `file-playback` | done — `file-playback.json` names what each REG case checks; one runner per kind of check in each edition; the playing file's name tested in all three | same |
 | B | `pitch` | done — `pitch.json`, 56 cases, identical in all three; Swift floors below C0; Python and the web round the half-step count as Swift; `formatCents` in all three | Swift `5a22fda`, Python `3f03523`, web `d39196d` |
-| B | `plate`, `brace`, `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
+| B | `plate`, `brace` (together: one model) | done — identical in all three; the web has Swift's model types; Python's wrappers and dialogs gone; when properties are shown follows Swift; Python's G_LC rule as Swift | Swift `da367e5`, Python `308d0e3`, web `288d003` |
+| B | `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
 | C | the scenario slugs (survey table) | stay as code | — |
 
 ### Stage 2 survey — what is still not the same (2026-10-02)
@@ -7153,6 +7154,72 @@ expected values were minted by compiling Swift's `Pitch.swift` with a driver; th
 - Suites after `pitch`: Swift 598 (Swift Testing counts each parameterised test once), Python 1119, web 1006; Swift
   macOS and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 65 shared fixtures, no
   drift.
+
+**Group B — `plate` and `brace` (2026-10-02; Swift `da367e5`, Python `308d0e3`, web `288d003`).** The survey: 39/41/34 and the brace equivalent; the same
+formulas, different shapes. Done together, because the first finding is one model for both.
+
+1. **The web had no plate or brace model.** Swift computes every value as a property of `PlateProperties` /
+   `BraceProperties` (E, c, specific modulus, radiation ratio, the anisotropy ratios, the grades, the Gore moduli and
+   shear, `goreTargetThickness(...)` as a method); Python has the same model. The web had only free functions
+   (`plateYoungsLongPa`, `speedOfSound`, `specificModulus`, …), and each caller assembled the values itself — the
+   Results panel and the measurement image, which the PDF also reads — as did its tests, so they did not test what
+   the app shows. *Recommendation:* the web gets Swift's `MaterialDimensions`, `PlateProperties`,
+   `BraceProperties` and `WoodQuality` (`evaluate`, `numericScore`), the callers use them, the free functions become
+   internals. *Decision (owner, 2026-10-02):* "Yes".
+2. **Python's Gore target thickness was a free function** (`calculate_gore_target_thickness(props, …)`), a method in
+   Swift; Python also had `calculate_plate_properties` / `calculate_brace_properties` wrappers Swift does not.
+   *Recommendation:* a method on `PlateProperties`; callers construct the model directly. *Decision (owner,
+   2026-10-02):* "Yes".
+3. **When the properties are shown differs** (found while doing 2). Python's wrappers raise `ValueError` when a
+   dimension or frequency is not positive; at the end of a live measurement the main view shows a "Calculation
+   Error" dialog, elsewhere the callers show no properties. Swift has no such check: its zero guards give 0s.
+
+   | | Results panel | export image / PDF |
+   |---|---|---|
+   | Swift | needs the fL and fC peaks and the measurement's dimensions | needs fL and fC, and length > 0 and mass > 0 |
+   | Python | all four dimensions and the frequencies positive, else the dialog (live) or nothing (loaded) | all four dimensions positive |
+   | web | needs fL and fC | a missing fL or fC computed as 0 Hz |
+
+   *Recommendation:* follow Swift — Python's wrappers and the dialog go, and Python's and the web's conditions become
+   Swift's. *Alternative:* the Gore method only, the rest recorded for later. *Decision (owner, 2026-10-02):* "Your
+   recommendation - full fix/not partial fix."
+4. **Comparing the values:** Swift computes in 32-bit `Float`, Python and the web in doubles; they agree to about one
+   part in a million. The shared file holds Swift's values, compared at a relative tolerance of 1e-5.
+5. **Python's G_LC is `None` for an fLC of 0**, where Swift computes it (0) and returns `nil` only when there was no
+   FLC tap (`if self.f_flc is None or self.f_flc <= 0`). No caller passes 0 — a missing tap is `None` — so no
+   output differs; found by reading. The web matches Swift. *Recommendation:* Python tests only for `None`, as
+   Swift. *Decision (owner, 2026-10-02):* "Yes". *Done:* Python tests only for `None`; `plate.json` gains "real
+   plate, an fLC of 0 Hz" (G_LC 0), which all three pass.
+
+*Done (1–3; 5 above):*
+- **Web:** `src/dsp/material.ts` holds `MaterialDimensions`, `PlateProperties`, `BraceProperties` and `WoodQuality`
+  (`evaluate`, `numericScore`; wood types spruce, cedar, maple, rosewood, as Swift); the beam formula is private.
+  The Results panel, the Settings density read-out and the report data use them. The report builds the material
+  section only from fL (and fC for a plate) and a sample with length and mass, as Swift; otherwise it has none
+  (it used to compute a missing frequency as 0 Hz).
+- **Python:** `PlateProperties.gore_target_thickness(...)`; `calculate_plate_properties`,
+  `calculate_brace_properties`, `calculate_gore_target_thickness` and `MaterialDimensions.is_valid` are gone. The
+  Results panel is filled from `_calculated_plate_properties` / `_calculated_brace_properties` — Swift's
+  `calculatedPlateProperties` / `calculatedBraceProperties`: the identified peaks and the measurement's own
+  dimensions (Store B), no other check — in all four places it was filled (a measurement's end, a dimension edit, a
+  load, a settings change). The "Missing Dimensions" and "Calculation Error" dialogs at a measurement's end are
+  gone. The two report builders build properties when the peaks are there and length > 0 and mass > 0, as Swift.
+- **Case files:** `plate.json` (16 plates, each with every property and its Gore target thicknesses; 41 grade
+  rows over all four wood types — cedar, maple and rosewood new; the five scores) and `brace.json` (7 braces), the
+  union of the three editions' samples. The identities the old tests checked (E ∝ f², E ∝ L⁴, c = √(E/ρ), the
+  reciprocal ratios, the brace's 22.37332) are pinned by each row's values. Expected values minted by compiling
+  Swift's `MaterialProperties.swift` with a driver.
+
+| | cases | Swift | Python | web |
+|---|---|---|---|---|
+| plates — every property, the Gore target thicknesses | 16 | pass | pass | pass |
+| grades (`WoodQuality.evaluate`), all four wood types | 41 rows | pass | pass | pass |
+| numeric scores | 5 rows | pass | pass | pass |
+| braces — every property | 7 | pass | pass | pass |
+
+- Suites after `plate` and `brace`: Swift 539 (the per-property tests became two parameterised ones), Python 1078,
+  web 973; Swift macOS and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 67
+  shared fixtures, no drift.
 3. **The cents rounding was testable only in the web.** `formattedNote` rounds the cents offset half to even
    (C's `%.0f` in Swift, `:.0f` in Python); the web hand-wrote that rounding (`roundTiesToEven`, since `toFixed`
    rounds a half away from zero) and tested it at exact halves, which no frequency can reach. *Options:* (a) each
