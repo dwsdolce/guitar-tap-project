@@ -6878,8 +6878,13 @@ below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all 
 | A, batch 2 | `measurement-amend` (`isAmended`) | done — identical in all three | same |
 | A, batch 2 | `settings-store` (validation, entered value, defaults) | done — identical in all three | same |
 | A, batch 2 | `decay-tracking` (DK1–5, DK8–10) | done — identical in all three | same |
-| A, batch 3 | `material-selection`, `peak-heal`, `pdf-report`, `spectrum-export`, `peaks` (fixtures) | in progress — fixture lists | — |
-| oracle | `gated-fft`, `file-playback` | to do — expected values already in `parity-oracle.json`; the case lists become a loop | — |
+| A, batch 3 | `material-selection` | done — identical in all three | Swift `d414025`, Python `5994aa0`, web `828c8f4` |
+| A, batch 3 | `peak-heal` | done — identical in all three; the web's measurement type now declares `wasHealed`, as Swift and Python | same |
+| A, batch 3 | `pdf-report` | done — fixture list and baseline tolerance in `pdf-report.json` | same |
+| A, batch 3 | `spectrum-export` | done — cases in `spectrum-export.json` | same |
+| A, batch 3 | `peaks` (fixtures) | done — the fixture list is `peak-baseline-expected.json`'s keys (already shared) | same |
+| oracle | `gated-fft` | done — the tone cases are one test over the oracle's own case list (GFFT1–3, 5) | same |
+| oracle | `file-playback` | done — `file-playback.json` names what each REG case checks; one runner per kind of check in each edition; the playing file's name tested in all three | same |
 | B | `pitch`, `plate`, `brace`, `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
 | C | the scenario slugs (survey table) | stay as code | — |
 
@@ -7072,6 +7077,50 @@ shared file; the rest of the file (scenarios, signals) stays as code.
   model property on real `TapToneMeasurement`s, not stand-ins. All 19 cases pass in all three.
 - Suites after batch 2: Swift 631 (more tests parameterised over the shared files), Python 1094, web 975; Swift macOS
   and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 59 shared fixtures, no drift.
+
+**Group A, batch 3 (2026-10-02; Swift `d414025`, Python `5994aa0`, web `828c8f4`)** — the fixture-list slugs and the oracle's. The fixtures and expected
+values move into shared files; the checks stay in each runner.
+
+| slug | cases | Swift | Python | web |
+|---|---|---|---|---|
+| `material-selection` — the iPad plate whose saved selection was clobbered resolves all three peaks | 1 | pass | pass | pass |
+| `peak-heal` — the fixture with a twin peak decodes healed, keeps the selected twin, leaves nothing dangling, reports the heal and never saves it | 1 fixture, 5 checks | pass | pass | pass |
+| `pdf-report` — the fixture list and the 1 pt baseline tolerance (`pdf-report.json`) | 18 | pass | pass | pass |
+| `spectrum-export` — pixels and pixels per inch (`spectrum-export.json`) | 3 | pass | pass | pass |
+| `peaks` (fixture regression) — the fixture list is `peak-baseline-expected.json`'s keys | 3 | pass | pass | pass |
+| `gated-fft` — one test over the oracle's tone cases | 4 | pass | pass | pass |
+| `file-playback` — what each REG case checks (`file-playback.json`); the expected values stay the oracle's | 8 cases, 8 kinds of check | pass | pass | pass |
+
+- On the way: the three `peak-heal` files probed the heal flag indirectly, with comments saying it "does not exist
+  yet" — it does; Swift and Python now read it directly, and the web's measurement type declares `wasHealed` (decode
+  set it untyped). The web's store does not read the flag: its library holds decoded objects in IndexedDB, so it runs
+  the heal itself on read — forced by the storage, and documented there. The headers' project history ("authored
+  against the unfixed code", "step 8") is gone. `material-selection`'s Swift test now decodes through
+  `TapToneAnalyzer.decodeMeasurements`, the production path, as the others do.
+- `file-playback`: first recommended to stay as code, since its expected values are already the oracle's. The owner
+  (2026-10-02): "Since the goal is to have identical tests across the editions how does just having the values
+  acheive that?" It does not — shared values fix the answers, not what each edition checks. The three run the same
+  18 cases by name (levelled in F52 / F53), plus Python's main-thread check (a Qt rule) and two web tests of the
+  playing file's name; whether same-named tests assert the same things is unverified. *Recommendation (revised):*
+  the shared file names what each REG case checks (averaged peaks by role, per-tap peaks, ring-out, phases captured
+  with a relative noise floor), one runner per kind of check in each edition; the playback rules (cancel, a type
+  change, the session recording, provenance, calibration) stay as code; the web's file-name tests checked against
+  Swift and Python. *Decision (owner, 2026-10-02):* "Proceed on file-playback proposal."
+  *Done:* `file-playback.json` lists the 8 cases (REG-B1, B2, G1, the REG-G ring-out, G2, P1, P2, OUT-4) and, for
+  each, its checks: `materialPhaseComplete`, `measurementComplete`, `capturedTaps` / `tapEntries` (count), `peaks`
+  (roles and fields against the oracle's `peaks` or `averagedPeaks`), `perTapPeaks`, `ringOut`, `phasesCaptured`,
+  `noiseFloorBetween`. Each edition plays the oracle entry's fixture, calibration and settings through its
+  file-playback path and runs one branch per kind; an unknown kind fails. Swift asserts at `selfTolerances` (zero),
+  Python and the web at `tolerances`. The 8 hand-written REG tests in each edition are gone; the expected-value
+  constants Python kept for them are gone too (the rule tests keep the fixtures and settings they play).
+  The playing file's name: the behaviour is the same in all three (set when a playback starts, kept when the file
+  ends, cleared by a stop or a new sequence). Swift and Python checked "cancel clears it" inside their cancel test,
+  the web in a separate test; the web's check moved into its cancel test, Swift's shape. "Named while it plays,
+  kept at the end, cleared by a new sequence" was web-only; Swift and Python now have it.
+- Suites after batch 3 and `file-playback`: Swift 622 (Swift Testing counts a parameterised test once: the 8 REG
+  tests became 1, plus the file-name test), Python 1095, web 974 (the separate cancel file-name test folded into the
+  cancel test); Swift macOS and iOS Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` 64
+  shared fixtures, no drift.
 
 ## Expect production defects, not just test cleanup
 
