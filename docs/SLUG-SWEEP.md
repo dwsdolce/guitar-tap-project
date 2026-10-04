@@ -6870,8 +6870,8 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 3 | B — `pitch` | `pitch` | done |
 | 4 | B — `plate` and `brace` | `plate`, `brace` | done |
 | 5 | B — `dsp` | `dsp` | done — identical in all three; peak analysis and the live FFT are analyzer methods in all three; one live-spectrum length and bin 0; run-reviewed (Swift `f082a55`, Python `180b595`, web `7fef7a6`) |
-| 6 | B — `peaks` (synthetic cases and averaging) | `peaks` | **next** |
-| 7 | B — `mode-colors` (the web's values differ by design — needs your decision) | `mode-colors` | to do |
+| 6 | B — `peaks` (synthetic cases and averaging) | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and saves are Swift's; run-reviewed (Swift `7855a3d`, Python `8837a28`, web `8f31b91`) |
+| 7 | B — `mode-colors` (the web's values differ by design — needs your decision) | `mode-colors` | **next** |
 | 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | to do |
 | 9 | B — `measurement-codable` | `measurement-codable` | to do |
 | 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do |
@@ -6909,6 +6909,7 @@ pilot and the batch entries below. *done* = the cases are in `tooling/parity/cas
 | B | `pitch` | done — `pitch.json`, 56 cases, identical in all three; Swift floors below C0; Python and the web round the half-step count as Swift; `formatCents` in all three | Swift `5a22fda`, Python `3f03523`, web `d39196d` |
 | B | `plate`, `brace` (together: one model) | done — identical in all three; the web has Swift's model types; Python's wrappers and dialogs gone; when properties are shown follows Swift; Python's G_LC rule as Swift | Swift `da367e5`, Python `308d0e3`, web `288d003` |
 | B | `dsp` | done — identical in all three; the web's peak analysis and the live FFT (web and Python) are analyzer methods, as Swift's; one live-spectrum length (32768) with a correct bin 0; run-reviewed | Swift `f082a55`, Python `180b595`, web `7fef7a6` |
+| B | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and every save on the analyzer, as Swift's; run-reviewed | Swift `7855a3d`, Python `8837a28`, web `8f31b91` |
 
 ### Stage 2 survey — what is still not the same (2026-10-02)
 
@@ -7354,6 +7355,105 @@ edition, Swift first.
   WAV through the plate pipeline gives the same (fL 30.0, fC 117.6, fLC 33.1 Hz). Then run through a lossless
   loopback (the recording played to BlackHole, BlackHole as the input): fL 67.0 Hz each time. A speaker cannot
   test plate capture; real taps or a loopback can.
+
+**Group B — `peaks` (2026-10-04; Swift `7855a3d`, Python `8837a28`, web `8f31b91`).** Synthetic peak finding (F10–F17, the duplicate regression
+D1–D4), spectrum averaging (A1–A5) and the full-set save; the fixture cases moved in batch 3.
+
+1. **Spectrum averaging is a free function in the web** (`averageSpectra()` in `src/dsp/spectrumAverage.ts`);
+   Swift's `averageSpectra(from:)` and Python's `average_spectra` are analyzer methods. With no taps Swift and
+   Python return an empty spectrum; the web throws. *Recommendation:* a method on the web's analyzer, empty for no
+   taps. *Decision (owner, 2026-10-04):* yes.
+2. **Saving in the web differs from Swift in three ways** (the web's analyzer already owns the guitar and material
+   save): (a) no `guitarFullSavePeaks()` — `buildMeasurement` passes `this.peaks` itself; (b) a comparison is saved
+   by `App.tsx` building the record (`buildComparisonMeasurement`) and storing it, where Swift calls
+   `analyzer.saveComparison(measurementName:notes:)`; (c) the record builders are exported free functions in
+   `fromLive.ts` (`buildGuitarMeasurement`, `buildMaterialMeasurement`, `buildComparisonMeasurement`) that about
+   eight test files call with hand-made arguments, where Swift builds inside `saveMeasurement` / `saveComparison`.
+   First recommended deferring (c) to the `measurement-codable` step; the owner: "Since the change in the web is
+   code and not testing there is no reason to wait … Fix it now so it is correct." *Recommendation:* (a)
+   `guitarFullSavePeaks()` on the analyzer, used by the save; (b) `saveComparison(name, notes)` on the analyzer,
+   building from its comparison state, and the app's save and export call the analyzer; (c) the builders private to
+   the analyzer, their tests driving an analyzer. *Decision (owner, 2026-10-04):* "yes do 1, 2 (a, b and c) and 3."
+3. **Guitar auto-selection is a different function in the web.** Swift's `guitarModeSelectedPeakIDs(from:)` —
+   `classifyAll`, the six named modes, the strongest per mode (the first on a tie), defaulting to `allPeaks`, the
+   guitar type from the settings — and Python's `guitar_mode_selected_peak_ids` are the same loop; the web's
+   `guitarModeSelectedPeakIds(peaks, guitarType)` returns `resolvedModePeaks`'s winners, the same result today by a
+   different route, with the peaks and guitar type supplied by the caller. *Recommendation:* the web's becomes
+   Swift's loop, defaulting to the durable set and reading the guitar type from the analyzer's settings; the shared
+   cases pin the result. *Decision (owner, 2026-10-04):* yes.
+4. **The cases differ, and most checks are loose** (F10's width 20 against 15 Hz; F12's flat spectrum at 0 against
+   −20 dB; "within 2 bins", "≥ 3 peaks"; only the web pins one exact Q; A5 Python-only; "a loaded measurement is
+   not upgraded" missing in the web). *Plan:* `peaks.json`, minted from Swift — `findPeaks` (every edition's
+   spectra and settings → the full peak list), `removeDuplicatePeaks`, `averageSpectra` (none, one, mismatched
+   lengths), auto-selection on the overlap spectrum, and the full-set save on the real swift-mac fixture.
+5. **The web passes the guitar type into four methods** — `reclassifyPeaks`, `resetToAutoSelection`,
+   `reclassifyForGuitarTypeChange`, `applyFrozenPeakState` — where Swift's read it from the settings
+   (`TapDisplaySettings.guitarType`). Found doing 3; wider than 3, so not folded in: the web's auto-selection takes
+   Swift's defaults (the durable set, the analyzer's guitar type) but still accepts a type from those callers.
+   *Recommendation:* the web reads the type from the analyzer's settings, as Swift, and callers stop passing it.
+   *Decision (owner, 2026-10-04):* "I agree with your recommendation on 5. Do it before the run review."
+
+
+*Done (1–5):*
+- **Web, the guitar type (5):** `reclassifyPeaks()`, `resetToAutoSelection()`, `reclassifyForGuitarTypeChange()`,
+  `applyFrozenPeakState(old, new)` and `guitarModeSelectedPeakIds(peaks?)` read the analyzer's own guitar type, as
+  Swift's read the settings; `App.tsx` no longer passes one. Safe because the app syncs the type into the analyzer
+  in a layout effect declared before the one that reclassifies; the recalculation already read the analyzer's
+  type. Web suite 993 after it.
+- **Web, averaging (1):** `TapToneAnalyzer.averageSpectra(taps)` — empty for no taps, a single tap unchanged, the
+  first tap on different lengths, as Swift; `src/dsp/spectrumAverage.ts` is gone.
+- **Web, saving (2):** (a) `guitarFullSavePeaks()` returns the durable set, and the guitar save uses it; (b)
+  `buildComparisonMeasurement(name, notes)` and `saveComparison(name, notes)` on the analyzer, building from its
+  comparison state — `App.tsx`'s save and PDF paths call the analyzer, never a builder; (c) the three record
+  builders moved from `fromLive.ts` into the analyzer's module, unexported (`makeGuitarMeasurement`,
+  `makeMaterialMeasurement`, `makeComparisonMeasurement`). The eight test files that called them now set an
+  analyzer's state and save through it (`test/saveFromAnalyzer.ts`); all 113 of their tests pass.
+- **Web, auto-selection (3):** `guitarModeSelectedPeakIds(peaks = the durable set, guitarType = the analyzer's)` is
+  Swift's loop — `classifyAll`, the six named modes, the strongest per mode, the first on a tie.
+- **`peaks.json` (4):** minted by running Swift's production code in a temporary test. 16 `findPeaks` cases (every
+  edition's spectra and settings, each with its full peak list — frequency, magnitude, Q, bandwidth, pitch — plus
+  the overlap at the −100 dB floor), 6 `removeDuplicatePeaks`, 11 `averageSpectra` (none, one, mismatched
+  lengths), auto-selection on the overlap spectrum (modes Top, Back, Back; the first two selected), and the full-set
+  save on the real swift-mac capture (the Air peak displayed no, saved yes; every saved peak its own id; a loaded
+  set saved as it is). The web's `peak-fullset-save.test.ts` is folded in.
+
+| | cases | Swift | Python | web |
+|---|---|---|---|---|
+| `findPeaks` | 16 | pass | pass | pass |
+| `removeDuplicatePeaks` | 6 | pass | pass | pass |
+| `averageSpectra` | 11 | pass | pass | pass |
+| auto-selection | 1 | pass | pass | pass |
+| full-set save | 1 | pass | pass | pass |
+
+- Suites after `peaks`: Swift 514 (each parameterised test counts once), Python 1100, web 993; Swift macOS and iOS
+  Simulator build; parity map 116 groups, `--check` clean; `check-fixtures.py` clean.
+
+**`peaks` run-review (done — owner, 2026-10-04).** Only the web's production code changed — its averaging, auto-selection, guitar
+type and every save path — so the run-review is the web's. Launch: `npm run build && npm run preview`, then clear
+the service worker (F30's run-review steps).
+
+1. Take a 3-tap guitar measurement and save it. → It appears in Measurements; reloading it shows the same peaks
+   and selection.
+2. Change the guitar type (e.g. Generic → Classical) with that result showing. → The peaks are relabelled for the
+   new type and the selection resets to auto.
+3. Press the wand after deselecting a peak. → The auto-selection comes back.
+4. Save a plate measurement. → It reloads with fL, fC, fLC and the dimensions.
+5. Compare two guitar measurements and save the comparison. → It appears in Measurements and reloads as the
+   comparison.
+6. Export a PDF of a guitar measurement and of a comparison. → Both export as before.
+
+| step | web |
+|---|---|
+| 1–6 | ✅ (2026-10-04) |
+
+- **A loopback plate capture (owner, 2026-10-04)** — `Tests/AllPlatforms/plate-umik-1-swift-mac-1785359486.wav`
+  played through Audacity into BlackHole, captured live by the web (−48 dB, no calibration): fL 67.037 Hz −51.52 dB,
+  fC 117.333 Hz −56.12 dB, fLC 35.867 Hz −60.24 dB — identical to replaying that WAV through the plate pipeline at
+  −48 dB, so the web's live path reproduces file playback exactly. Against the original July capture
+  (`…1785359486.guitartap`, UMIK-1 with calibration `7108913`, −56.47 dB) fC and fLC differ by exactly the
+  calibration's correction (+0.69, +1.29 dB; frequencies within 0.006 Hz); fL differs by the correction (+0.98 dB)
+  plus 0.95 dB and 0.09 Hz — the July live capture's window placement and build, not the editions (today's
+  analysis gives 67.037 Hz at either threshold).
 
 ## Expect production defects, not just test cleanup
 

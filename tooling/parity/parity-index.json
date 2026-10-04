@@ -257,7 +257,7 @@
         "src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py"
       ],
       "web": [
-        "src/dsp/spectrumAverage.ts"
+        "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
         "test/peaks"
@@ -985,7 +985,6 @@
       ],
       "web": [
         "test/peak-fixture-regression.test.ts",
-        "test/peak-fullset-save.test.ts",
         "test/peaks.test.ts"
       ],
       "tests": [],
