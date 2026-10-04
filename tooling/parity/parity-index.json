@@ -125,7 +125,7 @@
         "src/guitar_tap/models/resonant_peak.py"
       ],
       "web": [
-        "src/dsp/peaks.ts"
+        "src/measurement/types.ts"
       ],
       "tests": [
         "test/peaks"
@@ -174,7 +174,7 @@
         "src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py"
       ],
       "web": [
-        "src/dsp/guitarFFT.ts"
+        "src/audio/realtimeFFTAnalyzer.ts"
       ],
       "tests": [
         "test/file-playback"
@@ -223,7 +223,7 @@
         "src/guitar_tap/models/tap_tone_analyzer_peak_analysis.py"
       ],
       "web": [
-        "src/dsp/peaks.ts"
+        "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
         "test/dsp",

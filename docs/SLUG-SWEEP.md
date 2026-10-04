@@ -6858,10 +6858,31 @@ Stage 2 is a mechanical move of the case-shaped subset. This bears on what #17 s
 [`ANDROID-PLAN.md`](ANDROID-PLAN.md), which records that how much of #17 gates the Android port is a
 judgement, not a given.
 
+### Stage 2 plan — what is left
+
+The steps to finish Stage 2, in order. Each step's status is kept current here; what was done and decided is in
+the progress table and the entries below. Stage 2 is finished when every row says *done* or *nothing to do*.
+
+| # | step | slugs | status |
+|---|---|---|---|
+| 1 | Group A — same cases in all three, moved as they are | 19 slugs (progress table) | done |
+| 2 | Oracle slugs — case list from the oracle | `gated-fft`, `file-playback` | done |
+| 3 | B — `pitch` | `pitch` | done |
+| 4 | B — `plate` and `brace` | `plate`, `brace` | done |
+| 5 | B — `dsp` | `dsp` | done — identical in all three; peak analysis and the live FFT are analyzer methods in all three; one live-spectrum length and bin 0; run-reviewed (Swift `f082a55`, Python `180b595`, web `7fef7a6`) |
+| 6 | B — `peaks` (synthetic cases and averaging) | `peaks` | **next** |
+| 7 | B — `mode-colors` (the web's values differ by design — needs your decision) | `mode-colors` | to do |
+| 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | to do |
+| 9 | B — `measurement-codable` | `measurement-codable` | to do |
+| 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do |
+| 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s and `decay-tracking`'s scenario tests | to do — needs a decision. The owner (2026-10-02): "I agree that the comment on C is not acceptable. Staying as code means divergence" — a proposal comes after step 10 |
+| 12 | Cannot be shared — per-machine baselines, random draws, the filesystem | `self-regression`, `uuid-case`, `wav-dump-folder` | nothing to do |
+| 13 | Close Stage 2 and #17 | — | to do |
+
 ### Stage 2 progress
 
-The status of every slug Stage 2 moves, kept current. Details are in the survey, the pilot and the batch entries
-below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all three editions, and pass.
+What is done, slug by slug, with its commits. What is left is the plan above. Details are in the survey, the
+pilot and the batch entries below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all three editions, and pass.
 
 | group | slug | status | commits (Swift / Python / web) |
 |---|---|---|---|
@@ -6887,8 +6908,7 @@ below. *done* = the cases are in `tooling/parity/cases/<slug>.json`, run in all 
 | oracle | `file-playback` | done — `file-playback.json` names what each REG case checks; one runner per kind of check in each edition; the playing file's name tested in all three | same |
 | B | `pitch` | done — `pitch.json`, 56 cases, identical in all three; Swift floors below C0; Python and the web round the half-step count as Swift; `formatCents` in all three | Swift `5a22fda`, Python `3f03523`, web `d39196d` |
 | B | `plate`, `brace` (together: one model) | done — identical in all three; the web has Swift's model types; Python's wrappers and dialogs gone; when properties are shown follows Swift; Python's G_LC rule as Swift | Swift `da367e5`, Python `308d0e3`, web `288d003` |
-| B | `dsp`, `peaks` (synthetic), `mode-colors`, `mic-selection`, `measurement-codable`, and F18's `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do — one slug at a time, each starting from its run table | — |
-| C | the scenario slugs (survey table) | stay as code | — |
+| B | `dsp` | done — identical in all three; the web's peak analysis and the live FFT (web and Python) are analyzer methods, as Swift's; one live-spectrum length (32768) with a correct bin 0; run-reviewed | Swift `f082a55`, Python `180b595`, web `7fef7a6` |
 
 ### Stage 2 survey — what is still not the same (2026-10-02)
 
@@ -7226,6 +7246,114 @@ formulas, different shapes. Done together, because the first finding is one mode
    edition gets a cents formatter and the half-tie rows go in the shared file; (b) drop the web's test.
    *Decision (owner, 2026-10-02):* "I like (a)." *Done:* `Pitch.formatCents(_:)` (Swift), `Pitch.format_cents`
    (Python), `Pitch.formatCents` (web, replacing `roundTiesToEven`); `formattedNote` uses it in all three.
+
+**Group B — `dsp` (2026-10-02 – 10-04; Swift `f082a55`, Python `180b595`, web `7fef7a6`).**
+
+1. **The cases differ, and every check is loose.** F1–F5 are the same arrays in all three; F6 uses a 1024-bin
+   spectrum in Swift and 2048 in the others; F9 pins bandwidth 990 and Q 0.505 in Swift and Python, while the web
+   checks only "not NaN" under a comment saying Q "falls back to 0". No F-case pins a value ("shifted left",
+   "sharp Q > broad Q", "0 < Q < 15"). The silence and level tests: Swift 4 (the gated path only), Python 8, web 7.
+   *Proposal:* one `dsp.json`, values minted from Swift — `parabolicInterpolate` (F1–F5, the synthetic peak at 1024
+   and 2048 bins), `calculateQFactor` (sharp, broad, both flat spectra), and the union of the silence and level
+   cases (gated FFT, live FFT, live peak, a chunk's detection and readout levels) as signal → result.
+2. **Swift's header says its live path cannot be called without starting the engine.** Out of date: `init` builds
+   the rectangular window, so `computeFFT` runs on a test analyzer. Swift gains the live-path cases.
+3. **The web's peak analysis is free functions; Swift's and Python's are analyzer methods.** Swift has
+   `parabolicInterpolate`, `calculateQFactor`, `findPeaks` and the rest on `TapToneAnalyzer`
+   (`TapToneAnalyzer+PeakAnalysis.swift`), as does Python; the web has them in `src/dsp/peaks.ts`. One
+   implementation each — a difference in where the code lives. *Recommendation:* leave it and record it.
+   *Decision (owner, 2026-10-02):* "Please remove the divergence in the web code." — the web's peak analysis moves
+   onto its `TapToneAnalyzer`, as Swift's.
+4. **The FFT code has the same divergence** (found doing 3). Swift's live FFT (`computeFFT(on:)`) and live peak
+   (computed in `performFFT`, published as `peakFrequency` / `peakMagnitude`) are `RealtimeFFTAnalyzer` methods;
+   Python's are module functions (`dft_anal`, `perform_fft(analyzer, …)`); the web's are free functions
+   (`dftAnalRect`, `spectrumPeak` in `dsp/guitarFFT.ts`). The gated FFT is a method in all three. *Options:* (a)
+   the same treatment now — methods on the engine in Python and the web; (b) finish `dsp` on the code as it is
+   and record the difference. *Recommendation:* (a). *Decision (owner, 2026-10-02):* "(a) please".
+
+*Done (1–4):*
+- **Web — peak analysis on the analyzer (3):** `TapToneAnalyzer.findPeaks`, `removeDuplicatePeaks`,
+  `parabolicInterpolate`, `calculateQFactor` (Swift's name; was `calculateQ`), a private `makePeak`, the static
+  `peakProximityHz` and `peakDetectionFloor`, and the analysis range as `minFrequency` / `maxFrequency`.
+  `findPeaks` takes its defaults from the analyzer, as Swift's — the range, `peakMinThreshold`, `pitchCalculator`.
+  `src/dsp/peaks.ts` is gone; the analysis-range constants moved to `settings.ts` (Swift `TapDisplaySettings`);
+  `dsp/find-peaks` is tagged on `ResonantPeak`, as the natives. The `peaks` tests call the analyzer (their own
+  rework is step 6).
+- **Web — the live FFT on the engine (4):** `RealtimeFFTAnalyzer.computeFFT` (Swift `computeFFT(on:)`),
+  `performFFT` (calibration and the live peak, `peakFrequency` / `peakMagnitude`), `frequencies`, and
+  `processRawSamples` (Swift's per-chunk entry; was a private `processChunk` whose callers computed the RMS),
+  with `inputLevelDB` / `readoutLevelDB`. `dftAnalRect` and `spectrumPeak` are gone. The guitar capture calls
+  the engine's `computeFFT`, as Swift's calls `fftAnalyzer.computeFFT`.
+- **Python — the live FFT on the analyzer (4):** `RealtimeFFTAnalyzerFFTProcessingMixin` with `compute_fft`
+  (returns the dB spectrum, as Swift) and `perform_fft`, beside the EngineControl and DeviceManagement mixins;
+  `dft_anal`, the module `perform_fft(analyzer, …)` and the unused `hps_peak_freq` are gone. The frame signal no
+  longer carries a linear spectrum (stored, never read; Swift has none). `input_level_db` added (Swift
+  `inputLevelDB`).
+- **Swift (2):** the stale header is gone with the old tests; Swift runs the live-path cases.
+- **`dsp.json` (1):** values minted by running Swift's production code in a temporary test. The tones are
+  generated in double precision and rounded to Float per sample in every edition — Float's `sin` loses phase at
+  the large arguments a 65536-sample tone reaches, which moved Swift's live peak by 0.0005 dB.
+
+| | cases | Swift | Python | web |
+|---|---|---|---|---|
+| `parabolicInterpolate` — F1–F5, the synthetic peak at 1024 and 2048 bins | 8 | pass | pass | pass |
+| `calculateQFactor` — sharp, broad, both flat spectra | 4 | pass | pass | pass |
+| signals — gated FFT, live FFT, live peak, a chunk's levels, each for silence and a tone; the live FFT of DC, Nyquist and both | 11 | pass | pass | pass |
+
+5. **The live spectrum differs in length and bin 0** (found doing 4, measured). Swift's live FFT has 32768 bins;
+   vDSP's real DFT packs DC and Nyquist into bin 0 and Swift does not unpack them, so its bin 0 is DC doubled (+6 dB)
+   mixed with Nyquist, and it has no Nyquist bin (constant 0.5: Swift 0.0 dB, Python and web −6.02 dB; alternating
+   ±0.5: Swift 0.0 dB in bin 0, Python and web −6.02 dB in a 32769th bin). Only 0 Hz and 24 kHz are affected —
+   peak analysis is 30–2000 Hz and the display 1–5000 Hz — but saved guitar spectra are 32768 values from Swift
+   and 32769 from Python and the web, and with a DC offset Swift's idle Peak readout reads 0 Hz 6 dB high.
+   *Options:* (a) Python and the web copy Swift's packed bin 0; (b) Swift unpacks, adding a Nyquist bin (32769);
+   (c) all three 32768 bins with a correct bin 0 — Swift's bin 0 is DC alone, Python and the web drop the Nyquist
+   bin. *Recommendation:* (c). The owner asked for the practical effect, then for verification that files of
+   different lengths cause no problem. *Verified:* all 157 measurement files (hub and editions), 99 guitar
+   measurements (69 of 32768 values, 30 of 32769): in every edition each decodes, loads and re-analyzes with peaks,
+   and a comparison of a 32768 and a 32769 measurement overlays both; every length check in the code compares
+   arrays of one capture or a snapshot's own frequencies — nothing combines two measurements by bin index. Not
+   run: the PDF / image export of a loaded 32769 measurement (read only). *Decision (owner, 2026-10-02):* "It
+   looks like (c) is safe and is my preference. Go".
+   *Done:* Swift's bin 0 is DC alone — `abs(realp[0]) · 0.5` after vDSP's scaling, the packed Nyquist dropped;
+   Python's `compute_fft` and the web's `computeFFT` stop at the last bin below Nyquist (32768 bins), and their
+   live frequency axes and live calibration follow (Python `freq`, the canvas's initial calibration, the capture's
+   fallback axis; the web engine's `frequencies` and calibration cache). `dsp.json` gains three live-FFT cases —
+   a constant 0.5 (DC), an alternating ±0.5 (Nyquist), both — each pinning the bin count, bin 0 and the last bin,
+   and the two existing live-FFT cases pin the bin count. All 23 cases pass in all three.
+- Suites after `dsp`: Swift 528, Python 1084, web 979; Swift macOS and iOS Simulator build; parity map 116
+  groups, `--check` clean; `check-fixtures.py` 68 shared fixtures, no drift.
+
+**`dsp` run-review (done — owner, 2026-10-04: "all 3 editions have been verified").** The live audio path changed in all three editions
+(the web's peak analysis and live FFT moved onto its analyzer and engine; Python's live FFT onto its analyzer;
+one live-spectrum length and bin 0 everywhere), so it is run-reviewed before the commit. Launch: Xcode scheme
+`guitar_tap` · `.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`, then clear the service
+worker after the build (the procedure in F30's run-review steps — a web result without it is not a result). Same list per
+edition, Swift first.
+
+1. Start the app with the UMIK-1 in a quiet room. → The live spectrum draws as before; the Peak readout shows a
+   level and a frequency.
+2. Switch the input to the BlackHole virtual device, which delivers digital silence. → The Peak readout shows
+   −∞ dB. (Muting or unplugging the UMIK-1 cannot do this: a muted mic still carries noise, and unplugging
+   switches devices.)
+3. Take a guitar measurement of 1 tap, then one of 3 taps. → Peaks, modes and Q look as before.
+4. Take a plate measurement. → fL, fC, fLC and the material results look as before.
+5. Load a saved guitar measurement from each edition (Swift, Python, web), then compare two of them. → Each loads;
+   both overlays draw.
+6. Re-analyze a loaded guitar measurement. → The peaks come back.
+
+| step | Swift | Python | web |
+|---|---|---|---|
+| 1–6 | ✅ (2026-10-04) | ✅ (2026-10-04) | ✅ (2026-10-04) |
+
+- **Step 4, Swift (owner, 2026-10-03).** First tried by playing the first tap of
+  `Tests/AllPlatforms/plate-umik-1-swift-mac-1785359486.wav` through the speaker into the UMIK-1 (threshold −53):
+  fL 29.3 Hz, fC 117.4 Hz, fLC 36.3 Hz — looked wrong. Not the code: the session WAV (what the mic heard) shows
+  the speaker path lost the low modes — 67 Hz arrived at −79…−82 dB, 16 dB *below* 117 Hz, where the recording has
+  it 6 dB *above* (−42.3 against −48.2 dB) — so the pickers took noise at ~30 and ~36 Hz. Replaying that session
+  WAV through the plate pipeline gives the same (fL 30.0, fC 117.6, fLC 33.1 Hz). Then run through a lossless
+  loopback (the recording played to BlackHole, BlackHole as the input): fL 67.0 Hz each time. A speaker cannot
+  test plate capture; real taps or a loopback can.
 
 ## Expect production defects, not just test cleanup
 
