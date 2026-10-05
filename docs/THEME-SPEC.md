@@ -35,7 +35,8 @@ keeps coming up everytime we hit a color difference." The `mode-colors` step of 
   resolved scheme.
 - **What the OS reports, per edition** (`docs/theme/PLATFORM-SCHEMES.md`):
   - Swift — the SwiftUI `colorScheme` (macOS `NSAppearance` aqua / darkAqua; iOS `userInterfaceStyle`), always light
-    or dark. Following: `.preferredColorScheme(nil)`; forcing: `.preferredColorScheme(.light / .dark)`.
+    or dark. Following: `NSApp.appearance = nil` (iOS: each window's `overrideUserInterfaceStyle = .unspecified`);
+    forcing: `NSApp.appearance` aqua / darkAqua (iOS: `.light` / `.dark`) — what Qt's `setColorScheme` does on macOS.
   - Python — `QStyleHints.colorScheme()` (Qt ≥ 6.5) and `colorSchemeChanged`; forcing: `setColorScheme` (Qt ≥ 6.8;
     the edition uses PySide6 6.11). On Windows Qt reads the *app* mode; on GNOME and Cinnamon it is often **Unknown**
     (their light modes report "no preference").
@@ -65,7 +66,7 @@ colors) and which in the app" — and then the model: "There are settings the al
 widgets that are tied to the system. The only colors we have to define are the app specific colors for light/dark -
 everything we get from the OS resolves to Light/Dark (from either us taking unknown to be light or by the OS giving
 us Light/Dark)." *Agreed model:* **the app tells the OS which scheme to use** (SwiftUI
-`.preferredColorScheme`, Qt's colour scheme, CSS `color-scheme`) **and lets the OS draw its own controls and chrome
+`NSApp.appearance` / the window's interface style, Qt's colour scheme, CSS `color-scheme`) **and lets the OS draw its own controls and chrome
 in it; the app pins every colour it draws itself** (§5). Every colour that carries meaning is then identical across
 the three editions; native controls look native on each platform. The rules below apply to the
 app-drawn side.
@@ -285,7 +286,7 @@ The full per-site inventories (file:line for every colour) are in `docs/theme/IN
 
 ## 8. Per-edition implementation
 
-- **Swift:** the `appearance` setting and `.preferredColorScheme` at the root; `Palette` gains every role (§5),
+- **Swift:** the `appearance` setting and `Palette.apply` (`NSApp.appearance`; on iOS each window's interface style); `Palette` gains every role (§5),
   each an adaptive colour with the pinned light/dark pair; every system colour, `Color(…)` literal and inline role
   set is replaced by a role; `AccentColor` gets the accent role's values; colour leaves `GuitarMode` / `WoodQuality`;
   PNG renders get `.environment(\.colorScheme, .light)`. Size: medium (~300 sites, mostly mechanical).
@@ -301,13 +302,15 @@ The full per-site inventories (file:line for every colour) are in `docs/theme/IN
 ## 9. Implementation plan (lock-step)
 
 Each step is done in Swift, then Python, then the web, and verified in all three before the next step starts; each
-edition's step is one commit (code → hash → this doc). Steps 5a–5f are the area-by-area re-wiring.
+edition's step is one commit (code → hash → this doc). Steps 5a–5f are the area-by-area re-wiring. The steps are committed to `main`;
+no release is cut from any edition until step 7 is signed off (owner, 2026-10-04), because from step 3 to the end of
+step 5 the native widgets follow the scheme while the app's own colours do not yet.
 
 | # | step | what it delivers | done when | status |
 |---|---|---|---|---|
 | 1 | Lock the table | the decisions (§10) | the owner approves the spec | **done** 2026-10-04 |
 | 2 | Shared data and palette modules | `tooling/parity/cases/theme.json`: every role of §5 with its light and dark value (`#RRGGBB`, or `#RRGGBBAA` where the role has an opacity; the peak-row tint and message backgrounds as opacities; the meter gradient as a list). Each palette module holds every role; a palette test in each edition checks it against `theme.json`. `quality-colors.json` and the colour part of `analysis-quality.json` fold into it. | the three palette tests pass on `theme.json` | **done** 2026-10-04 (Swift a834b3c, Python 16d4430, web 841c07c) |
-| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `.preferredColorScheme`, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets in all three; the Linux check on Cinnamon (and GNOME / KDE VMs) | — |
+| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `NSApp.appearance` / the windows' interface style, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets on macOS (Linux and Windows are checked in step 7, from the committed code) | **done** 2026-10-04 (Swift a102504, Python 2728f22, web ab7812c) |
 | 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | — |
 | 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average) | the chart follows the scheme live in all three | — |
 | 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | — |
@@ -316,7 +319,7 @@ edition's step is one commit (code → hash → this doc). Steps 5a–5f are the
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | — |
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13) | exports identical whatever the setting | — |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | — |
-| 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Cinnamon, GNOME and KDE | the owner signs off | — |
+| 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
 | 8 | `mode-colors` (#17 Stage 2) | its case file becomes the mode slice of `theme.json`; the #17 entry closes | #17's plan row 7 done | — |
 
 **How each edition follows a scheme change.** One mechanism in all three, closest to Swift's: a use site names a
@@ -370,4 +373,4 @@ redraws from one change point.
    `setColorScheme`; on a Linux desktop where PySide6 6.11 ignores the request, Python switches to the Fusion style
    with a light or dark `QPalette` built from the role table, so its widgets follow the setting too (Qt-styled rather
    than native there). Tested on Linux Mint Cinnamon (the owner's VM), and on GNOME and KDE in VMs built for it
-   (§9 step 3).
+   (§9 step 7, from the committed code).

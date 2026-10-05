@@ -282,6 +282,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/appearance",
+      "swift": [
+        "GuitarTap/Models/Appearance.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/appearance.py"
+      ],
+      "web": [
+        "src/presentation/appearance.ts"
+      ],
+      "tests": [
+        "test/theme"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/export-filename",
       "swift": [
         "GuitarTap/Models/ExportFilename.swift"
