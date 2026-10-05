@@ -562,6 +562,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/axis-ticks",
+      "swift": [
+        "GuitarTapTests/AxisTicksTests.swift"
+      ],
+      "python": [
+        "tests/test_axis_ticks.py"
+      ],
+      "web": [
+        "test/axis-ticks.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/brace",
       "swift": [
         "GuitarTapTests/BracePropertiesTests.swift"
@@ -585,6 +599,20 @@
       ],
       "web": [
         "test/button-enablement.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/chart-style",
+      "swift": [
+        "GuitarTapTests/ChartStyleTests.swift"
+      ],
+      "python": [
+        "tests/test_chart_style.py"
+      ],
+      "web": [
+        "test/chart-style.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1347,6 +1375,38 @@
       ],
       "tests": [],
       "equivalence": "review only"
+    },
+    {
+      "slug": "view/axis-ticks",
+      "swift": [
+        "GuitarTap/Views/Utilities/AxixTickGenerator.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/axis_tick_generator.py"
+      ],
+      "web": [
+        "src/presentation/axisTicks.ts"
+      ],
+      "tests": [
+        "test/axis-ticks"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "view/chart-style",
+      "swift": [
+        "GuitarTap/Views/Utilities/ChartStyle.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/chart_style.py"
+      ],
+      "web": [
+        "src/presentation/chartStyle.ts"
+      ],
+      "tests": [
+        "test/chart-style"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "view/comparison-results",

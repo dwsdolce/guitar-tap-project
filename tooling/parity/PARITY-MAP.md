@@ -54,8 +54,10 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/analysis-quality` | `GuitarTapTests/AnalysisQualityTests.swift` | `tests/test_analysis_quality.py` | `test/analysis-quality.test.ts` | test suite |
 | `test/annotation-state` | `GuitarTapTests/AnnotationStateTests.swift` | `tests/test_annotation_state.py` | `test/annotation-state.test.ts`<br>`test/peak-state-store.test.ts` | test suite |
 | `test/audio-clock-timers` | `GuitarTapTests/AudioClockTimerTests.swift` | `tests/test_audio_clock_timers.py` | `test/audio-clock-timers.test.ts` | test suite |
+| `test/axis-ticks` | `GuitarTapTests/AxisTicksTests.swift` | `tests/test_axis_ticks.py` | `test/axis-ticks.test.ts` | test suite |
 | `test/brace` | `GuitarTapTests/BracePropertiesTests.swift` | `tests/test_brace.py` | `test/brace.test.ts` | test suite |
 | `test/button-enablement` | `GuitarTapTests/ButtonEnablementTests.swift` | `tests/test_button_enablement.py` | `test/button-enablement.test.ts` | test suite |
+| `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |
 | `test/classify` | `GuitarTapTests/ClassifyCasesTests.swift` | `tests/test_classify_cases.py` | `test/classify-cases.test.ts`<br>`test/classify.test.ts` | test suite |
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
 | `test/decay-tracking` | `GuitarTapTests/DecayTrackingTests.swift` | `tests/test_decay_tracking.py` | `test/decay-tracking.test.ts` | test suite |
@@ -111,6 +113,8 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | review only |
 | `util/timing-activity` | `GuitarTap/Utilities/TimingActivity.swift` | `src/guitar_tap/utilities/timing_activity.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |
+| `view/axis-ticks` | `GuitarTap/Views/Utilities/AxixTickGenerator.swift` | `src/guitar_tap/views/utilities/axis_tick_generator.py` | `src/presentation/axisTicks.ts` | tests |
+| `view/chart-style` | `GuitarTap/Views/Utilities/ChartStyle.swift` | `src/guitar_tap/views/utilities/chart_style.py` | `src/presentation/chartStyle.ts` | tests |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
 | `view/dot-layer` | `GuitarTap/Views/SpectrumView.swift`<br>`GuitarTapTests/DotLayerTests.swift` | `src/guitar_tap/views/fft_canvas.py`<br>`tests/test_dot_layer.py` | `src/App.tsx`<br>`src/dsp/guitarModes.ts`<br>`test/dot-layer.test.ts` | review only |
 | `view/edit-sheet` | `GuitarTap/Views/Measurements/EditMeasurementView.swift` | `src/guitar_tap/views/measurements/edit_measurement_view.py` | `src/components/EditMeasurementSheet.tsx` | review only |

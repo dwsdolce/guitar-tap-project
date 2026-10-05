@@ -254,6 +254,31 @@ A saved comparison stores each entry's colour as RGBA (`colorComponents`). On lo
 resolved scheme by its series slot (by order, §5.8); the stored colour is not used for drawing. `colorComponents` is
 still written (the light value) so files stay compatible.
 
+### 5.14 Chart style (not by scheme)
+How the chart draws its lines and points does not change with the scheme, but it must be the same in every edition,
+so it is pinned the same way as the colours: one table per edition (Swift `ChartStyle`, Python
+`views/utilities/chart_style.py`, web `src/presentation/chartStyle.ts`), checked against
+`tooling/parity/cases/chart-style.json`. Widths and dashes in points, opacities applied to the line's role, point
+sizes as areas (pt²); every curve and point is antialiased.
+
+| | screen | exported image |
+|---|---|---|
+| spectrum line | 1 | 2 |
+| overlay (comparison, multi-tap, plate/brace phase) | 1.5 | 2 |
+| grid line | 1, solid, one per axis tick, no minor lines | 1 |
+| mode boundary | 1.5, dash [5, 5], at 30 % | 2, dash [8, 8], at 30 % |
+| Peak Min | 1.5, dash [8, 3], at 70 % | — |
+| crosshair | 1, dash [4, 3] | — |
+| peak-label leader | 1.5, dash [4, 3], at 40 % | 2, dash [5, 4], at 50 % |
+| peak-label border | 1.5 | — |
+| peak dot / highlighted star (area) | 40 / 120 | 200 |
+| magnitude tick spacing | chosen from the visible range | every 20 dB |
+
+The axis ticks — the grid lines — are Swift's `AxisTickGenerator` in all three, checked against
+`tooling/parity/cases/axis-ticks.json`: frequency ticks by the nice-number rule (8 at most), labelled "100 Hz" /
+"1.2 kHz" on screen and "100" / "1.2k" in the exported image; magnitude ticks every 1, 2, 5, 10, 20 or 50 dB, the
+smallest giving at most 8.
+
 ## 6. Divergences the inventory found (removed by this work)
 
 - **Mode colours** — three tables per native edition: Swift `GuitarMode.hex`, a PDF-only `modeColor()` (different
@@ -312,12 +337,12 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 2 | Shared data and palette modules | `tooling/parity/cases/theme.json`: every role of §5 with its light and dark value (`#RRGGBB`, or `#RRGGBBAA` where the role has an opacity; the peak-row tint and message backgrounds as opacities; the meter gradient as a list). Each palette module holds every role; a palette test in each edition checks it against `theme.json`. `quality-colors.json` and the colour part of `analysis-quality.json` fold into it. | the three palette tests pass on `theme.json` | **done** 2026-10-04 (Swift a834b3c, Python 16d4430, web 841c07c) |
 | 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `NSApp.appearance` / the windows' interface style, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets on macOS (Linux and Windows are checked in step 7, from the committed code) | **done** 2026-10-04 (Swift a102504, Python 2728f22, web ab7812c) |
 | 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | **done** 2026-10-04 (Swift 382cfeb, Python 450e1ce, web 329a10e) |
-| 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average) | the chart follows the scheme live in all three | — |
+| 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average); the chart style and Swift's axis ticks (§5.14) | the chart follows the scheme live in all three | **done** 2026-10-04 (Swift d2649ed, Python e1aff31, web fc25da2); run-review passed |
 | 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | — |
 | 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | — |
 | 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | — |
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | — |
-| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13) | exports identical whatever the setting | — |
+| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | — |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | — |
 | 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
 | 8 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | — |
