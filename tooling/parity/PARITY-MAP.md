@@ -164,6 +164,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `GuitarTapTests/SpectrumReplayProbeTests.swift` | swift |
 | `GuitarTapTests/SpectrumViewGestureTests.swift` | swift |
 | `src/components/ReleaseNotes.tsx` | web |
+| `src/hooks/useScheme.ts` | web |
 | `src/measurement/dumpWav.ts` | web |
 | `src/presentation/chartLimits.ts` | web |
 | `src/presentation/pngPixelsPerInch.ts` | web |
