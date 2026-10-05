@@ -322,7 +322,8 @@
         "src/guitar_tap/models/guitar_mode.py"
       ],
       "web": [
-        "src/dsp/classify.ts"
+        "src/dsp/classify.ts",
+        "src/presentation/modeColors.ts"
       ],
       "tests": [
         "test/classify"
@@ -390,39 +391,6 @@
       ],
       "tests": [
         "test/measurement-name"
-      ],
-      "equivalence": "tests"
-    },
-    {
-      "slug": "model/mode-colors",
-      "swift": [
-        "GuitarTap/Models/GuitarMode.swift"
-      ],
-      "python": [
-        "src/guitar_tap/models/guitar_mode.py"
-      ],
-      "web": [
-        "src/presentation/modeColors.ts"
-      ],
-      "tests": [
-        "test/classify",
-        "test/mode-colors"
-      ],
-      "equivalence": "tests"
-    },
-    {
-      "slug": "model/quality-colors",
-      "swift": [
-        "GuitarTap/Models/MaterialProperties.swift"
-      ],
-      "python": [
-        "src/guitar_tap/models/material_properties.py"
-      ],
-      "web": [
-        "src/presentation/qualityColors.ts"
-      ],
-      "tests": [
-        "test/quality-colors"
       ],
       "equivalence": "tests"
     },
@@ -1581,6 +1549,8 @@
       ],
       "tests": [
         "test/analysis-quality",
+        "test/mode-colors",
+        "test/quality-colors",
         "test/theme"
       ],
       "equivalence": "tests"
@@ -1770,10 +1740,6 @@
     {
       "repo": "python",
       "path": "tests/test_wi10_qtimer_slots.py"
-    },
-    {
-      "repo": "swift",
-      "path": "GuitarTap/Models/ColorHex.swift"
     },
     {
       "repo": "swift",
