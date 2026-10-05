@@ -97,7 +97,7 @@ app-drawn side.
 
 ## 5. The role table
 
-Most values are Apple's long-standing light and dark system values — the family F57 pinned for the analysis-quality
+`tooling/parity/cases/theme.json` holds exactly these roles under these names. Most values are Apple's long-standing light and dark system values — the family F57 pinned for the analysis-quality
 colours. The rest were settled by eye under decision 3 (§10): text on a tinted peak row reads at about 3.5 : 1 or
 better, and no two modes share a colour family.
 
@@ -163,16 +163,16 @@ One set for curves, markers, badges, step dots, the instruction panel and the PD
 ### 5.5 Peak lists
 | role | light | dark |
 |---|---|---|
-| peak.magnitude ≥ −40 dB | `#34C759` | `#30D158` |
-| peak.magnitude ≥ −60 dB | `#007AFF` | `#0A84FF` |
-| peak.magnitude ≥ −80 dB | `#FF9500` | `#FF9F0A` |
-| peak.magnitude below −80 dB | `#FF3B30` | `#FF453A` |
+| peak.magnitude.strong (≥ −40 dB) | `#34C759` | `#30D158` |
+| peak.magnitude.moderate (≥ −60 dB) | `#007AFF` | `#0A84FF` |
+| peak.magnitude.weak (≥ −80 dB) | `#FF9500` | `#FF9F0A` |
+| peak.magnitude.faint (below −80 dB) | `#FF3B30` | `#FF453A` |
 | peak.pitch | `#AF52DE` | `#BF5AF2` |
 | peak.selectedStar | `#007AFF` | `#0A84FF` |
 | peak.unselectedStar | `#6B7785` | `#8A96A5` |
 | peak.inRange | `#34C759` | `#30D158` |
 | peak.outOfRange | `#FF9500` | `#FF9F0A` |
-| peak.rowTint | the row's mode colour at 10 % | at 20 % |
+| peak.rowTint (an opacity) | the row's mode colour at 10 % | at 20 % |
 
 ### 5.6 Analysis quality (ring-out, tap ratio — decided in F57)
 | role | light | dark |
@@ -196,16 +196,16 @@ One set for curves, markers, badges, step dots, the instruction panel and the PD
 ### 5.8 Multi-tap and comparison
 | role | light | dark |
 |---|---|---|
-| series.1 blue | `#007AFF` | `#0A84FF` |
-| series.2 orange | `#E07800` | `#FF9F0A` |
-| series.3 green | `#269342` | `#30D158` |
-| series.4 purple | `#AF52DE` | `#BF5AF2` |
-| series.5 cyan | `#0090B0` | `#64D2FF` |
-| series.6 red | `#E0302A` | `#FF453A` |
-| series.7 pink | `#D6177A` | `#FF6FB5` |
-| series.8 brown | `#8B6A42` | `#C29A6B` |
-| series.9 olive | `#7A8A00` | `#B8D430` |
-| series.10 slate | `#5E6B7A` | `#A8B4C2` |
+| series.1 (blue) | `#007AFF` | `#0A84FF` |
+| series.2 (orange) | `#E07800` | `#FF9F0A` |
+| series.3 (green) | `#269342` | `#30D158` |
+| series.4 (purple) | `#AF52DE` | `#BF5AF2` |
+| series.5 (cyan) | `#0090B0` | `#64D2FF` |
+| series.6 (red) | `#E0302A` | `#FF453A` |
+| series.7 (pink) | `#D6177A` | `#FF6FB5` |
+| series.8 (brown) | `#8B6A42` | `#C29A6B` |
+| series.9 (olive) | `#7A8A00` | `#B8D430` |
+| series.10 (slate) | `#5E6B7A` | `#A8B4C2` |
 | series.average | `#EBC300` | `#FFD900` |
 
 Ten series, one per tap at the most taps allowed (10), so no two taps or compared measurements share a colour while
@@ -215,23 +215,24 @@ editions used. The average is drawn thicker than the series.
 ### 5.9 Status and messages
 | role | light | dark |
 |---|---|---|
-| status.running / tapDetected / complete | `#34C759` | `#30D158` |
-| status.stopped / idle | `#8E8E93` | `#8E8E93` |
-| status.paused / frozen / warning / playingFile | `#FF9500` | `#FF9F0A` |
-| status.info / saved / progress / tapCount / peakReadout | `#007AFF` | `#0A84FF` |
+| status.running, status.tapDetected, status.complete | `#34C759` | `#30D158` |
+| status.stopped, status.idle | `#8E8E93` | `#8E8E93` |
+| status.paused, status.frozen, status.warning, status.playingFile | `#FF9500` | `#FF9F0A` |
+| status.info, status.saved, status.progress, status.tapCount, status.peakReadout | `#007AFF` | `#0A84FF` |
 | status.error | `#FF3B30` | `#FF453A` |
-| message background (warning, saved, loaded settings) | its status colour at 12 % | at 12 % |
+| status.messageBackground (an opacity: warning, saved, loaded settings) | its status colour at 12 % | at 12 % |
 
 ### 5.10 Threshold slider and level meter
 | role | light | dark |
 |---|---|---|
 | meter.groove | `#EBEBEB` | `#0A0D12` |
 | meter.grooveBorder | `#8E8E93` at 60 % | `#8E8E93` at 45 % |
-| meter.level (gradient, top to bottom) | `#66CCFF → #0066CC → #001E50` | `#66CCFF → #0066CC → #001E50` |
+| meter.levelTop, meter.levelMiddle, meter.levelBottom (the gradient) | `#66CCFF`, `#0066CC`, `#001E50` | the same |
 | meter.clip | `#FF3B30` at 85 % | `#FF453A` at 85 % |
 | meter.ticks | `#3D8C3D` at 70 % | `#3D8C3D` at 70 % |
 | meter.peakHold | `#FFD900` | `#FFD900` |
-| meter.thresholdHandle | `#FF3B30`, border `#800000` | `#FF453A`, border `#800000` |
+| meter.thresholdHandle | `#FF3B30` | `#FF453A` |
+| meter.thresholdHandleBorder | `#800000` | `#800000` |
 
 ### 5.11 Metrics (processing time, CPU)
 | role | light | dark |
@@ -297,21 +298,47 @@ The full per-site inventories (file:line for every colour) are in `docs/theme/IN
   `LIGHT_CHART` / `DARK_CHART` by the resolved scheme; `MODE_COLOR` and the other dark-only tables become role
   lookups; exports take the light column. Size: medium.
 
-## 9. Work breakdown (lock-step)
+## 9. Implementation plan (lock-step)
 
-1. **Lock the table** — done: the decisions (§10).
-2. **Shared data** — `tooling/parity/cases/theme.json` (every role, light and dark) and each edition's palette
-   test against it.
-3. **Palette modules** — every role in each edition's palette; colour off the model enums.
-4. **The setting** — persistence, the Settings row, resolution, following the OS live; in Python, the Linux test
-   of `setColorScheme` on Cinnamon, GNOME and KDE and the Fusion fallback where it is ignored (decision 9).
-5. **Re-wire every colour site** to a role, area by area (chart, peak lists, results, material, toolbar, status
-   bar, settings, measurements, exports), removing the duplicates of §6; the source check (§4 rule 5) passes at
-   the end.
-6. **Exports** forced light in all three.
-7. **Run-review** — both schemes × three editions × {live spectrum, peak list, mode annotations, material results,
-   multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}.
-8. **`mode-colors` (#17 Stage 2) resumes** — its case file is the mode slice of `theme.json`.
+Each step is done in Swift, then Python, then the web, and verified in all three before the next step starts; each
+edition's step is one commit (code → hash → this doc). Steps 5a–5f are the area-by-area re-wiring.
+
+| # | step | what it delivers | done when | status |
+|---|---|---|---|---|
+| 1 | Lock the table | the decisions (§10) | the owner approves the spec | **done** 2026-10-04 |
+| 2 | Shared data and palette modules | `tooling/parity/cases/theme.json`: every role of §5 with its light and dark value (`#RRGGBB`, or `#RRGGBBAA` where the role has an opacity; the peak-row tint and message backgrounds as opacities; the meter gradient as a list). Each palette module holds every role; a palette test in each edition checks it against `theme.json`. `quality-colors.json` and the colour part of `analysis-quality.json` fold into it. | the three palette tests pass on `theme.json` | **done** 2026-10-04 (Swift a834b3c, Python 16d4430, web 841c07c) |
+| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `.preferredColorScheme`, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets in all three; the Linux check on Cinnamon (and GNOME / KDE VMs) | — |
+| 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | — |
+| 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average) | the chart follows the scheme live in all three | — |
+| 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | — |
+| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | — |
+| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics | as above | — |
+| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | — |
+| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13) | exports identical whatever the setting | — |
+| 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | — |
+| 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Cinnamon, GNOME and KDE | the owner signs off | — |
+| 8 | `mode-colors` (#17 Stage 2) | its case file becomes the mode slice of `theme.json`; the #17 entry closes | #17's plan row 7 done | — |
+
+**How each edition follows a scheme change.** One mechanism in all three, closest to Swift's: a use site names a
+role, never a value; the role is resolved to a value for the current scheme in one place (the palette module); and a
+scheme change reaches every colour without code at the use site, except where the edition draws for itself, which
+redraws from one change point.
+
+- **Swift:** palette colours are dynamic colours (`NSColor` / `UIColor` providers, as `Palette` already does); a view
+  writes `.foregroundStyle(Palette.textSecondary)`, and SwiftUI redraws by itself when the colour scheme changes.
+- **Python:** `palette.py` owns the resolved scheme and one `QObject` with a `scheme_changed(scheme)` signal. It
+  emits — explicitly — when the OS scheme changes (`QStyleHints.colorSchemeChanged`) while the setting is System, or
+  when the setting changes, and only when the resolved scheme actually changes; Qt's own events are not used as the
+  trigger (they report only the OS, often Unknown on GNOME and Cinnamon, and vary between native styles and Fusion).
+  Connected to it: one slot that regenerates the application stylesheet from the palette — widgets carry their role
+  as a property (e.g. `QLabel[role="text.secondary"]`) and their inline `setStyleSheet` keeps layout only — and one
+  slot per custom-drawn item (the chart `FftCanvas`: background, axes, pens, brushes; the threshold slider's painted
+  parts; annotation cards), each re-taking its roles from the palette and redrawing. The export chart does not
+  connect (always light).
+- **Web:** `palette.ts` owns the resolved scheme and one `subscribe(listener)`, fired on the `prefers-color-scheme`
+  change event while the setting is System, or when the setting changes, and only on an actual change. It sets
+  `data-theme` on the root, so CSS follows through the custom properties by itself; the canvas chart and anything
+  else drawn in script subscribe, re-read their roles and redraw.
 
 ## 10. Decisions
 
@@ -343,4 +370,4 @@ The full per-site inventories (file:line for every colour) are in `docs/theme/IN
    `setColorScheme`; on a Linux desktop where PySide6 6.11 ignores the request, Python switches to the Fusion style
    with a light or dark `QPalette` built from the role table, so its widgets follow the setting too (Qt-styled rather
    than native there). Tested on Linux Mint Cinnamon (the owner's VM), and on GNOME and KDE in VMs built for it
-   (§9 step 4).
+   (§9 step 3).

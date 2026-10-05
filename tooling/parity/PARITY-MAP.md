@@ -98,6 +98,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/tap-count-change` | `GuitarTapTests/TapCountChangeTests.swift` | `tests/test_tap_count_change.py` | `test/tap-count-change.test.ts` | test suite |
 | `test/tap-decisions` | `GuitarTapTests/TapDetectionTests.swift` | `tests/test_tap_detection.py` | `test/tap-decisions.test.ts` | test suite |
 | `test/tap-progress` | `GuitarTapTests/TapProgressTests.swift` | `tests/test_tap_progress.py` | `test/tap-progress.test.ts` | test suite |
+| `test/theme` | `GuitarTapTests/ThemeTests.swift` | `tests/test_theme.py` | `test/theme.test.ts` | test suite |
 | `test/uuid-case` | — | `tests/test_uuid_case.py` | `test/uuid-case.test.ts` | test suite |
 | `test/wav-dump-folder` | `GuitarTapTests/WavDumpFolderTests.swift` | `tests/test_wav_dump_folder.py` | — | test suite |
 | `tooling/audio-clock-feed` | `GuitarTapTests/AudioClockFeed.swift` | `tests/audio_clock_feed.py` | `test/audioClockFeed.ts` | review only |

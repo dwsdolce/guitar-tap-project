@@ -1185,6 +1185,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/theme",
+      "swift": [
+        "GuitarTapTests/ThemeTests.swift"
+      ],
+      "python": [
+        "tests/test_theme.py"
+      ],
+      "web": [
+        "test/theme.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/uuid-case",
       "swift": [],
       "python": [
@@ -1550,7 +1564,8 @@
         "src/presentation/palette.ts"
       ],
       "tests": [
-        "test/analysis-quality"
+        "test/analysis-quality",
+        "test/theme"
       ],
       "equivalence": "tests"
     },
