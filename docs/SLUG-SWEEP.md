@@ -6265,7 +6265,7 @@ the module top, so it also covers `vsep` / `hsep`.
 
 - *Moved to the theme spec (owner, 2026-10-02):* three colour questions found while doing item 2 — the web's
   `--system-blue` follows the OS appearance while its background stays dark; Swift's other semantic `.blue` uses;
-  the wood-quality colours, semantic in Swift — are in #2's `THEME-SPEC.md` §3.7 and its open decisions.
+  the wood-quality colours, semantic in Swift — are in #2's `THEME-SPEC.md` (§5.1 accent, §5.7 wood quality, §6).
 
 **Run-review steps.** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
 `npm run build && npm run preview`, clearing the service worker after the build. Same list per edition, Swift first.
@@ -6871,7 +6871,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 4 | B — `plate` and `brace` | `plate`, `brace` | done |
 | 5 | B — `dsp` | `dsp` | done — identical in all three; peak analysis and the live FFT are analyzer methods in all three; one live-spectrum length and bin 0; run-reviewed (Swift `f082a55`, Python `180b595`, web `7fef7a6`) |
 | 6 | B — `peaks` (synthetic cases and averaging) | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and saves are Swift's; run-reviewed (Swift `7855a3d`, Python `8837a28`, web `8f31b91`) |
-| 7 | B — `mode-colors` (the web's values differ by design — needs your decision) | `mode-colors` | **next** |
+| 7 | B — `mode-colors` | `mode-colors` | **waits on Issue #2 (theme)** — the owner chose to do the theme work first; spec approved 2026-10-04 (`docs/THEME-SPEC.md`), implementation next |
 | 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | to do |
 | 9 | B — `measurement-codable` | `measurement-codable` | to do |
 | 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do |
@@ -7454,6 +7454,19 @@ the service worker (F30's run-review steps).
   calibration's correction (+0.69, +1.29 dB; frequencies within 0.006 Hz); fL differs by the correction (+0.98 dB)
   plus 0.95 dB and 0.09 Hz — the July live capture's window placement and build, not the editions (today's
   analysis gives 67.037 Hz at either threshold).
+
+**Group B — `mode-colors` (2026-10-04, waits on Issue #2).** The mode colours differ because the chart
+backgrounds differ: Swift follows the OS (light or dark), Python is always white, the web always dark; Swift and
+Python share one table, the web brightened five of seven for its dark chart. Swift's colour sits on the
+`GuitarMode` model (its own source calls that a layer violation to shed with the theme work); the web's in its
+presentation layer. Options were: (a) the web takes Swift's table now; (b) do Issue #2 (Theme — Light / Dark /
+System) so all three have the same light and dark tables and the same background rule; (c) pin Swift's table for
+the natives only. The owner (2026-10-04): "Once color schemes are available they will both respond to the current
+color scheme and have the same numbers for the same scheme … My preference is to go ahead and do #2 since it keeps
+coming up everytime we hit a color difference. Can you please spec it out?" — with three questions for the spec:
+can the user choose the scheme or only follow the system; are all colours in all three editions inventoried and
+assigned to what changes with the scheme; which schemes. The spec (`docs/THEME-SPEC.md`, written 2026-08) is
+being rewritten on a full colour inventory of the three editions; `mode-colors` resumes when #2 lands.
 
 ## Expect production defects, not just test cleanup
 
