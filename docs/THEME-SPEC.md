@@ -89,12 +89,16 @@ app-drawn side.
    the palette.
 4. **The table is shared data.** `tooling/parity/cases/theme.json` holds every role's light and dark value; each
    edition's palette test checks its table against it — the Stage 2 pattern.
-5. **A source check enforces rules 1 and 2.** Each edition has a test that scans its production source and fails on
-   a colour written outside the palette module: Swift `Color(red:…)`, `Color(white:)`, `Color(sRGBHex:)` and system
+5. **A source check enforces rules 1 and 2.** Each edition scans its own source and refuses to go on when a colour
+   is written outside the palette module, where its release check already refuses (no edition needs the hub): Swift
+   `Tooling/check-colours.sh`, a build phase beside Check Release Readiness — the build fails; Python
+   `_colour_guard.py`, run beside `_release_guard.py` — a development checkout refuses to start; the web
+   `tooling/check-colours.mjs`, in the `predev` / `prebuild` / `prepreview` scripts — `npm run dev`, `build` and
+   `preview` stop. It looks for Swift `Color(red:…)`, `Color(white:)`, `Color(sRGBHex:)` and system
    colours (`.blue`, `.secondary`, `.accentColor`, …); Python hex strings, `rgb(…)` / `rgba(…)`, `QColor(…)`, named
    colours and `palette(…)` in stylesheets, pyqtgraph colour shorthands; the web hex and `rgb(…)` in `.ts` / `.tsx`
-   and `App.css` (CSS uses only the `var(--…)` properties generated from the palette). Each test has a short,
-   explicit allow list.
+   and the stylesheets (CSS uses only the `var(--…)` properties generated from the palette). Allowed: Swift's
+   `Color.clear`, and comment lines.
 
 ## 5. The role table
 
@@ -114,9 +118,12 @@ Only where the app draws its own surface (§3); the OS draws its controls and wi
 | separator | dividers, borders | `#D8DEE6` | `#222A33` |
 | text.primary | body text | `#1A2330` | `#E7EBF0` |
 | text.secondary | captions, units, hints | `#6B7785` | `#8A96A5` |
+| text.onColor | text on a filled colour (an active phase badge) | `#FFFFFF` | `#FFFFFF` |
 | accent | fills: toolbar tints, prominent buttons (white text on it) | `#007AFF` | `#0A84FF` |
 | accent.text | accent-coloured text: links, checkmarks, the Gore value | `#007AFF` | `#409CFF` |
-| scrim | modal backdrops | `#000000` at 30 % | `#000000` at 50 % |
+| toolbar.inactive | a toolbar button's tint when it has nothing to act on (Cancel) | `#8E8E93` | `#8E8E93` |
+| scrim | modal backdrops, shadows | `#000000` at 30 % | `#000000` at 50 % |
+| overlay.card | the loading overlay's card (white text on it) | `#3A3A3C` at 80 % | `#3A3A3C` at 80 % |
 
 ### 5.2 Chart
 | role | light | dark |
@@ -150,7 +157,7 @@ that it stays clearly apart from Air. Top, Back and Air are darker than Apple's 
 tinted peak row.
 
 ### 5.4 Plate and brace
-One set for curves, markers, badges, step dots, the instruction panel and the PDF.
+One set for curves, markers, badges, phase markers, the instruction panel and the PDF.
 
 | role | light | dark |
 |---|---|---|
@@ -158,6 +165,8 @@ One set for curves, markers, badges, step dots, the instruction panel and the PD
 | material.cross (fC) | `#FF9500` | `#FF9F0A` |
 | material.flc (fLC) | `#AF52DE` | `#BF5AF2` |
 | material.unselected | `#6B7785` | `#8A96A5` |
+| material.phaseInactive (an inactive phase badge) | `#8E8E93` at 20 % | `#8E8E93` at 20 % |
+| material.goreBox (the Gore thickness box) | `#007AFF` at 8 % | `#0A84FF` at 8 % |
 | phase.notStarted | `#8E8E93` | `#8E8E93` |
 | phase.complete | `#34C759` | `#30D158` |
 
@@ -194,6 +203,14 @@ One set for curves, markers, badges, step dots, the instruction panel and the PD
 | wood.fair | `#FF9500` | `#FF9F0A` |
 | wood.poor | `#FF3B30` | `#FF453A` |
 
+### 5.7a Results header
+| role | light | dark |
+|---|---|---|
+| badge.guitar (the measurement-type badge) | `#007AFF` at 20 % | `#0A84FF` at 20 % |
+| badge.material | `#FF9500` at 20 % | `#FF9F0A` at 20 % |
+| badge.comparison | `#AF52DE` at 20 % | `#BF5AF2` at 20 % |
+| results.tapsActive (the Taps toggle while the per-tap comparison is shown; `accent` otherwise) | `#FF9500` | `#FF9F0A` |
+
 ### 5.8 Multi-tap and comparison
 | role | light | dark |
 |---|---|---|
@@ -221,6 +238,7 @@ editions used. The average is drawn thicker than the series.
 | status.paused, status.frozen, status.warning, status.playingFile | `#FF9500` | `#FF9F0A` |
 | status.info, status.saved, status.progress, status.tapCount, status.peakReadout | `#007AFF` | `#0A84FF` |
 | status.error | `#FF3B30` | `#FF453A` |
+| status.inactiveDot (the tap dot while waiting) | `#8E8E93` at 30 % | `#8E8E93` at 30 % |
 | status.messageBackground (an opacity: warning, saved, loaded settings) | its status colour at 12 % | at 12 % |
 
 ### 5.10 Threshold slider and level meter
@@ -231,7 +249,8 @@ editions used. The average is drawn thicker than the series.
 | meter.levelTop, meter.levelMiddle, meter.levelBottom (the gradient) | `#66CCFF`, `#0066CC`, `#001E50` | the same |
 | meter.clip | `#FF3B30` at 85 % | `#FF453A` at 85 % |
 | meter.ticks | `#3D8C3D` at 70 % | `#3D8C3D` at 70 % |
-| meter.peakHold | `#FFD900` | `#FFD900` |
+| meter.peakHold | `#FFC700` | `#FFC700` |
+| meter.peakHoldBorder | `#FFFFFF` at 85 % | `#FFFFFF` at 85 % |
 | meter.thresholdHandle | `#FF3B30` | `#FF453A` |
 | meter.thresholdHandleBorder | `#800000` | `#800000` |
 
@@ -339,10 +358,10 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | **done** 2026-10-04 (Swift 382cfeb, Python 450e1ce, web 329a10e) |
 | 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average); the chart style and Swift's axis ticks (§5.14) | the chart follows the scheme live in all three | **done** 2026-10-04 (Swift d2649ed, Python e1aff31, web fc25da2); run-review passed |
 | 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | **done** 2026-10-05 (Swift 5f4be71, Python 1bdc5ff, web 6e2f40e); run-review passed |
-| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | — |
-| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | — |
-| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | — |
-| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | — |
+| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress |
+| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress |
+| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress |
+| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress; the web's PNG now draws and counts only the shown peaks and draws Swift's export card; Python's dB range was the same as Swift's — its 0 and −100 labels were hidden (now shown, in the live chart too); Python's and the web's PNG layout brought to Swift's (§9a 30); run-review §9a 25–30 |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | — |
 | 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
 | 8 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | — |
@@ -354,7 +373,13 @@ redraws from one change point.
 
 - **Swift:** palette colours are dynamic colours (`NSColor` / `UIColor` providers, as `Palette` already does); a view
   writes `.foregroundStyle(Palette.textSecondary)`, and SwiftUI redraws by itself when the colour scheme changes.
-- **Python:** `palette.py` owns the resolved scheme and one `QObject` with a `scheme_changed(scheme)` signal. It
+- **Python:** `palette.tag(widget, color=…, background=…, tint=…, border=…, prominent=…, message=…)` names a
+  widget's role as a Qt property; the palette sets one application stylesheet with a rule per role
+  (`*[colorRole="text.secondary"] { color: … }`; a bordered-button or progress-bar tint — Swift's `.bordered` with
+  `.tint(role)`; a filled button — `.borderedProminent`; a status message's box at `status.messageBackground`),
+  regenerated for every scheme. `palette.set_icon(widget, name, role)` draws a qtawesome icon in a role and draws it
+  again on every change of scheme. `palette.py` also
+  owns the resolved scheme and one `QObject` with a `scheme_changed(scheme)` signal. It
   emits — explicitly — when the OS scheme changes (`QStyleHints.colorSchemeChanged`) while the setting is System, or
   when the setting changes, and only when the resolved scheme actually changes; Qt's own events are not used as the
   trigger (they report only the OS, often Unknown on GNOME and Cinnamon, and vary between native styles and Fusion).
@@ -366,7 +391,87 @@ redraws from one change point.
 - **Web:** `palette.ts` owns the resolved scheme and one `subscribe(listener)`, fired on the `prefers-color-scheme`
   change event while the setting is System, or when the setting changes, and only on an actual change. It sets
   `data-theme` on the root, so CSS follows through the custom properties by itself; the canvas chart and anything
-  else drawn in script subscribe, re-read their roles and redraw.
+  else drawn in script subscribe, re-read their roles and redraw. A tinted button is `.btn.tint` with a `tint-*`
+  class naming its role — Python's tint and Swift's `.tint(role)`, at the same 12 % fill and 35 % border.
+
+### 9a. Run-review steps — step 5 (5c–5f)
+
+Launch all three from the working tree: Swift (Xcode, macOS), Python (`.venv/bin/python -m guitar_tap`), the web
+(`npm run build && npm run preview`). Do each step in Light and in Dark (Settings → Advanced → Appearance), in each
+edition. "Tinted" means the role as text over a faint fill of it.
+
+**Results and material (5c)**
+
+1. Guitar: take a tap. → The results panel, its headings and text read in both schemes; the ring-out and tap-ratio
+   words in their quality colours; the Guitar badge a faint blue.
+2. Taps 3, complete, press Taps. → Taps is tinted orange while the per-tap table is up, blue otherwise; the table's
+   dots in the series colours.
+3. Plate, Measure Diagonal on: run the three phases. → Phase markers grey before, blue (L) / orange (C) / purple
+   (FLC) while active, green when done; inactive phase badges faint grey; the Plate badge faint orange.
+4. The plate result. → The Gore Target Thickness box faint blue, its value in the accent, readable in Dark; the
+   summary boxes faint grey; the quality words in the wood colours.
+5. Brace: run. → As 3–4 for the one phase.
+
+**Toolbar, status bar, meter (5d)**
+
+6. Look at the toolbar. → Every button tinted blue; Python's icons blue, none black.
+7. Turn Auto dB and Annotations on. → The on state a stronger tint.
+8. Play File… a WAV. → Play File tinted orange while it plays, blue after.
+9. Before and during a tap. → New Tap filled blue with white text; Pause tinted blue; Cancel tinted orange when it
+   can act, grey when not.
+10. A plate phase under review. → Accept tinted green; Redo orange.
+11. The status bar through a tap. → Its background faint grey; the tap dot faint grey while waiting, green on a tap;
+    "Tap Detected!" green; the progress bar and "Tap n/N" blue; the peak readout blue; the message in the text colour
+    while detecting, orange otherwise; "Complete" orange while frozen. The web's bar no longer has a coloured left edge (web-only; removed).
+12. Load a measurement saved with other settings. → The loaded-settings notice orange on a faint orange box, its
+    icon orange.
+13. Dump Capture Audio on; take a tap. → The saved notice blue on a faint blue box.
+14. Speak, then tap hard. → The meter's groove light grey (Light) or near-black (Dark), with a border; the blue
+    gradient fill; green ticks; a yellow peak-hold dot with a white rim; the red handle; the right end red while
+    clipping.
+15. Open Metrics. → The dot green while running, grey stopped; captions secondary; the processing values (Swift,
+    Python) green, yellow, orange or red by load.
+16. Python, an update offered. → The banner a faint blue box with a blue icon.
+
+**Settings, measurements, dialogs (5e)**
+
+17. Open Settings. → Captions, units and hints secondary; Python's button icons in the text colour, the Help rows'
+    icons blue and chevrons secondary.
+18. Open the Quick-Start Guide; switch Appearance with it open (Python: from the help page). → Headings, icons and
+    text follow the scheme.
+19. Open Measurements. → Dates, counts and notes secondary; the waveform mark green; Python's ⋯ on hover; the row
+    menu's icons readable in Dark.
+20. Compare: select two. → The selected circles blue, the others secondary; rows that can't be compared dimmed.
+21. View Details of a guitar and of a plate measurement. → Mode names in their mode colours, magnitudes by strength,
+    pitch purple; the plate's L / C / FLC names in the material colours.
+22. Open Edit, Save and Play File, and the plate and brace dimensions in Settings. → Captions and units secondary;
+    fields readable.
+23. Export a PDF. → The loading overlay: the scrim, a dark grey card, white text.
+24. Web: look over the whole page. → Window, panels, separators and dialogs all follow the scheme; nothing left
+    dark in Light.
+
+**Exports (5f)**
+
+25. Export a PNG in Dark and in Light. → The two are the same, drawn light: white chart, light colours.
+26. Web, Annotations = Selected: export a PNG. → Dots only for the shown peaks; "Detected Peaks: N" counts the same
+    peaks; the cards as Swift's (larger text, centred, a shadow, no border).
+27. Export a PDF in Dark and in Light — guitar, plate, comparison, multi-tap. → Each pair the same, drawn light.
+28. Save a comparison; switch Appearance; load it. → Curves and table dots in the series colours by order, for the
+    current scheme.
+29. View Details of that comparison. → The same colours by order.
+30. Export a PNG of the same measurement in all three. → Each matches Swift's:
+    - the dB axis labelled 0 and −100 at its ends (Python's live chart too);
+    - the axis titles "Frequency (Hz)" and "FFT Magnitude (dB)" — on Swift's live chart too, where they had
+      gone missing since F55 clipped the plot;
+    - the header "Type: … • Platform: … • GuitarTap v…", labels secondary and values in the text colour;
+    - peak cards that fit their text, with a shadow and no border, the cents smaller and lighter;
+    - summary chips with no border: frequency bold, mode name in its colour, dB grey;
+    - the mode legend kept together on the left;
+    - a clear margin around the image.
+
+    The web leaves out a frequency label that would run past the plot's edge, as Swift and Python do.
+    *(Found from this step's first run: the dB range was the same in Swift and Python; Python had only
+    hidden the 0 and −100 labels.)*
 
 ## 10. Decisions
 

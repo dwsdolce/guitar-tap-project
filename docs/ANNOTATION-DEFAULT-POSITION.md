@@ -93,3 +93,10 @@ What each edition does today (from the code; to be checked in full when this is 
   position.
 - **Python** (`peak_annotations.py`): labels are pyqtgraph items in the plot (`plot_item.addItem`), so the view box
   clips them; which peaks get a label at the edges is to be confirmed.
+
+**Owner's position (2026-10-06): Python's clipping is right.** Python cuts both peak labels and mode chips off at the
+plot's edges: a chip whose band starts left of the chart shows only the part inside the plot ("r" of Air), and the
+whole chip appears once a pan brings the start into view. Swift lets labels run over the plot's edge (seen covering
+the magnitude axis title), and the web lets them overflow too and leaves out a chip whose band starts off-chart. The
+owner notes this is related to, but separate from, the main question of #25 — how an untouched label's position is
+set and saved.

@@ -46,7 +46,7 @@ type badges `rgba(0,100,255,0.15)` guitar, `rgba(255,140,0,0.20)` material, `rgb
 `rgba(255,149,0,0.15/0.45)` text `rgb(200,100,0)` (4326-4333); summary box `palette(alternateBase)`; captions
 `palette(shadow)`; ring-out and ratio quality `ColorPair.on`; footer dot `green` / `gray`; Auto dB icon `#27ae60`.
 Material: section boxes `rgba(127,127,127,0.12)`, spec boxes `0.10`; quality labels `WoodQuality.color`; Gore box
-`rgba(0,122,255,0.10)`, value `#007AFF` (1422-1434). Instructions and phase: step dots `#1976D2 #E65100 #7B1FA2`;
+`rgba(0,122,255,0.10)`, value `#007AFF` (1422-1434). Instructions and phase: phase markers `#1976D2 #E65100 #7B1FA2`;
 phase states IDLE `gray`, L `#1976D2`, C `#E65100`, FLC `#7B1FA2`, COMPLETE `#388E3C` (3611-3757).
 
 ## Toolbar, status bar (TTAV)

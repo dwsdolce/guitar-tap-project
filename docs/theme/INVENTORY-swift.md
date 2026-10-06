@@ -40,7 +40,7 @@ Taps toggle `.orange` / `.accentColor` (163); Comparison badge `Color.purple.opa
 `Color.blue.opacity(0.2)` / `Color.orange.opacity(0.2)` (183); guitar row highlight `mode.color` (527-532); ring-out
 and ratio quality `Palette` (568, 596); summary bar `Color.secondary.opacity(0.07)` (611); status dot `.green` /
 `.gray` (618); material stars `.blue` / `.secondary`; phase badges `.blue` / `.orange` / `.purple`, inactive
-`Color.secondary.opacity(0.2)`, text `.white` / `.primary` (1187-1208); step dots `.blue .orange .purple`
+`Color.secondary.opacity(0.2)`, text `.white` / `.primary` (1187-1208); phase markers `.blue .orange .purple`
 (1001-1072); wood quality `WoodQuality.color` (699-918); key-metric box `Color.secondary.opacity(0.1)`; prompts
 `.orange`; Gore value `.accentColor`, box `Color.accentColor.opacity(0.08)` (971-979); phase panel
 `materialPhaseColor` `.gray .blue .orange .purple .green` (SpectrumViews:296-343).
@@ -91,7 +91,7 @@ White background (731); spectrum `.red`; border `Color.gray`; grid/axes defaults
 0.35, blue: 0.75)`, Gore box at 0.07; image backing `Color(white: 0.05)`; dividers `Color.gray.opacity(0.3)`, footer
 0.2, header 0.1, result boxes 0.07, dimension boxes 0.06; peak mode labels **PDF-local `modeColor()`** — air
 `(0,0.5,0.8)`, top `(0.2,0.65,0.2)`, back `(0.8,0.4,0)`, dipole `(0.6,0,0.8)`, ringMode `(0.8,0,0.4)`, others
-`.secondary` (598-606) — or `userDefinedColor`; role cells and step dots `.blue .orange .purple`; analysis quality
+`.secondary` (598-606) — or `userDefinedColor`; role cells and phase markers `.blue .orange .purple`; analysis quality
 `Palette` (light); wood quality `WoodQuality.color`; comparison swatches stored RGBA; multi-tap local palette.
 
 ## Central tables
