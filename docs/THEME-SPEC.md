@@ -410,20 +410,22 @@ edition. "Tinted" means the role as text over a faint fill of it.
 
 **Results and material (5c)**
 
-1. Guitar: take a tap. → The results panel, its headings and text read in both schemes; the ring-out and tap-ratio
-   words in their quality colours; the Guitar badge a faint blue.
-2. Taps 3, complete, press Taps. → Taps is tinted orange while the per-tap table is up, blue otherwise; the table's
-   dots in the series colours.
+1. ~~Guitar: take a tap. → The results panel, its headings and text read in both schemes; the ring-out and tap-ratio
+   words in their quality colours; the Guitar badge a faint blue.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
+2. ~~Taps 3, complete, press Taps. → While the per-tap table is up, Taps is orange with the on fill (28 %), blue with
+   the plain 5 % fill otherwise; hovering lightens it a step either way; the table's dots in the series colours.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
 3. Plate, Measure Diagonal on: run the three phases. → Phase markers grey before, blue (L) / orange (C) / purple
    (FLC) while active, green when done; inactive phase badges faint grey; the Plate badge faint orange.
-4. The plate result. → The Gore Target Thickness box faint blue, its value in the accent, readable in Dark; the
-   summary boxes faint grey; the quality words in the wood colours.
+4. ~~The plate result. → The Gore Target Thickness box faint blue, its value in the accent, readable in Dark; the
+   summary boxes faint grey; the quality words in the wood colours.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
 5. Brace: run. → As 3–4 for the one phase.
 
 **Toolbar, status bar, meter (5d)**
 
-6. Look at the toolbar. → Every button tinted blue; Python's icons blue, none black.
-7. Turn Auto dB and Annotations on. → The on state a stronger tint.
+6. ~~Look at the toolbar. → Every button blue text and icon on a faint (5 %) blue fill, no outline; Python's icons
+   blue, none black. Hover with a pointer → a step lighter (15 %); on touch, no hover.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
+7. Turn Auto dB on (and Crosshair, on iOS and the touch web). → The on state a stronger fill (28 %), a step
+   lighter again on hover. Annotations cycles All / Selected / None with its icon only — no on fill.
 8. Play File… a WAV. → Play File tinted orange while it plays, blue after.
 9. Before and during a tap. → New Tap filled blue with white text; Pause tinted blue; Cancel tinted orange when it
    can act, grey when not.
@@ -452,6 +454,15 @@ edition. "Tinted" means the role as text over a faint fill of it.
 20. Compare: select two. → The selected circles blue, the others secondary; rows that can't be compared dimmed.
 21. View Details of a guitar and of a plate measurement. → Mode names in their mode colours, magnitudes by strength,
     pitch purple; the plate's L / C / FLC names in the material colours.
+    *Finding (owner, 2026-10-07): a plate's Details showed each peak with Swift's "?" icon and a grey name (Swift
+    gave plate peaks the guitar mode "unknown"); Python drew a plain dot, the web no icon; and Python's and the
+    web's Details drew their own rows, not the results card. Done (Swift `9bcf4f0`, Python `fb211e8`, web `98cbe52`): Details uses the results panel's
+    peak card, read-only (no star, no mode menu), in all three; a plate / brace peak shows its role's **fL / fC /
+    fLC badge** — the same badge as the results panel, now one component per edition (Swift `MaterialPhaseBadge`,
+    Python `phase_badge`, web `MaterialPhaseBadge`) — with its full name in the material colour. One shared
+    `view/material-peak-role` holds each role's name, badge text and colour. Direction icons (⟷ ↕ ⤢) were tried and
+    dropped (owner): one symbol per role everywhere, not three ways to name a tap. The web's Details classifies
+    guitar modes among the shown peaks, as Swift's and Python's.*
 22. Open Edit, Save and Play File, and the plate and brace dimensions in Settings. → Captions and units secondary;
     fields readable.
 23. Export a PDF. → The loading overlay: the scrim, a dark grey card, white text.
@@ -477,9 +488,18 @@ edition. "Tinted" means the role as text over a faint fill of it.
     - the mode legend kept together on the left;
     - a clear margin around the image.
 
-    The web leaves out a frequency label that would run past the plot's edge, as Swift and Python do.
-    *(Found from this step's first run: the dB range was the same in Swift and Python; Python had only
-    hidden the 0 and −100 labels.)*
+    ~~The web leaves out a frequency label that would run past the plot's edge, as Swift and Python do.~~
+    — *passed (owner, 2026-10-07).* *(Found from this step's first run: the dB range was the same in Swift and
+    Python; Python had only hidden the 0 and −100 labels.)*
+
+    *Finding (owner, 2026-10-07): the web's PNG counted and summarised only the visible peaks inside the chart's
+    range ("Detected Peaks: 3" against Swift's and Python's 6, which list 409 / 623 / 1180 Hz above a 75–350 Hz
+    view). Cause: the web had no analyzer-owned `visiblePeaks`; App re-derived the annotation rule per chart
+    marker, and those markers are range-limited. Done (Swift `9bcf4f0`, Python `fb211e8`, web `98cbe52`), in Swift's shape: the web analyzer owns
+    `annotationVisibilityMode` (mirrored in from settings), `cycleAnnotationVisibility()`, `isUnknown` and
+    `visiblePeaks`; the chart's badges and the live export read it; the saved-measurement export keeps its inline
+    rule (`annotatedBy`), as Swift's does. A shared slug `state/visible-peaks` in all three, pinned by
+    `test/annotation-state` (the web's tests now test the analyzer's rule, including a peak outside the range). Verified by the owner, 2026-10-07.*
 
 ## 10. Decisions
 

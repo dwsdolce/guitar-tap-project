@@ -519,6 +519,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "state/visible-peaks",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer.py"
+      ],
+      "web": [
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/annotation-state"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "test/analysis-quality",
       "swift": [
         "GuitarTapTests/AnalysisQualityTests.swift"
@@ -1534,6 +1550,20 @@
       ],
       "web": [
         "src/components/MaterialInstructionPanel.tsx"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "view/material-peak-role",
+      "swift": [
+        "GuitarTap/Views/Utilities/MaterialPeakRole.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/material_peak_role.py"
+      ],
+      "web": [
+        "src/presentation/materialPeakRole.ts"
       ],
       "tests": [],
       "equivalence": "review only"

@@ -51,6 +51,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `state/status-message` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-detection` | `GuitarTap/Models/TapToneAnalyzer+TapDetection.swift` | `src/guitar_tap/models/tap_tone_analyzer_tap_detection.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-tone-analyzer` | `GuitarTap/Models/TapToneAnalyzer+Control.swift` | `src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/visible-peaks` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `test/analysis-quality` | `GuitarTapTests/AnalysisQualityTests.swift` | `tests/test_analysis_quality.py` | `test/analysis-quality.test.ts` | test suite |
 | `test/annotation-state` | `GuitarTapTests/AnnotationStateTests.swift` | `tests/test_annotation_state.py` | `test/annotation-state.test.ts`<br>`test/peak-state-store.test.ts` | test suite |
 | `test/audio-clock-timers` | `GuitarTapTests/AudioClockTimerTests.swift` | `tests/test_audio_clock_timers.py` | `test/audio-clock-timers.test.ts` | test suite |
@@ -124,6 +125,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/main` | `GuitarTap/Views/TapToneAnalysisView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/App.tsx` | review only |
 | `view/material-dimensions-editor` | `GuitarTap/Views/MaterialDimensionsEditor.swift` | `src/guitar_tap/views/material_dimensions_editor.py` | — | review only |
 | `view/material-instructions` | `GuitarTap/Views/TapToneAnalysisView+SpectrumViews.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/components/MaterialInstructionPanel.tsx` | review only |
+| `view/material-peak-role` | `GuitarTap/Views/Utilities/MaterialPeakRole.swift` | `src/guitar_tap/views/utilities/material_peak_role.py` | `src/presentation/materialPeakRole.ts` | review only |
 | `view/material-results` | `GuitarTap/Views/TapAnalysisResultsView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/components/MaterialResults.tsx` | review only |
 | `view/measurement-detail` | `GuitarTap/Views/Measurements/MeasurementDetailView.swift` | `src/guitar_tap/views/measurements/measurement_detail_view.py` | `src/components/MeasurementDetail.tsx` | review only |
 | `view/measurements-list` | `GuitarTap/Views/Measurements/MeasurementRowView.swift`<br>`GuitarTap/Views/Measurements/MeasurementsListView.swift` | `src/guitar_tap/views/measurements/measurement_row_view.py`<br>`src/guitar_tap/views/measurements/measurements_list_view.py` | `src/components/MeasurementsPanel.tsx` | review only |
