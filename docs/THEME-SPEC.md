@@ -116,6 +116,8 @@ Only where the app draws its own surface (§3); the OS draws its controls and wi
 | background.control | inputs, buttons, list rows | `#FFFFFF` | `#11161D` |
 | background.subtle | summary and metric boxes | `#8E8E93` at 8 % | `#8E8E93` at 10 % |
 | separator | dividers, borders | `#D8DEE6` | `#222A33` |
+| divider.section | the line between a panel's sections (the plate / brace results) — chosen by eye, 2026-10-06 | `#1A2330` at 35 % | `#FFFFFF` at 35 % |
+| divider.headerFooter | the line under a results panel's header and above its footer — brighter than divider.section, so header, body and footer read as three parts; chosen by eye, 2026-10-06 | `#1A2330` | `#E7EBF0` |
 | text.primary | body text | `#1A2330` | `#E7EBF0` |
 | text.secondary | captions, units, hints | `#6B7785` | `#8A96A5` |
 | text.onColor | text on a filled colour (an active phase badge) | `#FFFFFF` | `#FFFFFF` |
@@ -392,7 +394,13 @@ redraws from one change point.
   change event while the setting is System, or when the setting changes, and only on an actual change. It sets
   `data-theme` on the root, so CSS follows through the custom properties by itself; the canvas chart and anything
   else drawn in script subscribe, re-read their roles and redraw. A tinted button is `.btn.tint` with a `tint-*`
-  class naming its role — Python's tint and Swift's `.tint(role)`, at the same 12 % fill and 35 % border.
+  class naming its role — Python's tint and Swift's `.tint(role)`: the role as text and a 5 % fill, no outline
+  (measured from Swift's `.bordered` button; the 35 % border first used here was not Swift's — removed 2026-10-07).
+  **Hover and on (the owner, 2026-10-07), the same in all three:** a tinted button's fill rises 10 points while a
+  pointer is over it, on or off (5 → 15 %, on 28 → 38 %, Python pressed 22 %) (none on touch — the web gates it on `(hover: hover)`; Swift's `.tintedBordered` adds the wash
+  behind the native button); a **two-state toggle** — Auto dB, Taps, Crosshair (iOS, touch web) — shows a 28 %
+  fill while on (Swift: a native `Toggle` with `.toggleStyle(.button)`; Python: `:checked` or `palette.set_on`;
+  web: `.on`). A multi-state control (Annotations: All / Selected / None) has no on fill — its icon names the state.
 
 ### 9a. Run-review steps — step 5 (5c–5f)
 

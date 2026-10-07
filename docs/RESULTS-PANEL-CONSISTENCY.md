@@ -1,144 +1,146 @@
 # Results panel (Analysis Results) — cross-platform consistency
 
-**Status:** 📋 OPEN — captured 2026-07-16 from the first plate test. **No code written. Post-release.**
-Not a 1.0.2 blocker: every *number* is correct and agrees across platforms (see
-[MATERIAL-MULTITAP-DISCREPANCIES.md](MATERIAL-MULTITAP-DISCREPANCIES.md) — the target-thickness check
-validated the algorithms). This is **presentation only**.
+**Status:** ✅ done in all three editions — Swift `7408b50`, Python `38ce6c2`, web `342a174` (2026-10-07). Every
+item below was checked side by side by the owner in light and dark, on macOS, iPhone and iPad, and the web on
+desktop and a real iPhone.
 
-**Canonical = Swift** ([[project_swift_canonical]]). Precedent for this exact shape of work:
-`MEASUREMENT-DETAILS-CONSISTENCY.md` — the Details pane had diverged across all three, was spec'd, then
-implemented three-way (2026-06-25). Do the same here: **spec first, then all three together**
-([[feedback_improvements_all_three_platforms]]).
+**Scope:** presentation only — every number already agreed across the editions (the target-thickness check in
+[MATERIAL-MULTITAP-DISCREPANCIES.md](MATERIAL-MULTITAP-DISCREPANCIES.md) validated the algorithms).
 
-## Evidence — the screenshots are committed alongside this doc
+## The rules (owner's decisions)
 
-Three captures of the **same completed plate measurement**, one per platform (user, 2026-07-16). They
-are the primary evidence for everything below — **keep them with this file**; unlike the `.guitartap`
-and `.wav` files in `~/Documents/GuitarTap`, these are not reproducible after the next test run.
+1. **Size, layout and spacing: Python's** — the most compact and useful. Swift and the web take Python's sizes
+   (10 pt body, 9 pt small, 14 pt bold values), its row and section spacing.
+2. **Wording and structure: Swift's** — canonical except where it is wrong.
+3. **Section lines:** `divider.section` between a panel's sections (ink / white at 35 %), `divider.headerFooter`
+   under the header and above the footer (text.primary's colours) — both new palette roles, in all three.
+4. **Icons:** Swift keeps SF Symbols; Python and the web use the same Material Design icons (Python names them,
+   the web draws the same glyphs from paths generated off Python's icon font).
+5. **Tinted buttons:** the role as text, a 5 % fill, no outline (measured from Swift's `.bordered`). Where a
+   pointer exists, hover raises the fill 10 points (5 → 15 %; on 28 → 38 %). A **two-state toggle** — Auto dB,
+   Taps, Crosshair (iOS, touch web) — shows a 28 % fill while on. A multi-state control (Annotations) has none; its
+   icon names the state. Recorded in [THEME-SPEC.md](THEME-SPEC.md).
+6. **New Tap is filled blue** everywhere.
+7. **Deselect and Reset to Auto never show for a plate or brace** — peak selection has no purpose there.
+8. **Accepted platform differences:** macOS greys an inactive window's controls (Python and the web do not imitate
+   it); macOS line breaking avoids a one-word last line, so Swift's italic note can wrap one word earlier.
 
-| platform | screenshot | shows |
+## Evidence
+
+The July captures of the same completed plate measurement, one per edition — where this started:
+
+| platform | screenshot |
+|---|---|
+| Swift | [`images/results-panel-plate-swift-2026-07-16.png`](images/results-panel-plate-swift-2026-07-16.png) |
+| Python | [`images/results-panel-plate-python-2026-07-16.png`](images/results-panel-plate-python-2026-07-16.png) |
+| Web | [`images/results-panel-plate-web-2026-07-16.png`](images/results-panel-plate-web-2026-07-16.png) |
+
+The fL / thickness differences in them (66.9 vs 67.0 Hz; 2.81 vs 2.80 mm) are the first-tap gated-window defect in
+MATERIAL-MULTITAP-DISCREPANCIES.md §3, not the panel.
+
+## The original divergences (July 2026) — all resolved
+
+| # | divergence | resolved by |
 |---|---|---|
-| **Swift** (canonical) | [`images/results-panel-plate-swift-2026-07-16.png`](images/results-panel-plate-swift-2026-07-16.png) | fL 66.9, 2.81 mm, L 4174 m/s · `Showing 20.0 Hz - 200.0 Hz` |
-| **Python** | [`images/results-panel-plate-python-2026-07-16.png`](images/results-panel-plate-python-2026-07-16.png) | fL 67.0, 2.80 mm, L 4180 m/s · `Showing 20 – 200 Hz` · the only FULL-panel capture |
-| **Web** | [`images/results-panel-plate-web-2026-07-16.png`](images/results-panel-plate-web-2026-07-16.png) | fL 67.0, 2.80 mm · dark theme · no `Showing` row |
+| 1 | Web listed plate peaks in phase order (L, C, FLC), not by frequency | the web sorts identified peaks by frequency once complete, keeping the phase slots while capturing — #17 F55 (web `b7de553`) |
+| 2 | "Showing …" row three ways: Swift `20.0 Hz - 200.0 Hz`, Python `20 – 200 Hz`, the web none | one `displayRangeLabel` / `display_range_label` in Swift's form in all three — #17 F55 (Python `272b361`, web `b7de553`) |
+| 3 | Python nested Gore inside Plate Properties | Gore its own section — Python's two-store dimensions (`5fc9aa5`) |
+| 4 | The web's Gore value unboxed | boxed, as the others (confirmed side by side, 2026-10-06) |
+| 5 | The web ran "Speed of Sound" into its values, not bold | heading on its own line, bold, as Swift (this work — Property rows, below) |
+| 6 | The web coloured some section titles blue | plain text.primary titles in all three (this work — G7, below) |
+| 7 | Python's spacing tighter than Swift's and the web's | rule 1: Python's spacing is the reference; Swift and the web changed (this work) |
 
-<img src="images/results-panel-plate-swift-2026-07-16.png" width="300" alt="Swift Analysis Results — plate">
-<img src="images/results-panel-plate-python-2026-07-16.png" width="300" alt="Python Analysis Results — plate">
-<img src="images/results-panel-plate-web-2026-07-16.png" width="300" alt="Web Analysis Results — plate">
+## What changed in the code (Swift `7408b50`, Python `38ce6c2`, web `342a174`)
 
-The fL / thickness differences visible between them (66.9 vs 67.0; 2.81 vs 2.80) are **the buffer-size item's
-first-tap gated-window defect — not a panel issue.** See
-[MATERIAL-MULTITAP-DISCREPANCIES.md](MATERIAL-MULTITAP-DISCREPANCIES.md) §3.
+### Guitar peak list and summary
 
-⚠ **This is NOT a "the web drifted" story.** The divergences point in **three different directions** —
-the web is wrong on order/boxing/colour, Python is wrong on nesting/spacing, and **Swift and Python
-disagree with each other** on the "Showing" format. Any fix pass must check all three, not just re-skin
-the web.
+| item | change |
+|---|---|
+| G1 card size and spacing | Swift and the web take Python's (10 / 9 pt, tighter rows) |
+| G2 mode name | Python shows the mode's full name ("Air (Helmholtz)"), left-aligned |
+| G3 in-range mark | Swift: a plain ✓ on the Q line, not a circled ✓ under the icon |
+| G4 pitch | Python and the web: Swift's "G2 (-10 ¢)" |
+| G5 Q / BW line | Swift and the web: no wrapping (fixed-size pieces) |
+| G6 BW value | Python shows the peak's stored bandwidth, not frequency ÷ Q |
+| G7 header roles | "Analysis Results" text.primary, "Showing …" text.secondary, in all three |
+| G8 Ring-Out / Tap Ratio values | text.primary in all three (Python cleared a stale secondary tag) |
 
-## The divergences
+### Header, toolbar and icons
 
-### 1. Peak row ORDER — web diverges ✅ code-confirmed
+| item | change |
+|---|---|
+| New Tap | Swift's macOS bar: `.borderedProminent`, filled blue |
+| Unknown-mode and ⊗ icons | Python: outline, not filled |
+| Refresh, ⊗, wand | Python and the web: Swift's grey rounded square (`background.subtle`) |
+| Mode, pitch, export icons | Python and the web: one Material Design set (`mdiPaths.ts` generated by the hub's `tooling/parity/gen_web_icons.py`); Swift's weight and size |
+| Export buttons | Python: Swift's icons and size |
+| Web header sizes | Swift's sizes for the title, microphone line, "Showing …" and summary values |
+| Web title line | "Guitar Tap 1.0.3 (N)" moved from its own line into the app control bar; hidden at phone size |
+| Measurements button | Swift no longer shows the count ("Measurements (88)") — the list shows the total |
 
-| | order | renders as |
-|---|---|---|
-| Swift | ascending **frequency** | 35.9, 66.9, 117.3 |
-| Python | ascending **frequency** | 35.9, 67.0, 117.3 |
-| **Web** | **phase order (L→C→FLC)** | **67.0, 117.3, 35.9** |
+### Plate and brace panels
 
-- Swift `TapAnalysisResultsView.swift:410` — `.sorted { $0.peak.frequency < $1.peak.frequency }`, and
-  the doc comment at `:28` says *"lists all `currentPeaks` sorted by frequency"*.
-- Python `tap_analysis_results_view.py:535` — *"Visible (selected) peaks, sorted by frequency"*.
-- Web `MaterialResults.tsx:138-144` — builds `slots` as `[{role:'L'},{role:'C'},{role:'FLC'}]` and
-  `slots.map(...)`s them straight out. **No sort.**
+| item | change |
+|---|---|
+| Type | Swift: one `MaterialType` font set at Python's sizes; the web: Python's sizes |
+| Sections | Swift: each section a bold title over a grey box (`materialSection`), no `GroupBox`, no "Dimensions" sub-heading, the peak list unboxed, panel top 8 pt; the web: the boxes added; Python: each section one group — line, 12 px, title, 4 px, box |
+| fL / fC / fLC buttons | Python's size (36 × 32), square, in all three |
+| Number fields | Swift: `ValidatedNumberField(fontSize:)` — 10 pt fields and stiffness picker; a fixed 20 px unit column in all three so the Mass field lines up |
+| Labels | Swift's wording and colons ("Cross/Long Ratio:", "Length:"); headings without colons ("Radiation Ratio (R)"); GLC on one line; Specific Modulus title bold |
+| Property rows | plate: bold heading, 10 pt L / C values, 2 pt between; brace: regular label, bold value; Specific Modulus box full width, Python's spacing |
+| Overall Quality | bold label everywhere; no line above it; Swift's extra padding removed |
+| Python sizes | ratio labels 10 pt; frequency / dB pair centred at its own height |
+| Measurement Process | Swift: stray top line removed; text fills the box (asks for 240 pt only while the `.fixedSize` macOS panel sizes itself); Python: step dots 2 px down, as Swift; footer wording Swift's (plate "…from each tap…", brace single-tap) |
+| Deselect / Reset to Auto | hidden for a plate or brace in all three. Python now holds Swift's rule in one `_refresh_selection_buttons` (guitar, a non-empty results list, no per-tap table; Deselect enabled while a peak is selected, Reset while the selection is not the automatic one), run wherever its inputs change; the saved-comparison check moved into Python's results list (`_refresh_results_peaks`), where Swift and the web keep it |
+| Material instructions under the chart | Python hides them in a comparison — one `_refresh_material_instructions` with Swift's `!isGuitar && displayMode != .comparison` (they stayed up from a previous brace measurement) |
 
-All three show the same L/C/FLC badges, so **only the order differs**. Note the web's slot array is
-what drives the fixed dashed placeholder rows during live capture
-([[project_material_results_phased_display]]) — so the fix must keep the slot model for the *capturing*
-state while sorting by frequency once complete. Check what Swift does during capture before changing it.
+### Comparison and per-tap tables
 
-### 2. "Showing …" range row — THREE-way divergence ✅ code-confirmed
+| item | change |
+|---|---|
+| Type and spacing | Swift's: 10 px text, 4 px around the table, 6 px title row, 5 px rows, centred titles, lines between rows only, 8 px markers (the Averaged marker square-cornered); Python via one shared `apply_results_table_style` (24 px rows, no header bar or column lines), the web on the shared table class |
+| Web pane | 440 px wide in a saved comparison on desktop, so names show in full (Swift's and Python's panels widen to fit) |
+| Web microphone row | shown in a comparison |
+| Summary in the per-tap view | the web shows Ring-Out / Tap Ratio, as Swift's `isGuitar && (displayMode != .comparison \|\| showingMultiTapComparison)` |
+| Web footer | one group under the header/footer line: the summary in a grey box, then the export row |
+| Taps button | Swift a native `Toggle`; Python a plain button flipping the analyzer's `showing_multi_tap_comparison`, its on fill through `palette.set_on`; the web `.on` |
+| Swift Measurements list | compare-mode clicks register at once — the row's double-click gesture is off in compare mode (SwiftUI held every single click for the double-click interval) |
 
-| | renders | source |
-|---|---|---|
-| Swift | `Showing 20.0 Hz - 200.0 Hz` — hyphen, unit on **both**, 1 dp | `TapAnalysisResultsView.swift:220` `Text("Showing \(minFreq.formattedAsFrequency()) - \(maxFreq.formattedAsFrequency())")` |
-| Python | `Showing 20 – 200 Hz` — en-dash, unit **once**, 0 dp | `tap_tone_analysis_view.py:1178` `f"Showing {fmin} – {fmax} Hz"` |
-| **Web** | **absent entirely** | no such string anywhere in `src/` |
+### Status bar
 
-The web is missing **the whole row**, which also means it has no **Select All / Deselect All** controls
-(the ✓/⊗ icons Swift and Python show at the row's right). Decide whether the web needs the row, the
-controls, or both.
+| item | change |
+|---|---|
+| Web in a comparison | Swift's comparison line — waveform icon, "Comparing N measurements" / "Tap comparison — N taps + averaged", the exit hint; no progress bar |
+| Python in a comparison | Swift's waveform icon; the tap-state dot and the progress bar hidden |
+| Web progress bar | no longer shown over a loaded plate measurement — `restoreMaterial` zeroes `currentTapCount` / `tapProgress` (new test in `tap-progress.test.ts`) |
+| Web Threshold readout | whole decibels, truncated toward zero, as Swift's `Int(tapDetectionThreshold)` |
 
-### 3. Gore Target Thickness — section NESTING — Python diverges
+### Buttons (rule 5)
 
-- **Swift + web:** `Gore Target Thickness` is its **own section, first**; then a separate
-  `Plate Properties` section holds fL / fC / fLC.
-- **Python:** `Plate Properties` is the **outer header**, with the Gore box **inside** it, then
-  fL / fC / fLC.
+| edition | change |
+|---|---|
+| Swift | `TintedButtonStyle.swift`: `.tintedBordered` keeps the native `.bordered` button and adds the hover wash in its tint; Auto dB, Taps and Crosshair are native `Toggle(.button)`s |
+| Python | the tinted-button stylesheet: 5 % fill, no border, hover 15 %, pressed 22 %, on 28 %, on + hover 38 %; `palette.set_on` for a toggle whose state lives in the model |
+| Web | `.btn.tint`: 5 % fill, no outline; hover only under `(hover: hover)`; `.on` 28 %, on + hover 38 %; Annotations has no on fill |
 
-### 4. Gore Target Thickness — BOXING — web diverges
+### Palette and other fixes
 
-Swift and Python render it as a **tinted box**; the web uses a plain coloured text header with **no
-panel**.
+- New roles `divider.section` and `divider.headerFooter` in `theme.json`; the three palettes regenerated.
+- Web `newId()`: falls back to a v4 UUID from `crypto.getRandomValues` where `crypto.randomUUID` is missing (any
+  plain-HTTP page, e.g. the preview on a phone); HTTPS and localhost unchanged.
+- Fast test runs in all three: `Tooling/test-fast.sh` (Python, Swift) and `npm run test:fast` (web) skip the
+  recording replays — the playback regression and, in Python and the web, the separate self-regression.
 
-### 5. Label/line treatment — web diverges (user)
+## Verification
 
-> *"Speed of sound is a line of its own and bold in swift but on the same line as the values with no
-> bold in web."*
+- Suites (last full and fast runs): Swift 523 (full) / 511 (fast); Python 1259 (full) / 1237 (fast); web 1154 (full) / 1133 (fast); colour
+  guards and parity map clean; iOS build succeeds.
+- Owner side by side, light and dark: guitar, plate (top and lower), brace, comparison and per-tap views; Swift on
+  iPhone and iPad; the web on a real iPhone; the toolbar and Taps hover and on states.
+- Deselect / Reset through a saved comparison: hidden while it shows, back with the peak list after loading a
+  single guitar measurement; after New Tap, Deselect is enabled as soon as a live peak shows — the same in all three.
 
-- **Swift:** `Speed of Sound` is its **own bold line**; `L: 4174 m/s` / `C: 1144 m/s` sit beneath it.
-- **Web:** collapses to **one line** — `Speed of Sound   L: 4180 m/s   C: 1144 m/s` — and the label is
-  **not bold**.
+## Not divergences
 
-⚠ **Treat as systemic, not one row.** The web's `Young's Modulus (E)` *is* bold-on-its-own-line while
-`Speed of Sound` isn't, so the web is inconsistent **with itself** as well as with Swift. Audit **every**
-section label (Speed of Sound, Young's Modulus, Specific Modulus, Radiation Ratio, Overall Quality, …)
-and derive one rule from Swift rather than patching the one row that was noticed.
-
-### 6. Colour used for titles — web diverges (user)
-
-> *"Web is using color for some 'titles' while swift does not."*
-
-The web renders `Gore Target Thickness` and `Plate Properties` as **blue** headings; Swift uses plain
-text for both. Note the web applies it **selectively** — those two are blue while `Speed of Sound` and
-`Young's Modulus (E)` are not — so there is no consistent rule on the web today.
-
-⚠ **Overlaps [THEME-SPEC.md](THEME-SPEC.md) (the Theme work).** The **systemBlue token** is exactly that
-work's seam ([[project_theme_light_dark]]). Settle *"are section titles ever coloured?"* **with** the
-theme work or the two efforts will fight over the same pixels.
-
-### 7. Vertical spacing / density — Python diverges (user)
-
-> *"Python spacing (vertically) is more cramped than swift and web."*
-
-Python's rows sit tighter than Swift's and the web's — visible in the screenshots, and consistent with
-Python being the **only** platform whose whole panel fits without scrolling (Swift's cuts off at Young's
-Modulus, the web's at Specific Modulus). Needs a measured target from Swift (Qt layout spacing/margins),
-not eyeballing.
-
-## NOT compared — the screenshots are cut off at different points
-
-**Everything from `Specific Modulus` down is unverified.** Python's screenshot shows the full panel
-(Specific Modulus values with quality colours, Radiation Ratio, Cross/Long + Long/Cross ratios, Overall
-Quality, Three-Tap Measurement Process); Swift's stops at Young's Modulus; the web's stops at the
-Specific Modulus header. **Get scrolled-down captures of all three before spec'ing** — do not assume
-those sections agree.
-
-## Explicitly NOT divergences
-
-- **The web's dark theme.** That is [THEME-SPEC.md](THEME-SPEC.md) / the Theme work, not this.
-- **Badge hues** (L blue / C orange / FLC purple) — consistent across all three; only shade differs,
-  which is theme.
-- **fL 66.9 vs 67.0 and 2.81 vs 2.80 mm** — the buffer-size item's first-tap gated-window defect. The numbers
-  and algorithms are correct; see MATERIAL-MULTITAP-DISCREPANCIES.md §3.
-
-## Before fixing
-
-1. **Spec it first**, against Swift, from scrolled-down screenshots of all three. Same approach that
-   worked for `MEASUREMENT-DETAILS-CONSISTENCY.md`.
-2. **Coordinate with the theme work** — divergence 6 is a theme question wearing a layout
-   costume.
-3. **Consider folding into the view-layer restructure** ([[project_architectural_restructure]]). This panel is the view layer, and *"every web defect is the presentation layer re-deriving
-   what Swift's model owns"* is the recurring theme of this whole cycle — divergence 1 (the web
-   re-deriving row order instead of taking the model's sorted peaks) is precisely that pattern again.
-4. Tests: order (1) and the "Showing" string (2) are testable as pure functions. Boxing/spacing/colour
-   (4–7) are visual — the realistic guard is the spec plus a run-review.
+- Badge hues (L blue, C orange, FLC purple) — the same in all three.
+- The fL / thickness differences in the July captures — the gated-window defect above.
