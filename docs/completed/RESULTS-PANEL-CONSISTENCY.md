@@ -1,6 +1,6 @@
 # Results panel (Analysis Results) — cross-platform consistency
 
-**Status:** ✅ done in all three editions — Swift `7408b50`, Python `38ce6c2`, web `342a174` (2026-10-07). Every
+**Status:** ✅ CLOSED 2026-10-07 — done in all three editions — Swift `7408b50`, Python `38ce6c2`, web `342a174` (2026-10-07). Every
 item below was checked side by side by the owner in light and dark, on macOS, iPhone and iPad, and the web on
 desktop and a real iPhone.
 
@@ -19,7 +19,7 @@ desktop and a real iPhone.
 5. **Tinted buttons:** the role as text, a 5 % fill, no outline (measured from Swift's `.bordered`). Where a
    pointer exists, hover raises the fill 10 points (5 → 15 %; on 28 → 38 %). A **two-state toggle** — Auto dB,
    Taps, Crosshair (iOS, touch web) — shows a 28 % fill while on. A multi-state control (Annotations) has none; its
-   icon names the state. Recorded in [THEME-SPEC.md](THEME-SPEC.md).
+   icon names the state. Recorded in [THEME-SPEC.md](../THEME-SPEC.md).
 6. **New Tap is filled blue** everywhere.
 7. **Deselect and Reset to Auto never show for a plate or brace** — peak selection has no purpose there.
 8. **Accepted platform differences:** macOS greys an inactive window's controls (Python and the web do not imitate
@@ -31,9 +31,9 @@ The July captures of the same completed plate measurement, one per edition — w
 
 | platform | screenshot |
 |---|---|
-| Swift | [`images/results-panel-plate-swift-2026-07-16.png`](images/results-panel-plate-swift-2026-07-16.png) |
-| Python | [`images/results-panel-plate-python-2026-07-16.png`](images/results-panel-plate-python-2026-07-16.png) |
-| Web | [`images/results-panel-plate-web-2026-07-16.png`](images/results-panel-plate-web-2026-07-16.png) |
+| Swift | [`images/results-panel-plate-swift-2026-07-16.png`](../images/results-panel-plate-swift-2026-07-16.png) |
+| Python | [`images/results-panel-plate-python-2026-07-16.png`](../images/results-panel-plate-python-2026-07-16.png) |
+| Web | [`images/results-panel-plate-web-2026-07-16.png`](../images/results-panel-plate-web-2026-07-16.png) |
 
 The fL / thickness differences in them (66.9 vs 67.0 Hz; 2.81 vs 2.80 mm) are the first-tap gated-window defect in
 MATERIAL-MULTITAP-DISCREPANCIES.md §3, not the panel.

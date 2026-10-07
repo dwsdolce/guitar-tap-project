@@ -18,7 +18,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#2](https://github.com/dwsdolce/guitar-tap-project/issues/2) · [`THEME-SPEC.md`](THEME-SPEC.md) — Light / Dark / System theme
 - [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3) · [`AUDIO-BUFFER-SIZE.md`](AUDIO-BUFFER-SIZE.md) — Swift 4800-frame buffer
 - [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · [`SLUG-SWEEP.md`](SLUG-SWEEP.md) — sweep every `@parity` slug for false twins, untagged files and dead tests
-- [#6](https://github.com/dwsdolce/guitar-tap-project/issues/6) · [`RESULTS-PANEL-CONSISTENCY.md`](RESULTS-PANEL-CONSISTENCY.md) — Results panel cross-platform consistency
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
@@ -34,6 +33,12 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#6 (results panel consistency) is **closed**; its record is
+[`completed/RESULTS-PANEL-CONSISTENCY.md`](completed/RESULTS-PANEL-CONSISTENCY.md) — the Analysis Results panel
+(guitar, plate, brace, comparison and per-tap views) takes Python's sizes and Swift's wording in all three; two
+divider roles; one icon set for Python and the web; tinted buttons without outlines, with hover and a two-state
+on fill.
 
 #20 (Windows mic level too low) is **closed**; its record is
 [`completed/WINDOWS-MIC-LEVEL-AUDIO-EFFECTS.md`](completed/WINDOWS-MIC-LEVEL-AUDIO-EFFECTS.md) — the Windows
