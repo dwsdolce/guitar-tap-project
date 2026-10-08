@@ -723,6 +723,13 @@ limitation for the tests — the apps need only start and export without an inpu
   published load, as Swift's view does with `.onReceive`; the export double-click guard dropped a click in the
   first 0.7 s after the page loaded; and the download fallback released the file's URL at once. Not yet measured:
   the shared checker comes next.
+- **Python — driver done** (`735fa70`): `pytest-qt` drives the real main window through the same ten exports; only
+  the file dialogs, message boxes and the audio device (none, as on CI) are replaced. The suite draws off-screen
+  by default, as CI must (owner: the checker has to judge off-screen images anyway, so it compares the image's
+  parts within tolerances, not its pixels). The tests found that Python could not start with no input device —
+  the stream was opened in the analyzer's constructor; it is now opened in `start()`, as Swift's engine is, and a
+  failure shows "Audio Engine Error" with Swift's wording — and that two Qt objects (`PeaksModel`,
+  `FftAnnotations`) had no parent and outlived their window.
 
 **Size and order:** several sessions. The web's Playwright setup and the shared checker first (Playwright reaches
 both export paths with no change to the app), then Python's `pytest-qt`, then Swift's UI target and its two hooks;
