@@ -71,6 +71,25 @@ in it; the app pins every colour it draws itself** (§5). Every colour that carr
 the three editions; native controls look native on each platform. The rules below apply to the
 app-drawn side.
 
+**Accepted platform differences** (the owner, 2026-10-07: "I wonder how much to focus on the inactive appearance. It
+is getting pretty detailed."). These follow from the model above and are not divergences:
+
+- **The inactive window.** macOS greys Swift's checkboxes and `.tint` buttons when the window loses focus; Qt and the
+  browser grey their own checkboxes, but the tinted buttons Python and the web draw from the palette stay coloured.
+- **The native controls' own drawing** — e.g. the web's unchecked checkbox is Safari's (white with an outline), not
+  AppKit's or Qt's grey square.
+- **A native toggle's on state.** Swift's Auto dB / Taps / Crosshair are native button toggles, whose on fill macOS
+  draws (about 11 % in Light); Python and the web draw 28 %.
+- **Export All.** Swift's is a menu — Share / AirDrop, or Save All to Disk; Python and the web have no share
+  sheet, so theirs saves to a file, the second of those.
+- **Colour management.** Swift and Safari convert the palette's sRGB values to the display's colour space; Qt
+  on macOS draws them unconverted, so Python's colours look a little more saturated on a wide-gamut display.
+- **Icon glyph sizes.** SF Symbols and the Material Design glyphs sit differently in the same box (the User Manual
+  icon is smaller in Swift).
+
+What is matched is what shows with the window active: the roles, the layout, and which controls are enabled — a
+disabled row dims whole in all three (Swift's `.opacity(0.4)`).
+
 ## 4. Rules
 
 1. **Every colour is a functional role in one table.** A role names what the colour is for (the fL curve, secondary
@@ -115,6 +134,7 @@ Only where the app draws its own surface (§3); the OS draws its controls and wi
 | background.panel | panels, cards, sheets, status bar | `#FFFFFF` | `#141A22` |
 | background.control | inputs, buttons, list rows | `#FFFFFF` | `#11161D` |
 | background.subtle | summary and metric boxes | `#8E8E93` at 8 % | `#8E8E93` at 10 % |
+| background.picker | macOS's control fill: a menu picker's (the Settings dropdowns) and a plain bordered button's (the results panel's Export buttons); Swift's native controls draw it themselves, Python and the web draw it | `#000000` at 8 % | `#FFFFFF` at 8 % |
 | separator | dividers, borders | `#D8DEE6` | `#222A33` |
 | divider.section | the line between a panel's sections (the plate / brace results) — chosen by eye, 2026-10-06 | `#1A2330` at 35 % | `#FFFFFF` at 35 % |
 | divider.headerFooter | the line under a results panel's header and above its footer — brighter than divider.section, so header, body and footer read as three parts; chosen by eye, 2026-10-06 | `#1A2330` | `#E7EBF0` |
@@ -360,10 +380,10 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | **done** 2026-10-04 (Swift 382cfeb, Python 450e1ce, web 329a10e) |
 | 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average); the chart style and Swift's axis ticks (§5.14) | the chart follows the scheme live in all three | **done** 2026-10-04 (Swift d2649ed, Python e1aff31, web fc25da2); run-review passed |
 | 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | **done** 2026-10-05 (Swift 5f4be71, Python 1bdc5ff, web 6e2f40e); run-review passed |
-| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress |
-| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress |
-| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress |
-| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review in progress; the web's PNG now draws and counts only the shown peaks and draws Swift's export card; Python's dB range was the same as Swift's — its 0 and −100 labels were hidden (now shown, in the live chart too); Python's and the web's PNG layout brought to Swift's (§9a 30); run-review §9a 25–30 |
+| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review §9a passed 2026-10-07 (its findings' fixes: Swift f69964a, Python 7d91cb2, web 3dcc139) |
+| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review §9a passed 2026-10-07 (its findings' fixes: Swift f69964a, Python 7d91cb2, web 3dcc139) |
+| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review §9a passed 2026-10-07 (its findings' fixes: Swift f69964a, Python 7d91cb2, web 3dcc139) |
+| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | committed 2026-10-06 (Swift abecde5, Python a25c0b9, web be62a1b); run-review §9a passed 2026-10-07 (its findings' fixes: Swift f69964a, Python 7d91cb2, web 3dcc139); the web's PNG now draws and counts only the shown peaks and draws Swift's export card; Python's dB range was the same as Swift's — its 0 and −100 labels were hidden (now shown, in the live chart too); Python's and the web's PNG layout brought to Swift's (§9a 30); run-review §9a 25–30 |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | — |
 | 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
 | 8 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | — |
@@ -398,9 +418,10 @@ redraws from one change point.
   (measured from Swift's `.bordered` button; the 35 % border first used here was not Swift's — removed 2026-10-07).
   **Hover and on (the owner, 2026-10-07), the same in all three:** a tinted button's fill rises 10 points while a
   pointer is over it, on or off (5 → 15 %, on 28 → 38 %, Python pressed 22 %) (none on touch — the web gates it on `(hover: hover)`; Swift's `.tintedBordered` adds the wash
-  behind the native button); a **two-state toggle** — Auto dB, Taps, Crosshair (iOS, touch web) — shows a 28 %
-  fill while on (Swift: a native `Toggle` with `.toggleStyle(.button)`; Python: `:checked` or `palette.set_on`;
-  web: `.on`). A multi-state control (Annotations: All / Selected / None) has no on fill — its icon names the state.
+  behind the native button); a **two-state toggle** — Auto dB, Taps, Crosshair (iOS, touch web) — shows a
+  stronger fill while on: Python's and the web's 28 % (`:checked` or `palette.set_on`; `.on`); Swift's is a native
+  `Toggle` with `.toggleStyle(.button)`, whose on state macOS draws — about 11 % in Light (measured 2026-10-07), an
+  accepted platform difference (owner, 2026-10-07; §3). A multi-state control (Annotations: All / Selected / None) has no on fill — its icon names the state.
 
 ### 9a. Run-review steps — step 5 (5c–5f)
 
@@ -414,46 +435,127 @@ edition. "Tinted" means the role as text over a faint fill of it.
    words in their quality colours; the Guitar badge a faint blue.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
 2. ~~Taps 3, complete, press Taps. → While the per-tap table is up, Taps is orange with the on fill (28 %), blue with
    the plain 5 % fill otherwise; hovering lightens it a step either way; the table's dots in the series colours.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
-3. Plate, Measure Diagonal on: run the three phases. → Phase markers grey before, blue (L) / orange (C) / purple
+3. ~~Plate, Measure Diagonal on: run the three phases. → Phase markers grey before, blue (L) / orange (C) / purple~~ — *passed (owner, 2026-10-07).*
    (FLC) while active, green when done; inactive phase badges faint grey; the Plate badge faint orange.
 4. ~~The plate result. → The Gore Target Thickness box faint blue, its value in the accent, readable in Dark; the
    summary boxes faint grey; the quality words in the wood colours.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
-5. Brace: run. → As 3–4 for the one phase.
+5. ~~Brace: run. → As 3–4 for the one phase.~~ — *passed (owner, 2026-10-07).*
 
 **Toolbar, status bar, meter (5d)**
 
 6. ~~Look at the toolbar. → Every button blue text and icon on a faint (5 %) blue fill, no outline; Python's icons
    blue, none black. Hover with a pointer → a step lighter (15 %); on touch, no hover.~~ — *passed (owner, 2026-10-07, light and dark, in the #6 side-by-sides).*
-7. Turn Auto dB on (and Crosshair, on iOS and the touch web). → The on state a stronger fill (28 %), a step
-   lighter again on hover. Annotations cycles All / Selected / None with its icon only — no on fill.
-8. Play File… a WAV. → Play File tinted orange while it plays, blue after.
-9. Before and during a tap. → New Tap filled blue with white text; Pause tinted blue; Cancel tinted orange when it
+7. ~~Turn Auto dB on (and Crosshair, on iOS and the touch web). → The on state a stronger fill (28 %; Swift's the~~ — *passed (owner, 2026-10-07).*
+   native on state), a step lighter again on hover. Annotations cycles All / Selected / None with its icon only — no
+   on fill.
+   *Finding (owner, 2026-10-07): Swift's Auto dB on is lighter than Python's and the web's. Measured: Swift ≈ 11 %,
+   Python and web 28 %. The record had said Swift showed 28 %; its on state is macOS's own. Decided (owner): keep
+   it — the state reads in all three; the record corrected (§9 step 5 rule, §3).*
+8. ~~Play File… a WAV. → Play File tinted orange while it plays, blue after.~~ — *passed (owner, 2026-10-07).*
+9. ~~Before and during a tap. → New Tap filled blue with white text; Pause tinted blue; Cancel tinted orange when it~~ — *passed (owner, 2026-10-07).*
    can act, grey when not.
-10. A plate phase under review. → Accept tinted green; Redo orange.
-11. The status bar through a tap. → Its background faint grey; the tap dot faint grey while waiting, green on a tap;
+10. ~~A plate phase under review. → Accept tinted green; Redo orange.~~ — *passed (owner, 2026-10-07).*
+11. ~~The status bar through a tap. → Its background faint grey; the tap dot faint grey while waiting, green on a tap;
     "Tap Detected!" green; the progress bar and "Tap n/N" blue; the peak readout blue; the message in the text colour
-    while detecting, orange otherwise; "Complete" orange while frozen. The web's bar no longer has a coloured left edge (web-only; removed).
-12. Load a measurement saved with other settings. → The loaded-settings notice orange on a faint orange box, its
-    icon orange.
-13. Dump Capture Audio on; take a tap. → The saved notice blue on a faint blue box.
-14. Speak, then tap hard. → The meter's groove light grey (Light) or near-black (Dark), with a border; the blue
+    while detecting, orange otherwise; "Complete" orange while frozen. The web's bar no longer has a coloured left edge (web-only; removed).~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): the web's bar was an inset card with an outline, its text larger, "Tap
+    Detected!" grey and "Complete" bold with no "•" after it; Python's message dot stayed green on completion and
+    its message kept the cooldown's orange after re-arming, its count read "1/3"; Python's and the web's Complete
+    icon plain pause bars. Done (Swift f69964a, Python 7d91cb2, web 3dcc139), to Swift's fullStatusBar: the web's bar a flat strip to the
+    window's edges (background.subtle over the panel), 11 px left / 10 px right, the dot and message colours from
+    detection, Swift's spacing and padding; Python's dot and message recoloured on every detection-state change,
+    "Tap 1/3"; the filled pause circle in both. Qt's unmanaged colour accepted (§3).*
+12. ~~Load a measurement saved with other settings. → The loaded-settings notice orange on a faint orange box, its
+    icon orange.~~ — *passed (owner, 2026-10-07).*
+13. ~~Dump Capture Audio on; take a tap. → The saved notice blue on a faint blue box.~~ — *passed (owner, 2026-10-07).*
+14. ~~Speak, then tap hard. → The meter's groove light grey (Light) or near-black (Dark), with a border; the blue
     gradient fill; green ticks; a yellow peak-hold dot with a white rim; the red handle; the right end red while
-    clipping.
-15. Open Metrics. → The dot green while running, grey stopped; captions secondary; the processing values (Swift,
-    Python) green, yellow, orange or red by load.
-16. Python, an update offered. → The banner a faint blue box with a blue icon.
+    clipping.~~ — *passed (owner, 2026-10-07).*
+15. ~~Open Metrics. → The dot green while running, grey stopped; captions secondary; the processing values (Swift,
+    Python) green, yellow, orange or red by load.~~ — *passed (owner, 2026-10-07).*
+16. ~~Python, an update offered. → The banner a faint blue box with a blue icon.~~ — *passed (owner, 2026-10-07).*
 
 **Settings, measurements, dialogs (5e)**
 
-17. Open Settings. → Captions, units and hints secondary; Python's button icons in the text colour, the Help rows'
-    icons blue and chevrons secondary.
-18. Open the Quick-Start Guide; switch Appearance with it open (Python: from the help page). → Headings, icons and
-    text follow the scheme.
-19. Open Measurements. → Dates, counts and notes secondary; the waveform mark green; Python's ⋯ on hover; the row
-    menu's icons readable in Dark.
-20. Compare: select two. → The selected circles blue, the others secondary; rows that can't be compared dimmed.
-21. View Details of a guitar and of a plate measurement. → Mode names in their mode colours, magnitudes by strength,
-    pitch purple; the plate's L / C / FLC names in the material colours.
+17. ~~Open Settings. → Captions, units and hints secondary; Python's button icons in the text colour, the Help rows'
+    icons blue and chevrons secondary.~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): the three Settings sheets differed in layout, lines, colours and icons; the web
+    was most compact but lacked icons, Delete All Calibrations and Swift's wording. Decided from a mock-up (owner):
+    Swift's structure at the web's density — each section an icon and a bold title (text.primary, not blue), its
+    rows in a grey box with **no lines between rows**, a note under the box; each group inside Measurement Type
+    (Mode Frequency Ranges; Sample Dimensions; Gore Body Dimensions; Plate Vibrational Stiffness; Brace Dimensions)
+    its own titled box, no blank spacer rows; Swift's wording and no colons; sample rate once; icons on the action
+    buttons; a fixed unit column; Cancel / Done at the bottom (top on a phone). Done (Swift f69964a, Python 7d91cb2, web 3dcc139): Swift — the
+    in-section Divider rows became titled Sections, row separators hidden, the sample rate no longer repeated under
+    the device; Python — the Qt lines and spacers removed, boxes and titled groups, Swift's icons (guitars / layers,
+    cogs, outline info); web — the dialog rebuilt on SetSection / SetGroup / SetRow, the icons, Delete All
+    Calibrations (with a confirm), Swift's note and labels, "min to max unit", the About description dropped as in
+    Swift and Python. Then (owner): every setting one row, the control right-aligned — Appearance, the
+    Frequency / Magnitude ranges and Peak Detection Minimum included (their fields had sat on the line below); the
+    calibration buttons on one row; every action button tinted (accent), Save / Reset on one row; Python's unit
+    column sized to its font ("mm" was clipped). Then (owner, side by side): Swift's native Form kept its row lines
+    and padding (macOS ignores hidden row separators) — Swift's Settings now draws its own layout like the others
+    (TapSettingsView+LayoutHelpers: settingsSection / settingsGroup / settingsRow / settingsToggleRow /
+    settingsActionButtons / settingsLinkRow, 13 pt rows, 11 pt notes), on iOS too; one text size for every row;
+    descriptions and notes secondary in Python; every toggle a right-aligned checkbox with its label and description
+    on the left (a switch on iOS); Quick Start Guide / User Manual rows an accent icon, primary text and a secondary
+    trailing icon (Swift's User Manual a button, not a Link); Advanced a boxed row with the chevron at the right;
+    Swift's mode-range grid and wording, the calibration details and Delete All only with calibrations, in all
+    three; Python's Check Now tinted. Then (owner, side by side): every Settings dropdown drawn as Swift's macOS menu
+    picker — a filled box (new role `background.picker`), no border, 24 pt, radius 6, ⌃⌄ at the right; Swift's is the
+    native picker, Python's a `MenuPicker` it paints, the web's a `MenuPicker` around the native select; the web's
+    checkboxes in the accent; Python's Calculated Density semibold and the brace Height note under its row; Python's
+    Peak Detection Minimum dims whole when off (plate / brace), as Swift's and the web's. The inactive-window look,
+    native control drawing and icon glyph sizes accepted as platform differences (§3).*
+18. ~~Open the Quick-Start Guide; switch Appearance with it open (Python: from the help page). → Headings, icons and
+    text follow the scheme.~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): the three guides looked different — Python's headings large and its lines loose
+    (Qt's rich text ignores heading sizes and paragraph borders), the web's headings blue, its body secondary and
+    the three workflows as rows. Done (Swift f69964a, Python 7d91cb2, web 3dcc139): Swift's HelpView list in all three — each section a small
+    secondary header (icon and title) with a line under it; the overview primary body text with plain bullets;
+    each entry an 11 px semibold title over a 10 px secondary description, a line between entries; row icons in
+    the accent; a line under every item, the last in a section too, so each section ends with one; a row's icons
+    — several for a control that changes (Pause / Resume / Accept, Cancel / Redo, Annotations) — before its title,
+    each in a 20 px slot 6 px apart (owner: the web had only one, Python's ran together). Python: styled
+    paragraphs and `<hr>` lines, no in-page title (Swift's is the bar's). The web's
+    Release Notes share the guide's styles and follow it. The name is "Quick Start Guide" everywhere (owner): the
+    hyphen dropped from Swift's and Python's pushed-page titles, the manual (ch08) and the guide generators.
+    Then (owner): the current section's header pinned at the top while it scrolls (Swift's list headers) —
+    the web's sticky, Python's a strip over the view; the contents aligned row by row to Swift, keeping
+    platform wording (Click / Tap, toolbar / menu bar): Swift's Menu Bar and User Manual rows moved after
+    Metrics (they had sat among the toolbar buttons) and its "five menus" made four; the web's Crosshair after
+    them; the web's titles Swift's (Re-analyze Peaks, Play Audio File, Step 3 — Tap New Tap, Zoom & Pan Help),
+    "Chart Options" without "(⋯)"; the web's icons Swift's (Multi-Tap Comparison added; Analysis Results a
+    document, Play Audio File a play circle, Compare a waveform, Zoom & Pan an info circle, Crosshair the
+    viewfinder; none on Peak Labels, Toolbar and the Tap Controls rows); section icons guitars, 3-D layers and
+    a closed book; the web's Zooming the Spectrum added; Zoom & Pan Help describes the ⓘ card, as Swift's;
+    Swift's sentences restored (export between devices; Generic Guitar's broad ranges); Python's Analysis
+    Results without the iPhone / iPad sentence.*
+19. ~~Open Measurements. → Dates, counts and notes secondary; the waveform mark green; Python's ⋯ on hover; the row
+    menu's icons readable in Dark.~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): the rows were separated three ways (Swift lines, Python a framed box, the web
+    cards); the type marks differed (Python a 〜 character and the 📊 emoji, the web's waveform after the name and
+    no comparison mark); Python's and the web's buttons had no icons, the web's sat at the top; Swift's title let
+    the rows show through as they scrolled. Done (Swift f69964a, Python 7d91cb2, web 3dcc139), to Swift's list: plain rows with a line between,
+    no frame or cards; Swift's marks beside the date — the waveform (has a spectrum) in status.complete, the chart
+    document (a comparison) in the accent; a › chevron, ⋯ on hover (always on touch); Python's names on one line
+    unless there is no room; the web's text at Swift's sizes (names 13 px bold, the rest 10 px); the buttons with
+    Swift's icons and labels ("Import", not "Import…"), the web's at the foot (top on a phone); Swift's title on
+    an opaque background. Export All stays one action in Python and the web (§3). Then (owner): Done follows
+    what it does, as Swift's placements — a Done that commits beside Cancel (Settings) is the accent with
+    white text, one that only closes (Saved Measurements, Metrics, Measurement Details, the Quick Start
+    Guide) a plain button — one rule everywhere (owner); Swift's Metrics Done and its iOS guide's Done, which
+    had been .confirmationAction, are now .cancellationAction; the web's Metrics Done plain. Every remaining
+    accent button commits (Save, Play, Settings' Done). The web's rows 8 px between lines, as Swift's.*
+20. ~~Compare: select two. → The selected circles blue, the others secondary; rows that can't be compared dimmed.~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): the selection was drawn three ways — Python ● / ○ characters, the web ☑ / ☐
+    with the selected row tinted and no mark on a row that can't be compared, its other buttons hidden and
+    Compare (N) blue; Python and the web hid the › chevron. Done (Swift f69964a, Python 7d91cb2, web 3dcc139), to Swift's: an empty circle in
+    the secondary colour or the accent check-circle on every row, a row that can't be compared dimmed with its
+    circle, no row tint, the chevron kept; the web's Import / Export All / Delete All shown disabled while
+    comparing, Compare (N) plain with its icon, Cancel where Done was.*
+21. ~~View Details of a guitar and of a plate measurement. → Mode names in their mode colours, magnitudes by strength,
+    pitch purple; the plate's L / C / FLC names in the material colours.~~ — *passed (owner, 2026-10-07).*
     *Finding (owner, 2026-10-07): a plate's Details showed each peak with Swift's "?" icon and a grey name (Swift
     gave plate peaks the guitar mode "unknown"); Python drew a plain dot, the web no icon; and Python's and the
     web's Details drew their own rows, not the results card. Done (Swift `9bcf4f0`, Python `fb211e8`, web `98cbe52`): Details uses the results panel's
@@ -463,22 +565,43 @@ edition. "Tinted" means the role as text over a faint fill of it.
     `view/material-peak-role` holds each role's name, badge text and colour. Direction icons (⟷ ↕ ⤢) were tried and
     dropped (owner): one symbol per role everywhere, not three ways to name a tap. The web's Details classifies
     guitar modes among the shown peaks, as Swift's and Python's.*
-22. Open Edit, Save and Play File, and the plate and brace dimensions in Settings. → Captions and units secondary;
-    fields readable.
-23. Export a PDF. → The loading overlay: the scrim, a dark grey card, white text.
-24. Web: look over the whole page. → Window, panels, separators and dialogs all follow the scheme; nothing left
-    dark in Light.
+    *Finding (owner, 2026-10-07, the rest of the form): closing differed — Swift's macOS window had no button,
+    Python a Close at the bottom, the web a blue Close at the top; Measurement Info was laid out three ways and
+    the web's section titles were blue and bold, its modal title much larger. Decided (owner): a Done at the
+    bottom right in all three (plain — the one rule; at the top on a phone), Swift's macOS window included; the
+    rest Swift's GroupBox — a plain title over a grey rounded box, Measurement Info fitting its content with a
+    small secondary "Label:" before each value (the name medium weight), the peaks (and a comparison's spectra)
+    in their own box; Python's scroll frame removed; the web's modal titles at the native window titles' 13 px
+    bold. Done (Swift f69964a, Python 7d91cb2, web 3dcc139).*
+22. ~~Open Edit, Save and Play File, and the plate and brace dimensions in Settings. → Captions and units secondary;
+    fields readable.~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): the Save and Play File sheets differed in all three — Swift's title large and
+    centred, unlike its other sheets; Python's fields in grey group boxes; the web's name field on its label's
+    line, its hints inside the boxes, Play File's buttons at the top, and a disabled Save / Play a faded blue.
+    Done (Swift f69964a, Python 7d91cb2, web 3dcc139): Swift's sheets titled as Saved Measurements (one `sheetTitle` for all three: the
+    headline at the left, a line under it); Swift's form in Python and the web — a bold title above each
+    full-width field, the hint as a caption under it, a file row's name (secondary while none) with Browse…
+    and Clear at the right; Cancel and Save / Play at the bottom right, Save / Play the accent while they can
+    act and plain while they cannot.*
+23. ~~Export a PDF. → The loading overlay: the scrim, a dark grey card, white text.~~ — *passed (owner, 2026-10-07).*
+24. ~~Web: look over the whole page. → Window, panels, separators and dialogs all follow the scheme; nothing left
+    dark in Light.~~ — *passed (owner, 2026-10-07).*
 
 **Exports (5f)**
 
-25. Export a PNG in Dark and in Light. → The two are the same, drawn light: white chart, light colours.
-26. Web, Annotations = Selected: export a PNG. → Dots only for the shown peaks; "Detected Peaks: N" counts the same
-    peaks; the cards as Swift's (larger text, centred, a shadow, no border).
-27. Export a PDF in Dark and in Light — guitar, plate, comparison, multi-tap. → Each pair the same, drawn light.
-28. Save a comparison; switch Appearance; load it. → Curves and table dots in the series colours by order, for the
-    current scheme.
-29. View Details of that comparison. → The same colours by order.
-30. Export a PNG of the same measurement in all three. → Each matches Swift's:
+25. ~~Export a PNG in Dark and in Light. → The two are the same, drawn light: white chart, light colours.~~ — *passed (owner, 2026-10-07).*
+26. ~~Web, Annotations = Selected: export a PNG. → Dots only for the shown peaks; "Detected Peaks: N" counts the same
+    peaks; the cards as Swift's (larger text, centred, a shadow, no border).~~ — *passed (owner, 2026-10-07).*
+27. ~~Export a PDF in Dark and in Light — guitar, plate, comparison, multi-tap. → Each pair the same, drawn light.~~ — *passed (owner, 2026-10-07).*
+    *Finding (owner, 2026-10-07): Python's and the web's PDFs had a much thicker dark frame round the chart than
+    Swift's. Cause: step 30 gave their chart images Swift's transparent 16 pt margin, but their PDF code still
+    inset the image inside the matte (written when the image was opaque, to imitate that margin), so the frame
+    was doubled. Done (Swift f69964a, Python 7d91cb2, web 3dcc139): the image fills the matte at the content width, as Swift's — the margin
+    alone is the frame.*
+28. ~~Save a comparison; switch Appearance; load it. → Curves and table dots in the series colours by order, for the
+    current scheme.~~ — *passed (owner, 2026-10-07).*
+29. ~~View Details of that comparison. → The same colours by order.~~ — *passed (owner, 2026-10-07).*
+30. ~~Export a PNG of the same measurement in all three. → Each matches Swift's:
     - the dB axis labelled 0 and −100 at its ends (Python's live chart too);
     - the axis titles "Frequency (Hz)" and "FFT Magnitude (dB)" — on Swift's live chart too, where they had
       gone missing since F55 clipped the plot;
@@ -486,7 +609,7 @@ edition. "Tinted" means the role as text over a faint fill of it.
     - peak cards that fit their text, with a shadow and no border, the cents smaller and lighter;
     - summary chips with no border: frequency bold, mode name in its colour, dB grey;
     - the mode legend kept together on the left;
-    - a clear margin around the image.
+    - a clear margin around the image.~~ — *passed (owner, 2026-10-07; image and PDF exports from the main window — plate, comparison, generic — checked too).*
 
     ~~The web leaves out a frequency label that would run past the plot's edge, as Swift and Python do.~~
     — *passed (owner, 2026-10-07).* *(Found from this step's first run: the dB range was the same in Swift and
@@ -500,6 +623,40 @@ edition. "Tinted" means the role as text over a faint fill of it.
     `visiblePeaks`; the chart's badges and the live export read it; the saved-measurement export keeps its inline
     rule (`annotatedBy`), as Swift's does. A shared slug `state/visible-peaks` in all three, pinned by
     `test/annotation-state` (the web's tests now test the analyzer's rule, including a peak outside the range). Verified by the owner, 2026-10-07.*
+
+    *Finding (owner, 2026-10-07, a saved comparison's PNG): the mode bands only in Swift's (both live charts
+    have them; the web's live chart had none); Type "Generic Guitar" (Swift), missing (Python), "Comparison"
+    (web); the list export titled "Comparison — name", the main view's "FFT Peaks — name"; the web's title and
+    header larger, its date the browser's (10/7/2026, 9:22:32 PM), its legend dots; Python's and the web's
+    chart titles higher, plots taller, axis titles small. Decided (owner): a comparison is always of guitars,
+    so it has the bands; its Type is "Comparison" (it may hold different guitar types); one title from either
+    export, the live chart's "FFT Peaks — name". Done (Swift f69964a, Python 7d91cb2, web 3dcc139): Swift `typeLabel`; Python bands on every
+    guitar export, the Type, the titles, its multi-tap exports' invalid "classical" type replaced by Swift's;
+    the web's bands (live and export), the app's date format; Python's and the web's images laid out on
+    Swift's — the 800 pt chart frame at 169 pt, the title centred 21 pt in, the plot 219.5–930 pt, 16 pt
+    medium axis titles, the header 22 / 11 pt, the legend's 10 pt marks (24 × 4 lines, 12 pt circles) at
+    1030 pt. Python measured against Swift's PNG: every band within 0.5 pt but the x-axis title (4 pt high,
+    pyqtgraph's own offset).*
+    *Then (owner, re-export of the loaded comparison "Fred"): Python's main-view exports still had the Type
+    "Generic Guitar", no Frequency Range in the PDF header (the live path passed no entries) and no date on
+    the PDF's chart image. Done (Swift f69964a, Python 7d91cb2, web 3dcc139): fixed in that path — and (owner, the next re-export) in a
+    third: Python's Export Spectrum has its own early branch for a saved comparison, which still titled it
+    "Comparison — name" with the guitar type. Checked against the files (all three PNGs within 0.5 pt of Swift's but Python's
+    x-axis title, 4 pt high; the PDFs alike): Swift's frequency labels started at their grid lines (Swift Charts'
+    default), Python's and the web's were centred on them. Decided (owner): centred — Swift's x-axis marks
+    `AxisMarks(preset: .aligned, …)` with the label anchored `.top` (the default preset overrode the anchor;
+    `centered: true` would centre a label between two marks), in the export and the live chart; measured on
+    a rendered export, each label within 1.5 px (2×) of its line (Swift f69964a, Python 7d91cb2, web 3dcc139). Apple documents neither the presets nor
+    the default's override of the anchor (`AxisValueLabel.centered`: "center the label between two axis
+    values"; `anchor`: "the anchor point on the bounding box … that attaches to the position"), so an OS
+    update could move the labels unannounced. **Test plan (owner):** the export regression tests include
+    one that renders each edition's export and asserts every frequency label's centre is within 2 px (2×)
+    of its grid line — Swift's guards the undocumented preset; the main graph shares the mechanism. If it
+    ever fails, the fallback is labels drawn at the chart proxy's x positions. **Test gap (owner):** the PDF test
+    (`test/pdf-report`) compares only text, and nothing compares the PNG; and the main window and the Saved
+    Measurements list export through separate code. A regression test must exercise both — guitar, plate /
+    brace, multi-tap and saved comparison, PNG and PDF, from each — the main-window ones with the fixture
+    loaded into the analyzer first. To design next.*
 
 ## 10. Decisions
 
