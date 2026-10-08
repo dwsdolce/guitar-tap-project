@@ -385,7 +385,7 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
-| 7 | Export regression tests | the exports guarded in all three, Swift's output the expected values: both export paths — the main window and Saved Measurements — for guitar, plate / brace, multi-tap and a saved comparison, PNG and PDF (the main-window export built by a function a test can call, the same in all three); the PDF's chart image and matte rectangles added to `test/pdf-report`; the PNG's layout (header, chart title, plot, axis titles, legend) and every frequency label's centre within 2 px (2×) of its grid line; fixtures with a fixed date, version and platform (the plan under §9a step 30) | each edition's suite runs them and they pass; a deliberate change to an export fails them | — |
+| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | — |
 | 8 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
 | 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
@@ -657,7 +657,57 @@ edition. "Tinted" means the role as text over a faint fill of it.
     (`test/pdf-report`) compares only text, and nothing compares the PNG; and the main window and the Saved
     Measurements list export through separate code. A regression test must exercise both — guitar, plate /
     brace, multi-tap and saved comparison, PNG and PDF, from each — the main-window ones with the fixture
-    loaded into the analyzer first. → §9 step 7.*
+    loaded into the analyzer first. → §9 step 7, planned in §9b.*
+
+### 9b. Step 7 — the export regression tests (plan)
+
+Decided with the owner, 2026-10-08. Why: the run-review's export findings (§9a 27, 30) passed every suite — the PDF
+test compares only text, nothing compared the PNG, and the main window and Saved Measurements export through separate
+code. Several were a wrong argument on one export path, so the tests drive the app itself rather than calling the
+export functions.
+
+**What each test does** — the owner's four steps, in each edition:
+1. import a fixture (`.guitartap`) through the app;
+2. export — Export Spectrum (PNG) and Export PDF — from the main window (the fixture loaded) and from Saved
+   Measurements (the row's menu);
+3. catch the written files;
+4. measure them against Swift's expected values.
+
+**Cases:** guitar, plate, brace, multi-tap and a saved comparison — each from both paths, PNG and PDF. The fixtures
+carry a fixed date, version and platform so the outputs compare.
+
+**How each edition drives its app:**
+- **Web — Playwright Test,** as in palmas: an `e2e/` suite and a `test:e2e` script beside the Vitest suite, the built
+  PWA served locally, desktop Chrome first; downloads caught by Playwright.
+- **Python — `pytest-qt`:** the real main window, its real buttons and menus clicked with `qtbot`; only the open and
+  save file dialogs are replaced (they return a path). Everything between the click and the file is the app's code.
+- **Swift — an XCUITest target:** launches the real app and drives it through accessibility. Two edges get test-only
+  hooks behind a launch argument: Import takes the fixture without the file panel (or the library starts with it),
+  and the save panel writes to a test folder. Everything between the click and the file is the app's code.
+
+**What is measured — one shared checker,** so all three are judged by the same rules, with Swift's values the
+expected ones (kept in the hub, as shared case data):
+- **PNG layout** (points, from the 2× image): the header title, the chart title, the plot's edges, the x-axis title
+  and the legend — Swift's: 36–56.5, 181.5–199, 219.5–930, 960–974.5, 1026.5–1033.5 for a comparison; the header's
+  Type, date format and rows; the legend's marks.
+- **Label centring:** every frequency label's centre within 2 px (2×) of its grid line — guarding Swift's
+  undocumented `AxisMarks(preset: .aligned)`; if it ever fails, the fallback is labels drawn at the chart proxy's
+  x positions.
+- **PDF:** the existing text comparison (`test/pdf-report`, Swift's lines, 1 pt), plus the chart image's and the
+  matte's rectangles.
+- **Tolerance per OS:** fonts differ by OS, so the layout checks carry a tolerance — or expected values per OS, as the
+  per-OS peak baselines do (`tooling/parity/baselines/`).
+
+**CI (a requirement):** GitHub Actions — the web on Linux; Python on Linux, macOS and Windows; Swift on macOS. Free on
+GitHub's runners for public repos: `guitar_tap` and `GuitarTapWeb` are public; `GuitarTap` becomes public when its CI
+is set up (owner). Linux runs Qt on its off-screen platform; macOS and Windows runners have a desktop.
+
+**No microphone:** CI runners have no audio input; no current or planned test uses one (owner), so this is not a
+limitation for the tests — the apps need only start and export without an input device.
+
+**Size and order:** several sessions. The web's Playwright setup and the shared checker first (Playwright reaches
+both export paths with no change to the app), then Python's `pytest-qt`, then Swift's UI target and its two hooks;
+CI workflows as each edition's suite passes locally.
 
 ## 10. Decisions
 
