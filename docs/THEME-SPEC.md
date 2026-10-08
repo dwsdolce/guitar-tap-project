@@ -369,7 +369,7 @@ The full per-site inventories (file:line for every colour) are in `docs/theme/IN
 
 Each step is done in Swift, then Python, then the web, and verified in all three before the next step starts; each
 edition's step is one commit (code → hash → this doc). Steps 5a–5f are the area-by-area re-wiring. The steps are committed to `main`;
-no release is cut from any edition until step 7 is signed off (owner, 2026-10-04), because from step 3 to the end of
+no release is cut from any edition until step 8 (the run-review) is signed off (owner, 2026-10-04), because from step 3 to the end of
 step 5 the native widgets follow the scheme while the app's own colours do not yet.
 
 | # | step | what it delivers | done when | status |
@@ -385,8 +385,9 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | — |
-| 7 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
-| 8 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | — |
+| 7 | Export regression tests | the exports guarded in all three, Swift's output the expected values: both export paths — the main window and Saved Measurements — for guitar, plate / brace, multi-tap and a saved comparison, PNG and PDF (the main-window export built by a function a test can call, the same in all three); the PDF's chart image and matte rectangles added to `test/pdf-report`; the PNG's layout (header, chart title, plot, axis titles, legend) and every frequency label's centre within 2 px (2×) of its grid line; fixtures with a fixed date, version and platform (the plan under §9a step 30) | each edition's suite runs them and they pass; a deliberate change to an export fails them | — |
+| 8 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
+| 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
 **How each edition follows a scheme change.** One mechanism in all three, closest to Swift's: a use site names a
 role, never a value; the role is resolved to a value for the current scheme in one place (the palette module); and a
@@ -656,7 +657,7 @@ edition. "Tinted" means the role as text over a faint fill of it.
     (`test/pdf-report`) compares only text, and nothing compares the PNG; and the main window and the Saved
     Measurements list export through separate code. A regression test must exercise both — guitar, plate /
     brace, multi-tap and saved comparison, PNG and PDF, from each — the main-window ones with the fixture
-    loaded into the analyzer first. To design next.*
+    loaded into the analyzer first. → §9 step 7.*
 
 ## 10. Decisions
 
@@ -688,4 +689,4 @@ edition. "Tinted" means the role as text over a faint fill of it.
    `setColorScheme`; on a Linux desktop where PySide6 6.11 ignores the request, Python switches to the Fusion style
    with a light or dark `QPalette` built from the role table, so its widgets follow the setting too (Qt-styled rather
    than native there). Tested on Linux Mint Cinnamon (the owner's VM), and on GNOME and KDE in VMs built for it
-   (§9 step 7, from the committed code).
+   (§9 step 8, from the committed code).

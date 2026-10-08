@@ -6871,7 +6871,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 4 | B — `plate` and `brace` | `plate`, `brace` | done |
 | 5 | B — `dsp` | `dsp` | done — identical in all three; peak analysis and the live FFT are analyzer methods in all three; one live-spectrum length and bin 0; run-reviewed (Swift `f082a55`, Python `180b595`, web `7fef7a6`) |
 | 6 | B — `peaks` (synthetic cases and averaging) | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and saves are Swift's; run-reviewed (Swift `7855a3d`, Python `8837a28`, web `8f31b91`) |
-| 7 | B — `mode-colors` | `mode-colors` | **waits on Issue #2 (theme)** — the owner chose to do the theme work first; spec approved 2026-10-04 (`docs/THEME-SPEC.md`), implementation next |
+| 7 | B — `mode-colors` | `mode-colors` | done — with Issue #2 (theme) step 4: each mode's colour role is a case in `theme.json` (`modeRoles`), run in all three (Swift `382cfeb`, Python `450e1ce`, web `329a10e`); closed 2026-10-07 |
 | 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | to do |
 | 9 | B — `measurement-codable` | `measurement-codable` | to do |
 | 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do |
@@ -6910,6 +6910,7 @@ pilot and the batch entries below. *done* = the cases are in `tooling/parity/cas
 | B | `plate`, `brace` (together: one model) | done — identical in all three; the web has Swift's model types; Python's wrappers and dialogs gone; when properties are shown follows Swift; Python's G_LC rule as Swift | Swift `da367e5`, Python `308d0e3`, web `288d003` |
 | B | `dsp` | done — identical in all three; the web's peak analysis and the live FFT (web and Python) are analyzer methods, as Swift's; one live-spectrum length (32768) with a correct bin 0; run-reviewed | Swift `f082a55`, Python `180b595`, web `7fef7a6` |
 | B | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and every save on the analyzer, as Swift's; run-reviewed | Swift `7855a3d`, Python `8837a28`, web `8f31b91` |
+| B | `mode-colors` | done — the cases are `theme.json`'s `modeRoles` (Issue #2 step 4), identical in all three | Swift `382cfeb`, Python `450e1ce`, web `329a10e` |
 
 ### Stage 2 survey — what is still not the same (2026-10-02)
 
@@ -7455,7 +7456,7 @@ the service worker (F30's run-review steps).
   plus 0.95 dB and 0.09 Hz — the July live capture's window placement and build, not the editions (today's
   analysis gives 67.037 Hz at either threshold).
 
-**Group B — `mode-colors` (2026-10-04, waits on Issue #2).** The mode colours differ because the chart
+**Group B — `mode-colors` (2026-10-04; done with Issue #2 step 4 — Swift `382cfeb`, Python `450e1ce`, web `329a10e`; closed 2026-10-07).** The mode colours differ because the chart
 backgrounds differ: Swift follows the OS (light or dark), Python is always white, the web always dark; Swift and
 Python share one table, the web brightened five of seven for its dark chart. Swift's colour sits on the
 `GuitarMode` model (its own source calls that a layer violation to shed with the theme work); the web's in its
