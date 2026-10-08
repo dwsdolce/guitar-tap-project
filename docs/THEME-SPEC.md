@@ -685,8 +685,16 @@ carry a fixed date, version and platform so the outputs compare.
   hooks behind a launch argument: Import takes the fixture without the file panel (or the library starts with it),
   and the save panel writes to a test folder. Everything between the click and the file is the app's code.
 
-**What is measured — one shared checker,** so all three are judged by the same rules, with Swift's values the
-expected ones (kept in the hub, as shared case data):
+**One judge, three drivers** (owner, 2026-10-08): each edition's native test drives its app and writes the exported
+files to a folder with a small manifest (case, path, format); one Python checker judges that folder. The checker's
+source and Swift's expected values live in the hub and are copied into each edition, as `theme.json` is — each
+repo's tests run on their own copy without the hub, and the hub checks the copies are identical (a byte compare, not
+a review of three implementations). Its dependencies stay small: Pillow for the PNG, one PDF library for the
+rectangles. The web's Playwright spec and Python's `pytest-qt` call the checker directly; Swift runs it as the step
+after `xcodebuild`, in a script and on CI. Python is on every GitHub runner.
+
+**What is measured — the shared checker,** so all three are judged by the same rules, with Swift's values the
+expected ones:
 - **PNG layout** (points, from the 2× image): the header title, the chart title, the plot's edges, the x-axis title
   and the legend — Swift's: 36–56.5, 181.5–199, 219.5–930, 960–974.5, 1026.5–1033.5 for a comparison; the header's
   Type, date format and rows; the legend's marks.
@@ -704,6 +712,17 @@ is set up (owner). Linux runs Qt on its off-screen platform; macOS and Windows r
 
 **No microphone:** CI runners have no audio input; no current or planned test uses one (owner), so this is not a
 limitation for the tests — the apps need only start and export without an input device.
+
+**Progress:**
+- **Web — driver done** (`52814db`): Playwright drives the built app — guitar, multi-tap, plate, brace and the saved
+  comparison, each imported and exported as PNG and PDF from both the main window and Saved Measurements (11
+  tests). Headless Chrome has no microphone, so the tests dismiss the Audio Engine Error as a user would, and hide
+  the save picker so a save is a download the test catches. The tests found three web bugs, fixed in the same
+  commit: an import's auto-load skipped App's share of the load (the measurement's type, settings, range and tap
+  count), so a plate's or brace's Export PDF did nothing after an import — App now observes the analyzer's
+  published load, as Swift's view does with `.onReceive`; the export double-click guard dropped a click in the
+  first 0.7 s after the page loaded; and the download fallback released the file's URL at once. Not yet measured:
+  the shared checker comes next.
 
 **Size and order:** several sessions. The web's Playwright setup and the shared checker first (Playwright reaches
 both export paths with no change to the app), then Python's `pytest-qt`, then Swift's UI target and its two hooks;
