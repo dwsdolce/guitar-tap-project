@@ -4,11 +4,16 @@ Status: **APPROVED 2026-10-04** — every decision in §10 taken by the owner. B
 three editions (§7).
 Lock-step: designed once here, built in Swift, Python and the web together, shipped together.
 
+**Where it stands (2026-10-08):** steps 1–6 and 9 done (§9). Step 7, the export regression tests, in progress: the
+tests that drive each app through its exports and the shared checker are built, the findings they raised are fixed,
+and every edition's exports match Swift's; left are CI, and iPad and iPhone (§9b). Step 8, the sign-off run-review, follows; no release before it.
+
 Why now: every colour difference the #17 slug sweep meets (mode colours, wood quality, the multi-tap palette, the
 analysis-quality colours of F57) comes back to the same cause — the three editions draw on different backgrounds
 and pick colours three different ways. The owner (2026-10-04): "Once color schemes are available they will both
 respond to the current color scheme and have the same numbers for the same scheme … go ahead and do #2 since it
-keeps coming up everytime we hit a color difference." The `mode-colors` step of Stage 2 waits on this.
+keeps coming up everytime we hit a color difference." The `mode-colors` step of Stage 2 waited on this (done with
+step 4).
 
 ## 1. The owner's three questions
 
@@ -18,7 +23,7 @@ keeps coming up everytime we hit a color difference." The `mode-colors` step of 
 2. **Is every colour in all three editions inventoried and assigned to what changes with the scheme?** Yes — §7
    summarises the inventory and §5 assigns every colour to a **role**. Each role has a light value and a dark
    value (equal where the colour need not change); nothing is left to a platform's own colours. The inventory
-   also found duplicate and diverging copies (§6), which this work removes.
+   also found duplicate and diverging copies (§6), which this work removed.
 3. **Which schemes?** **Light and Dark.** Researched for macOS, iOS / iPadOS, Windows 10 / 11, GNOME, KDE,
    Cinnamon, Qt and the browsers (`docs/theme/PLATFORM-SCHEMES.md`, with sources): no platform hands an app a third
    scheme — each reduces to light or dark (plus "unknown" / "no preference"). The differences are in how the user
@@ -288,7 +293,8 @@ editions used. The average is drawn thicker than the series.
 The PNG and PDF use the light value of every role, so an exported Air is the screen's Air in light. The PDF's own
 constants are roles with one value: `pdf.accent` `#2659BF`, `pdf.text` `#1C1C1E`, `pdf.secondary` `#787880`,
 `pdf.divider` `#D2D2D4`, `pdf.box` `#F2F2F4`, `pdf.pill` `#ECECEE`, `pdf.goreBox` `#F7F9FD`, `pdf.chartMatte`
-`#0D0D0D`.
+`#0D0D0D`. Report text with no colour of its own is `pdf.text` — in Swift the report views' default text colour
+(owner, 2026-10-08; it had been the system's black).
 
 ### 5.13 Saved comparison colours (decision 4)
 A saved comparison stores each entry's colour as RGBA (`colorComponents`). On load, each entry is drawn in the
@@ -316,11 +322,18 @@ sizes as areas (pt²); every curve and point is antialiased.
 | magnitude tick spacing | chosen from the visible range | every 20 dB |
 
 The axis ticks — the grid lines — are Swift's `AxisTickGenerator` in all three, checked against
-`tooling/parity/cases/axis-ticks.json`: frequency ticks by the nice-number rule (8 at most), labelled "100 Hz" /
-"1.2 kHz" on screen and "100" / "1.2k" in the exported image; magnitude ticks every 1, 2, 5, 10, 20 or 50 dB, the
-smallest giving at most 8.
+`tooling/parity/cases/axis-ticks.json`: frequency ticks by the nice-number rule (8 at most), labelled the same on
+screen and in the exported image — whole hertz, thousands with a k ("100", "1.2k"), more decimals until every label
+differs, no unit (the axis title "Frequency (Hz)" carries it); a label that would reach past the plot's edge is not
+shown (owner, 2026-10-08; §9b finding 1); magnitude ticks every 1, 2, 5, 10, 20 or 50 dB, the smallest giving at
+most 8.
 
-## 6. Divergences the inventory found (removed by this work)
+## 6. Divergences the inventory found (2026-10-04) — all removed
+
+The inventory's list, as found before the work. Steps 2–5 removed every one: the duplicate tables by step 2's single
+palette module per edition and step 4 (colour off the model, the PDF and PNG mode tables gone); the rest by the
+re-wiring of step 5 (5a chart, 5b peak lists, 5c–5e the panels and the web's blues, 5f the exports — Swift's PNG
+now forced light).
 
 - **Mode colours** — three tables per native edition: Swift `GuitarMode.hex`, a PDF-only `modeColor()` (different
   values; Upper and Unknown `.secondary`), and the PNG legend uses `GuitarMode.color`; Python `GuitarMode.hex`, a PDF
@@ -340,7 +353,9 @@ smallest giving at most 8.
 - **Swift accent:** `AccentColor` has no value, so every untinted control takes the user's system accent colour.
 - **Swift PNG export** does not force the light scheme (its PDF does).
 
-## 7. Inventory summary (2026-10-04)
+## 7. Inventory summary — before the work (2026-10-04)
+
+How each edition chose its colours when the work began; §8 is how it does now.
 
 | | Swift | Python | Web |
 |---|---|---|---|
@@ -350,44 +365,12 @@ smallest giving at most 8.
 
 The full per-site inventories (file:line for every colour) are in `docs/theme/INVENTORY-swift.md`, `INVENTORY-python.md` and `INVENTORY-web.md`.
 
-## 8. Per-edition implementation
+## 8. Per-edition implementation (as built)
 
-- **Swift:** the `appearance` setting and `Palette.apply` (`NSApp.appearance`; on iOS each window's interface style); `Palette` gains every role (§5),
-  each an adaptive colour with the pinned light/dark pair; every system colour, `Color(…)` literal and inline role
-  set is replaced by a role; `AccentColor` gets the accent role's values; colour leaves `GuitarMode` / `WoodQuality`;
-  PNG renders get `.environment(\.colorScheme, .light)`. Size: medium (~300 sites, mostly mechanical).
-- **Python:** the setting and the OS-scheme follow; `palette.py` gains every role and a resolved-scheme lookup;
-  a per-scheme stylesheet replaces the 177 inline `setStyleSheet` colour strings; pyqtgraph background, pens and
-  text from roles; `ColorPair.on(widget)` gives way to the resolved scheme; exports take the light column. Size:
-  large — the long pole.
-- **Web:** the setting and the media-query follow; `palette.ts` holds every role, and the CSS custom properties are
-  set per scheme from it (`:root[data-theme=…]`); `App.css` literals become variables; the chart takes
-  `LIGHT_CHART` / `DARK_CHART` by the resolved scheme; `MODE_COLOR` and the other dark-only tables become role
-  lookups; exports take the light column. Size: medium.
-
-## 9. Implementation plan (lock-step)
-
-Each step is done in Swift, then Python, then the web, and verified in all three before the next step starts; each
-edition's step is one commit (code → hash → this doc). Steps 5a–5f are the area-by-area re-wiring. The steps are committed to `main`;
-no release is cut from any edition until step 8 (the run-review) is signed off (owner, 2026-10-04), because from step 3 to the end of
-step 5 the native widgets follow the scheme while the app's own colours do not yet.
-
-| # | step | what it delivers | done when | status |
-|---|---|---|---|---|
-| 1 | Lock the table | the decisions (§10) | the owner approves the spec | **done** 2026-10-04 |
-| 2 | Shared data and palette modules | `tooling/parity/cases/theme.json`: every role of §5 with its light and dark value (`#RRGGBB`, or `#RRGGBBAA` where the role has an opacity; the peak-row tint and message backgrounds as opacities; the meter gradient as a list). Each palette module holds every role; a palette test in each edition checks it against `theme.json`. `quality-colors.json` and the colour part of `analysis-quality.json` fold into it. | the three palette tests pass on `theme.json` | **done** 2026-10-04 (Swift a834b3c, Python 16d4430, web 841c07c) |
-| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `NSApp.appearance` / the windows' interface style, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets on macOS (Linux and Windows are checked in step 7, from the committed code) | **done** 2026-10-04 (Swift a102504, Python 2728f22, web ab7812c) |
-| 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | **done** 2026-10-04 (Swift 382cfeb, Python 450e1ce, web 329a10e) |
-| 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average); the chart style and Swift's axis ticks (§5.14) | the chart follows the scheme live in all three | **done** 2026-10-04 (Swift d2649ed, Python e1aff31, web fc25da2); run-review passed |
-| 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | **done** 2026-10-05 (Swift 5f4be71, Python 1bdc5ff, web 6e2f40e); run-review passed |
-| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
-| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
-| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
-| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
-| 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
-| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | — |
-| 8 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
-| 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
+Each edition holds every role of §5, and only there, in its palette module — Swift `Palette`, Python `palette.py`,
+web `palette.ts` (the web's CSS custom properties generated from it) — checked against `theme.json` by its palette
+test and guarded by its source check (§4 rule 5). The `appearance` setting resolves the scheme (§2); the OS is asked
+to draw its own widgets in it; exports take the light value of every role.
 
 **How each edition follows a scheme change.** One mechanism in all three, closest to Swift's: a use site names a
 role, never a value; the role is resolved to a value for the current scheme in one place (the palette module); and a
@@ -423,6 +406,30 @@ redraws from one change point.
   stronger fill while on: Python's and the web's 28 % (`:checked` or `palette.set_on`; `.on`); Swift's is a native
   `Toggle` with `.toggleStyle(.button)`, whose on state macOS draws — about 11 % in Light (measured 2026-10-07), an
   accepted platform difference (owner, 2026-10-07; §3). A multi-state control (Annotations: All / Selected / None) has no on fill — its icon names the state.
+
+## 9. Implementation plan (lock-step)
+
+Each step is done in Swift, then Python, then the web, and verified in all three before the next step starts; each
+edition's step is one commit (code → hash → this doc). Steps 5a–5f are the area-by-area re-wiring. The steps are committed to `main`;
+no release is cut from any edition until step 8 (the run-review) is signed off (owner, 2026-10-04), because from step 3 to the end of
+step 5 the native widgets follow the scheme while the app's own colours do not yet.
+
+| # | step | what it delivers | done when | status |
+|---|---|---|---|---|
+| 1 | Lock the table | the decisions (§10) | the owner approves the spec | **done** 2026-10-04 |
+| 2 | Shared data and palette modules | `tooling/parity/cases/theme.json`: every role of §5 with its light and dark value (`#RRGGBB`, or `#RRGGBBAA` where the role has an opacity; the peak-row tint and message backgrounds as opacities; the meter gradient as a list). Each palette module holds every role; a palette test in each edition checks it against `theme.json`. `quality-colors.json` and the colour part of `analysis-quality.json` fold into it. | the three palette tests pass on `theme.json` | **done** 2026-10-04 (Swift a834b3c, Python 16d4430, web 841c07c) |
+| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `NSApp.appearance` / the windows' interface style, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets on macOS (Linux and Windows are checked in step 7, from the committed code) | **done** 2026-10-04 (Swift a102504, Python 2728f22, web ab7812c) |
+| 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | **done** 2026-10-04 (Swift 382cfeb, Python 450e1ce, web 329a10e) |
+| 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average); the chart style and Swift's axis ticks (§5.14) | the chart follows the scheme live in all three | **done** 2026-10-04 (Swift d2649ed, Python e1aff31, web fc25da2); run-review passed |
+| 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | **done** 2026-10-05 (Swift 5f4be71, Python 1bdc5ff, web 6e2f40e); run-review passed |
+| 5c | Re-wire: results and material | analysis and wood quality, badges, phase and step colours, Gore, summary boxes | as above | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
+| 5d | Re-wire: toolbar, status bar, meter | toolbar tints, buttons, status messages and dots, the threshold slider / level meter, metrics; Python's qtawesome icons (26 with no colour draw a fixed near-black, 8 a fixed gray — black on a dark menu today): plain icons `text.primary`, gray ones `text.secondary`, coloured ones their status roles, recreated on `scheme_changed` | as above | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
+| 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
+| 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
+| 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
+| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **in progress** — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports. Left: CI, iPad and iPhone (§9b) |
+| 8 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
+| 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
 ### 9a. Run-review steps — step 5 (5c–5f)
 
@@ -659,61 +666,64 @@ edition. "Tinted" means the role as text over a faint fill of it.
     brace, multi-tap and saved comparison, PNG and PDF, from each — the main-window ones with the fixture
     loaded into the analyzer first. → §9 step 7, planned in §9b.*
 
-### 9b. Step 7 — the export regression tests (plan)
+### 9b. Step 7 — the export regression tests
 
-Decided with the owner, 2026-10-08. Why: the run-review's export findings (§9a 27, 30) passed every suite — the PDF
-test compares only text, nothing compared the PNG, and the main window and Saved Measurements export through separate
-code. Several were a wrong argument on one export path, so the tests drive the app itself rather than calling the
-export functions.
+**Status (2026-10-08): in progress.** The tests that drive each app and the shared checker are built; the findings
+they raised are fixed; every edition's exports match Swift's, all 20. Left: see "Remaining" at the end.
+
+Planned with the owner, 2026-10-08. Why: the run-review's export findings (§9a 27, 30) passed every suite — the PDF
+test compared only text, nothing compared the PNG, and the main window and Saved Measurements export through
+separate code. Several were a wrong argument on one export path, so the tests drive the app itself rather than
+calling the export functions.
 
 **What each test does** — the owner's four steps, in each edition:
 1. import a fixture (`.guitartap`) through the app;
 2. export — Export Spectrum (PNG) and Export PDF — from the main window (the fixture loaded) and from Saved
    Measurements (the row's menu);
 3. catch the written files;
-4. measure them against Swift's expected values.
+4. measure them against Swift's.
 
-**Cases:** guitar, plate, brace, multi-tap and a saved comparison — each from both paths, PNG and PDF. The fixtures
-carry a fixed date, version and platform so the outputs compare.
+**Cases:** guitar, multi-tap, plate, brace and a saved comparison (Swift's fixtures) — each from both paths, PNG and
+PDF: 20 files per edition. Every driver runs its app in UTC, so a measurement's date prints the same on any machine.
 
-**How each edition drives its app:**
-- **Web — Playwright Test,** as in palmas: an `e2e/` suite and a `test:e2e` script beside the Vitest suite, the built
-  PWA served locally, desktop Chrome first; downloads caught by Playwright.
-- **Python — `pytest-qt`:** the real main window, its real buttons and menus clicked with `qtbot`; only the open and
-  save file dialogs are replaced (they return a path). Everything between the click and the file is the app's code.
-- **Swift — an XCUITest target:** launches the real app and drives it through accessibility. Two edges get test-only
-  hooks behind a launch argument: Import takes the fixture without the file panel (or the library starts with it),
-  and the save panel writes to a test folder. Everything between the click and the file is the app's code.
+**How each edition drives its app (as built):**
+- **Web — Playwright Test,** as in palmas: `e2e/export.spec.ts` and `e2e/app.ts` against the built app (`vite
+  preview`, desktop Chrome, UTC). Headless Chrome has no microphone, so a test dismisses the Audio Engine Error as a
+  user would; the save picker is hidden, so a save is a download the test catches. `npm run test:e2e` runs the e2e
+  tests; `npm run test:exports` runs the export tests and then the checker. About a minute.
+- **Python — `pytest-qt`:** `tests/test_export_e2e.py` drives the real main window; only the edges are replaced —
+  the open and save file dialogs return a path, message boxes are answered, and there is no input device. Each test
+  has its own empty library. The whole suite draws off-screen by default (`QT_QPA_PLATFORM`, `tests/conftest.py`), as
+  CI must. `Tooling/run-export-check.sh` runs the export tests and the checker. About 20 seconds.
+- **Swift — XCUITest:** the `GuitarTapUITests` target, in its own test plan so the unit runs never launch it. It
+  drives the real app through the system's open and save panels — nothing replaced: paths are typed (⇧⌘G) as a user
+  would, which also grants the sandboxed app access. The app runs in its own test sandbox (`GT_TEST_SANDBOX` in the
+  launch environment — Python's variable for the same), so its settings and library start empty and are never the
+  user's. The test runner is sandboxed too, so each export leaves as an attachment of the test result;
+  `Tooling/run-export-uitests.sh` runs the tests, extracts the exports and runs the checker. One test, one launch
+  per case for both paths; the app runs with no input device (`GT_NO_AUDIO_INPUT`, honoured only in the test
+  sandbox), as on CI and as the other drivers. About 7½ minutes — XCUITest takes about a second a step, and the
+  app's own PDF rendering and saving the rest — and macOS UI tests take over the mouse and keyboard, so they run
+  on CI, and locally only when needed (owner). Automation mode needs an unlocked session; on the owner's Mac
+  `automationmodetool enable-automationmode-without-authentication` stops its prompt.
 
-**One judge, three drivers** (owner, 2026-10-08): each edition's native test drives its app and writes the exported
-files to a folder with a small manifest (case, path, format); one Python checker judges that folder. The checker's
-source and Swift's expected values live in the hub and are copied into each edition, as `theme.json` is — each
-repo's tests run on their own copy without the hub, and the hub checks the copies are identical (a byte compare, not
-a review of three implementations). Its dependencies stay small: Pillow for the PNG, one PDF library for the
-rectangles. The web's Playwright spec and Python's `pytest-qt` call the checker directly; Swift runs it as the step
-after `xcodebuild`, in a script and on CI. Python is on every GitHub runner.
+**One judge, three drivers** (owner, 2026-10-08): each edition's driver writes its exports to
+`<folder>/<case>/<main|saved>/<file>` (when `GT_EXPORT_DIR` is set); one Python checker judges that folder. Its
+source and Swift's values live in the hub (`tooling/export-check/`) and are copied into each edition, as
+`theme.json` is — each repo runs its own copy without the hub, and `sync.sh --check` confirms the copies are
+identical. Its dependencies are NumPy, Pillow and pdfminer.six (pypdf misreads the text in Swift's Core Graphics
+PDFs). Swift's values are re-recorded with `check_exports.py mint` when Swift's exports change on purpose.
 
-**What is measured — the shared checker,** so all three are judged by the same rules, with Swift's values the
-expected ones:
-- **PNG layout** (points, from the 2× image): the header title, the chart title, the plot's edges, the x-axis title
-  and the legend — Swift's: 36–56.5, 181.5–199, 219.5–930, 960–974.5, 1026.5–1033.5 for a comparison; the header's
-  Type, date format and rows; the legend's marks.
-- **Label centring:** every frequency label's centre within 2 px (2×) of its grid line — guarding Swift's
-  undocumented `AxisMarks(preset: .aligned)`; if it ever fails, the fallback is labels drawn at the chart proxy's
-  x positions.
-- **PDF:** the existing text comparison (`test/pdf-report`, Swift's lines, 1 pt), plus the chart image's and the
-  matte's rectangles.
-- **Tolerance per OS:** fonts differ by OS, so the layout checks carry a tolerance — or expected values per OS, as the
-  per-OS peak baselines do (`tooling/parity/baselines/`).
+**What the checker measures** — the parts of each file, not its pixels, so fonts and off-screen drawing that differ
+by system do not fail it, while a moved, missing or resized part does:
+- **PNG:** the image size; the header title and rows; the chart title; the plot's border; the frequency labels, each
+  centred on its grid line (within 1 pt) and none past the plot's edge; the x-axis title; the peaks summary; the
+  legend and its entries. Positions within 3 pt of Swift's.
+- **PDF:** every line's text, baseline (3 pt) and typography — its runs of weight and colour (0.02) — with only the
+  "Generated by" footer, versions and the platform set aside; each page's image rectangles (2 pt).
+- **File names:** each must equal Swift's.
 
-**CI (a requirement):** GitHub Actions — the web on Linux; Python on Linux, macOS and Windows; Swift on macOS. Free on
-GitHub's runners for public repos: `guitar_tap` and `GuitarTapWeb` are public; `GuitarTap` becomes public when its CI
-is set up (owner). Linux runs Qt on its off-screen platform; macOS and Windows runners have a desktop.
-
-**No microphone:** CI runners have no audio input; no current or planned test uses one (owner), so this is not a
-limitation for the tests — the apps need only start and export without an input device.
-
-**Progress:**
+**What the drivers found when first run:**
 - **Web — driver done** (`52814db`): Playwright drives the built app — guitar, multi-tap, plate, brace and the saved
   comparison, each imported and exported as PNG and PDF from both the main window and Saved Measurements (11
   tests). Headless Chrome has no microphone, so the tests dismiss the Audio Engine Error as a user would, and hide
@@ -721,8 +731,7 @@ limitation for the tests — the apps need only start and export without an inpu
   commit: an import's auto-load skipped App's share of the load (the measurement's type, settings, range and tap
   count), so a plate's or brace's Export PDF did nothing after an import — App now observes the analyzer's
   published load, as Swift's view does with `.onReceive`; the export double-click guard dropped a click in the
-  first 0.7 s after the page loaded; and the download fallback released the file's URL at once. Not yet measured:
-  the shared checker comes next.
+  first 0.7 s after the page loaded; and the download fallback released the file's URL at once.
 - **Python — driver done** (`735fa70`): `pytest-qt` drives the real main window through the same ten exports; only
   the file dialogs, message boxes and the audio device (none, as on CI) are replaced. The suite draws off-screen
   by default, as CI must (owner: the checker has to judge off-screen images anyway, so it compares the image's
@@ -731,9 +740,83 @@ limitation for the tests — the apps need only start and export without an inpu
   failure shows "Audio Engine Error" with Swift's wording — and that two Qt objects (`PeaksModel`,
   `FftAnnotations`) had no parent and outlived their window.
 
-**Size and order:** several sessions. The web's Playwright setup and the shared checker first (Playwright reaches
-both export paths with no change to the app), then Python's `pytest-qt`, then Swift's UI target and its two hooks;
-CI workflows as each edition's suite passes locally.
+**Findings:** — every fix below is in Swift `a11d791`, Python `01201e0`, web `67f99f7`.
+- **The export checker's first run** (2026-10-08) — web and Python against Swift. Findings 2–5 — evidence, cause and
+  recommendation for each — are in `docs/theme/EXPORT-FINDINGS.md`; decided (owner, 2026-10-08): every recommendation
+  there is agreed.
+  1. *Frequency labels* — Swift labelled the plot's right end (350 Hz on a 75–350 Hz chart); the web and Python
+     stopped at the last inner grid line. Step 30's centred labels (`AxisMarks(preset: .aligned)`) had put Swift's
+     end label half past the edge: shown in the export, cut in half on the live chart ("350 H"). And the live chart
+     labelled "100 Hz", "1.2 kHz" while the export labelled "100", "1.2k" — and repeated labels the live chart
+     kept apart ("1.0k, 1.0k, 1.0k" on 950–1050 Hz). Decided (owner, 2026-10-08): the live chart and the export are
+     the same; a label that would reach past the plot's edge is not shown; no unit on the tick labels — the axis
+     title "Frequency (Hz)" carries it, as charts conventionally do, thousands written with a k. Done (Swift `a11d791`, Python `01201e0`, web `67f99f7`):
+     one formatter, `formatTickLabels`, for screen and export in all three (the export's `formatTickLabel` is gone;
+     `axis-ticks.json` has one label list per case); Swift leaves out a label that would cross the edge, measuring
+     it in its font against the plot's width — the live chart's tracked plot frame, the export's 1352 pt plot (the
+     width its fixed layout gives; stating it as the plot's frame widened the plot, so it is not) — and states its
+     label sizes (11 pt on screen, Swift Charts' own, measured; 12 pt in
+     the export); the web and Python already left such labels out (the web's renderer; pyqtgraph's axis). The
+     checker fails a label past the edge.
+  2. *Detected Peaks Summary* — the web drew the summary larger than Swift, Python smaller, both from fixed
+     numbers (plate and brace have the same summary; their properties are only in the PDF). Done: the web and
+     Python take Swift's sizes, spacing and card count, and build the summary, legend and image height from
+     their content as Swift's stack does (only the 39 pt from the chart frame to the first block below is taken
+     from Swift's image); the image is 1188 / 1069 pt as before.
+  3. *Multi-tap PDF page 2* — the odd one out was Swift's own main window: its page 2 lacked the loaded name
+     ("Comparison:"), and every main-window report in all three dropped the loaded notes. Done: every main-window
+     report falls back to the loaded name and notes (Swift `+Export.swift`; the web `App.tsx`; Python's
+     `_export_notes`); one date rule — a page or image made from a saved measurement (loaded, or just saved) shows
+     its date, the time of export only in the footer and for something never saved — through
+     `sourceMeasurementTimestamp`, which now also covers a saved comparison's load and both saves, and is cleared
+     by an ad-hoc comparison (Swift, and the same in the web, which gained it, and Python); Python's page-2 image
+     has its date row; page 2's image is titled "Tap Comparison — <name>" and typed by the measurement's guitar
+     type (the web; Swift's Saved Measurements path no longer hard-codes Generic). The typography difference
+     first reported was a rendering artefact (`docs/theme/EXPORT-FINDINGS.md`, correction); the real ones are
+     done — Python's empty plate role cell grey, the web's comparison table marking an overridden Averaged value
+     italic with " *"; Swift's report text with no colour of its own was pure black — decided (owner): the
+     palette's near-black #1C1C1E, now the default text colour of Swift's report views.
+  4. *Python's header and axis title* — done: header rows on Swift's line heights (16, 16, 14 pt, 8 apart); the
+     axis title set 4 pt lower, the bottom axis and chart image growing with it so the plot stays; the plot's left
+     border moved 3 pt right to Swift's (59 pt into the chart image) and pyqtgraph's axis baselines, a grid-coloured
+     line beside the border Swift doesn't draw, removed in the export. The checker had measured the plot's left
+     edge at the magnitude axis's "0" label; it now finds the border lines.
+  5. *Export file names* — done: one rule in all three — a saved measurement's exports are named with its own
+     timestamp, the time of export only for something never saved; Python's multi-tap report name now uses the
+     shared `export_stem`.
+
+  The checker now also compares file names, dates (the drivers run the apps in UTC; only the "Generated by"
+  footer is set aside) and each PDF line's weight and colour (to 0.02). Every edition passes against Swift's
+  exports, all 20.
+- **iPad and iPhone exports do not match macOS** (found 2026-10-08, the first run of Swift's suite on an iPad
+  simulator). The same code exports on every device, so the result must not depend on it (owner). Open:
+  - `PDFReportTests` — every line of the comparison report lands lower than on macOS, about 2 pt more per line (+3.7 pt
+    on the first line, +17.8 pt at "Frequency Spectrum", +40 pt at the footer); text and order identical. The line
+    height appears to be measured differently on iOS.
+  - `SpectrumExportTests` — the plate image is 29 pt taller (2928 × 2434 vs 2928 × 2376); guitar and comparison
+    match. Probably the same cause, in the plate's multi-line summary.
+
+  The iPad's other two failures (last-bit float differences against macOS-minted values) are baselines, not
+  exports — #16. Driving the iPad and iPhone simulators through the exports (the Files picker, the share sheet) is a
+  later stage of this step.
+
+**CI (a requirement):** GitHub Actions — the web on Linux; Python on Linux, macOS and Windows; Swift on macOS. Free on
+GitHub's runners for public repos: `guitar_tap` and `GuitarTapWeb` are public; `GuitarTap` becomes public when its CI
+is set up (owner). Linux runs Qt off-screen; macOS and Windows runners have a desktop.
+
+**No microphone:** CI runners have no audio input; no current or planned test uses one (owner), so this is not a
+limitation — the apps need only start and export without an input device.
+
+**Remaining:**
+1. ~~A faster Swift UI run~~ — done (2026-10-08): about 10 minutes → 7½. One launch per case for both paths;
+   paths pasted into the panels; no input device, so the app is idle between steps. The rest is XCUITest's second
+   a step and the app's own PDF work; fewer steps would mean fewer checks.
+2. ~~No skipped Swift test~~ — decided (owner, 2026-10-08): the one known skip stays. The parity-oracle generator
+   must stay in a test target to run, and Xcode reports a Swift Testing test the plan leaves out as skipped too
+   (tried); making it a mint mode of the app or a target of its own was not worth it.
+3. CI workflows for the three editions (Swift's makes `GuitarTap` public).
+4. iPad and iPhone: the export mismatch above, then the UI tests on the simulators (Files picker for import, share
+   sheet for export); their baselines are #16.
 
 ## 10. Decisions
 

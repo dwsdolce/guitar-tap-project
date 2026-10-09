@@ -9,6 +9,13 @@ The runbook for shipping a release. Four surfaces across three repos, all steps 
 | **Web app** | `GuitarTapWeb` | `dolcesfogato.com/guitar_tap/guitar_tap_web/` |
 | **Marketing site** | `guitar_tap_website` | `dolcesfogato.com/guitar_tap/` |
 
+**The notes' "reviewed through" marker (read once):** each repo's current notes section carries one line —
+`<!-- Notes reviewed through commit <sha> (<date>) … -->` in `Documentation/ReleaseNotes.md` (Swift) and
+`docs/ReleaseNotes.md` (Python), a `// Notes reviewed through commit <sha>` comment on the newest entry of
+`src/components/ReleaseNotes.tsx` (web). Whenever the notes are brought up to date — mid-cycle or at release — read
+only `git log <sha>..HEAD` for what is new, write the notes, then move the marker to the newest commit covered. It
+never reaches a reader: pandoc keeps the comment out of the HTML's view and out of the PDF.
+
 **The build-number rule (read once):** in every repo the build number is that repo's own
 `git rev-list --count HEAD`, baked at build/archive time. So finish committing first, then build from
 that commit, and keep each release-notes filename equal to the commit count you actually ship. Build
@@ -114,9 +121,9 @@ The **first commit after a release** makes all three code repos refuse to run or
 guard doing its job, but discover it deliberately here rather than mid-task three days later. Roll
 all three now, in one sitting:
 
-- [ ] **Swift** (`GuitarTap`): bump `MARKETING_VERSION` (both configs). In `Documentation/ReleaseNotes.md`, **freeze** the shipped top section to its literals — `## Version X.Y.Z · Build <n>` / `### What's New Since Build <prev>`, both from `git rev-list --count <tag>` — then add a fresh `{{placeholder}}` section carrying a `TODO(<next>)` marker.
-- [ ] **Python** (`guitar_tap`): bump `src/guitar_tap/version`. Same freeze + fresh placeholder section in `docs/ReleaseNotes.md`.
-- [ ] **Web** (`GuitarTapWeb`): bump `version` in `package.json`. In `src/components/ReleaseNotes.tsx`, **pin** the shipped top entry to the literal build it went out as (`git rev-list --count <tag>`), then prepend a new entry with `build: __APP_BUILD__`, `since: '<prev>'`, `groups: []` and a `TODO(<next>)` marker.
+- [ ] **Swift** (`GuitarTap`): bump `MARKETING_VERSION` (both configs). In `Documentation/ReleaseNotes.md`, **freeze** the shipped top section to its literals — `## Version X.Y.Z · Build <n>` / `### What's New Since Build <prev>`, both from `git rev-list --count <tag>` — then add a fresh `{{placeholder}}` section carrying a `TODO(<next>)` marker and a "Notes reviewed through commit `<tag's commit>`" line.
+- [ ] **Python** (`guitar_tap`): bump `src/guitar_tap/version`. Same freeze + fresh placeholder section (with its "reviewed through" line) in `docs/ReleaseNotes.md`.
+- [ ] **Web** (`GuitarTapWeb`): bump `version` in `package.json`. In `src/components/ReleaseNotes.tsx`, **pin** the shipped top entry to the literal build it went out as (`git rev-list --count <tag>`), then prepend a new entry with `build: __APP_BUILD__`, `since: '<prev>'`, `groups: []`, a `TODO(<next>)` marker and a `// Notes reviewed through commit <tag's commit>` comment.
 - [ ] Confirm each tree is unblocked — all three exit 0:
   - `GuitarTap`: `./Tooling/check-release-ready.sh`
   - `guitar_tap`: `python3 src/guitar_tap/_release_guard.py`
