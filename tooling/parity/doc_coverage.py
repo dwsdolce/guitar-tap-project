@@ -37,9 +37,9 @@ followed by the undocumented symbol names for every flagged slug.
 
 Usage
 -----
-    python3 tooling/parity/doc_coverage.py                # all tagged files
-    python3 tooling/parity/doc_coverage.py view/          # slugs with this prefix
-    python3 tooling/parity/doc_coverage.py --list-undoc   # dump undoc names for ALL slugs
+    .venv/bin/python tooling/parity/doc_coverage.py                # all tagged files
+    .venv/bin/python tooling/parity/doc_coverage.py view/          # slugs with this prefix
+    .venv/bin/python tooling/parity/doc_coverage.py --list-undoc   # dump undoc names for ALL slugs
 """
 from __future__ import annotations
 

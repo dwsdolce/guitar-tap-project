@@ -35,12 +35,12 @@ paired tests, and this column shows which rows actually have that proof.
 ## Commands
 
 ```
-python3 tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json + TEST-COVERAGE.md's coverage block
-python3 tooling/parity/gen_parity_map.py --check    # CI: verify all three are current + no orphan/malformed slugs
-python3 tooling/parity/gen_parity_map.py --coverage # print the functional-block coverage report (read-only)
-python3 tooling/parity/gen_parity_map.py --gaps     # report testable impl groups with NO test evidence
-python3 tooling/parity/parity_lookup.py classify    # show a group's counterparts (any column)
-python3 tooling/parity/parity_lookup.py . --sort=web    # browse everything, sorted by web path
+.venv/bin/python tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json + TEST-COVERAGE.md's coverage block
+.venv/bin/python tooling/parity/gen_parity_map.py --check    # CI: verify all three are current + no orphan/malformed slugs
+.venv/bin/python tooling/parity/gen_parity_map.py --coverage # print the functional-block coverage report (read-only)
+.venv/bin/python tooling/parity/gen_parity_map.py --gaps     # report testable impl groups with NO test evidence
+.venv/bin/python tooling/parity/parity_lookup.py classify    # show a group's counterparts (any column)
+.venv/bin/python tooling/parity/parity_lookup.py . --sort=web    # browse everything, sorted by web path
 ```
 
 `--coverage` prints the **functional-block coverage report** — of the testable blocks, how many are

@@ -96,9 +96,9 @@ is **doc-parity ✓** only when all of the following hold:
 Run it per slug and to back-audit finished slugs. It reports, per `@parity` slug, the
 `documented / total` symbol coverage for each platform and flags cross-platform gaps.
 
-    python3 tooling/parity/doc_coverage.py            # all slugs
-    python3 tooling/parity/doc_coverage.py view/      # a prefix
-    python3 tooling/parity/doc_coverage.py --list-undoc   # dump every unddocumented name
+    .venv/bin/python tooling/parity/doc_coverage.py            # all slugs
+    .venv/bin/python tooling/parity/doc_coverage.py view/      # a prefix
+    .venv/bin/python tooling/parity/doc_coverage.py --list-undoc   # dump every unddocumented name
 
 **How to read it (it catches *missing*, not *depth*):**
 - A **web `0/N`** row is the strongest real signal — exported symbols with no TSDoc (the

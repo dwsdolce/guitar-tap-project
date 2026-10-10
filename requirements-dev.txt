@@ -1,0 +1,12 @@
+# The hub's Python: the export checker (tooling/export-check/), for minting Swift's expected values and checking
+# an edition's exports. (tooling/parity/gen_web_icons.py and docs/playback-validation/ run with the Python
+# edition's interpreter, as their headers say — they need its qtawesome and its modules.)
+#
+# Setup:
+#   python3.14 -m venv .venv
+#   .venv/bin/pip install -r requirements-dev.txt
+#
+# Python version: 3.14 (match /Users/dws/src/guitar_tap)
+
+# The export checker's packages, pinned once for all three editions and the hub.
+-r tooling/export-check/requirements.txt

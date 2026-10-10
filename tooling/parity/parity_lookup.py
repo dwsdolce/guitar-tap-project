@@ -6,9 +6,9 @@ whose slug or any path contains the query substring (case-insensitive). This is
 the "stand on a symbol in platform x, find y and z" utility — the query doesn't
 care which platform the match came from.
 
-    python3 parity_lookup.py classify
-    python3 parity_lookup.py gated-fft --sort=web
-    python3 parity_lookup.py .           # list everything (sorted)
+    .venv/bin/python tooling/parity/parity_lookup.py classify
+    .venv/bin/python tooling/parity/parity_lookup.py gated-fft --sort=web
+    .venv/bin/python tooling/parity/parity_lookup.py .           # list everything (sorted)
 
 --sort picks the browse order (slug, or any edition key from platforms.py); default is slug.
 """

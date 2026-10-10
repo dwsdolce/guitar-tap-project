@@ -16,7 +16,7 @@ preset's value, or ``customPlateStiffness`` when the preset is "Custom".
 Pure standard-library; no repo imports. Rerun it after new captures land.
 
 Usage:
-    python3 guitartap_matrix.py [DIR] [-o OUT.md]
+    .venv/bin/python tooling/guitartap_matrix.py [DIR] [-o OUT.md]
 
 Defaults:
     DIR = <hub>/Tests/AllPlatforms   (resolved relative to this script — one dir up)

@@ -12,9 +12,9 @@ This compares every fixture that appears in more than one edition by SHA-256 and
 that disagree. It is read-only by default; `--adopt <edition>` copies that edition's copy of a
 named fixture over the others, which is the only way a fixture should ever be "synced".
 
-    python3 tooling/check-fixtures.py                  # report drift (exit 1 if any)
-    python3 tooling/check-fixtures.py --list           # list every shared fixture and its editions
-    python3 tooling/check-fixtures.py --adopt swift 7108913.txt
+    .venv/bin/python tooling/check-fixtures.py                  # report drift (exit 1 if any)
+    .venv/bin/python tooling/check-fixtures.py --list           # list every shared fixture and its editions
+    .venv/bin/python tooling/check-fixtures.py --adopt swift 7108913.txt
 
 Fixture directories are declared per edition in tooling/parity/platforms.py.
 """
@@ -111,7 +111,7 @@ def main() -> int:
         for key in sorted(locs):
             size = locs[key].stat().st_size
             print(f"    {key:<8} {digests[key][:16]}  {size:>9} bytes  {locs[key]}", file=sys.stderr)
-        print(f"    fix with: python3 tooling/check-fixtures.py --adopt <edition> {name}", file=sys.stderr)
+        print(f"    fix with: .venv/bin/python tooling/check-fixtures.py --adopt <edition> {name}", file=sys.stderr)
     return 1
 
 

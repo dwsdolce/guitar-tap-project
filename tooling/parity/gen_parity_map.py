@@ -22,11 +22,11 @@ repo (a typo, or something that should be `@parity none`), which `--check`
 reports.
 
 Usage:
-    python3 gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json
-    python3 gen_parity_map.py --check    # verify they're current + no orphan slugs (CI)
+    .venv/bin/python tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json
+    .venv/bin/python tooling/parity/gen_parity_map.py --check    # verify they're current + no orphan slugs (CI)
 
 The editions, their repo directories and their env-var overrides are declared in
-platforms.py; run `python3 platforms.py` to see which are active. Columns appear
+platforms.py; run `.venv/bin/python tooling/parity/platforms.py` to see which are active. Columns appear
 only for editions that have at least one @parity tag, so a declared-but-unstarted
 edition (Android, today) changes nothing here.
 """

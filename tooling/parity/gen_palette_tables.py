@@ -9,7 +9,7 @@ theme.json reaches all three editions identically:
   Python src/guitar_tap/views/utilities/palette.py — `class Role` members and the `PAIRS` table
   web    src/presentation/palette.ts               — the `ROLES` table
 
-    python3 tooling/parity/gen_palette_tables.py
+    .venv/bin/python tooling/parity/gen_palette_tables.py
 """
 from __future__ import annotations
 

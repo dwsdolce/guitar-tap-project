@@ -126,7 +126,7 @@ all three now, in one sitting:
 - [ ] **Web** (`GuitarTapWeb`): bump `version` in `package.json`. In `src/components/ReleaseNotes.tsx`, **pin** the shipped top entry to the literal build it went out as (`git rev-list --count <tag>`), then prepend a new entry with `build: __APP_BUILD__`, `since: '<prev>'`, `groups: []`, a `TODO(<next>)` marker and a `// Notes reviewed through commit <tag's commit>` comment.
 - [ ] Confirm each tree is unblocked — all three exit 0:
   - `GuitarTap`: `./Tooling/check-release-ready.sh`
-  - `guitar_tap`: `python3 src/guitar_tap/_release_guard.py`
+  - `guitar_tap`: `.venv/bin/python src/guitar_tap/_release_guard.py`
   - `GuitarTapWeb`: `./tooling/check-release-ready.sh`
 - [ ] Commit the three rolls. (Each rolls its repo's build number — expected; nothing baked depends on it yet this early in a cycle.)
 
@@ -141,7 +141,7 @@ all three now, in one sitting:
 - **Stale service worker (web):** `autoUpdate` means a returning visitor may need one reload before the new build takes; always hard-reload to verify a deploy, don't conclude from a first load.
 - **One-time tooling per build machine:**
   - Swift docs: pango + WeasyPrint venv, pandoc, basictex.
-  - Python (Mac build machine): `pip install -e ".[packaging]"`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows: Inno Setup 6. Linux: `appimagetool` (+ `libfuse2`).
+  - Python (Mac build machine): `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows: Inno Setup 6. Linux: `appimagetool` (+ `libfuse2`).
   - Web: Node.
 - **Automation candidate (future):** this process is heavily manual — three separate version bumps,
   ad-hoc PDF exports, per-platform installer builds, hand-assembled GitHub assets, and cPanel uploads
