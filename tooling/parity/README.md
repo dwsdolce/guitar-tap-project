@@ -84,15 +84,21 @@ archived record. The measurements and the reasoning behind the numbers are in
 
 | | compares | against | bar |
 |---|---|---|---|
-| **regression** | one configuration | **its own** prior baseline | **zero** |
+| **regression** | one configuration | **its own** prior baseline | `selfTolerances` in `parity-oracle.json`: 1e-12 |
 | **parity** | one edition | the oracle | `tolerances` in `parity-oracle.json` |
 
-A tracking edition cannot be checked at zero against the oracle — the oracle holds Swift's numbers,
+The regression bar is 1e-12, not zero, only because one configuration runs on different CPUs —
+GitHub's runners, different people's machines — whose vectorised maths can differ in the last bit
+(7e-15 between Linux runners, 2026-10-10); 1e-12 is still a million times below the smallest real
+change. Every edition reads it from the oracle and maps a value to its class by the leaf its path
+ends in (the table in `parity-report.py`).
+
+A tracking edition cannot be checked at the regression bar against the oracle — the oracle holds Swift's numbers,
 and the distance to them is what the parity bar measures. So every configuration
 (**edition × OS × arch**) mints its own absolute self-baseline and is checked against itself.
 
 The configuration key deliberately excludes library, runtime and compiler versions. A NumPy, V8 or
-Xcode upgrade that moves the numbers is precisely the event the zero bar exists to catch; keying on
+Xcode upgrade that moves the numbers is precisely the event the regression bar exists to catch; keying on
 the version would let the baseline follow the upgrade and report nothing.
 
 ### A suite never writes its own expectations
@@ -105,7 +111,7 @@ today becomes the answer it is checked against.
 - **First mint** on a new configuration has no prior, so the values must clear
   `bootstrapTolerances` — a deliberately separate, looser bar. Failing *parity* is a finding to
   investigate; failing *this* means the numbers are garbage and must not be frozen. Sharing one
-  number would mean a port still being built loses its zero-tolerance check exactly when it most
+  number would mean a port still being built loses its regression check exactly when it most
   needs one.
 - **Re-mint** of an existing configuration prints the diff and requires confirmation. That diff is
   the review artifact: adopt it only if a deliberate change explains every line.
