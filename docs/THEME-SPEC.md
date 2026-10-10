@@ -4,9 +4,9 @@ Status: **APPROVED 2026-10-04** — every decision in §10 taken by the owner. B
 three editions (§7).
 Lock-step: designed once here, built in Swift, Python and the web together, shipped together.
 
-**Where it stands (2026-10-08):** steps 1–6 and 9 done (§9). Step 7, the export regression tests, in progress: the
+**Where it stands (2026-10-09):** steps 1–6 and 9 done (§9). Step 7, the export regression tests, in progress: the
 tests that drive each app through its exports and the shared checker are built, the findings they raised are fixed,
-and every edition's exports match Swift's; left are CI, and iPad and iPhone (§9b). Step 8, the sign-off run-review, follows; no release before it.
+and every edition's exports match Swift's, on the Mac, the iPad and the iPhone; left is CI (§9b). Step 8, the sign-off run-review, follows; no release before it.
 
 Why now: every colour difference the #17 slug sweep meets (mode colours, wood quality, the multi-tap palette, the
 analysis-quality colours of F57) comes back to the same cause — the three editions draw on different backgrounds
@@ -427,7 +427,7 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
-| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **in progress** — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports. Left: CI, iPad and iPhone (§9b) |
+| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **in progress** — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports; the iPad and iPhone match the Mac, and the UI tests run on their simulators (2026-10-09). Left: CI (§9b) |
 | 8 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
 | 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
@@ -809,8 +809,18 @@ by system do not fail it, while a moved, missing or resized part does:
   macOS's exports are unchanged (the PDF and spectrum-export tests, and the export checker against Swift's
   values); the iPad and iPhone simulators' exports from Saved Measurements pass the checker, all 10, and both
   tests. The iPad's other two failures (last-bit float differences against macOS-minted values) are baselines,
-  not exports — #16. Driving the iPad and iPhone simulators through the exports (the Files picker, the share sheet)
-  is the next stage of this step.
+  not exports — #16.
+- **The UI tests run on the iPad and iPhone simulators** (2026-10-09, Swift `c2c5060`). One `testExports()` for
+  the Mac, the iPad and the iPhone; only the system screens differ. On iOS, Import is Saved Measurements → More →
+  Import Measurement → the document picker (the local files — the sidebar on the iPad, Browse on the iPhone — then
+  the fixture); export is the share sheet → View More → Save to Files → the local files → Save (the panel's own
+  `DOCPicker.actionButton`: the app has buttons labelled Save too); a row's exports are a long press. The iPhone's
+  export buttons are in the Results sheet. `Tooling/run-export-uitests.sh --simulator <name>` boots the simulator,
+  grants the microphone (decided, owner: the state of a user who has allowed it — iOS asks before it starts
+  listening, macOS does not), and passes the simulator's own files (`GT_FILES_DIR`); the test puts each fixture
+  there and removes each export once attached. iPad Air 11-inch and iPhone 17: all 20 exports pass the checker,
+  about 8 minutes each. With no input device iOS shows no "Audio Engine Error" where macOS does — noted, not
+  investigated (owner).
 
 **CI (a requirement):** GitHub Actions — the web on Linux; Python on Linux, macOS and Windows; Swift on macOS. Free on
 GitHub's runners for public repos: `guitar_tap` and `GuitarTapWeb` are public; `GuitarTap` becomes public when its CI
@@ -827,8 +837,8 @@ limitation — the apps need only start and export without an input device.
    must stay in a test target to run, and Xcode reports a Swift Testing test the plan leaves out as skipped too
    (tried); making it a mint mode of the app or a target of its own was not worth it.
 3. CI workflows for the three editions (Swift's makes `GuitarTap` public).
-4. iPad and iPhone: ~~the export mismatch above~~ (fixed 2026-10-09), then the UI tests on the simulators (Files picker for import, share
-   sheet for export); their baselines are #16.
+4. ~~iPad and iPhone~~ — done (2026-10-09): the export mismatch fixed, and the UI tests run on the simulators;
+   their unit-test baselines are #16.
 
 ## 10. Decisions
 
