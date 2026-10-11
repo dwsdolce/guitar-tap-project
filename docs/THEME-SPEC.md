@@ -418,7 +418,7 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 |---|---|---|---|---|
 | 1 | Lock the table | the decisions (§10) | the owner approves the spec | **done** 2026-10-04 |
 | 2 | Shared data and palette modules | `tooling/parity/cases/theme.json`: every role of §5 with its light and dark value (`#RRGGBB`, or `#RRGGBBAA` where the role has an opacity; the peak-row tint and message backgrounds as opacities; the meter gradient as a list). Each palette module holds every role; a palette test in each edition checks it against `theme.json`. `quality-colors.json` and the colour part of `analysis-quality.json` fold into it. | the three palette tests pass on `theme.json` | **done** 2026-10-04 (Swift a834b3c, Python 16d4430, web 841c07c) |
-| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `NSApp.appearance` / the windows' interface style, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets on macOS (Linux and Windows are checked in step 7, from the committed code) | **done** 2026-10-04 (Swift a102504, Python 2728f22, web ab7812c) |
+| 3 | The resolved scheme | the `appearance` setting (System / Light / Dark, default System) in each settings store; the resolved scheme (OS, or the setting; Unknown → Light) and its change notification; the row in Advanced → Display Settings; the OS asked to draw its widgets in it (Swift `NSApp.appearance` / the windows' interface style, Python `setColorScheme` with the Fusion fallback on Linux, the web `data-theme` and CSS `color-scheme`). Colour still comes from the old sites. | switching the setting, and the OS, switches the native widgets on macOS (Linux and Windows are checked in step 8, the run-review, from the committed code) | **done** 2026-10-04 (Swift a102504, Python 2728f22, web ab7812c) |
 | 4 | Colour off the model | `GuitarMode` and `WoodQuality` lose their colours; callers take `mode.*` / `wood.*` roles; the PDF and PNG mode tables of §6 removed | no colour on either enum; the suites pass | **done** 2026-10-04 (Swift 382cfeb, Python 450e1ce, web 329a10e) |
 | 5a | Re-wire: chart | background, grid, axes, spectrum, crosshair, readouts, Peak Min, mode bands, peak labels and dots, material curves, comparison and multi-tap series (10 + average); the chart style and Swift's axis ticks (§5.14) | the chart follows the scheme live in all three | **done** 2026-10-04 (Swift d2649ed, Python e1aff31, web fc25da2); run-review passed |
 | 5b | Re-wire: peak lists | rows and cards: mode colour, tint (10 % / 20 %), magnitude, pitch, stars, in-range | as above | **done** 2026-10-05 (Swift 5f4be71, Python 1bdc5ff, web 6e2f40e); run-review passed |
@@ -427,8 +427,8 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
-| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **in progress** — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports; the iPad and iPhone match the Mac, and the UI tests run on their simulators (2026-10-09). Left: CI (§9b) |
-| 8 | Run-review | both schemes × three editions × {live spectrum, peak list, mode annotations, material results, multi-tap and comparison, status messages, settings, measurements list, PNG, PDF}; Python on Windows and on Linux (Cinnamon, GNOME, KDE — including the Fusion fallback of decision 9), from the committed code | the owner signs off | — |
+| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **in progress** — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports; the iPad and iPhone match the Mac, and the UI tests run on their simulators (2026-10-09); CI green in all three (2026-10-10: Swift `cad4d83`…`f4c9c60`, Python `38fac43`…`93a3511`, web `6e35afc`). Left: the owner's decision on the Vite upgrade (§9b) |
+| 8 | Run-review | what can differ by platform within an edition (owner, 2026-10-09: §9c) — the OS's scheme read and followed, what the OS or toolkit draws, containers only one platform has — on the iPad and iPhone (Swift), Windows and Linux Cinnamon (Python, with the Fusion fallback of decision 9 where needed), Chrome on Windows and Safari on the iPhone and iPad (web); macOS and the exports are covered by §9a and §9b, from the committed code | the owner signs off | — |
 | 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
 ### 9a. Run-review steps — step 5 (5c–5f)
@@ -668,8 +668,9 @@ edition. "Tinted" means the role as text over a faint fill of it.
 
 ### 9b. Step 7 — the export regression tests
 
-**Status (2026-10-08): in progress.** The tests that drive each app and the shared checker are built; the findings
-they raised are fixed; every edition's exports match Swift's, all 20. Left: see "Remaining" at the end.
+**Status (2026-10-10): in progress.** The tests that drive each app and the shared checker are built; the findings
+they raised are fixed; every edition's exports match Swift's, all 20, on the Mac, the iPad and the iPhone; CI runs
+them in all three and is green. Left: the owner's decision on the Vite upgrade (Remaining, 3).
 
 Planned with the owner, 2026-10-08. Why: the run-review's export findings (§9a 27, 30) passed every suite — the PDF
 test compared only text, nothing compared the PNG, and the main window and Saved Measurements export through
@@ -836,9 +837,91 @@ limitation — the apps need only start and export without an input device.
 2. ~~No skipped Swift test~~ — decided (owner, 2026-10-08): the one known skip stays. The parity-oracle generator
    must stay in a test target to run, and Xcode reports a Swift Testing test the plan leaves out as skipped too
    (tried); making it a mint mode of the app or a target of its own was not worth it.
-3. CI workflows for the three editions (Swift's makes `GuitarTap` public).
+3. CI workflows for the three editions — done (2026-10-10); `GuitarTap` made public for it (its history rewritten
+   first: `docs/completed/SWIFT-HISTORY-REWRITE.md`). Each repo's `.github/workflows/test.yml`:
+   - **Python** (`38fac43`…`93a3511`): the suite on Linux, Windows and macOS. Linux draws off-screen with the
+     bundled Liberation Sans as the export font; Windows runs the export check in Qt's native `windows` platform
+     (owner: its off-screen fonts were wrong); `TZ=UTC0` is set before Python starts. A hand-run `mint-baseline.yml`
+     mints each runner's self-baseline.
+   - **Web** (`6e35afc`, `01d20a9`): the suite and the export tests on Linux and Windows (npm's script shell bash
+     on Windows); the same hand-run mint.
+   - **Swift** (`cad4d83`…`f4c9c60`): on the `xcode-27` runner, the unit tests, then the export UI tests on the
+     Mac, the iPad Air 11-inch (M4) and the iPhone 17 — each 20 of 20. Ad-hoc signed; automation mode enabled with
+     `sudo automationmodetool`. What CI's machines needed: exports rendered at a fixed 2×, never the screen's scale
+     (the runner's display is 1×); on its 1024×768 screen the window fitted with Window → Fill on the first screen;
+     on its slower simulators, the Files app opened once before the run, longer waits, the share sheet closed
+     before the next tap, and each export removed only once Files has saved it.
+   - Self-regression on every runner at the oracle's `selfTolerances`, 1e-12 (owner: Linux runners differed in the
+     last bit); each configuration (edition × OS × architecture) has its own minted baseline. Cross-edition
+     tolerances wait for iOS's baselines (#16).
+
+   Before CI is done (owner, 2026-10-10): evaluate upgrading the web's Vite (5.4 → 8.x, with vite-plugin-pwa 2);
+   its build-time `workbox-build` still pulls the deprecated `glob` 11 and `source-map` 0.8-beta, which no current
+   release removes. Evaluated (2026-10-10), in a scratch worktree: vite 8.3.4, vitest 5.0.3, @vitejs/plugin-react
+   6.1.2 and vite-plugin-pwa 2.0.0 — typecheck, the unit suite, the build and the export tests all pass with no
+   code changes. Whether to adopt it: the owner's decision.
 4. ~~iPad and iPhone~~ — done (2026-10-09): the export mismatch fixed, and the UI tests run on the simulators;
    their unit-test baselines are #16.
+
+### 9c. Run-review steps — step 8 (the platforms)
+
+Scope (owner, 2026-10-09): only what can differ by **platform** within an edition — not by edition, which §9a
+settled. Each edition on macOS passed §9a (Swift; Python; the web fully in Safari and checked in Chrome), and every
+export is held by the export tests on the Mac, the iPad and the iPhone (§9b), so neither is repeated here. What a
+platform can change: how the app reads the OS's light/dark setting, what the OS or toolkit draws itself, and
+containers only that platform has. Linux is Cinnamon only; Chrome stands for Edge.
+
+Run from the committed code. Do each step in Light and in Dark (Settings → Advanced → Appearance); "follows the
+OS" steps change the OS's own setting while the app is open.
+
+**Swift — iPad**
+
+1. Appearance System; switch iOS between Light and Dark (Control Center) with the app open. → The app follows at
+   once: the main window, an open sheet, and the status bar's time and battery.
+2. Appearance Light with iOS in Dark, then Dark with iOS in Light. → The app keeps its setting; its alerts and
+   menus follow the app, not iOS.
+3. Open Saved Measurements → More, a row's long-press menu, an alert (Import Successful), the document picker
+   (Import Measurement) and the share sheet (Export Spectrum). → Each drawn in the app's scheme; all text readable.
+4. Settings' switches and pickers. → Drawn in the app's scheme; on and off told apart, and all text readable.
+5. Crosshair and Auto dB, on and off. → The two-state toggle: the on fill (28 %) when on, the plain fill when off.
+
+**Swift — iPhone**
+
+6. Steps 1–5 on the iPhone.
+7. Results, Settings and Metrics, which are sheets on the iPhone. → Each sheet's background and the panels in it
+   as on the iPad, in each scheme; nothing light on light or dark on dark.
+
+**Python — Windows** (from Cygwin bash: `.venv/Scripts/python -m guitar_tap`, or the installer build)
+
+8. Appearance System; switch Windows' app mode between Light and Dark (Settings → Personalisation → Colours) with
+   the app open. → The app follows, its title bar with it.
+9. Appearance Light with Windows in Dark, then Dark with Windows in Light. → The app and its title bar keep the
+   setting.
+10. The widgets Qt draws: Settings' combo boxes, the Threshold and Peak Min sliders, the scroll bars (peak list,
+    Saved Measurements), the menus and context menus, tooltips. → Each in the app's scheme; all text readable.
+11. The file dialogs (Import, an export) and the message boxes (Import Successful). → In the app's scheme.
+
+**Python — Linux, Cinnamon** (`.venv/bin/python -m guitar_tap`)
+
+12. Appearance System; switch Cinnamon between a light and a dark theme with the app open. → The app follows; with
+    no light/dark preference from Cinnamon, Light.
+13. Appearance Light, then Dark. → The widgets follow. If they follow only Qt-styled rather than native, that is the
+    Fusion fallback (decision 9) — note which Cinnamon needs.
+14. Steps 10–11 on Cinnamon.
+
+**Web — Chrome, Windows** (the built app: `npm run build && npm run preview`, or the deployed site)
+
+15. Appearance System; switch Windows' app mode with the page open. → The page follows.
+16. Appearance Light with Windows in Dark, then Dark with Windows in Light. → The page keeps its setting.
+17. The controls Chrome draws: Settings' selects, checkboxes and number fields, the sliders, the scroll bars (peak
+    list, Saved Measurements); the installed app's title bar. → Each in the app's scheme; all text readable.
+
+**Web — Safari, iPhone and iPad** (a quick pass: colours and consistency, not layout)
+
+18. Appearance System; switch iOS between Light and Dark with the page open. → The page follows.
+19. Appearance Light, then Dark: Settings, Saved Measurements, a menu, the results panel, Crosshair and Auto dB on
+    and off. → The controls iOS draws (selects, checkboxes, sliders) and the phone and tablet panels in the app's
+    scheme, consistent with the Mac; nothing unreadable.
 
 ## 10. Decisions
 
@@ -869,5 +952,5 @@ limitation — the apps need only start and export without an input device.
 9. ~~**Qt's request on Linux**~~ — *decided (owner, 2026-10-04): (a).* Python requests the scheme with
    `setColorScheme`; on a Linux desktop where PySide6 6.11 ignores the request, Python switches to the Fusion style
    with a light or dark `QPalette` built from the role table, so its widgets follow the setting too (Qt-styled rather
-   than native there). Tested on Linux Mint Cinnamon (the owner's VM), and on GNOME and KDE in VMs built for it
-   (§9 step 8, from the committed code).
+   than native there). Tested on Linux Mint Cinnamon, the owner's VM (§9 step 8, §9c, from the committed code);
+   GNOME and KDE are not tested (owner, 2026-10-09: no VMs for them).
