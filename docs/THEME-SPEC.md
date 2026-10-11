@@ -4,9 +4,10 @@ Status: **APPROVED 2026-10-04** — every decision in §10 taken by the owner. B
 three editions (§7).
 Lock-step: designed once here, built in Swift, Python and the web together, shipped together.
 
-**Where it stands (2026-10-09):** steps 1–6 and 9 done (§9). Step 7, the export regression tests, in progress: the
-tests that drive each app through its exports and the shared checker are built, the findings they raised are fixed,
-and every edition's exports match Swift's, on the Mac, the iPad and the iPhone; left is CI (§9b). Step 8, the sign-off run-review, follows; no release before it.
+**Where it stands (2026-10-11):** steps 1–7 and 9 done (§9). Step 7, the export regression tests: the tests that
+drive each app through its exports and the shared checker are built, the findings they raised are fixed, every
+edition's exports match Swift's on the Mac, the iPad and the iPhone, and CI runs them in all three (§9b). Next is
+step 8, the sign-off run-review on the platforms (§9c), once the owner has reviewed its steps; no release before it.
 
 Why now: every colour difference the #17 slug sweep meets (mode colours, wood quality, the multi-tap palette, the
 analysis-quality colours of F57) comes back to the same cause — the three editions draw on different backgrounds
@@ -427,7 +428,7 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 5e | Re-wire: settings, measurements, dialogs | the app-drawn panels and text (§5.1), measurement rows and detail, comparison tables, help, loading overlay | as above; the source check (§4 rule 5) added and passing | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
-| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **in progress** — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports; the iPad and iPhone match the Mac, and the UI tests run on their simulators (2026-10-09); CI green in all three (2026-10-10: Swift `cad4d83`…`f4c9c60`, Python `38fac43`…`93a3511`, web `6e35afc`). Left: the owner's decision on the Vite upgrade (§9b) |
+| 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **done** 2026-10-11 — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports; the iPad and iPhone match the Mac, and the UI tests run on their simulators (2026-10-09); CI green in all three (2026-10-10: Swift `cad4d83`…`f4c9c60`, Python `38fac43`…`93a3511`, web `6e35afc`); the web on Vite 8 (2026-10-11, `eb1fc02`) |
 | 8 | Run-review | what can differ by platform within an edition (owner, 2026-10-09: §9c) — the OS's scheme read and followed, what the OS or toolkit draws, containers only one platform has — on the iPad and iPhone (Swift), Windows and Linux Cinnamon (Python, with the Fusion fallback of decision 9 where needed), Chrome on Windows and Safari on the iPhone and iPad (web); macOS and the exports are covered by §9a and §9b, from the committed code | the owner signs off | — |
 | 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
@@ -668,9 +669,9 @@ edition. "Tinted" means the role as text over a faint fill of it.
 
 ### 9b. Step 7 — the export regression tests
 
-**Status (2026-10-10): in progress.** The tests that drive each app and the shared checker are built; the findings
-they raised are fixed; every edition's exports match Swift's, all 20, on the Mac, the iPad and the iPhone; CI runs
-them in all three and is green. Left: the owner's decision on the Vite upgrade (Remaining, 3).
+**Status (2026-10-11): done.** The tests that drive each app and the shared checker are built; the findings they
+raised are fixed; every edition's exports match Swift's, all 20, on the Mac, the iPad and the iPhone; CI runs them
+in all three and is green; the web is on Vite 8.
 
 Planned with the owner, 2026-10-08. Why: the run-review's export findings (§9a 27, 30) passed every suite — the PDF
 test compared only text, nothing compared the PNG, and the main window and Saved Measurements export through
@@ -859,7 +860,11 @@ limitation — the apps need only start and export without an input device.
    its build-time `workbox-build` still pulls the deprecated `glob` 11 and `source-map` 0.8-beta, which no current
    release removes. Evaluated (2026-10-10), in a scratch worktree: vite 8.3.4, vitest 5.0.3, @vitejs/plugin-react
    6.1.2 and vite-plugin-pwa 2.0.0 — typecheck, the unit suite, the build and the export tests all pass with no
-   code changes. Whether to adopt it: the owner's decision.
+   code changes. Decided (owner, 2026-10-11): Vite 8 — done (web `eb1fc02`): vite 8.3.4, vitest 5.0.3,
+   @vitejs/plugin-react 6.1.2, vite-plugin-pwa 2.0.0. Vite 8 builds with Rolldown and Oxc, so esbuild has left the
+   tree and its `allowScripts` entry is removed (owner); Rollup stays only inside `workbox-build`. With it `npm audit
+   fix` (owner): dompurify 3.4.16 (in jsPDF), markdown-it 14.3.2, brace-expansion 5.0.12 — audit clean. Typecheck,
+   lint, the unit suite (1159), the build, the export check (20 of 20) and the Playwright tests (11) pass.
 4. ~~iPad and iPhone~~ — done (2026-10-09): the export mismatch fixed, and the UI tests run on the simulators;
    their unit-test baselines are #16.
 
