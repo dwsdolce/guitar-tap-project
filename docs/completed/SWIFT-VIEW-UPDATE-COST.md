@@ -2,7 +2,8 @@
 
 **Issue:** [#28](https://github.com/dwsdolce/guitar-tap-project/issues/28)
 
-**Status (2026-10-11): done** — items 1–6 in all three editions (Swift `335ac2c`, Python `9dc4613`, web
+**Status (2026-10-11): done — closed**, CI green in all three (Swift `335ac2c`, Python `9dc4613` + the window-fixture
+hardening `b6f8042`, web `eeef676`) — items 1–6 in all three editions (Swift `335ac2c`, Python `9dc4613`, web
 `eeef676`); the owner checked them on the iPad and the Mac (the meter, clipping, Settings, the calibration
 details) — "the Swift apps definitely feel less sluggish".
 
