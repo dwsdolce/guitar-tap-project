@@ -331,6 +331,25 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/input-level",
+      "swift": [
+        "GuitarTap/Models/InputLevel.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/input_level.py"
+      ],
+      "web": [
+        "src/audio/inputLevel.ts"
+      ],
+      "tests": [
+        "test/dsp",
+        "test/input-level",
+        "test/notification",
+        "test/status-message"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/material-measurement-inputs",
       "swift": [
         "GuitarTap/Models/MaterialMeasurementInputs.swift"
@@ -815,6 +834,20 @@
       ],
       "web": [
         "test/import-persistence.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/input-level",
+      "swift": [
+        "GuitarTapTests/InputLevelTests.swift"
+      ],
+      "python": [
+        "tests/test_input_level.py"
+      ],
+      "web": [
+        "test/input-level.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1798,6 +1831,10 @@
     {
       "repo": "python",
       "path": "src/guitar_tap/models/update_checker.py"
+    },
+    {
+      "repo": "python",
+      "path": "tests/test_capture_opens_no_window.py"
     },
     {
       "repo": "python",

@@ -39,6 +39,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/appearance` | `GuitarTap/Models/Appearance.swift` | `src/guitar_tap/models/appearance.py` | `src/presentation/appearance.ts` | tests |
 | `model/export-filename` | `GuitarTap/Models/ExportFilename.swift` | `src/guitar_tap/models/export_filename.py` | `src/measurement/exportFilename.ts` | tests |
 | `model/guitar-mode-classify` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/classify.ts`<br>`src/presentation/modeColors.ts` | tests |
+| `model/input-level` | `GuitarTap/Models/InputLevel.swift` | `src/guitar_tap/models/input_level.py` | `src/audio/inputLevel.ts` | tests |
 | `model/material-measurement-inputs` | `GuitarTap/Models/MaterialMeasurementInputs.swift` | `src/guitar_tap/models/material_measurement_inputs.py` | `src/measurement/materialMeasurementInputs.ts` | tests |
 | `model/material-selection` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts` | tests |
 | `model/measurement-amend` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/amend.ts` | tests |
@@ -72,6 +73,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/frozen-peak-recalc` | `GuitarTapTests/FrozenPeakRecalculationTests.swift` | `tests/test_frozen_peak_recalculation.py` | `test/frozen-peak-recalc.test.ts` | test suite |
 | `test/gated-fft` | `GuitarTapTests/GatedFFTParityTests.swift` | `tests/test_gated_fft_parity.py` | `test/gated-fft.test.ts` | test suite |
 | `test/import-persistence` | `GuitarTapTests/ImportPersistenceTests.swift` | `tests/test_import_persistence.py` | `test/import-persistence.test.ts` | test suite |
+| `test/input-level` | `GuitarTapTests/InputLevelTests.swift` | `tests/test_input_level.py` | `test/input-level.test.ts` | test suite |
 | `test/material-measurement-inputs` | `GuitarTapTests/MaterialMeasurementInputsTests.swift` | `tests/test_material_measurement_inputs.py` | `test/material-measurement-inputs.test.ts` | test suite |
 | `test/material-selection` | `GuitarTapTests/MaterialSelectionTests.swift` | `tests/test_material_selection.py` | `test/material-selection.test.ts` | test suite |
 | `test/measurement-amend` | `GuitarTapTests/MeasurementAmendTests.swift` | `tests/test_measurement_amend.py` | `test/measurement-amend.test.ts` | test suite |
@@ -152,6 +154,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 |---|---|
 | `Tooling/mmdevice-probe.py` | python |
 | `src/guitar_tap/models/update_checker.py` | python |
+| `tests/test_capture_opens_no_window.py` | python |
 | `tests/test_chart_zoom_limits.py` | python |
 | `tests/test_import_identity.py` | python |
 | `tests/test_peak_card_identity.py` | python |
