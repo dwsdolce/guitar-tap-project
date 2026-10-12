@@ -156,10 +156,10 @@ See [`SLUG-SWEEP.md`](SLUG-SWEEP.md).
 
 ### Finish before the Android UI (Phase 4)
 
-| Issue | Why |
-|---|---|
-| **#2 Theme — Light / Dark / System** | THEME-SPEC is PROPOSED with open decisions in §8 (light chrome, light gradient). [ANDROID-UI-GUIDELINES](ANDROID-UI-GUIDELINES.md) encodes the spec's exact hex values, so those decisions should be made by the spec rather than accidentally by whichever edition implements first. |
-| **#6 Results panel cross-platform consistency** | Presentation-only, but it is the panel Android copies. Settle it once rather than porting the disagreement and then fixing it in four places. |
+| Issue | Why | Status |
+|---|---|---|
+| **#2 Theme — Light / Dark / System** | [ANDROID-UI-GUIDELINES](ANDROID-UI-GUIDELINES.md) encodes the spec's exact hex values, so the theme's decisions should be made by the spec rather than accidentally by whichever edition implements first. | **Closed 2026-10-12.** Every colour role, light and dark, is in the shared table `tooling/parity/cases/theme.json`, which each edition's palette test checks — the source for Android's palette too. Record: [`completed/THEME-SPEC.md`](completed/THEME-SPEC.md). |
+| **#6 Results panel cross-platform consistency** | Presentation-only, but it is the panel Android copies. Settle it once rather than porting the disagreement and then fixing it in four places. | **Closed.** Record: [`completed/RESULTS-PANEL-CONSISTENCY.md`](completed/RESULTS-PANEL-CONSISTENCY.md). |
 
 ### Not blocking
 
