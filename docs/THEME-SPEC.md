@@ -944,54 +944,55 @@ OS" steps change the OS's own setting while the app is open.
    Windows' own.
 3. **Python: Settings too narrow on Windows and Linux** — 2026-10-12. On both, the Settings dialog opens with a
    horizontal scroll bar and the right-hand values cut off ("44,100 H", "Dipole: 310-460 H", the version and the
-   update check box); on the Mac it fits, with no scroll bar. **For the Windows session to take — measure first.**
+   update check box); on the Mac it fits, with no scroll bar.
    - *The code:* `_show_settings` opens the dialog at `max(dlg.sizeHint().width(), 460)` (`3fd70ed`, April, meant as
      "autosize"). The content sits in a `QScrollArea`, which does not pass its content's width up to the dialog's size
      hint, so the dialog opens at 460 whatever the content needs. The scroll area shows a horizontal scroll bar when
-     its content's minimum width exceeds its viewport (444 px in a 460 dialog on the Mac).
-   - *Measured on the Mac (not reproduced):* the content's minimum width is ≈ 300 px — macOS style 301, Fusion 298,
-     Fusion with the app font at 12–18 pt 287–360 — so it fits in 444 with room to spare. What pushes it past the
-     viewport on Windows and Linux is not known: fonts and widget style were the first guess, and do not account for
-     it on the Mac.
-   - *The probe* (a throwaway test, `tests/test_zz_width_tmp.py`, removed after): run it on Windows and on Linux with
-     the native platform and note the numbers and the widest rows.
-     ```python
-     from PySide6 import QtCore, QtWidgets
-     from tests.test_export_e2e import edges, window  # noqa: F401
-     def test_probe(qtbot, window):
-         out = {}
-         def inside():
-             dlg = QtWidgets.QApplication.activeModalWidget()
-             if dlg is None:
-                 QtCore.QTimer.singleShot(20, inside); return
-             QtWidgets.QApplication.processEvents()
-             scroll = dlg.findChild(QtWidgets.QScrollArea); c = scroll.widget()
-             rows = sorted(((w.minimumSizeHint().width(), w.sizeHint().width(), type(w).__name__, w.objectName())
-                            for w in c.findChildren(QtWidgets.QWidget) if w.isVisibleTo(dlg)), reverse=True)[:8]
-             out.update(dlg=dlg.width(), content_min=c.minimumSizeHint().width(),
-                        viewport=scroll.viewport().width(), vbar=scroll.verticalScrollBar().width(),
-                        hbar=scroll.horizontalScrollBar().maximum() > 0, style=QtWidgets.QApplication.style().name(),
-                        font=QtWidgets.QApplication.font().toString(), rows=rows)
-             dlg.reject()
-         QtCore.QTimer.singleShot(0, inside)
-         window._show_settings()
-         print("\nWIDTH", out)
-     ```
-     Run from the repo with the window drawn natively: `QT_QPA_PLATFORM=windows` (Windows) or `xcb` / `wayland`
-     (Linux), then `.venv/Scripts/python -m pytest -q -s -p no:cacheprovider tests/test_zz_width_tmp.py` (Windows;
-     `.venv/bin/python` on Linux).
-   - *Proposed fix* (from the Mac session; not committed — implement it on Windows if the probe agrees, or correct
-     it): open the dialog at the content's minimum width, plus the vertical scroll bar, the scroll area's frames and
-     the page's margins, between 460 and 640 and inside the screen —
-     `needed = content.minimumSizeHint().width() + scroll.verticalScrollBar().sizeHint().width() +
-     2 * scroll.frameWidth() + settings_outer.contentsMargins() left + right`;
-     `dlg.resize(min(max(needed, 460), 640, screen - 40), 700)` — and give the device and calibration pickers a cap,
-     `MenuPicker(max_text_chars=28)` (a new optional argument: `sizeHint` takes at most
-     `fontMetrics().averageCharWidth() * max_text_chars` for the text; the picker already elides what does not fit),
-     so a long device or calibration name is shortened rather than widening the dialog. On the Mac it changes nothing
-     (still 460, no scroll bar); the Settings window tests pass with it. If the probe shows the content's minimum
-     width is NOT what overflows, the cause is elsewhere and this fix will not remove the scroll bar.
-   Status: open — the Windows session measures, then fixes; the owner checks on Windows and Linux.
+     its content's minimum width exceeds its viewport (432 px in a 460 dialog on Windows).
+   - *The cause* (measured on Windows, 2026-10-12). **The probe below does not reproduce it, and that is the finding.**
+     `tests/test_export_e2e.py`'s `window` fixture monkeypatches `sounddevice.query_devices` to return `[]`, so the
+     device picker is empty — content minimum 274 px, no scroll bar. Every earlier measurement, Mac and Windows, was
+     taken with no audio device. Driving the real app path instead (real devices, `palette.apply()` as `__main__`
+     does) reproduces it at once: content minimum **450** in a **432** viewport. The palette makes no difference —
+     identical numbers with it off. The devices make all of it.
+
+     The widest `settings_box` is the audio-input row: `QLabel` 102 + `MenuPicker` + margins.
+
+     | widget | minimumSizeHint | sizeHint | maximumWidth |
+     |---|---|---|---|
+     | `MenuPicker` (device) | 47 | 457 | 300 |
+
+     `MenuPicker.minimumSizeHint()` is 47 px — it is built to elide, and `paintEvent` already does. The layout never
+     uses that number, because the picker's horizontal size policy is `Fixed`. `Fixed` carries no `ShrinkFlag`, so
+     Qt's `qSmartMinSize` takes `max(sizeHint, minimumSizeHint)` bounded by `maximumWidth` — 300, not 47. The
+     `setMaximumWidth(300)` on the device picker caps it but, under `Fixed`, that cap becomes a hard MINIMUM for the
+     layout: 102 + spacing + 300 + box margins = 432, plus the content's 18 px of margins = 450.
+
+     `sizeHint()` measures the longest item in the LIST, not the selected one, so choosing a short device does not
+     help while a long one is in the dropdown.
+   - *Why Windows and Linux and not the Mac:* nothing to do with fonts or widget style — same font, same style, and it
+     fits with no device. macOS device names are short ("MacBook Pro Microphone"), so `sizeHint` stays under 300 and
+     the row fits. Windows ships "Microphone Array (2- Intel® Smart Sound Technology for Digital Microphones)" at
+     457 px; Linux's ALSA / PulseAudio names are comparably long.
+   - *The Mac session's proposed fix does not work.* Its formula computes `needed` = 462. Swept against the real
+     dialog on Windows: 460 → viewport 432, scroll bar; 462 → 434, scroll bar; 470 → 442, scroll bar; **478 → 450, no
+     scroll bar**. The formula undercounts by 16 px because on Windows `scroll.frameWidth()` is 0 and the dialog has
+     no layout, so its margins term is 0 — the real dialog-to-viewport difference is 28 px, not the 12 it assumes.
+   - *Fixed* (Python `6088c2f`): one line in `MenuPicker` — the horizontal size policy `Fixed` → `Maximum`. `Maximum` is
+     `ShrinkFlag` with no `GrowFlag`: the picker is never wider than its content, exactly as before, but it may shrink
+     and elide when the row is tight, which is what `minimumSizeHint` and the eliding `paintEvent` were already
+     written for. Measured on Windows:
+
+     | policy | content min | scroll bar | the other pickers |
+     |---|---|---|---|
+     | `Fixed` (was) | 450 | yes | 145, 125 |
+     | `Maximum` | 368 | no | 145, 125 — unchanged |
+     | `Preferred` | 368 | no | both stretch to 192 |
+
+     `Preferred` also clears it but widens every other picker past its content, so `Maximum` is the one. No dialog
+     resize is needed, and the same stroke covers Linux and any future long device name.
+   - *Not tested by the suite:* no test references `MenuPicker` at all, on any edition. The check is the dialog itself.
+   Status: fixed on Windows (Python `6088c2f`); the owner checks on Windows and Linux.
 
 ## 10. Decisions
 
