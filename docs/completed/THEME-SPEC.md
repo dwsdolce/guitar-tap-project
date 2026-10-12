@@ -4,7 +4,7 @@ Status: **APPROVED 2026-10-04** — every decision in §10 taken by the owner. B
 three editions (§7).
 Lock-step: designed once here, built in Swift, Python and the web together, shipped together.
 
-**Where it stands (2026-10-12):** steps 1–9 done (§9). Step 8, the sign-off run-review on the platforms, done: the
+**Closed (2026-10-12) — Issue #2.** Steps 1–9 done (§9). Step 8, the sign-off run-review on the platforms, done: the
 owner ran every step of §9c on the iPad and iPhone, Windows and Linux; its four findings are fixed or accepted. The
 manual's screenshots are #26.
 
@@ -25,7 +25,7 @@ step 4).
    value (equal where the colour need not change); nothing is left to a platform's own colours. The inventory
    also found duplicate and diverging copies (§6), which this work removed.
 3. **Which schemes?** **Light and Dark.** Researched for macOS, iOS / iPadOS, Windows 10 / 11, GNOME, KDE,
-   Cinnamon, Qt and the browsers (`docs/theme/PLATFORM-SCHEMES.md`, with sources): no platform hands an app a third
+   Cinnamon, Qt and the browsers (`docs/completed/theme/PLATFORM-SCHEMES.md`, with sources): no platform hands an app a third
    scheme — each reduces to light or dark (plus "unknown" / "no preference"). The differences are in how the user
    picks: macOS Auto and iOS Automatic switch on a schedule; Windows Custom splits a Windows mode from an app mode;
    GNOME offers Default / Dark; KDE derives it from the chosen colour scheme; Cinnamon offers Mixed / Dark / Light.
@@ -38,7 +38,7 @@ step 4).
   settings).
 - **Resolved scheme** = the OS's when `system`, otherwise the setting. Every colour below is chosen by the
   resolved scheme.
-- **What the OS reports, per edition** (`docs/theme/PLATFORM-SCHEMES.md`):
+- **What the OS reports, per edition** (`docs/completed/theme/PLATFORM-SCHEMES.md`):
   - Swift — the SwiftUI `colorScheme` (macOS `NSAppearance` aqua / darkAqua; iOS `userInterfaceStyle`), always light
     or dark. Following: `NSApp.appearance = nil` (iOS: each window's `overrideUserInterfaceStyle = .unspecified`);
     forcing: `NSApp.appearance` aqua / darkAqua (iOS: `.light` / `.dark`) — what Qt's `setColorScheme` does on macOS.
@@ -363,7 +363,7 @@ How each edition chose its colours when the work began; §8 is how it does now.
 | colour sites | ~300 — system colours (`.secondary` alone ~150), `Color(…)` literals, `Palette`, central tables | 177 `setStyleSheet` calls (116 in `tap_tone_analysis_view.py`), pyqtgraph pens, `QColor`s, reportlab colours | 7 CSS variables (~170 uses) and ~150 literal colours in `App.css`; tables in `presentation/`; canvas and jsPDF colours |
 | central tables | `Palette`, `GuitarMode.hex`, `WoodQuality.hex`, PDF `modeColor`, `multiTapPalette` (+5 copies) | `palette.py`, `GuitarMode.hex`, `WoodQuality.color`, `_MATERIAL_MODE_COLORS`, two `_mag_color`, PDF `_mode_color`, PNG `GUITAR_MODE_DISPLAY`, multi-tap palette (+4 copies) | `palette.ts`, `MODE_COLOR`, `magnitudeColor`, `WOOD_QUALITY_COLOR`, `LIGHT_CHART` / `DARK_CHART`, `COMPARISON_PALETTE` (+1 copy), material sets A and B, `PHASE_COLOR`, PDF RGB constants |
 
-The full per-site inventories (file:line for every colour) are in `docs/theme/INVENTORY-swift.md`, `INVENTORY-python.md` and `INVENTORY-web.md`.
+The full per-site inventories (file:line for every colour) are in `docs/completed/theme/INVENTORY-swift.md`, `INVENTORY-python.md` and `INVENTORY-web.md`.
 
 ## 8. Per-edition implementation (as built)
 
@@ -743,7 +743,7 @@ by system do not fail it, while a moved, missing or resized part does:
 
 **Findings:** — every fix below is in Swift `a11d791`, Python `01201e0`, web `67f99f7`.
 - **The export checker's first run** (2026-10-08) — web and Python against Swift. Findings 2–5 — evidence, cause and
-  recommendation for each — are in `docs/theme/EXPORT-FINDINGS.md`; decided (owner, 2026-10-08): every recommendation
+  recommendation for each — are in `docs/completed/theme/EXPORT-FINDINGS.md`; decided (owner, 2026-10-08): every recommendation
   there is agreed.
   1. *Frequency labels* — Swift labelled the plot's right end (350 Hz on a 75–350 Hz chart); the web and Python
      stopped at the last inner grid line. Step 30's centred labels (`AxisMarks(preset: .aligned)`) had put Swift's
@@ -773,7 +773,7 @@ by system do not fail it, while a moved, missing or resized part does:
      by an ad-hoc comparison (Swift, and the same in the web, which gained it, and Python); Python's page-2 image
      has its date row; page 2's image is titled "Tap Comparison — <name>" and typed by the measurement's guitar
      type (the web; Swift's Saved Measurements path no longer hard-codes Generic). The typography difference
-     first reported was a rendering artefact (`docs/theme/EXPORT-FINDINGS.md`, correction); the real ones are
+     first reported was a rendering artefact (`docs/completed/theme/EXPORT-FINDINGS.md`, correction); the real ones are
      done — Python's empty plate role cell grey, the web's comparison table marking an overridden Averaged value
      italic with " *"; Swift's report text with no colour of its own was pure black — decided (owner): the
      palette's near-black #1C1C1E, now the default text colour of Swift's report views.

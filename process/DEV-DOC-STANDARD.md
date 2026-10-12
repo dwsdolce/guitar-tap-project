@@ -42,6 +42,13 @@ are native. Numbers and formulas must match the code and the oracle.
   dangling reference (and they break DocC/typedoc link resolution). If a fact matters to
   understand the code, **inline it**; otherwise drop the pointer. Shipped/published docs (the
   user manual, `Documentation/Manual/…`) and stable external URLs are fine.
+- **That covers everything in an edition, not only source:** test code, tooling scripts and their
+  comments, requirements files, and shared data copied in from the hub (`theme.json`,
+  `parity-oracle.json`, their "about" and note fields). Hub documents move (`docs/` →
+  `docs/completed/`) and are renamed; a reference to one goes stale wherever it sits. The same holds
+  for Issue numbers and finding labels ("#17 F44", "#21 step 2") — project history, not code.
+- **The hub as a place is fine:** a sync script fetching the oracle from it, a comment naming the
+  hub tool that generates a file. Those are where things live, not documents.
 
 ## Doc-correctness gates (build the docs, don't just count them)
 `doc_coverage.py` checks docs *exist*; it does **not** check they're *correct*. Building the docs

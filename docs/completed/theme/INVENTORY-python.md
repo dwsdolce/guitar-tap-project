@@ -1,6 +1,6 @@
 # Colour inventory — Python (2026-10-04)
 
-Production code under `/Users/dws/src/guitar_tap/src/guitar_tap`, as found for the theme spec (`docs/THEME-SPEC.md`,
+Production code under `/Users/dws/src/guitar_tap/src/guitar_tap`, as found for the theme spec (`docs/completed/THEME-SPEC.md`,
 §6). Paths are relative to that folder; TTAV = `views/tap_tone_analysis_view.py`. Line numbers as of 2026-10-04
 (Python `8837a28`).
 

@@ -381,7 +381,7 @@ About 41 Swift view files (~17.9k lines) map to composables of the same names:
 - **Chart interaction:** pinch zoom that depends on where you touch (plot, x-axis or y-axis), pan,
   draggable annotations with per-peak offsets, crosshair readout, the ⋯ menu (Reset Labels, …).
 - **Library:** long-press menus, swipe to delete.
-- **Theme:** Light / Dark / System per [THEME-SPEC](THEME-SPEC.md).
+- **Theme:** Light / Dark / System per [THEME-SPEC](completed/THEME-SPEC.md).
 - **Help:** opens the versioned manual URL, as the other editions do.
 - **macOS-only features** (menu shortcuts, the floating Results window, the scroll-wheel chart): not ported.
   Hardware-keyboard shortcuts on tablets are a later nice-to-have.

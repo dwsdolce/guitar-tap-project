@@ -1,6 +1,6 @@
 # Colour inventory — web (2026-10-04)
 
-Production code under `/Users/dws/src/GuitarTapWeb/src`, as found for the theme spec (`docs/THEME-SPEC.md`, §6).
+Production code under `/Users/dws/src/GuitarTapWeb/src`, as found for the theme spec (`docs/completed/THEME-SPEC.md`, §6).
 Paths are relative to `src/`. Line numbers are as of 2026-10-04 (web `8f31b91`).
 
 ## How light/dark works today

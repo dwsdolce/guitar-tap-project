@@ -76,7 +76,7 @@ still ships — as a toolbar or overflow item — under its existing name.
    44 px). Applies to toolbar icons, chart controls, list-row affordances and the peak-mode
    chips.
 
-10. **Theme comes from [THEME-SPEC.md](THEME-SPEC.md), not from Material dynamic colour.**
+10. **Theme comes from [THEME-SPEC.md](completed/THEME-SPEC.md), not from Material dynamic colour.**
     Appearance is System (default) / Light / Dark, resolved live when the OS flips. The spec
     fixes exact hex values for chrome, chart, mode colours, the magnitude gradient, the
     multi-tap palette and the quality labels — precisely so that platforms stop substituting

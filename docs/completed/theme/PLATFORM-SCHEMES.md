@@ -1,6 +1,6 @@
 # Platform colour schemes — what the user can choose and what an app sees (researched 2026-10-04)
 
-For the theme spec (`docs/THEME-SPEC.md` §2). Every claim has a source; where documentation was silent the source is
+For the theme spec (`docs/completed/THEME-SPEC.md` §2). Every claim has a source; where documentation was silent the source is
 the upstream code (Qt, KDE, GNOME, Cinnamon, xapp portal, master/dev as of 2026-10-04). *Unconfirmed* marks what no
 source settled.
 

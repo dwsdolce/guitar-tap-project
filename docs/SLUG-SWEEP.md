@@ -7466,7 +7466,7 @@ the natives only. The owner (2026-10-04): "Once color schemes are available they
 color scheme and have the same numbers for the same scheme … My preference is to go ahead and do #2 since it keeps
 coming up everytime we hit a color difference. Can you please spec it out?" — with three questions for the spec:
 can the user choose the scheme or only follow the system; are all colours in all three editions inventoried and
-assigned to what changes with the scheme; which schemes. The spec (`docs/THEME-SPEC.md`, written 2026-08) is
+assigned to what changes with the scheme; which schemes. The spec (`docs/completed/THEME-SPEC.md`, written 2026-08) is
 being rewritten on a full colour inventory of the three editions; `mode-colors` resumes when #2 lands.
 
 ## Expect production defects, not just test cleanup

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate the colour-role tables in the three palette modules from the shared theme.json.
 
-The role table (docs/THEME-SPEC.md §5) lives in tooling/parity/cases/theme.json; each edition holds the same
+The role table (docs/completed/THEME-SPEC.md §5) lives in tooling/parity/cases/theme.json; each edition holds the same
 roles in its palette module, checked by its theme test. This rewrites the generated blocks so a role added to
 theme.json reaches all three editions identically:
 

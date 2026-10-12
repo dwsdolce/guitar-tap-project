@@ -15,7 +15,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
-- [#2](https://github.com/dwsdolce/guitar-tap-project/issues/2) · [`THEME-SPEC.md`](THEME-SPEC.md) — Light / Dark / System theme
 - [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3) · [`AUDIO-BUFFER-SIZE.md`](AUDIO-BUFFER-SIZE.md) — Swift 4800-frame buffer
 - [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · [`SLUG-SWEEP.md`](SLUG-SWEEP.md) — sweep every `@parity` slug for false twins, untagged files and dead tests
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
@@ -33,6 +32,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#2 (Light / Dark / System theme) is **closed**; its record is
+[`completed/THEME-SPEC.md`](completed/THEME-SPEC.md), with its inventories and export findings in
+[`completed/theme/`](completed/theme/) — one role table shared by all three editions (`theme.json`), the scheme
+followed live, exports from the light values, the export regression tests on CI, and the platform run-review.
 
 #6 (results panel consistency) is **closed**; its record is
 [`completed/RESULTS-PANEL-CONSISTENCY.md`](completed/RESULTS-PANEL-CONSISTENCY.md) — the Analysis Results panel

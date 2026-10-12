@@ -20,7 +20,7 @@ desktop and a real iPhone.
    pointer exists, hover raises the fill 10 points (5 → 15 %; on 28 → 38 %). A **two-state toggle** — Auto dB,
    Taps, Crosshair (iOS, touch web) — shows a stronger fill while on: 28 % in Python and the web; Swift's is the
    native toggle's own on state (about 11 % in Light — measured 2026-10-07, accepted). A multi-state control (Annotations) has none; its
-   icon names the state. Recorded in [THEME-SPEC.md](../THEME-SPEC.md).
+   icon names the state. Recorded in [THEME-SPEC.md](THEME-SPEC.md).
 6. **New Tap is filled blue** everywhere.
 7. **Deselect and Reset to Auto never show for a plate or brace** — peak selection has no purpose there.
 8. **Accepted platform differences:** macOS greys an inactive window's controls (Python and the web do not imitate

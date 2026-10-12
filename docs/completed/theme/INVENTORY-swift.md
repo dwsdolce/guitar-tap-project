@@ -1,7 +1,7 @@
 # Colour inventory — Swift (2026-10-04)
 
 Production code under `/Users/dws/src/GuitarTap/GuitarTap` (all 89 Swift files and `Assets.xcassets`), as found for
-the theme spec (`docs/THEME-SPEC.md`, §6). Paths are relative to that folder. Line numbers as of 2026-10-04 (Swift
+the theme spec (`docs/completed/THEME-SPEC.md`, §6). Paths are relative to that folder. Line numbers as of 2026-10-04 (Swift
 `7855a3d`).
 
 Types: **SYS** — a SwiftUI system / semantic colour (adapts to appearance; the OS release can change it); **FIXED** —
