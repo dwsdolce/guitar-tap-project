@@ -4,10 +4,9 @@ Status: **APPROVED 2026-10-04** — every decision in §10 taken by the owner. B
 three editions (§7).
 Lock-step: designed once here, built in Swift, Python and the web together, shipped together.
 
-**Where it stands (2026-10-11):** steps 1–7 and 9 done (§9). Step 7, the export regression tests: the tests that
-drive each app through its exports and the shared checker are built, the findings they raised are fixed, every
-edition's exports match Swift's on the Mac, the iPad and the iPhone, and CI runs them in all three (§9b). Next is
-step 8, the sign-off run-review on the platforms (§9c), once the owner has reviewed its steps; no release before it.
+**Where it stands (2026-10-12):** steps 1–9 done (§9). Step 8, the sign-off run-review on the platforms, done: the
+owner ran every step of §9c on the iPad and iPhone, Windows and Linux; its four findings are fixed or accepted. The
+manual's screenshots are #26.
 
 Why now: every colour difference the #17 slug sweep meets (mode colours, wood quality, the multi-tap palette, the
 analysis-quality colours of F57) comes back to the same cause — the three editions draw on different backgrounds
@@ -429,7 +428,7 @@ step 5 the native widgets follow the scheme while the app's own colours do not y
 | 5f | Re-wire: exports | PNG and PDF from the light column of every role (Swift's PNG renders forced light); saved comparisons drawn by slot (§5.13); found in 5a's run-review: Python's PNG takes the chart's current dB range (Swift and the web the measurement's), the web's PNG draws a dot for every peak in range and counts 3 peaks (Swift and Python draw and count the shown peaks), and the web's PNG annotation cards are much smaller than Swift's and Python's | exports identical whatever the setting | **done** 2026-10-07 (Swift abecde5, Python a25c0b9, web be62a1b; its run-review fixes Swift f69964a, Python 7d91cb2, web 3dcc139); run-review passed |
 | 6 | Help and manual | Help text and the user manual: Appearance among the Advanced settings; what System does | the owner reviews the text | **done** 2026-10-07 (Swift b47f0aa, Python 7c01f74, web 2da0e06): Appearance in the three Quick Start Guides and the manual (§8.4); the owner reviewed the text; with it the 1.0.3 release notes; the manual's screenshots → #26 |
 | 7 | Export regression tests | every export checked in all three by tests that drive the real app as the owner does — import a fixture, export the PNG and the PDF from the main window and from Saved Measurements, catch the files, measure them against Swift's expected values — run on GitHub CI (§9b) | each edition's suite runs them, locally and on CI, and they pass; a deliberate change to an export, or a wrong argument on an export path, fails them | **done** 2026-10-11 — drivers in all three (web `52814db`, Python `735fa70`, Swift `a11d791`) and the shared checker built; its findings fixed (Swift `a11d791`, Python `01201e0`, web `67f99f7`); every edition matches Swift's 20 exports; the iPad and iPhone match the Mac, and the UI tests run on their simulators (2026-10-09); CI green in all three (2026-10-10: Swift `cad4d83`…`f4c9c60`, Python `38fac43`…`93a3511`, web `6e35afc`); the web on Vite 8 (2026-10-11, `eb1fc02`) |
-| 8 | Run-review | what can differ by platform within an edition (owner, 2026-10-09: §9c) — the OS's scheme read and followed, what the OS or toolkit draws, containers only one platform has — on the iPad and iPhone (Swift), Windows and Linux Cinnamon (Python, with the Fusion fallback of decision 9 where needed), Chrome on Windows and Safari on the iPhone and iPad (web); macOS and the exports are covered by §9a and §9b, from the committed code | the owner signs off | — |
+| 8 | Run-review | what can differ by platform within an edition (owner, 2026-10-09: §9c) — the OS's scheme read and followed, what the OS or toolkit draws, containers only one platform has — on the iPad and iPhone (Swift), Windows and Linux Cinnamon (Python, with the Fusion fallback of decision 9 where needed), Chrome on Windows and Safari on the iPhone and iPad (web); macOS and the exports are covered by §9a and §9b, from the committed code | the owner signs off | **done** 2026-10-12 — the owner ran every step; findings 1–4 (§9c): the slow scheme switch and the narrow Settings fixed (Python `5dfd9d9`, `6088c2f`), the web's select lists fixed (`ba0f929`), the native file dialogs on Windows and Linux accepted |
 | 9 | `mode-colors` (#17 Stage 2) | the mode-colours tests run on `theme.json` (`modeRoles`) from step 4; the #17 entry closes | #17's plan row 7 done | **done** 2026-10-04 with step 4 (Swift 382cfeb, Python 450e1ce, web 329a10e): the three `mode-colors` tests run on `theme.json`'s `modeRoles`; #17's row 7 closed 2026-10-07 |
 
 ### 9a. Run-review steps — step 5 (5c–5f)
@@ -935,13 +934,15 @@ OS" steps change the OS's own setting while the app is open.
    every widget. Fix: the follower answers a burst once, on the next pass of the event loop, and only when the
    palette differs from the one the stylesheet was last applied against — 3 restyles, a switch ≈ 280 ms on the Mac
    (was ≈ 1.5 s). Test `test_a_burst_of_palette_changes_restyles_the_app_once` (fails on the old follower: 30).
-   Status: fixed (Python `5dfd9d9`); the owner checks it on Windows.
-2. **Windows: the native file dialog follows Windows' scheme, not the app's** — step 11, 2026-10-12. Windows draws
+   Status: fixed (Python `5dfd9d9`); verified by the owner on Windows.
+2. **Windows and Linux: the native file dialog follows the system's scheme, not the app's** — steps 11 and 14,
+   2026-10-12. Windows draws
    its Explorer file dialog from the system's app mode and offers no supported per-app override; Qt's scheme request
    reaches Qt's own widgets and the title bar only. On macOS the panel follows the app. Decided (owner, 2026-10-12):
    accepted as a platform limit — the native dialog keeps Windows' look and features; it differs only when the app's
    Appearance differs from Windows'. Step 11 on Windows: the message boxes in the app's scheme, the file dialogs in
-   Windows' own.
+   Windows' own. Linux (Cinnamon) is the same: Qt shows the desktop's own file dialog (GTK, or the desktop portal),
+   drawn in the system theme. Decided (owner, 2026-10-12): no change on Linux either; step 14 as step 11.
 3. **Python: Settings too narrow on Windows and Linux** — 2026-10-12. On both, the Settings dialog opens with a
    horizontal scroll bar and the right-hand values cut off ("44,100 H", "Dipole: 310-460 H", the version and the
    update check box); on the Mac it fits, with no scroll bar.
@@ -992,7 +993,14 @@ OS" steps change the OS's own setting while the app is open.
      `Preferred` also clears it but widens every other picker past its content, so `Maximum` is the one. No dialog
      resize is needed, and the same stroke covers Linux and any future long device name.
    - *Not tested by the suite:* no test references `MenuPicker` at all, on any edition. The check is the dialog itself.
-   Status: fixed on Windows (Python `6088c2f`); the owner checks on Windows and Linux.
+   Status: fixed (Python `6088c2f`, from the Windows session); verified by the owner.
+4. **Web: a select's open list unreadable in Dark on Chrome/Windows** — step 17, 2026-10-12. Chrome on Windows draws
+   a select's list from the select's own colours, and the pickers' background is a translucent tint (`background.picker`,
+   8 % white in Dark), so the list came out white under the Dark text colour, near-white. Not Windows' setting:
+   Windows was Dark too. Fix: every select's options take the opaque panel background and the text colour
+   (`index.css`), in both schemes; browsers that draw a native menu ignore it. Covers all the native selects —
+   Settings' pickers, a peak card's mode, the plate stiffness preset.
+   Status: fixed (web `ba0f929`); verified by the owner on Windows.
 
 ## 10. Decisions
 
