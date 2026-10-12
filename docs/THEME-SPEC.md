@@ -928,6 +928,21 @@ OS" steps change the OS's own setting while the app is open.
     and off. → The controls iOS draws (selects, checkboxes, sliders) and the phone and tablet panels in the app's
     scheme, consistent with the Mac; nothing unreadable.
 
+**Findings:**
+1. **Python: a scheme switch took a second or two** (Windows worse; the Mac too) — found at step 8–9 on Windows,
+   2026-10-12. One switch restyled the whole application 31 times: Qt sends a burst of application palette-change
+   events for one scheme change (fifteen on macOS), and the palette follower answered each with a full restyle of
+   every widget. Fix: the follower answers a burst once, on the next pass of the event loop, and only when the
+   palette differs from the one the stylesheet was last applied against — 3 restyles, a switch ≈ 280 ms on the Mac
+   (was ≈ 1.5 s). Test `test_a_burst_of_palette_changes_restyles_the_app_once` (fails on the old follower: 30).
+   Status: fixed (Python `5dfd9d9`); the owner checks it on Windows.
+2. **Windows: the native file dialog follows Windows' scheme, not the app's** — step 11, 2026-10-12. Windows draws
+   its Explorer file dialog from the system's app mode and offers no supported per-app override; Qt's scheme request
+   reaches Qt's own widgets and the title bar only. On macOS the panel follows the app. Decided (owner, 2026-10-12):
+   accepted as a platform limit — the native dialog keeps Windows' look and features; it differs only when the app's
+   Appearance differs from Windows'. Step 11 on Windows: the message boxes in the app's scheme, the file dialogs in
+   Windows' own.
+
 ## 10. Decisions
 
 1. ~~**The OS / app line (§3)**~~ — *decided (owner, 2026-10-04):* the system's widgets come from the system; the app
