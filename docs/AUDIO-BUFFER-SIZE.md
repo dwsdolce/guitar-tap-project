@@ -3,11 +3,11 @@
 **Issue:** [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3)
 
 **Status:** ⏳ Items 1–6 DONE and committed 2026-10-13, all three editions — verified live by the
-owner. Open: the live taps repeated with item 4 in place; the Windows and Linux baselines (#16);
-items 7 and 8. Item 9 is #29.
+owner. Open: the live taps repeated with item 4 in place; items 7 and 8. Item 9 is #29.
 
 **Commits:** Swift `698ce7a` (code), `6489b1b` (oracle generator), `de43fc5` (oracle) · Python
-`07834e4`, `93b17f3` (baseline) · web `fa0414b`, `7fa96a2` (baseline).
+`07834e4`, `93b17f3` (macOS baseline), `5ad1181` (Linux, Windows) · web `fa0414b`, `7fa96a2` (macOS
+baseline), `a78e415` (Linux, Windows).
 
 **The goal (owner, 2026-10-12):** *"to make sure that all editions and platforms trigger taps at the
 same point in the audio stream. This affects the actual frequency of any peaks."* A 0.1 Hz difference
@@ -59,7 +59,7 @@ in two ways at once. The measurements below are the ones to rely on.
 | 3 | A guitar window's audio ends at a fixed length; zeros follow | ✅ | ✅ | ✅ |
 | 4 | The onset is found from the noise just before the tap | ✅ | ✅ | ✅ |
 | 5 | Capture probe: the web has it; all three can record live captures | ✅ | ✅ | ✅ |
-| 6 | Golden values and baselines re-minted | ✅ | ✅ macOS | ✅ macOS |
+| 6 | Golden values and baselines re-minted | ✅ | ✅ | ✅ |
 | 7 | Swift's meter rate and live confirmation latency | open | — | — |
 | 8 | Ring-out measured from the samples, not per chunk | open | open | open |
 | 9 | A sample-based trigger | → #29 | → #29 | → #29 |
@@ -111,13 +111,16 @@ build refuses to proceed with the switch on (Swift: the Release configuration; P
 builds; web: `npm run build`).
 
 **6. Re-minting.** The oracle was re-minted from Swift at `6489b1b` and synced to Python and the
-web; their macOS baselines were re-minted. What moved: REG-G2 (the 8-tap guitar case) — 54 values, at
+web; their macOS baselines were re-minted locally and their Linux and Windows baselines on the CI
+runners (the *Mint self-baselines* workflow). What moved, identically on all three platforms: REG-G2 (the 8-tap guitar case) — 54 values, at
 most 0.0013 Hz and 0.0023 dB — and one magnitude of REG-B2 (0.0005 dB). Nothing else; no gated-FFT
 case. Suites: Swift 536, Python 1283, web 1164.
 - *Found:* the oracle generator never re-minted REG-B2. The case was added to the oracle by hand in
   September and not to the generator's list of material cases, so its value could not follow a
   change; Swift's suite kept failing on it after the first re-mint. Added (`6489b1b`).
-- *Open:* the Windows and Linux baselines of Python and the web, on those machines (#16).
+- *Found:* the first push left Python's and the web's CI failing on Linux and Windows — only the macOS
+  baselines had been re-minted. A change that moves golden values needs all three platforms'
+  baselines minted before it is pushed.
 
 **7. Swift's meter rate and confirmation latency — open.** Cutting a buffer into chunks does not
 make audio arrive more often: the screen still sees a burst every 0.1 s. Changing that means taking
