@@ -1,153 +1,166 @@
-# Audio buffer size — Swift's 4800-frame buffers leak into three measurements
+# Audio buffer size — the same tap, the same samples, in every edition
 
-**Status:** 📋 OPEN — analysed 2026-07-16 (two 3-app runs), **not blocking 1.0.2**. No code written.
-**Why it's not a release blocker, and why it still matters (user, 2026-07-16):** a 0.1 Hz difference is
-**not material in guitar making** — it changes no lutherie decision. It matters for **accuracy and
-cross-platform trust**: the three editions must agree, and this is the one place they don't.
-**Parity:** `@parity dsp/decay tests=test/decay-tracking` + the gated-capture / peak path.
-**Related:** [DECAY-AUDIO-CLOCK-FIX.md](DECAY-AUDIO-CLOCK-FIX.md) — the audio-clock fix that *exposed*
-this (it did not cause it).
+**Issue:** [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3)
 
-## Root cause — one fact
+**Status:** ⏳ Items 1–6 DONE and committed 2026-10-13, all three editions — verified live by the
+owner. Open: the live taps repeated with item 4 in place; the Windows and Linux baselines (#16);
+items 7 and 8. Item 9 is #29.
 
-**Swift's live audio buffers are 4800 frames (0.1 s @ 48 kHz), not the 1024 it requests.**
-`installTap(bufferSize:)` is only a *hint* — CoreAudio decides, and 4800 is the macOS default. Python
-(`chunksize=1024`) and web (AudioWorklet, `CHUNK = 1024`) genuinely get 1024.
+**Commits:** Swift `698ce7a` (code), `6489b1b` (oracle generator), `de43fc5` (oracle) · Python
+`07834e4`, `93b17f3` (baseline) · web `fa0414b`, `7fa96a2` (baseline).
 
-Swift's own comment at `RealtimeFFTAnalyzer+EngineControl.swift:320-322` names the exact symptom:
+**The goal (owner, 2026-10-12):** *"to make sure that all editions and platforms trigger taps at the
+same point in the audio stream. This affects the actual frequency of any peaks."* A 0.1 Hz difference
+changes no lutherie decision; it matters for accuracy and for trust between the editions.
 
-> *"Using 1024 samples … This improves decay measurement precision from **~100ms** to ~23ms"*
+**Related:** [SAMPLE-BASED-TRIGGER.md](SAMPLE-BASED-TRIGGER.md) (#29) — the change that would remove
+the cause rather than its consequences. `tooling/chunk-boundary-sweep.py` — the tool that measures
+all of this without live taps.
 
-…and the measured ring-out is **exactly 100 ms**, i.e. the request is not being honoured.
+## Root cause
 
-Everything downstream keys off the buffer grid: `audioElapsed += samples.count / actualSampleRate`
-(`+FFTProcessing.swift:126`) advances by the **actual** size, the tap trigger fires on a buffer
-boundary, and the session recording accumulates whole buffers.
+**Swift's live audio arrives in 4800-frame buffers (0.1 s at 48 kHz), not the 1024 it asks for.**
+The size given to `installTap` is a hint; CoreAudio decides. Python (PortAudio) and the web (its
+worklet) process 1024-sample chunks. Confirmed live on 2026-10-13 — Swift now logs the delivered
+size at each engine start: `Audio buffers delivered: 4800 frames`.
 
-## Symptoms, one cause
+Everything downstream stepped once per delivered buffer: the level meter, the tap trigger, ring-out
+tracking, the session recording.
 
-| # | Symptom | Swift | Python / web |
+**And a second cause, found while fixing the first.** Even on 1024-sample chunks, the tap trigger
+lands wherever a chunk boundary happens to fall, so each edition's capture starts at a different
+sample. The alignment step exists to take that out of the FFT window — and two things leaked through
+it (items 3 and 4).
+
+## What the 2026-07-16 evidence did and did not show
+
+Two simultaneous captures by all three editions showed Swift's peaks 0.04–0.10 Hz from the other
+two, which agreed with each other to under 0.001 Hz. It was attributed to the buffer size alone.
+**That attribution was unproven:** at the time Swift aligned the guitar FFT window to the tap's
+onset and Python and the web did not (they gained it in September, #7), so Swift differed from them
+in two ways at once. The measurements below are the ones to rely on.
+
+## Symptoms
+
+| # | Symptom | Before | Now |
 |---|---|---|---|
-| 1 | **Ring-out quantized** — level envelope sampled once per buffer | exactly **0.100 s** (1 × 4800) | 21.3 ms grid (n × 1024) |
-| 2 | **Sub-bin peak shifts** — gated FFT window starts at *(trigger − preRollSamples)*; trigger is buffer-quantized | Air **97.262** → displays **97.3** | Air **97.223 / 97.224** → **97.2** |
-| 3 | **WAV length quantized** — session recording accumulates whole buffers | **163200 = exactly 34 × 4800** | 1024-grid (n.75 × 1024) |
-| 4 | **Level meter update rate** — `inputLevelDB` is published once per buffer and drives the threshold slider's meter | **~10 updates/s** (48 kHz ÷ 4800) | ~47/s (48 kHz ÷ 1024) |
-| 5 | **Live tap-confirmation latency** — the level-crossing detector confirms after 2 consecutive above-threshold *buffers* | **~200 ms** (2 × 100 ms) | ~43 ms (2 × 21 ms) |
+| 1 | Ring-out measured once per buffer | Swift exactly 0.100 s; others on a 21 ms grid | Swift on the 21 ms grid by construction — **not yet measured live** |
+| 2 | Peak frequencies differ between editions | up to 0.044 Hz on one live tap | none: bit-identical FFT windows (items 1, 3, 4) |
+| 3 | Session recording length | a multiple of 4800 | on the 1024 grid, as the others — verified |
+| 4 | Swift's level meter updates ~10 times a second | — | **unchanged** (item 7) |
+| 5 | Swift confirms a live tap up to ~200 ms late | — | the trigger is on the 1024 grid, but audio still arrives every 0.1 s (item 7) |
 
-Symptoms 4 and 5 were added 2026-09-23, from the owner's observation during the #17 run-review that
-Swift's threshold meter updates visibly less often than Python's and the web's. Both are **live-only**:
-Swift's file playback splits the file into 1024-sample chunks itself (`processFileData`), so every
-test, fixture and parity check runs Swift at the 1024 grid and none of them can see these. Fix A
-retires both along with 1–3: re-chunking to 1024 gives the meter and the detector the same cadence as
-the other editions. Until it lands, Swift is not a valid reference for meter smoothness or live tap
-timing — compare Python against web instead.
+## Items
 
-**The window mechanism (symptom 2).** The guitar window is seeded either from the level-crossing
-pre-roll snapshot taken *at the crossing buffer* (fast-start) or from the live pre-roll (fallback,
-`+SpectrumCapture.swift:583`), then the ring buffer is trimmed to a **fixed** `preRollSamples`
-(`:261-264`). So the window is onset-**inclusive**, not onset-**anchored at sample resolution** —
-despite the doc comment saying "aligned to the tap onset". Measured on the fixture: a 1024-grid trigger
-fires at onset+151, a 4800-grid at onset+3287 → a **3136-sample window shift** → different samples in
-the FFT → the parabolic interpolation moves a few hundredths of a Hz. A sensitivity probe puts a
-few-thousand-sample shift at ~0.1–0.2 Hz of Air-peak movement — the right order for the observed
-+0.039 Hz. *(Order-of-magnitude support, not proof — the probe could not pin the direction.)*
+| # | Item | Swift | Python | Web |
+|---|---|---|---|---|
+| 1 | Delivered buffers are cut into 1024-sample chunks | ✅ | n/a | n/a |
+| 2 | The level meter is told once per delivered buffer | ✅ | n/a | n/a |
+| 3 | A guitar window's audio ends at a fixed length; zeros follow | ✅ | ✅ | ✅ |
+| 4 | The onset is found from the noise just before the tap | ✅ | ✅ | ✅ |
+| 5 | Capture probe: the web has it; all three can record live captures | ✅ | ✅ | ✅ |
+| 6 | Golden values and baselines re-minted | ✅ | ✅ macOS | ✅ macOS |
+| 7 | Swift's meter rate and live confirmation latency | open | — | — |
+| 8 | Ring-out measured from the samples, not per chunk | open | open | open |
+| 9 | A sample-based trigger | → #29 | → #29 | → #29 |
 
-## Evidence — two 3-app simultaneous live captures (2026-07-16)
+**1. Re-chunking (Swift).** `processDeliveredSamples` appends each delivered buffer to the remainder
+of the last, passes every whole 1024 samples to `processRawSamples`, and keeps the rest; the
+remainder is cleared at each engine start. File playback already fed 1024-sample chunks.
+`RealtimeFFTAnalyzer.chunkSize` is the one constant for both.
+- *Tests:* `AudioChunkingTests` — buffers of 4800, 777, 512 and 1024 frames reach the pipeline as
+  whole chunks, in order; the audio clock advances a chunk at a time.
 
-Swift, Python and web run **at once on the same Mac, same UMIK-1 tap**, so CoreAudio hands all three
-the *identical* stream. **Proven identical**: pairwise normalised cross-correlation **1.000000**,
-**lag 0**, same peak sample value. Every difference below is therefore algorithmic.
+**2. One meter update per delivered buffer (Swift).** A 4800-frame buffer's four chunks are
+processed in the same instant, so announcing each level redrew the meter four times in one frame
+(SwiftUI: "onChange(of: Float) action tried to update multiple times per frame"). The live path
+announces the loudest chunk's level once per delivered buffer; playback still announces each chunk.
+- *Test:* `AudioChunkingTests` — one four-chunk buffer tells the meter once, the loudest chunk's level.
 
-**Run 2** (matched settings + calibration — the good comparison):
+**3. The fixed zero tail (all three).** A guitar capture is exactly as long as its FFT window and
+starts 0.2 s before the trigger; the window starts 0.1 s before the onset. So the capture ran out
+before the window's end by an amount that depended on the chunk boundary — 2,700 to 3,700 samples of
+zeros at 48 kHz, differing by up to 1023 between editions. That alone moved a weak peak by 0.044 Hz.
+Now the window's audio always ends at `fftSize − (pre-roll − pre-onset)` — 60,736 samples at 48 kHz —
+and exactly 4,800 zeros follow (`guitarWindowAudioSamples`).
+- *Tried and dropped:* capturing 0.1 s more, as plate and brace do (0.5 s for a 0.4 s window). It
+  works, but it lengthens the time before the next tap can register from about 1.7 s to about 1.8 s,
+  and the 8-tap guitar recording — a master luthier's, not replaceable — has taps 1.71 s apart: taps
+  were missed. *Decision (owner, 2026-10-13):* "Let's try the fixed zero tail."
+- *Cost:* the last tenth of a second of a 1.4-second window is never analysed; 0.06–0.08 s of it
+  already was not.
+- *Test:* `test/guitar-capture-window` GW1 — one tap played with its chunk boundaries at four
+  positions gives a bit-identical window.
 
-| selected peak | python | swift | web | sw−py | displayed |
-|---|---|---|---|---|---|
-| Air | 97.22325 | **97.26205** | 97.22376 | **+0.039** | 97.2 / **97.3** / 97.2 |
-| | 197.89697 | 197.90298 | 197.89694 | +0.006 | all 197.9 |
-| | 409.54636 | 409.53574 | 409.54620 | −0.011 | all 409.5 |
-| | 1180.60530 | **1180.67480** | 1180.60560 | **+0.070** | 1180.6 / **1180.7** / 1180.6 |
-| **decay** | 0.08533 (4×1024) | **0.100 (4800)** | 0.064 (3×1024) | | |
+**4. The onset rule (all three; shared with plate and brace).** The onset was the first sample above
+ten times the noise measured over the first 2048 samples *of the capture* — a different stretch of
+noise for each capture start, so a slightly different threshold, and an onset 1–3 samples apart
+between editions (up to 10 on one tap of the 8-tap recording). Now, after that first estimate, the
+noise is measured again over the 2048 samples ending 256 before the estimate and the onset found
+again, until it stops moving (at most four passes).
+- *Also tried:* a threshold 40 dB below the tap's own peak. Not robust — on quiet brace taps it falls
+  into the noise and the onset lands thousands of samples early.
+- *Decision (owner, 2026-10-13):* "implement the onset rule (it is simple and has improvement)."
+- *Test:* GW2 — a tap captured from seven starting samples aligns to the same window.
 
-**Web ↔ python agree to <0.001 Hz** — the control proving the method is sound and the audio identical.
-Swift is the sole outlier.
+**5. The capture probe.** The web gained the probe Swift and Python had (`src/state/captureProbe.ts`,
+`tooling/capture-probe.sh`). All three gained a developer switch — `CaptureProbe.liveProbe`,
+`LIVE_PROBE` — off in every release: with it on, and Dump Capture Audio on, each measurement's
+capture fingerprints are written beside its recording as `<recording>-capture-probe.json`. A release
+build refuses to proceed with the switch on (Swift: the Release configuration; Python: the packaging
+builds; web: `npm run build`).
 
-**Run 1** (archived; mismatched settings) shows the *same* Swift offset — **this is not new**:
-Air python 97.45350 / swift 97.55444 / web 97.51052 → sw−py **+0.101**, already displaying
-97.5 / **97.6** / 97.5. It simply went unnoticed.
+**6. Re-minting.** The oracle was re-minted from Swift at `6489b1b` and synced to Python and the
+web; their macOS baselines were re-minted. What moved: REG-G2 (the 8-tap guitar case) — 54 values, at
+most 0.0013 Hz and 0.0023 dB — and one magnitude of REG-B2 (0.0005 dB). Nothing else; no gated-FFT
+case. Suites: Swift 536, Python 1283, web 1164.
+- *Found:* the oracle generator never re-minted REG-B2. The case was added to the oracle by hand in
+  September and not to the generator's list of material cases, so its value could not follow a
+  change; Swift's suite kept failing on it after the first re-mint. Added (`6489b1b`).
+- *Open:* the Windows and Linux baselines of Python and the web, on those machines (#16).
 
-**Bonus finding — calibration shifts interpolated peaks.** In run 1 web was uncalibrated and sat
-+0.057 Hz off python on Air; with calibration matched in run 2 web collapsed onto python (+0.0005 Hz).
-Frequency-dependent bin gains tilt the parabola, so **calibration must match for any peak comparison**.
-(It still cannot move ring-out — decay rides `levelDB`, a raw time-domain RMS that no platform
-calibrates.)
+**7. Swift's meter rate and confirmation latency — open.** Cutting a buffer into chunks does not
+make audio arrive more often: the screen still sees a burst every 0.1 s. Changing that means taking
+audio from the system by another mechanism than the tap. Not investigated. *Owner, 2026-10-12:* "I am
+less concerned with the meter update than I am with the difference calculation."
 
-**Ruled out:** physical tap variation (audio bit-identical); calibration as a decay factor; WAV
-*format* (all three identical — 32-bit float, mono, 48 kHz; only length differs); the audio-clock fix
-(it *exposed* the quantization by making timestamps exact instead of wall-clock-smeared).
+**8. Ring-out from the samples — open.** Ring-out is measured on the 21 ms chunk grid in every
+edition (±21 ms). A sliding measure on the samples would be sub-millisecond and independent of
+chunking. No decision.
 
-## The fixes — three options, not interchangeable
+## Measurements (2026-10-13)
 
-**A. Re-chunk Swift's tap into fixed 1024-sample sub-chunks.** You cannot force CoreAudio, but you can
-accumulate what it delivers and emit a fixed grid downstream. **One small change that retires all three
-divergences** (ring-out onto the same 21 ms grid, trigger onto the same 1024 boundary so windows align,
-WAV quantized alike). It does **not** improve resolution — it makes all three *consistently* coarse.
-Worth doing on its own merits anyway: a 100 ms buffer is sluggish for tap detection and level metering.
+Three editions on one Mac and one microphone, recording the same taps; the editions' recordings are
+bit-identical audio.
 
-**B. Compute ring-out from raw samples** (sliding-window RMS ~1 ms hop, or an exponential fit over the
-post-tap region). Fixes decay **accuracy** (±21 ms → sub-ms) and is cadence-independent *by
-construction* — even a 4800-buffer Swift agrees. Does not touch the FFT window.
-
-**C. Anchor the gated FFT window to the detected onset _sample_**, not the crossing buffer. Fixes peak
-alignment by construction, buffer-independent. Does not touch decay.
-
-**B and C share the principle — _derive the measurement from the raw sample timeline, never the buffer
-grid_ — but they are different code in different places. A is neither: it makes the grid uniform so the
-divergence disappears without fixing either resolution.**
-
-Suggested order: **A first** (small, low-risk, retires all three divergences + fixes input latency),
-then **B** if ±21 ms on ring-out matters. **C** is optional once A lands — worth it only to stay robust
-against a future buffer change.
-
-Whatever lands must be 3-way with the `dsp/decay` tests, and REG_G's golden re-derived (the value will
-change — and should finally become platform-independent).
-
-**First step, cheap:** log `buffer.frameLength` in Swift's tap (and the gated window's start sample).
-If it reads 4800, all three symptoms are confirmed as one bug.
-
-## Verifying a fix — what a recording CAN and CANNOT do
-
-**No new recording is needed for the algorithm work.** The dumped WAV *is* what the decay path consumes
-— raw 32-bit-float PCM (calibration is FFT-bin only, so the time-domain samples the RMS sees are
-exactly these). Tap onset ~1.83 s in a 3.4 s file leaves ~1.5 s of tail, far more than the ~40–100 ms
-being measured.
-
-| Question | Recording enough? |
+| | Result |
 |---|---|
-| Does the new algorithm compute the right ring-out? | ✅ yes — compute a high-resolution ground truth from the raw samples |
-| Is it **cadence-independent** (the real fix)? | ✅ yes — feed the *same* samples chunked at 1024 / 4800 / 512 / 777; a correct algorithm returns the **same number every time**. Decisive. |
-| Does CoreAudio hand Swift 4800-frame buffers? | ❌ **no — live-only fact** |
+| Re-chunking alone, 3 taps | Tap onset and window start at the same sample in all three editions; largest peak difference 0.044 Hz (a weak peak), 0.003 Hz on the strongest |
+| + fixed zero tail, 5 taps | Largest peak difference 0.0013 Hz; editions with the same onset have bit-identical windows; onsets 1–3 samples apart on 4 of 5 taps |
+| + onset rule | Every tap in the six test recordings (29 taps): one onset and one window at all 1024 chunk-boundary positions. The three editions' windows for the 8-tap recording: bit-identical, 8 of 8. **Not yet repeated with live taps.** |
 
-**⚠ The trap:** the recording **cannot reproduce the live 4800 behaviour**. Swift's file playback
-hardcodes `chunkSize = 1024` (`processFileData`), bypassing CoreAudio — so replaying the WAV makes the
-0.100 s quantization (and the window shift) **disappear**. Don't conclude "fixed" from a playback run.
+For scale: the strongest peak of three consecutive taps read 240.03, 240.06 and 240.09 Hz — tap-to-tap
+variation is 20–50 times the timing effect that remained after the fixed tail.
 
-**Proof this is already happening:** a *shared cross-platform ring-out golden* already exists — Swift
-REG_G and web `decay-tracking.test.ts` both assert `Recording 5.wav` decays in **~0.085 s**, and they
-agree. That agreement is an **artifact of playback pinning both to 1024**, not evidence of a
-cadence-independent algorithm. Green playback tests and a wrong live number coexist happily today.
+The peak figures are an FFT of each edition's window computed outside the apps, uncalibrated — not
+the values the apps display.
 
-## The fixture
+## Run-review
 
-**The 2026-07-16 files in `~/Documents/GuitarTap` are TRANSIENT** (run 1 is under `ARCHIVE/`) and will
-disappear — the numbers above are recorded here precisely because the files won't survive.
+1. Start Swift and read its log (debug logging on). → One `Audio buffers delivered: N frames` line.
+   *Passed: 4800.*
+2. With all three editions on one microphone, the web tab visible and Dump Capture Audio on, take
+   several single-tap guitar measurements. → The probe files show the same window fingerprint in all
+   three for each tap. *After items 1 and 3: passed where the onsets agreed. To repeat after item 4.*
+3. Check Swift's recording length. → A whole number of 1024-sample chunks plus the same fraction as
+   Python's, not a multiple of 4800. *Passed.*
+4. Tap a guitar and read the ring-out in Swift. → Not exactly 0.100 s. *Not yet done.*
 
-**The recording to use is run 2** (matched settings + calibration). The user saves the final sets to
-the hub's **`Tests/`** — that folder is **not** fixture storage, just where saved
-measurement sets live. **Fixture storage is per implementation**, and a recording only moves there once
-a regression test consumes it, copied under the *same filename* in all three (cf. `Recording 5.wav`):
+## Found while doing this
 
-| | fixture storage (only once a regression uses it) |
-|---|---|
-| Swift | `GuitarTap/GuitarTapTests/` |
-| Python | `guitar_tap/tests/` |
-| web | `GuitarTapWeb/test/fixtures/` |
+- **Swift recorded from the wrong microphone** after a hot-plug with other applications opening the
+  same device — #30, [completed/WRONG-INPUT-DEVICE.md](completed/WRONG-INPUT-DEVICE.md).
+- **A tool that models the editions must be checked against them before its numbers are used.** An
+  early version of the boundary sweep reported that the 8-tap recording loses a tap at 59 % of
+  boundary positions; it was re-arming a chunk late. `--probe` exists so the model has to reproduce
+  the editions' own captures first.

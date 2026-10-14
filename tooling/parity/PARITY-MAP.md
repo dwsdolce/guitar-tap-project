@@ -45,7 +45,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/measurement-amend` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/amend.ts` | tests |
 | `model/measurement-name` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/measurementName.ts` | tests |
 | `model/wav-dump-folder` | `GuitarTap/Models/WavDumpFolder.swift` | `src/guitar_tap/models/wav_dump_folder.py` | — | tests |
-| `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | — | review only |
+| `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
 | `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | review only |
 | `state/button-enablement` | `GuitarTap/Models/ButtonEnablement.swift` | `src/guitar_tap/models/button_enablement.py` | `src/state/buttonEnablement.ts` | tests |
 | `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts` | tests |
@@ -72,6 +72,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/frequency-format` | `GuitarTapTests/FrequencyFormatTests.swift` | `tests/test_frequency_format.py` | `test/frequency-format.test.ts` | test suite |
 | `test/frozen-peak-recalc` | `GuitarTapTests/FrozenPeakRecalculationTests.swift` | `tests/test_frozen_peak_recalculation.py` | `test/frozen-peak-recalc.test.ts` | test suite |
 | `test/gated-fft` | `GuitarTapTests/GatedFFTParityTests.swift` | `tests/test_gated_fft_parity.py` | `test/gated-fft.test.ts` | test suite |
+| `test/guitar-capture-window` | `GuitarTapTests/GuitarCaptureWindowTests.swift` | `tests/test_guitar_capture_window.py` | `test/guitar-capture-window.test.ts` | test suite |
 | `test/import-persistence` | `GuitarTapTests/ImportPersistenceTests.swift` | `tests/test_import_persistence.py` | `test/import-persistence.test.ts` | test suite |
 | `test/input-level` | `GuitarTapTests/InputLevelTests.swift` | `tests/test_input_level.py` | `test/input-level.test.ts` | test suite |
 | `test/material-measurement-inputs` | `GuitarTapTests/MaterialMeasurementInputsTests.swift` | `tests/test_material_measurement_inputs.py` | `test/material-measurement-inputs.test.ts` | test suite |
@@ -106,7 +107,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/uuid-case` | — | `tests/test_uuid_case.py` | `test/uuid-case.test.ts` | test suite |
 | `test/wav-dump-folder` | `GuitarTapTests/WavDumpFolderTests.swift` | `tests/test_wav_dump_folder.py` | — | test suite |
 | `tooling/audio-clock-feed` | `GuitarTapTests/AudioClockFeed.swift` | `tests/audio_clock_feed.py` | `test/audioClockFeed.ts` | review only |
-| `tooling/capture-probe` | `GuitarTapTests/CaptureProbeTests.swift` | `Tooling/capture-probe.py` | — | review only |
+| `tooling/capture-probe` | `GuitarTapTests/CaptureProbeTests.swift` | `Tooling/capture-probe.py` | `tooling/capture-probe.test.ts` | review only |
 | `tooling/gated-signal` | `GuitarTapTests/GatedTestSignal.swift` | `tests/gated_signal.py` | `test/gatedSignal.ts` | review only |
 | `tooling/mint-baseline` | — | `Tooling/mint-baseline.py` | `tooling/mint-baseline.test.ts` | review only |
 | `tooling/oracle-sync` | — | `tests/test_oracle_sync.py` | `test/oracle-sync.test.ts` | review only |
@@ -158,11 +159,13 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_chart_zoom_limits.py` | python |
 | `tests/test_import_identity.py` | python |
 | `tests/test_peak_card_identity.py` | python |
+| `tests/test_settings_calibration_details.py` | python |
 | `tests/test_state_notification.py` | python |
 | `tests/test_stream_restart_coordination.py` | python |
 | `tests/test_update_checker.py` | python |
 | `tests/test_wasapi_raw_open.py` | python |
 | `tests/test_wi10_qtimer_slots.py` | python |
+| `GuitarTapTests/AudioChunkingTests.swift` | swift |
 | `GuitarTapTests/DrawnPointsTests.swift` | swift |
 | `GuitarTapTests/ExportDirectoryTests.swift` | swift |
 | `GuitarTapTests/GenerateParityOracle.swift` | swift |

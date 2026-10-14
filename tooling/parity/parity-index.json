@@ -145,6 +145,7 @@
       ],
       "tests": [
         "test/file-playback",
+        "test/guitar-capture-window",
         "test/tap-decisions"
       ],
       "equivalence": "tests"
@@ -435,7 +436,9 @@
       "python": [
         "src/guitar_tap/models/capture_probe.py"
       ],
-      "web": [],
+      "web": [
+        "src/state/captureProbe.ts"
+      ],
       "tests": [],
       "equivalence": "review only"
     },
@@ -820,6 +823,20 @@
       ],
       "web": [
         "test/gated-fft.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/guitar-capture-window",
+      "swift": [
+        "GuitarTapTests/GuitarCaptureWindowTests.swift"
+      ],
+      "python": [
+        "tests/test_guitar_capture_window.py"
+      ],
+      "web": [
+        "test/guitar-capture-window.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1305,7 +1322,9 @@
       "python": [
         "Tooling/capture-probe.py"
       ],
-      "web": [],
+      "web": [
+        "tooling/capture-probe.test.ts"
+      ],
       "tests": [],
       "equivalence": "review only"
     },
@@ -1850,6 +1869,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_settings_calibration_details.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_state_notification.py"
     },
     {
@@ -1867,6 +1890,10 @@
     {
       "repo": "python",
       "path": "tests/test_wi10_qtimer_slots.py"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTapTests/AudioChunkingTests.swift"
     },
     {
       "repo": "swift",

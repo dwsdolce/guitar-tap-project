@@ -15,7 +15,8 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
-- [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3) · [`AUDIO-BUFFER-SIZE.md`](AUDIO-BUFFER-SIZE.md) — Swift 4800-frame buffer
+- [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3) · [`AUDIO-BUFFER-SIZE.md`](AUDIO-BUFFER-SIZE.md) — the same tap, the same samples, in every edition (Swift's 4800-frame buffers cut into 1024-sample chunks; the guitar window's fixed tail; the onset rule)
+- [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · [`SLUG-SWEEP.md`](SLUG-SWEEP.md) — sweep every `@parity` slug for false twins, untagged files and dead tests
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
@@ -43,6 +44,12 @@ followed live, exports from the light values, the export regression tests on CI,
 (guitar, plate, brace, comparison and per-tap views) takes Python's sizes and Swift's wording in all three; two
 divider roles; one icon set for Python and the web; tinted buttons without outlines, with hover and a two-state
 on fill.
+
+#30 (Swift recording from the wrong microphone) is **closed**; its record is
+[`completed/WRONG-INPUT-DEVICE.md`](completed/WRONG-INPUT-DEVICE.md) — after a hot-plug with another
+application opening the same microphone, macOS could leave Swift's engine on the built-in microphone while
+Settings showed the selected one; the watchdog now checks the device the engine is really on and restarts,
+and Python checks the device it opened by name.
 
 #20 (Windows mic level too low) is **closed**; its record is
 [`completed/WINDOWS-MIC-LEVEL-AUDIO-EFFECTS.md`](completed/WINDOWS-MIC-LEVEL-AUDIO-EFFECTS.md) — the Windows

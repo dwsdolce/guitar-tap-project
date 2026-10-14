@@ -3,20 +3,21 @@
 
     ./tooling/compare-capture-probes.py capture-probe-swift.json capture-probe-python.json
 
-Produced by Swift's CaptureProbeTests and guitar_tap's Tooling/capture-probe.py. Both
-fingerprint the buffer on either side of the onset-alignment step for every tap of REG-G2,
-so the comparison localises the cross-edition difference rather than just confirming it:
+Produced by Swift's CaptureProbeTests, guitar_tap's Tooling/capture-probe.py and GuitarTapWeb's
+tooling/capture-probe.sh; any two compare. Each fingerprints the buffer on either side of the
+onset-alignment step for every tap of REG-G2, so the comparison localises a cross-edition
+difference rather than just confirming it:
 
     buffer differs               -> the editions are not capturing the same samples;
                                     the divergence is upstream, in detection or buffering
     buffer same, window differs  -> the same samples are being windowed differently;
-                                    the alignment step is the divergence (issues #7/#3/#5)
+                                    the alignment step is the divergence
     both identical               -> the input is identical and the arithmetic differs;
                                     look at the FFT, not the capture
 
-Background: the guitar capture window is onset-aligned in Swift and not in Python or web.
-Patching Python to align closes only 6-52% of the measured gap, so at least one more
-difference remains — this says where.
+All three editions align the guitar capture window to the tap onset. The probes run on file
+replay, which feeds 1024-sample chunks in every edition; they do not see the size of the buffers
+a live microphone delivers.
 """
 
 from __future__ import annotations
@@ -74,7 +75,7 @@ def main(argv: list[str]) -> int:
         print("the same samples, so fixing the alignment step cannot close the gap on its own.")
     if windows_differ and not buffers_differ:
         print(f"{windows_differ} tap(s) share a buffer but not a window. The alignment step is")
-        print("the whole difference — which is the outcome issues #7/#3/#5 predict.")
+        print("the whole difference.")
     if not (counts_differ or buffers_differ or windows_differ):
         print("Every capture is bit-identical. The editions feed the FFT the same samples, so")
         print("the measured spectrum difference is arithmetic — look at the transform, not the")
