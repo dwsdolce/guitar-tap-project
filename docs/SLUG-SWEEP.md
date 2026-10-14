@@ -6872,7 +6872,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 5 | B — `dsp` | `dsp` | done — identical in all three; peak analysis and the live FFT are analyzer methods in all three; one live-spectrum length and bin 0; run-reviewed (Swift `f082a55`, Python `180b595`, web `7fef7a6`) |
 | 6 | B — `peaks` (synthetic cases and averaging) | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and saves are Swift's; run-reviewed (Swift `7855a3d`, Python `8837a28`, web `8f31b91`) |
 | 7 | B — `mode-colors` | `mode-colors` | done — with Issue #2 (theme) step 4: each mode's colour role is a case in `theme.json` (`modeRoles`), run in all three (Swift `382cfeb`, Python `450e1ce`, web `329a10e`); closed 2026-10-07 |
-| 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | to do |
+| 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | done — `mic-selection.json`, MS1–MS5: Swift and Python run all five against their function; the web runs MS1–MS3 through its engine and a fake browser; MS4 and MS5 are marked Swift and Python only, because the browser always resolves a default input itself. *Decision (owner, 2026-10-14):* option 1 — not giving the web Swift's mechanism, which would open the default microphone first (a Bluetooth headset audibly switching to call mode). Swift `3a8022b`, Python `3c513c1`, web `ee74021` |
 | 9 | B — `measurement-codable` | `measurement-codable` | to do |
 | 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do |
 | 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s scenario tests and `decay-tracking`'s DK9 | to do — needs a decision. The owner (2026-10-02): "I agree that the comment on C is not acceptable. Staying as code means divergence" — a proposal comes after step 10 |
@@ -6911,6 +6911,7 @@ pilot and the batch entries below. *done* = the cases are in `tooling/parity/cas
 | B | `dsp` | done — identical in all three; the web's peak analysis and the live FFT (web and Python) are analyzer methods, as Swift's; one live-spectrum length (32768) with a correct bin 0; run-reviewed | Swift `f082a55`, Python `180b595`, web `7fef7a6` |
 | B | `peaks` | done — identical in all three; the web's averaging, auto-selection, guitar type and every save on the analyzer, as Swift's; run-reviewed | Swift `7855a3d`, Python `8837a28`, web `8f31b91` |
 | B | `mode-colors` | done — the cases are `theme.json`'s `modeRoles` (Issue #2 step 4), identical in all three | Swift `382cfeb`, Python `450e1ce`, web `329a10e` |
+| B | `mic-selection` (MS1–MS5) | done — `mic-selection.json`; MS4 and MS5 Swift and Python only (the browser resolves its own default) | Swift `3a8022b`, Python `3c513c1`, web `ee74021` |
 
 ### Stage 2 survey — what is still not the same (2026-10-02)
 
