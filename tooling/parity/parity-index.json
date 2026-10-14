@@ -95,7 +95,8 @@
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
-        "test/decay-tracking"
+        "test/decay-tracking",
+        "test/guitar-capture-window"
       ],
       "equivalence": "tests"
     },

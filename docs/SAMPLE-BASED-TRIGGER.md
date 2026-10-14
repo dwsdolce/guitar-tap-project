@@ -30,7 +30,7 @@ alone. Every edition would then trigger, and start its capture, at the same samp
 | Where the window's audio ends | no | fixed under #3: a fixed length, then zeros (guitar) |
 | Whether a tap is detected at all | not in any recording tested | see "Detection" below |
 | The dead time before the next tap can register | by up to one chunk | unchanged |
-| Ring-out time | measured in 21 ms steps | unchanged (option B of #3) |
+| Ring-out time | no — measured from the samples of the tap's window | fixed under #3 (item 8) |
 
 So the repairs made under #3 — re-chunking Swift's 4800-frame buffers to 1024, the fixed zero tail,
 the onset rule — each remove a consequence of the trigger sitting on a grid. A sample-based trigger
@@ -115,7 +115,6 @@ in May 2026 to need two consecutive chunks, to reject exactly that bump) misses 
    buffers with running sums rather than a loop, with state carried across buffers.
 9. **Numerical sameness across editions.** A running sum accumulates rounding differently from one
    start to another; "the same sample in every edition" needs a formulation that does not.
-10. **Ring-out.** Whether it moves to the sample timeline at the same time (option B of #3).
 
 ## What exists to test it with
 

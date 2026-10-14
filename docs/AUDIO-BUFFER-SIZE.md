@@ -3,11 +3,14 @@
 **Issue:** [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3)
 
 **Status:** ⏳ Items 1–6 DONE and committed 2026-10-13, all three editions — verified live by the
-owner. Open: the live taps repeated with item 4 in place; items 7 and 8. Item 9 is #29.
+owner, and again with item 4 in place on 2026-10-14. Item 8 DONE 2026-10-14, all three — verified
+live by the owner. Open: item 7. Item 9 is #29.
 
-**Commits:** Swift `698ce7a` (code), `6489b1b` (oracle generator), `de43fc5` (oracle) · Python
-`07834e4`, `93b17f3` (macOS baseline), `5ad1181` (Linux, Windows) · web `fa0414b`, `7fa96a2` (macOS
-baseline), `a78e415` (Linux, Windows).
+**Commits:** items 1–6 — Swift `698ce7a` (code), `6489b1b` (oracle generator), `de43fc5` (oracle) ·
+Python `07834e4`, `93b17f3` (macOS baseline), `5ad1181` (Linux, Windows) · web `fa0414b`, `7fa96a2`
+(macOS baseline), `a78e415` (Linux, Windows). Item 8 — Swift `777a951`, `85a290a` (oracle) · Python
+`3a83e99`, `949c587` (macOS baseline), `42b56e1` (Linux, Windows) · web `760dacb`, `d849771` (macOS
+baseline), `cf71b50` (Linux, Windows).
 
 **The goal (owner, 2026-10-12):** *"to make sure that all editions and platforms trigger taps at the
 same point in the audio stream. This affects the actual frequency of any peaks."* A 0.1 Hz difference
@@ -44,7 +47,7 @@ in two ways at once. The measurements below are the ones to rely on.
 
 | # | Symptom | Before | Now |
 |---|---|---|---|
-| 1 | Ring-out measured once per buffer | Swift exactly 0.100 s; others on a 21 ms grid | Swift on the 21 ms grid by construction — **not yet measured live** |
+| 1 | Ring-out measured once per buffer | Swift exactly 0.100 s; others on a 21 ms grid | measured from the samples of the tap's window (item 8) |
 | 2 | Peak frequencies differ between editions | up to 0.044 Hz on one live tap | none: bit-identical FFT windows (items 1, 3, 4) |
 | 3 | Session recording length | a multiple of 4800 | on the 1024 grid, as the others — verified |
 | 4 | Swift's level meter updates ~10 times a second | — | **unchanged** (item 7) |
@@ -61,7 +64,7 @@ in two ways at once. The measurements below are the ones to rely on.
 | 5 | Capture probe: the web has it; all three can record live captures | ✅ | ✅ | ✅ |
 | 6 | Golden values and baselines re-minted | ✅ | ✅ | ✅ |
 | 7 | Swift's meter rate and live confirmation latency | open | — | — |
-| 8 | Ring-out measured from the samples, not per chunk | open | open | open |
+| 8 | Ring-out measured from the samples, not per chunk | ✅ | ✅ | ✅ |
 | 9 | A sample-based trigger | → #29 | → #29 | → #29 |
 
 **1. Re-chunking (Swift).** `processDeliveredSamples` appends each delivered buffer to the remainder
@@ -127,9 +130,26 @@ make audio arrive more often: the screen still sees a burst every 0.1 s. Changin
 audio from the system by another mechanism than the tap. Not investigated. *Owner, 2026-10-12:* "I am
 less concerned with the meter update than I am with the difference calculation."
 
-**8. Ring-out from the samples — open.** Ring-out is measured on the 21 ms chunk grid in every
-edition (±21 ms). A sliding measure on the samples would be sub-millisecond and independent of
-chunking. No decision.
+**8. Ring-out from the samples (all three).** Ring-out was measured on the chunk grid: one level per
+1024-sample chunk, from a reference taken from the level meter's peak hold, so it came out in whole
+chunks (21.3 ms). Each edition's grid falls where its audio stream started, so the same tap read a
+chunk apart — live on 2026-10-14, Python and the web 0.0427 s, Swift 0.064 s, on a tap whose
+FFT windows were bit-identical (the saved measurements reproduce both values exactly). Now the ring-out
+is measured once, from the tap's FFT window (`ringOutTime`): the energy of a sliding 1024-sample
+window at every sample from the onset to where the window's audio ends; the peak is the first window
+with the most energy; the crossing is the first window after it 15 dB lower, interpolated in dB. The
+streaming tracker, its 3 s window and the peak-hold reference are gone.
+- *Decision (owner, 2026-10-14):* measure from the capture — "A 1.16 s ceiling is fine. Any ring out
+  that long would be strange for a good guitar."
+- *Ceiling:* the window's audio lasts about 1.16 s after the onset; a longer ring-out is not measured
+  (the tracker's limit was 3 s). The ring-out now appears when the tap's spectrum does.
+- *Guitar only:* plate and brace never measured a ring-out.
+- *Tests:* `test/decay-tracking` DK1–DK8 — generated decays with exact answers (an exponential decay
+  falls in a straight line in dB, so 15 dB below the peak is at 0.75·ln10·τ), and the cases with no
+  ring-out; DK9 — a new sequence clears it. GW3 — one tap at four chunk-boundary positions measures the
+  same ring-out; it fails (0.427 vs 0.405 s) with the chunk grid put back.
+- *Golden values:* REG-G1's ring-out moves from 0.08533 s (four chunks) to 0.07610 s — the same in all
+  three editions.
 
 ## Measurements (2026-10-13)
 
@@ -154,10 +174,15 @@ the values the apps display.
    *Passed: 4800.*
 2. With all three editions on one microphone, the web tab visible and Dump Capture Audio on, take
    several single-tap guitar measurements. → The probe files show the same window fingerprint in all
-   three for each tap. *After items 1 and 3: passed where the onsets agreed. To repeat after item 4.*
+   three for each tap. *After items 1 and 3: passed where the onsets agreed. After item 4: passed, 3 of
+   3 taps (2026-10-14).*
 3. Check Swift's recording length. → A whole number of 1024-sample chunks plus the same fraction as
    Python's, not a multiple of 4800. *Passed.*
-4. Tap a guitar and read the ring-out in Swift. → Not exactly 0.100 s. *Not yet done.*
+4. Tap a guitar and read the ring-out in Swift. → Not exactly 0.100 s. *Passed (0.06 s) — and found
+   item 8's difference: Python and the web read 0.04 s on the same tap.*
+5. After item 8: tap a guitar with all three running. → The same ring-out in all three, not a
+   multiple of 0.0213 s. *Passed 2026-10-14: three taps, the same in all three (0.04, 0.04, 0.05 s); the
+   saved measurements of the third read 0.05019883 s in every edition.*
 
 ## Found while doing this
 
