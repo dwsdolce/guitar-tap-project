@@ -9,7 +9,7 @@ plan; it does not propose one.
 If I had it to do over again I would make it sample based."* The owner asked for an issue holding the
 analysis and what is needed to plan the change.
 
-**Related:** [AUDIO-BUFFER-SIZE.md](AUDIO-BUFFER-SIZE.md) (#3), whose work produced the measurements
+**Related:** [completed/AUDIO-BUFFER-SIZE.md](completed/AUDIO-BUFFER-SIZE.md) (#3, closed), whose work produced the measurements
 here. All three editions; Swift is canonical.
 
 ## The idea in one paragraph

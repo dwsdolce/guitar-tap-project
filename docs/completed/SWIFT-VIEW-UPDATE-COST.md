@@ -31,7 +31,7 @@ view too.
 ## Facts (checked in the code)
 
 1. **Swift's audio arrives in 4800-frame buffers** (0.1 s at 48 kHz), not the 1024 it requests — #3,
-   `docs/AUDIO-BUFFER-SIZE.md`. About 10 buffers a second.
+   `docs/completed/AUDIO-BUFFER-SIZE.md`. About 10 buffers a second.
 2. **Each buffer publishes the input level** on the engine (`RealtimeFFTAnalyzer`): `inputLevelDB` every
    time, `recentPeakLevelDB` when it rises or expires, `isClipping` on a change
    (`RealtimeFFTAnalyzer+FFTProcessing.swift`, the `DispatchQueue.main.async` after `rmsLevelHandler`).

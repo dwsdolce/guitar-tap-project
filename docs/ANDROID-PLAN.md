@@ -105,11 +105,12 @@ iPhone"), which had no precedent: real-instrument agreement is checked once per 
    routed to**, are shown in Metrics and saved with the measurement, as the sample rate is —
    `getRoutedDevice()` is checked after start rather than assuming the request was honoured.
 5. **Re-chunk to exactly 1024 samples, from day one.** Android buffer sizes vary by device. Swift on macOS
-   actually receives 4800-frame buffers, which quantizes ring-out to 100 ms
-   ([AUDIO-BUFFER-SIZE](AUDIO-BUFFER-SIZE.md) — still open on Swift). Android fixes this at the source, so
-   live and playback share one chunk grid.
-6. **Audio clock, not wall clock.** Warm-up, cooldown, ring-out and decay run on `audioElapsed`, and each
-   chunk carries its timestamp to the analyzer ([DECAY-AUDIO-CLOCK-FIX](completed/DECAY-AUDIO-CLOCK-FIX.md)).
+   actually receives 4800-frame buffers and cuts them into 1024-sample chunks
+   ([AUDIO-BUFFER-SIZE](completed/AUDIO-BUFFER-SIZE.md), #3). Android does the same, so live and playback
+   share one chunk grid.
+6. **Audio clock, not wall clock.** Warm-up and cooldown run on `audioElapsed`, and each chunk carries its
+   timestamp to the analyzer ([DECAY-AUDIO-CLOCK-FIX](completed/DECAY-AUDIO-CLOCK-FIX.md)); ring-out is
+   measured from the samples of the tap's window ([AUDIO-BUFFER-SIZE](completed/AUDIO-BUFFER-SIZE.md) item 8).
 7. **FFT:** port the existing TypeScript `src/dsp/fft.ts`. It is already oracle-validated, and a
    65536-point FFT every ~1.4 s is trivial on any phone. No third-party DSP library, which avoids licence
    and numeric-drift questions.

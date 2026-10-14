@@ -2,9 +2,8 @@
 
 **Issue:** [#3](https://github.com/dwsdolce/guitar-tap-project/issues/3)
 
-**Status:** ⏳ Items 1–6 DONE and committed 2026-10-13, all three editions — verified live by the
-owner, and again with item 4 in place on 2026-10-14. Item 8 DONE 2026-10-14, all three — verified
-live by the owner. Open: item 7. Item 9 is #29.
+**Status:** ✅ COMPLETE 2026-10-14 — closed. Items 1–6 done 2026-10-13 and item 8 on 2026-10-14, all
+three editions, verified live by the owner. Item 7 not pursued (owner, 2026-10-14). Item 9 is #29.
 
 **Commits:** items 1–6 — Swift `698ce7a` (code), `6489b1b` (oracle generator), `de43fc5` (oracle) ·
 Python `07834e4`, `93b17f3` (macOS baseline), `5ad1181` (Linux, Windows) · web `fa0414b`, `7fa96a2`
@@ -16,7 +15,7 @@ baseline), `cf71b50` (Linux, Windows).
 same point in the audio stream. This affects the actual frequency of any peaks."* A 0.1 Hz difference
 changes no lutherie decision; it matters for accuracy and for trust between the editions.
 
-**Related:** [SAMPLE-BASED-TRIGGER.md](SAMPLE-BASED-TRIGGER.md) (#29) — the change that would remove
+**Related:** [SAMPLE-BASED-TRIGGER.md](../SAMPLE-BASED-TRIGGER.md) (#29) — the change that would remove
 the cause rather than its consequences. `tooling/chunk-boundary-sweep.py` — the tool that measures
 all of this without live taps.
 
@@ -63,7 +62,7 @@ in two ways at once. The measurements below are the ones to rely on.
 | 4 | The onset is found from the noise just before the tap | ✅ | ✅ | ✅ |
 | 5 | Capture probe: the web has it; all three can record live captures | ✅ | ✅ | ✅ |
 | 6 | Golden values and baselines re-minted | ✅ | ✅ | ✅ |
-| 7 | Swift's meter rate and live confirmation latency | open | — | — |
+| 7 | Swift's meter rate and live confirmation latency | not pursued | — | — |
 | 8 | Ring-out measured from the samples, not per chunk | ✅ | ✅ | ✅ |
 | 9 | A sample-based trigger | → #29 | → #29 | → #29 |
 
@@ -125,10 +124,14 @@ case. Suites: Swift 536, Python 1283, web 1164.
   baselines had been re-minted. A change that moves golden values needs all three platforms'
   baselines minted before it is pushed.
 
-**7. Swift's meter rate and confirmation latency — open.** Cutting a buffer into chunks does not
+**7. Swift's meter rate and confirmation latency — not pursued.** Cutting a buffer into chunks does not
 make audio arrive more often: the screen still sees a burst every 0.1 s. Changing that means taking
 audio from the system by another mechanism than the tap. Not investigated. *Owner, 2026-10-12:* "I am
 less concerned with the meter update than I am with the difference calculation."
+*Decision (owner, 2026-10-14):* "Since it has no effect on the accuracy or consistency of the data I
+think we can skip it." The meter updates about 10 times a second and a live tap is confirmed up to
+about 0.1 s later than in the other two; the captured samples, and so every measured value, are
+unaffected.
 
 **8. Ring-out from the samples (all three).** Ring-out was measured on the chunk grid: one level per
 1024-sample chunk, from a reference taken from the level meter's peak hold, so it came out in whole
@@ -187,7 +190,7 @@ the values the apps display.
 ## Found while doing this
 
 - **Swift recorded from the wrong microphone** after a hot-plug with other applications opening the
-  same device — #30, [completed/WRONG-INPUT-DEVICE.md](completed/WRONG-INPUT-DEVICE.md).
+  same device — #30, [WRONG-INPUT-DEVICE.md](WRONG-INPUT-DEVICE.md).
 - **A tool that models the editions must be checked against them before its numbers are used.** An
   early version of the boundary sweep reported that the 8-tap recording loses a tap at 59 % of
   boundary positions; it was re-arming a chunk late. `--probe` exists so the model has to reproduce
