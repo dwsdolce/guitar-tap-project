@@ -6875,7 +6875,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | to do |
 | 9 | B — `measurement-codable` | `measurement-codable` | to do |
 | 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | to do |
-| 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s and `decay-tracking`'s scenario tests | to do — needs a decision. The owner (2026-10-02): "I agree that the comment on C is not acceptable. Staying as code means divergence" — a proposal comes after step 10 |
+| 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s scenario tests and `decay-tracking`'s DK9 | to do — needs a decision. The owner (2026-10-02): "I agree that the comment on C is not acceptable. Staying as code means divergence" — a proposal comes after step 10 |
 | 12 | Cannot be shared — per-machine baselines, random draws, the filesystem | `self-regression`, `uuid-case`, `wav-dump-folder` | nothing to do |
 | 13 | Close Stage 2 and #17 | — | to do |
 
@@ -6898,7 +6898,7 @@ pilot and the batch entries below. *done* = the cases are in `tooling/parity/cas
 | A, batch 2 | `measurement-type-name` | done — Python and web fixed to Swift's type resolution (word, flag, save path) | same |
 | A, batch 2 | `measurement-amend` (`isAmended`) | done — identical in all three | same |
 | A, batch 2 | `settings-store` (validation, entered value, defaults) | done — identical in all three | same |
-| A, batch 2 | `decay-tracking` (DK1–5, DK8–10) | done — identical in all three | same |
+| A, batch 2 | `decay-tracking` (DK1–5, DK8–10) | done — identical in all three. Replaced 2026-10-14 by #3 item 8: the ring-out is measured from the tap's window, and the cases are DK1–DK8 on generated audio, identical in all three | same; item 8: Swift `777a951`, Python `3a83e99`, web `760dacb` |
 | A, batch 3 | `material-selection` | done — identical in all three | Swift `d414025`, Python `5994aa0`, web `828c8f4` |
 | A, batch 3 | `peak-heal` | done — identical in all three; the web's measurement type now declares `wasHealed`, as Swift and Python | same |
 | A, batch 3 | `pdf-report` | done — fixture list and baseline tolerance in `pdf-report.json` | same |
