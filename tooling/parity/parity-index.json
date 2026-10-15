@@ -79,6 +79,7 @@
         "src/dsp/calibration.ts"
       ],
       "tests": [
+        "test/calibration",
         "test/file-playback"
       ],
       "equivalence": "tests"
@@ -638,6 +639,20 @@
       ],
       "web": [
         "test/button-enablement.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/calibration",
+      "swift": [
+        "GuitarTapTests/CalibrationTests.swift"
+      ],
+      "python": [
+        "tests/test_calibration.py"
+      ],
+      "web": [
+        "test/calibration.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"

@@ -59,6 +59,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/axis-ticks` | `GuitarTapTests/AxisTicksTests.swift` | `tests/test_axis_ticks.py` | `test/axis-ticks.test.ts` | test suite |
 | `test/brace` | `GuitarTapTests/BracePropertiesTests.swift` | `tests/test_brace.py` | `test/brace.test.ts` | test suite |
 | `test/button-enablement` | `GuitarTapTests/ButtonEnablementTests.swift` | `tests/test_button_enablement.py` | `test/button-enablement.test.ts` | test suite |
+| `test/calibration` | `GuitarTapTests/CalibrationTests.swift` | `tests/test_calibration.py` | `test/calibration.test.ts` | test suite |
 | `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |
 | `test/classify` | `GuitarTapTests/ClassifyCasesTests.swift` | `tests/test_classify_cases.py` | `test/classify-cases.test.ts`<br>`test/classify.test.ts` | test suite |
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
