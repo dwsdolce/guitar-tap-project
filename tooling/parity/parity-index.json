@@ -538,7 +538,6 @@
       "tests": [
         "test/measurement-complete",
         "test/scenario-trace",
-        "test/start-tap-race",
         "test/state-invariants"
       ],
       "equivalence": "tests"
@@ -1204,20 +1203,6 @@
       ],
       "web": [
         "test/spectrum-export.test.ts"
-      ],
-      "tests": [],
-      "equivalence": "test suite"
-    },
-    {
-      "slug": "test/start-tap-race",
-      "swift": [
-        "GuitarTapTests/StartTapSequenceRaceTests.swift"
-      ],
-      "python": [
-        "tests/test_start_tap_sequence_race.py"
-      ],
-      "web": [
-        "test/start-tap-race.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"

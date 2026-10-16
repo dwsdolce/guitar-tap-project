@@ -99,7 +99,6 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/session-pre-roll` | `GuitarTapTests/SessionPreRollTests.swift` | `tests/test_session_pre_roll.py` | `test/session-pre-roll.test.ts` | test suite |
 | `test/settings-store` | `GuitarTapTests/SettingsStoreTests.swift` | `tests/test_settings_store.py` | `test/settings-store.test.ts` | test suite |
 | `test/spectrum-export` | `GuitarTapTests/SpectrumExportTests.swift` | `tests/test_spectrum_export.py` | `test/spectrum-export.test.ts` | test suite |
-| `test/start-tap-race` | `GuitarTapTests/StartTapSequenceRaceTests.swift` | `tests/test_start_tap_sequence_race.py` | `test/start-tap-race.test.ts` | test suite |
 | `test/state-invariants` | `GuitarTapTests/StateInvariantTests.swift` | `tests/test_state_invariants.py` | `test/state-invariants.test.ts` | test suite |
 | `test/status-message` | `GuitarTapTests/StatusMessageTests.swift` | `tests/test_status_message.py` | `test/status-message.test.ts` | test suite |
 | `test/tap-count-change` | `GuitarTapTests/TapCountChangeTests.swift` | `tests/test_tap_count_change.py` | `test/tap-count-change.test.ts` | test suite |
