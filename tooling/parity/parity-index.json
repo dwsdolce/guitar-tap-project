@@ -956,6 +956,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/measurement-load",
+      "swift": [
+        "GuitarTapTests/MeasurementLoadTests.swift"
+      ],
+      "python": [
+        "tests/test_measurement_load.py"
+      ],
+      "web": [
+        "test/measurement-load.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/measurement-name",
       "swift": [
         "GuitarTapTests/MeasurementNameTests.swift"

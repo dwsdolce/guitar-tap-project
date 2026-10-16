@@ -81,6 +81,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/measurement-amend` | `GuitarTapTests/MeasurementAmendTests.swift` | `tests/test_measurement_amend.py` | `test/measurement-amend.test.ts` | test suite |
 | `test/measurement-codable` | `GuitarTapTests/MeasurementCodableTests.swift` | `tests/test_measurement_codable.py` | `test/measurement-codable.test.ts` | test suite |
 | `test/measurement-complete` | `GuitarTapTests/MeasurementCompleteTransitionTests.swift` | `tests/test_measurement_complete_transitions.py` | `test/measurement-complete.test.ts` | test suite |
+| `test/measurement-load` | `GuitarTapTests/MeasurementLoadTests.swift` | `tests/test_measurement_load.py` | `test/measurement-load.test.ts` | test suite |
 | `test/measurement-name` | `GuitarTapTests/MeasurementNameTests.swift` | `tests/test_measurement_name.py` | `test/measurement-name.test.ts` | test suite |
 | `test/measurement-type-name` | `GuitarTapTests/MeasurementTypeNameTests.swift` | `tests/test_measurement_type_name.py` | `test/measurement-type-name.test.ts` | test suite |
 | `test/mic-selection` | `GuitarTapTests/MicSelectionTests.swift` | `tests/test_mic_selection.py` | `test/mic-selection.test.ts` | test suite |
