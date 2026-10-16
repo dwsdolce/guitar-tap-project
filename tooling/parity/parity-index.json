@@ -718,17 +718,15 @@
       "slug": "test/display-range",
       "swift": [
         "GuitarTapTests/DisplayRangeExpansionTests.swift",
-        "GuitarTapTests/LoadedRangeTests.swift",
-        "GuitarTapTests/MaterialPeakAnnouncementTests.swift"
+        "GuitarTapTests/DisplayRangeScenarioTests.swift"
       ],
       "python": [
         "tests/test_display_range_expansion.py",
-        "tests/test_loaded_range.py",
-        "tests/test_material_peak_announcement.py"
+        "tests/test_display_range_scenarios.py"
       ],
       "web": [
-        "test/display-range.test.ts",
-        "test/material-peak-announcement.test.ts"
+        "test/display-range-scenarios.test.ts",
+        "test/display-range.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -753,9 +751,11 @@
         "GuitarTapTests/EffectivePeakIDTests.swift"
       ],
       "python": [
-        "tests/test_wi2_effective_peak_id.py"
+        "tests/test_effective_peak_id.py"
       ],
-      "web": [],
+      "web": [
+        "test/effective-peak-id.test.ts"
+      ],
       "tests": [],
       "equivalence": "test suite"
     },
