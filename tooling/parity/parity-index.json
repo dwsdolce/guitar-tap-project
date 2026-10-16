@@ -483,7 +483,8 @@
         "src/guitar_tap/models/tap_display_settings.py"
       ],
       "web": [
-        "src/settings.ts"
+        "src/settings.ts",
+        "src/settingsStore.ts"
       ],
       "tests": [
         "test/settings-store"

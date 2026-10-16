@@ -48,7 +48,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
 | `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | review only |
 | `state/button-enablement` | `GuitarTap/Models/ButtonEnablement.swift` | `src/guitar_tap/models/button_enablement.py` | `src/state/buttonEnablement.ts` | tests |
-| `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts` | tests |
+| `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts`<br>`src/settingsStore.ts` | tests |
 | `state/status-message` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-detection` | `GuitarTap/Models/TapToneAnalyzer+TapDetection.swift` | `src/guitar_tap/models/tap_tone_analyzer_tap_detection.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-tone-analyzer` | `GuitarTap/Models/TapToneAnalyzer+Control.swift` | `src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
