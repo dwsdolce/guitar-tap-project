@@ -54,7 +54,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `state/tap-tone-analyzer` | `GuitarTap/Models/TapToneAnalyzer+Control.swift` | `src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/visible-peaks` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `test/analysis-quality` | `GuitarTapTests/AnalysisQualityTests.swift` | `tests/test_analysis_quality.py` | `test/analysis-quality.test.ts` | test suite |
-| `test/annotation-state` | `GuitarTapTests/AnnotationStateTests.swift` | `tests/test_annotation_state.py` | `test/annotation-state.test.ts`<br>`test/peak-state-store.test.ts` | test suite |
+| `test/annotation-state` | `GuitarTapTests/AnnotationStateTests.swift` | `tests/test_annotation_state.py` | `test/annotation-state.test.ts` | test suite |
 | `test/audio-clock-timers` | `GuitarTapTests/AudioClockTimerTests.swift` | `tests/test_audio_clock_timers.py` | `test/audio-clock-timers.test.ts` | test suite |
 | `test/axis-ticks` | `GuitarTapTests/AxisTicksTests.swift` | `tests/test_axis_ticks.py` | `test/axis-ticks.test.ts` | test suite |
 | `test/brace` | `GuitarTapTests/BracePropertiesTests.swift` | `tests/test_brace.py` | `test/brace.test.ts` | test suite |
@@ -108,6 +108,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/theme` | `GuitarTapTests/ThemeTests.swift` | `tests/test_theme.py` | `test/theme.test.ts` | test suite |
 | `test/uuid-case` | — | `tests/test_uuid_case.py` | `test/uuid-case.test.ts` | test suite |
 | `test/wav-dump-folder` | `GuitarTapTests/WavDumpFolderTests.swift` | `tests/test_wav_dump_folder.py` | — | test suite |
+| `tooling/analyzer-steps` | `GuitarTapTests/AnalyzerSteps.swift` | `tests/analyzer_steps.py` | `test/analyzerSteps.ts` | review only |
 | `tooling/audio-clock-feed` | `GuitarTapTests/AudioClockFeed.swift` | `tests/audio_clock_feed.py` | `test/audioClockFeed.ts` | review only |
 | `tooling/capture-probe` | `GuitarTapTests/CaptureProbeTests.swift` | `Tooling/capture-probe.py` | `tooling/capture-probe.test.ts` | review only |
 | `tooling/gated-signal` | `GuitarTapTests/GatedTestSignal.swift` | `tests/gated_signal.py` | `test/gatedSignal.ts` | review only |
@@ -116,6 +117,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `tooling/parity-oracle` | `GuitarTapTests/ParityOracle.swift` | `tests/parity_oracle.py` | — | review only |
 | `tooling/parity-runner` | — | `tests/parity_runner.py` | `test/parityRunner.ts` | review only |
 | `tooling/self-baseline` | — | `tests/self_baseline.py` | `test/selfBaseline.ts` | review only |
+| `tooling/synthetic-tap` | `GuitarTapTests/SyntheticTap.swift` | `tests/synthetic_tap.py` | `test/syntheticTap.ts` | review only |
 | `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | review only |
 | `util/timing-activity` | `GuitarTap/Utilities/TimingActivity.swift` | `src/guitar_tap/utilities/timing_activity.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |

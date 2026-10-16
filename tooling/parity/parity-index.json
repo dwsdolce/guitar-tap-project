@@ -582,8 +582,7 @@
         "tests/test_annotation_state.py"
       ],
       "web": [
-        "test/annotation-state.test.ts",
-        "test/peak-state-store.test.ts"
+        "test/annotation-state.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1332,6 +1331,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "tooling/analyzer-steps",
+      "swift": [
+        "GuitarTapTests/AnalyzerSteps.swift"
+      ],
+      "python": [
+        "tests/analyzer_steps.py"
+      ],
+      "web": [
+        "test/analyzerSteps.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "tooling/audio-clock-feed",
       "swift": [
         "GuitarTapTests/AudioClockFeed.swift"
@@ -1429,6 +1442,20 @@
       ],
       "web": [
         "test/selfBaseline.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/synthetic-tap",
+      "swift": [
+        "GuitarTapTests/SyntheticTap.swift"
+      ],
+      "python": [
+        "tests/synthetic_tap.py"
+      ],
+      "web": [
+        "test/syntheticTap.ts"
       ],
       "tests": [],
       "equivalence": "review only"
