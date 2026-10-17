@@ -6881,7 +6881,8 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 8 | B — `mic-selection` (the web has no pure `inputDeviceToUse` — needs your decision) | `mic-selection` | done — `mic-selection.json`, MS1–MS5: Swift and Python run all five against their function; the web runs MS1–MS3 through its engine and a fake browser; MS4 and MS5 are marked Swift and Python only, because the browser always resolves a default input itself. *Decision (owner, 2026-10-14):* option 1 — not giving the web Swift's mechanism, which would open the default microphone first (a Bluetooth headset audibly switching to call mode). Swift `3a8022b`, Python `3c513c1`, web `ee74021` |
 | 9 | B — `measurement-codable` | `measurement-codable` | done — the whole slug moves to shared definitions, in two parts (owner, 2026-10-14: same inputs, same guitar type, same organisation; Swift's inputs win). **9a** done — run-reviewed by the owner in all three, 2026-10-14; Swift `f02b9f7`, Python `5db7f73`, web `4e41e8c`: `measurement-codable.json` — tap-tone ratio TR1–TR9 (TR4–TR7 and TR9 also checked against the live analyzer), the label each peak is written with and displayed with ML1–ML4, the selection heal on decode SH1–SH5 — classical, Swift's values, identical in all three. Found and fixed with it, the same way in all three (owner's decisions, 2026-10-14): (1) a saved measurement's modes and labels come from one model function (`autoModes` / `peakModeLabels`), classified among ALL its peaks with its own guitar type, else Generic — the writer, the Details pane, the ratio, the selection heal and every saved-measurement export (report table, chart image) read it; the Details panes and the saved exports had classified only the shown peaks, and Swift used the app's guitar type; (2) the multi-tap comparison entries are built once, on the measurement model (`multiTapComparisonEntries`) — the on-screen overlay, the live report and the saved report all build from a measurement (`makeMeasurement`), where each edition had three builders; (3) Select None round-trips: an empty selection is written as `[]` and read as nothing selected (Swift and Python wrote nothing and the read healed it to the auto-selection; Python and the web read `[]` as all peaks); (4) the web's measurement logic moved from `fromLive.ts` to the model (`types.ts`), its heals to the reader (`decode.ts`), its comparison building and restore into the analyzer, and its saved exports read the measurement directly, as Swift's renderers do — `fromLive.ts` is gone; Python's measurement list uses the measurement's own ratio. (5) found in the owner's run-review, 2026-10-14: the web classified a loaded measurement's peaks under the app's current guitar type before applying the measurement's own (Air shown as Unknown after the app was set to Acoustic) — it now applies the measurement's type first, as Swift and Python do (test PR46 in all three); (6) found in the run-review: Python's averaged Air read 88.3 Hz where Swift and the web read 88.4 — at launch Python applied the calibration at each bin's frequency rounded down to a whole hertz (`rate // fft_size` in the chart view), up to 1.06 dB off near 11 Hz and ~0.002 dB at 88 Hz. Python's calibration is now owned by its engine, as Swift's and the web's are: the engine takes the device's calibration when it selects the device (launch included), computes the per-bin corrections from its own exact bin frequencies and recomputes them when the sample rate changes; the analyzer keeps no copy. The web engine's cached corrections did not follow a sample-rate change; now they do. New shared `test/calibration` (CAL1, CAL2) on all three engines; (7) found in the run-review: Swift and Python did not save a live multi-tap session recording. Not a defect — a logging run showed each sequence had started with Dump Capture Audio off and the setting was turned on before tapping; since the owner's 2026-10-07 decision (F58 item 8) all three read the setting only when a sequence starts. A sequence starts at launch, on New Tap, on Cancel (which starts a fresh sequence exactly as New Tap does), on a measurement-type change that needs one, and on Play File — the setting is read at each of these, not only at launch and New Tap. Decision (owner, 2026-10-14): turning the setting on before the sequence's first tap saves that sequence, as a user would expect; turned on after the first tap it takes effect when the next sequence starts; turned off at any point, the sequence is not saved. The bounded 2 s pre-roll is now kept with the setting off too (owner chose this over recording from the moment the setting is turned on), so a sequence saved this way has the same recording as one started with the setting on; with the setting off it is dropped at the first tap, so the 2026-10-07 bound on memory still holds. The same way in all three: the analyzer applies a change of the setting (`applyDumpCaptureAudioSetting` / `apply_dump_capture_audio_setting`; Swift and Python from Settings and both "Turn Off Saving" buttons, the web from `setSettings`); `maintainSessionRecording` drops the pre-roll at the first tap when the sequence is not saved; resume after a pause keeps the pre-roll; the capture probe's records (the diagnostic `…-capture-probe.json` beside the WAV) follow the recording — found in the owner's run-review, where a sequence saved this way had its WAV but no probe file (a probe-only test in all three, run while the probe is switched on). New shared cases `session-pre-roll.json` SR1–SR11 in `test/session-pre-roll` (a mutation restoring "nothing kept with the setting off" fails SR1, SR2, SR5, SR6 and SR11 in all three); the 1.0.3 release-note line updated in all three **9b** done — Swift `9cd3c38`, Python `3310195`, web `84196de`: the file format in `measurement-codable.json`, Swift's values, identical in all three — `snapshotBytes` SB1–SB2 (the spectrum's base64 float32 text, exact), `decode` DC1–DC10 (legacy `tapLocation` / `peakThreshold`, a missing sample rate, the legacy plain-array snapshot, overrides in the legacy object and current flat forms, an `auto` override dropped, no pitch, no visibility), `write` WR1–WR4 (no legacy key written, unset optionals omitted, Float fields as their shortest float32 text from float64 input, overrides as assigned entries), and `fixtures` — the 18 real files every edition carries, each read to its facts, its overrides naming peaks it contains, written with no legacy key and its spectrum bytes unchanged, and read back the same (three files saved before the `findPeaks` duplicate fix read one peak fewer, by design). All three passed with no writer change. Mutations, each caught: Swift writing the plain arrays too (SB1, SB2), Python skipping the float32 step (WR3 — which first passed it, because its inputs were already short; now float64 expansions), the web dropping the `peakThreshold` fallback (DC2). The code tests these replace are gone in all three (Swift 14, Python 10, web 7); model-only facts and the Contreras fixture's own checks stay as matched code. Python's comparison-entry codec tests moved to `test/comparison` (`test_comparison_mode.py`), where Swift and the web keep theirs (owner, 2026-10-14). |
 | 10 | B — F18's three | `import-persistence`, `peak-selection-persistence`, `material-measurement-inputs` | **done** 2026-10-15 — owner, 2026-10-14: one shared case file per slug (the union of the editions' cases, as step scripts, Swift's values); a case about something only one edition has is marked for that edition; the code tests the cases replace are removed. **`peak-selection-persistence`** done — Swift `6407014`, Python `8c2914e`, web `5c720fc`: `peak-selection-persistence.json` — PSP1–PSP3, a measurement saved automatic, manual or with no flag is loaded, and whether it loads as manual (which enables the Reset to automatic selection wand), whether the saved selection is kept, and that the wand makes it automatic over all its peaks; PSP4–PSP6, the flag written and read back (omitted when unset). Found doing it: the old tests — and their comments — pinned "an automatic selection re-runs auto-selection when Peak Min changes", the rule from before Peak Min became display-only; they passed only by calling `recalculateFrozenPeaksIfNeeded` directly on a loaded measurement, a path no app reaches (its one caller, Re-analyze, drops the loaded peaks first), and the web's copy of that branch skipped the selection step Swift's ran. Decision (owner, 2026-10-14): the cases test what the app does (the wand), and the loaded-measurement branch of `recalculateFrozenPeaksIfNeeded` is removed in all three. In `test/frozen-peak-recalc` with it: PR03, PR04, PR07, PR08, PR09 now set Peak Min on the measurement's peaks (the app's path) instead of calling the recalculation; PR06 and PR31 (the branch itself) removed; PR11 and PR16 on the live path; Swift's PR20, PR23, PR26, PR28 and Python's PR28 moved to the live path (a re-detection), where the web and Python already tested them; PR21 and PR24 (a hidden peak keeps its label and its name across a re-detection) rewritten on the live path and added to Python and the web (mutation: snapshotting against the displayed peaks fails PR21, PR24 and PR19). **Found next, and fixed before the rest of step 10 (owner, 2026-10-14): loading a measurement is not done the same way.** Swift's `loadMeasurement` does nearly the whole load in the model; Python's view does a second round after it, and the web's `App` finishes it by copying the model's values into its settings store and pushing them back. The three load paths were traced, model against view, step by step:<br>1. Saved peaks into the durable set — Swift: model. Python: the model stores `loaded_measurement_peaks`, the VIEW sets `all_peaks` from them (`_emit_loaded_peaks_at_threshold`, twice when there is no spectrum). Web: model (via `restoreSnapshot`); `App` holds an unused copy, and the property is read by nothing after the load.<br>2. The analyzer's own measurement type — Swift: model. Python: settings written by the model, but `analyzer._measurement_type` set only by the VIEW (`_apply_measurement_type_to_ui` → canvas). Web: model, then `App` pushes settings back into the analyzer.<br>3. Restored settings and their saved values (Peak Min, threshold, guitar type, annotation mode, Show Unknown Modes) — Swift: model, except Show Unknown Modes, restored only by the VIEW, which also repeats three of the model's writes. Python: model; the view's slider updates write the same values back. Web: the model publishes `loadedSettings`; `App` copies them into the settings store (and so localStorage) and pushes Peak Min, threshold and annotation mode back into the analyzer.<br>4. Plate/brace phase spectra — Swift, web: model. Python: model, then the VIEW rebuilds and sets them again, with a different plate/brace gate.<br>5. Plate/brace frozen spectrum — Swift, web: model clears it. Python: the VIEW refills it (crosshair).<br>6. Peak list selection and mode labels — Swift, web: the view reads the model. Python: the VIEW recomputes them from the file and forces "manual" on its list model.<br>7. One-shot `loaded*` values — Swift: the VIEW clears them 0.1 s later. Python, web: none.<br>8. A saved comparison record — Swift, Python: model; neither stops detection or the session recording; Python's view load handler then runs anyway. Web: model, and it does stop both.<br>9. A new comparison from a multi-select — Swift: model. Python: the canvas clears the curves, then the model. Web: `App` sequences clear-peaks, clear-result, load.<br>10. Chart axis range — model publishes it, the view holds it, in all three (the same pattern; it stays).<br>Defects seen in the trace (read, not run): Python — a saved comparison loaded after a guitar measurement puts the previous peaks back into the durable set (row 8); web — a plate/brace load's banner shows the current threshold as the loaded one (the material load restores only the type and FLC); web — a new comparison keeps the previous measurement's microphone in the results line; all three — a file with no microphone id leaves an earlier microphone warning showing; all three — the peaks are projected and the ring-out quality labelled under the previous type and Peak Min before the new ones are restored; Swift — a file with no saved label positions keeps the previous measurement's, and two view handlers for material peak ids are dead. The target: `loadMeasurement` / `loadComparison` do the whole load in the model in all three — peaks, type, every restored setting and its saved value, phase and frozen spectra, selection, stopping detection — and the views only display it (keeping the chart range as now); the loaded-peaks property goes in all three; the defects are fixed in the same pass. Effect on the shared cases until then: a case that loads a measurement calls the model's `loadMeasurement`, which in Python and the web is only part of the load — so a load case can pass in all three while the apps differ (Python's test helpers already set `analyzer._measurement_type` by hand, as its view does). Pure-logic cases are unaffected. **Load path — done: Swift `fb5b0e6`, Python `9ecaf7b`, web `6aba00a`; run-review passed (steps under "Load path run-review" below) (owner decisions 2026-10-15):** (1) the web gets a settings store outside React (`settingsStore.ts`, the same localStorage key and JSON layout — no migration), which the analyzer reads and a load writes, as Swift's analyzer and load use TapDisplaySettings; (2) Swift keeps `loadedAxisRange` as the view's signal (applied on each new load, not replayed when the view subscribes) and the view never writes the model; (3) loading a saved comparison stops detection and the session recording in all three; (4) shared cases in a new slug, `test/measurement-load` (`measurement-load.json`, LD1–LD8; LD7 and LD8 from the run-review); and, the web's Settings type change done Swift's way — Settings' Done calls the model (`changeMeasurementType`), a load never does. Done: Swift — the load applies and saves Show Unknown Modes itself, applies the type and Peak Min before the peaks, clears earlier label positions and microphone warning, and the view's `loaded*` handlers (bar the axis range), `loadedMeasurementPeaks`, four other `loaded*` values and dead peak-id handlers are gone. Python — `load_measurement` does the whole load (it now restores Show Unknown Modes, which it had only logged), ends by announcing the peaks to show, and restores Peak Min and the tap threshold exactly (it rounded them to whole dB); the analyzer's measurement type IS the saved setting (one store, as Swift; the view no longer keeps a second in step); the view's load handler only updates widgets; the crosshair snaps to plate/brace curves as Swift's does; `loaded_measurement_peaks` gone; Re-analyze no longer disables itself after one press (found here). Web — the store above; the analyzer applies the settings itself; a load writes the measurement's settings (a plate/brace its threshold too, fixing the banner; settings a file lacks are no longer reset to defaults, as Swift); a new comparison is one model call that clears the previous result and microphone line; `loadedPeaks`, `loadedSettings` and App's copying effects gone. LD1–LD8 pass in all three; mutations caught: Swift label positions LD2 and comparison microphone LD7, Python saved-comparison detection LD6, web microphone warning LD3 and load highlight LD8. **`material-measurement-inputs`** done (2026-10-15) — Swift `aca3fc6`, Python `3174bbd`, web `2b25826`: `material-measurement-inputs.json` — M1–M5, a measurement's own dimensions (Store B) taken from the Settings defaults when it completes (plate; none for a guitar; none during a load; the completion transition only, not a repeated assignment; a brace's own defaults); M6–M7, a plate or brace load takes the file's dimensions and leaves the Settings defaults untouched; M8, a save writes the measurement's own dimensions; M9–M12, notes on load (kept; empty, spaces-only and surrounding spaces normalized); M13, a plate file without body size, stiffness preset or custom stiffness takes them from Settings. Before, the editions shared 6 tests by count with almost none in common: M4, M5 and M8 ran only in the web, and the web ran M5, M6 and M8 on helpers rather than the analyzer, and none of M9–M12 (owner, 2026-10-15: M4, M5, M8 shared, run in all three). Found doing it, decided (owner, 2026-10-15) and fixed: a load's notes and name were normalized three ways — Swift dropped only empty text, Python also spaces-only text but kept surrounding spaces, the web neither — while each edition's own `normalizedNotes` / `normalizedName` (used by Save and Edit) trims and drops blank; the load now uses them in all three (name cases LD9–LD11 in `measurement-load.json`). And the web filled a file's missing body size, stiffness preset and custom stiffness with 0 and Steel String Top, where Swift and Python (load and saved-measurement PDF) use the Settings values; the web now does too, on load and in its saved-measurement image and report (M13). Mutations caught: Swift notes M11–M12, Python save ignoring Store B M8 and loaded name LD11, web completion-transition guard M4 and missing-field fallback M13. **`import-persistence`** done (2026-10-15) — Swift `1f7f986`, Python `8e6bfc3`, web `fcc9741`: `import-persistence.json` — IP1–IP3, an import (through the app's `importAndLoadMeasurements`) adds its measurements to the library and to storage, in order, keeping the file's id, and a re-import appends a second entry sharing it; IP4–IP5, editing an entry changes only that entry, in its place, with a new id, and editing one of two duplicates leaves the other its shared id; IP6, a save appends; IP9, Delete All empties the library and its saved copy; IP7 (natives only — they address entries by position, the web by row key, deferred to the sort work) an edit of a missing entry changes nothing; IP8 (web only) the row key never reaches an exported file; IM1–IM3, the import message. Before, the editions shared 3 cases by number with different content: the natives' IP1 and IP3 tested `importMeasurements(json:)` / `import_measurements(json_str)`, which no app path calls; decision (owner, 2026-10-15): test through the app's import, and those two functions are removed. Found running the full Swift suite, decided (owner, 2026-10-15) and fixed: Swift wrote the library on a concurrent queue, so two quick changes (an import, then an edit) could land out of order and leave the older library on disk — it now writes on one serial queue, in order, as Python (synchronous) and the web (IndexedDB transactions) already do; and the Swift test shared the per-process library file with two other suites that save in parallel — an analyzer now has a `libraryFileURL` (the usual file by default), and each case uses its own. Mutations caught: Swift edit not persisted IP4–IP5, Python import replacing the library IP2/IP5/IP6, web a save minting a new row key IP4–IP5. Also found, decided (owner, 2026-10-15) and fixed: the web's Measurements panel did the library's edit, delete and Delete All itself (amend, then store calls), where Swift's and Python's are the analyzer's — the web analyzer now has `updateMeasurement`, `deleteMeasurement` and `deleteAllMeasurements`, which the panel calls; and Swift's Delete All was the view clearing `savedMeasurements` without saving, so the measurements came back at the next launch unless another change was saved first — Swift's analyzer now has `deleteAllMeasurements()` (clear and save, as Python's `delete_all_measurements`), which the view calls; IP9 (a mutation dropping its save fails it). |
-| 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s scenario tests and `decay-tracking`'s DK9 | in progress — the owner (2026-10-02): "I agree that the comment on C is not acceptable. Staying as code means divergence". **Survey (2026-10-15, three readers, every edition's tests for each slug):** the reason for "stay as code" no longer holds — step 10 shared four of this group's slugs as step scripts with a small runner per edition, and nearly every case here is synchronous or runs on the audio clock the tests already feed (`audio-clock-feed`, the same in all three). Three obstacles are production mechanisms, not tests: (1) Swift published its frequency bins with `DispatchQueue.main.async`, so its tests slept 50 ms before a guitar tap; (2) the no-audio safety timeout (`afterAudioStall`) runs on wall-clock timers in all three, with no clock a test can set; (3) the settle timer after a device change lives in the analyzer in Swift (unreachable from a test) and Python (a test swaps the timer function), and in a React hook (a view) on the web. Same-named cases test different things: frozen-peak-recalc PR10, 12, 15, 16, 18, 19, 27, 32 (and four spectrum generators); status-message redo (L vs C) and no-resonance (suffix vs string); annotation-state D11, D15; audio-clock-timers T2/T3 (state set by hand vs real taps). Defects seen (read): Python comparison range rounded to whole Hz and `comparison_snapshots` never cleared by `load_comparison`; the web's `loadComparison` / `clearComparison` do more than Swift's; Swift N10 omits the write it describes; the web's 220 Hz overlap case asks about an id that does not exist; Swift PR34 duplicates PR33 and PR10 may depend on an earlier test's Peak Min; start-tap-race R1 guards a deferred path no edition has; the web lacks `effective…PeakID`, the label / manual-override / auto-mode lookups and LoadedRange tests; MC11–MC12 are the web's alone; stale comments in each edition. **Plan (owner, 2026-10-15):** batch A, ready now — DK9, measurement-complete, tap-count-change, scenario-trace, state-invariants, tap-progress, annotation-state, session-pre-roll's remaining five; batch B after the same-name decisions — status-message, audio-clock-timers (bar the timeout), comparison, display-range's scenarios, effective-peak-id; batch C after the timing decisions — notification, the timeout cases, frozen-peak-recalc; each slug's defects fixed as it is reached. Decision (owner, 2026-10-15): Swift publishes the frequency bins at once when on the main thread (engine start, file playback, tests), queued only from another thread — the 50 ms waits go as each slug is reached. **DK9** done: `decay-tracking.json` gains an 'analyzer' case list (DK9 as steps), run in all three; the hand-written DK9s removed. **measurement-complete** done (2026-10-15): `measurement-complete.json` MC1–MC18 through each edition's real paths (process the captured taps, New Tap, Cancel, load, change Taps or the threshold); the web's load cases go through `loadMeasurement` (they called `restoreSnapshot`); MC11–MC12, the web's alone, shared; Python's signal and setter cases stay in its file as Python's own. Found by MC10 and decided (owner, 2026-10-15): when changing Taps or the threshold ends the loaded-settings warning differed — Swift clears it when the new value differs from the loaded one (`loadedNumberOfTaps` / `loadedTapDetectionThreshold`, each set only when the file carries it); Python only when a loaded value existed, and it recorded the current values at the end of every load; the web on any change, with no loaded values. Python and the web now follow Swift (Python drops the extra check and records each value where it restores it, and `set_tap_num`'s duplicate of the rule goes; the web keeps the loaded values on the analyzer, its threshold setter applies the rule on an actual change, and App's `noteLoadedSettingsDeviation` call goes). Also fixed: the web's load set Taps to 1 when a file carried no count, where Swift leaves it (MC18). New MC13–MC18. Mutations caught: web any-change rule MC14, web Taps-to-1 MC18, Python's extra check MC10. **tap-count-change** done (2026-10-15): `tap-count-change.json` TC1–TC10, each case reaching its state through the app's paths in all three (decided, owner, 2026-10-15) — New Tap, real captured taps (a guitar or material capture finish on a synthetic tap), Accept, Redo, audio fed through a rest — where the natives had written the detection state, tap count, captured taps and prompt by hand; one starting point where the editions differed (Generic; the lower case from 4). TC7, the guard that keeps a later phase's instruction, first passed with the guard removed: listening for fC, the prompt the hook would write is the one already shown; it now reaches the fC redo, whose "— tap again" the hook would overwrite (mutation: the guard removed fails it in Swift and the web). Also decided (owner, 2026-10-15) and done: the web's `startTapSequence({arm: false})`, a parameter for tests only, is removed — its 36 test calls use `startTapSequence()` as the natives do, and the full web suite passes. New shared test helper `tooling/synthetic-tap` (the decaying-sine tap, written out in several test files per edition), used here; the other slugs move to it as they are reached. Also decided (owner, 2026-10-15) and done: the web's `acceptMaterial` / `redoMaterial` renamed `acceptCurrentPhase` / `redoCurrentPhase`, the names Swift and Python use. New shared test helper `tooling/analyzer-steps`: the steps the scenario case files share (settings, Taps, New Tap, Pause, Resume, Cancel, a guitar or material capture on a synthetic tap, Accept, Redo, audio through a rest), each through the app's path, run by one function per edition, so the runners keep only their own set-up and expectations. **scenario-trace** done (2026-10-15): `scenario-trace.json` S1–S4, the trace as recorded states; the set-up made one (Generic, threshold −40 — the web had used Classical, Python a 256-point frequency axis and a stand-in microphone, and the natives set warm-up fields by hand, none needed), and Swift's 50 ms waits gone with the bins fix. S2 keeps its simulated stray detection; whether it, and start-tap-race R1, still guard anything is for that slug. Mutations caught: Python Resume doing nothing S3, web Cancel not restarting S4. **state-invariants** done (2026-10-15): `state-invariants.json` V1–V13; the I1–I6 checker stays test code in each edition, its rules written out in the case file; the V cases reach their states through real steps (V3 now completes through a real capture and the capture window, where it had set the detection state, taps and count by hand), and the checker's own cases (V7, V9–V13) set a forbidden state with a `write` step named as such. Python's unused real-time `_pump_events` (its docstring still said the rest was a QTimer) went with the rewrite. `tooling/analyzer-steps` gains `setThreshold`. Mutations caught: Swift checker without I2 V9, web checker without I5 V12, Python Taps step doing nothing V4. **tap-progress** done (2026-10-15): `tap-progress.json` TP1–TP15 — the taps expected, the bar over guitar taps, the cumulative material count across Accepts and through the FLC wait, Redo's rebase, Cancel during the FLC wait, a load tearing down a part-captured sequence, and the bar kept after a later Taps change; the web's own load-over-a-plate case (fixture `plate-umik-1-3-tap-swift-mac-1785359465`, carried by all three) is shared as TP15. Mutations caught: Python Accept resetting the count TP6/TP8/TP9/TP12, web and Swift Redo resetting it TP8/TP9. **annotation-state** done (2026-10-15): `annotation-state.json` AS1–AS41 — label positions, selection and the user's mark, which peaks are annotated (with Show Unknown Modes off, shared from the web's own case), labels and the auto-detected mode, Reset to Auto, the definitive Air/Top/Back and the ratio, the guitar-type clean slate and a new sequence, a load replacing labels and positions, and a brace capture's unclassified peak. Decided (owner, 2026-10-15) and done: every case loads its peaks as the app loads a file and the analyzer classifies them — the editions had seeded different internal lists (Swift `allPeaks`, Python `peaks_above_peak_min`, the web `peaksAbovePeakMin` and `modeByPeak` by hand, skipping classification); where inputs differed, Swift's (D11's two auto Tops, D15's freeform label); the web's 220 Hz case, which asked about an id that did not exist, now asks about a peak the analyzer does not know, as Swift's does, and the real case — a material peak — is AS41. Also decided and done: the web's peak cards took their label, auto mode and override flag from App (`labelFor`, `overrides.has`, `modeByPeak`) — the web analyzer now has `effectiveModeLabel`, `autoDetectedMode` and `hasManualOverride`, as Swift's and Python's do, and the cards read them; and Python cleared a label through `set_mode_override(None)` (which also ran the uniqueness rule Swift's reset does not), accepting "auto" too — its view now calls `reset_mode_override`, as Swift's calls `resetModeOverride`, and `set_mode_override` only sets a label. The web's `peak-state-store.test.ts` (the same store cases) is replaced by the shared ones; the web keeps three cases of its own for its chart-marker and report helpers, and Swift two for its visibility enum's cycle and icons. Mutations caught: web label ignoring the user's AS19/AS20, Python Reset to Auto doing nothing AS21–AS23, Swift uniqueness rule off AS26/AS28. **session-pre-roll** done (2026-10-15): its four hand-written cases join `session-pre-roll.json` as SR12–SR14 (idle bounded, the first tap freezing the latch, completely live after it — through a new `release` step and a `preRoll` field; each case's expectations now optional) and a `preRollSeconds` value each edition's constant is checked against; the capture probe's case stays code (it runs only with the probe on). Raised, not changed: the natives' Settings call `applyDumpCaptureAudioSetting` after writing the setting; the web's analyzer applies it itself when its stored setting changes. Mutation caught: web latch never freezing SR6/SR8/SR13/SR14. **Batch A complete** — Swift `acce5cb`, Python `3b28c56`, web `34eda6b`. Run-review (owner, 2026-10-15), all three editions passed: (1) load a saved measurement, change Taps away from its value and back → the loaded-settings banner goes at the change and stays gone (the threshold likewise on the web); (2) a peak given a name of its own, then Reset to Auto from its label menu → the auto mode's name returns (Python: a selected Top stays selected). A step for a file saved without a tap count was dropped — no saved file lacks one; MC18 pins it. The wand (Reset to automatic selection) resets the selection and keeps the labels, by design (AS10). **Batch B** — decided (owner, 2026-10-15): (1) the web's comparison follows Swift — `loadComparison` and the saved-comparison load no longer clear the previous result, the microphone warning or the ring-out (the saved-comparison load clears the highlight, as Swift's), the chart range is set only when something was compared, and `clearComparison` no longer touches the multi-tap flag; Python's comparison range keeps its fractions (it truncated to whole Hz) and `load_comparison` starts a fresh `comparison_snapshots` (it grew); (2) the web gains `effectiveLongitudinalPeakID` / `effectiveCrossPeakID` / `effectiveFlcPeakID` (its material record builder keeps reading the ids off the same three peaks); (3) Swift's clipping and dead-input overrides apply at once — no main-queue hop; found doing it: a @Published sink runs before the property changes, and `statusMessage.didSet` re-applies the overrides, so the hop had been hiding a stale read — the analyzer now keeps its own `isClipping` / `inputAppearsDead`, set by the sinks before applying, as Python and the web do (Swift's notification tests keep the analyzer's subscriptions, which they had removed); (4) material peak announcements are observed per edition, with no production change; (5) the web applies Dump Capture Audio from Settings' Apply, as the natives do, and `setSettings` no longer applies it. **effective-peak-id** done: `effective-peak-id.json` EP1–EP4 through real plate taps, in all three (the web had none; Python's file renamed from `test_wi2_…`). Mutations caught: web fC getter null EP3/EP4, Python fC getter returning fL EP2–EP4. **display-range scenarios** done: `display-range.json` gains 'files' and 'scenarios' DR1–DR7 — the range a load publishes (a snapshot's exactly; the saved range without one), the analysis range a load leaves, the material peaks' announcements (a load's, and Redo's single clear) and the from-a-load mark; DR7, the web's sequence-start count, is the web's alone. Swift's LoadedRangeTests and MaterialPeakAnnouncementTests, Python's test_loaded_range and test_material_peak_announcement and the web's material-peak-announcement test become one runner each (the web had no LoadedRange cases). Found by DR2 and decided (owner, 2026-10-15): the web's load returned at once for a measurement with no spectrum (a file from before spectra were stored), where Swift and Python load it — the saved range, its own settings and peaks; the web now does too (`measurementToLive` takes the settings and handles no snapshot). **audio-clock-timers** (bar the timeout) done: `audio-clock-timers.json` AT1–AT6 — the rest between material taps, the FLC hold and its warm-up anchor, the file's end releasing the capture window but not a rest, a tap detected from audio turning detection off, and file playback's auto-advance — each case reaching its state through real detection and captures (the natives had called `handleTapDetection` and set the phase and spectra by hand for T2/T3, as the web did not). `tooling/analyzer-steps` gains audio at a level (`advance` with 'level' / 'extra', `audioChunks`). The two safety-timeout cases stay code in each edition until batch C; the web keeps its own file-playback pacing case. Mutation caught: web rests halved AT1/AT2. **comparison** done: `comparison.json` CM1–CM24 — entries, labels (numbered duplicates, shared from the web), the range, the mode, detection standing down or left alone, a load ending a comparison, the per-tap overlay giving way and turning off, each entry's Air/Top/Back from its source's selection and labels, saving a comparison (Python's save cases, shared — Swift had none) and loading it back, New Tap ending a comparison (guitar and plate, shared from the web). CM15 found a gap in the web's change above — `loadComparison` had emptied the per-tap taps only through `clearResult` — now done as Swift does. The comparison-format cases (an entry written and read back, a field left out, a legacy entry healed, the stored map read back, a plain record not a comparison) moved into `measurement-codable.json` as its `comparison` group, CR1–CR5, replacing Swift's ComparisonModePersistence suite, Python's TestComparisonEntryCodable, TestComparisonDefinitiveModes and TestResolvedModePeaks, and the web's format describes; what those held that the shared cases lacked was added — an entry's guitar type after loading (CM17 `entryGuitarType`) and no peaks giving no modes (classify RM04). Python's own `comparisonChanged` signal cases stay in its comparison file. CR1 found (owner, 2026-10-16: fix it): a saved comparison has no peaks and no `selectedPeakIDs`, and Swift's and the web's read-time selection heal established an empty selection for it and flagged it healed — every comparison read as healed, so a library holding one was saved again at each launch, and an opened comparison read as changed; Python's heal already ran only with peaks. Now the heal runs only with peaks in all three (SH6: no peaks and no selection, not healed); mutation: the guard removed fails CR1 and SH6 in each edition. Batch B full suites green (2026-10-16); run-review passed in all three (owner, 2026-10-16; steps under "Step 11 batch B run-review" below). **Batch B complete** — Swift `d7389de`, Python `8527a21`, web `eeaf68e`. **Batch C — survey and decisions (owner, 2026-10-16).** Survey (three readers, every edition): (1) the settle after a device change differs — the timer is in the analyzer in Swift and Python and in a React hook on the web; Swift and Python stand the detector down on a change and re-arm it after the settle, the web never touches the detection state; Swift waits 3 s and then for the next FFT frame, Python restores after 3 s; the web merges repeated changes into one restore, the natives schedule one per change. Decided: the web stands the detector down and re-arms as Swift; the timer moves into the analyzer in all three and the settle runs on the audio clock (3 s of audio, then the next frame), driven in tests by `advance`; raised, to be looked at: whether one restore per change can cut a later change's settle short. (2) The no-audio safety timeout is the same in all three, on the wall clock by design, its tests sleeping. Decided: the analyzer takes a clock it reads now from and schedules on (the real one in the app, a manual one in tests); a shared step stalls it. (3) "Two writes settle" has no timer in any edition — the writes are synchronous; the case pins that, once the main queue drains, no further status writes come (the bouncing-sink regression). Decided: a shared drain-the-main-queue step and a status-writes check; Swift's status runner becomes async; no production change. (4) frozen-peak-recalc: PR12, 15, 16, 18, 19, 27, 28, 29, 32 mean different things across the editions, four spectrum generators, state set by hand; the web's recalc re-classifies every peak where Swift carries each peak's mode forward (±5 Hz), and has no non-guitar branch. Decided: the web's recalc aligned with Swift; one `frozen-peak-recalc.json` under Swift's ids and meanings, spectra from the shared `gaussians`/`flat` spec of `peaks.json`, through real entry points; the editions' own checks that test something real kept as new ids. (5) start-tap-race R1 guards the deferred start Swift removed in `df17a48` (Python and the web never had one) and tests nothing; R2–R4 repeat S1–S3; R5 (pause, then Cancel) is its own. S2's hand-set idle is reachable by no real path. Decided: start-tap-race retired, R5 moved into scenario-trace; S2 reaches its state through a real detection (warm-up, audio above the threshold), as AT1/AT5; the stale comments on the deferred start fixed. (6) tap-decisions was in no batch: the same cases in all three, on the audio clock; Swift's noise-floor seed sets the level by hand where the others feed audio; Swift's 50 ms wait for the frequency bins waits for nothing since the bins decision. Decided: shared in batch C; the 50 ms wait removed; Python's pipeline-delivery class (Qt signal connections, a risk the others' single-assignment callbacks do not have) stays Python's own, so noted in the case file. (7) Found: the web's auto-start at engine start has no guard, where Swift starts only when idle (not detecting, not complete, not paused, no taps). Decided: check whether it can discard a completed or loaded measurement, then align with Swift. **tap-decisions** done (batch C item 1, 2026-10-16): `tap-decisions.json` T1–T14 (T1e and T6 each split into the two analyzers they compared; the settle, seed, confirmation and resume cases numbered T9–T14) and the onset alignment O1–O3, through the shared steps in all three; `confirmChunks` checked against each edition's constant. `tooling/analyzer-steps` gains `newTapSkippingWarmUp`, and `audioChunks` feeds exactly n chunks (it had gone through the seconds, where rounding could add one). Found and decided (owner, 2026-10-16: (A)): Swift seeded a new sequence's noise floor, and re-anchored the latch on Accept, Redo and the phase restarts, from the level meter's value (`fftAnalyzer.level.inputLevelDB`, set a buffer at a time on the main thread), where Python and the web use the level of the chunk the analyzer last received — Swift now reads its own `lastChunkLevelDB`, as its resume and re-arm already did, so a fed chunk seeds it as in the others. Swift's 50 ms wait for the frequency bins is gone with its runner. T7's value is the EMA's (−55.38; Swift's old comment said ≈ −57.4, its check only > −58). Python's pipeline-delivery class stays its own, so noted in the case file. Mutations caught: Swift seeding from the meter T11; Python with no hysteresis margin T1f, T5; web confirming on one chunk T12, T13 and the constant. **start-tap-race retired; S2 and S5** (batch C item 2, 2026-10-16): the three start-tap-race files are gone (R1 guarded the deferred start removed in `df17a48`; R2–R4 repeated S1–S3) and the web's tag no longer names the slug. `scenario-trace.json` S2 now reaches its state through a real detection — warm-up, two loud chunks — and records it (postWarmUp, postDetect), where it had set the detection state idle by hand; the `strayDetection` step is gone from the three runners. S5 is R5: Cancel from a paused sequence starts a fresh one listening — reached through a real tap and re-arm, where R5 had set the tap count by hand. The comments that still described a deferred start (Swift's and Python's same-value guard on the detection state, Python's per-sequence clear) now describe what the code does. Mutations caught: a detection not standing detection down S2 (Swift, Python); web Cancel leaving a paused sequence paused S5. Found by the full suite after this: Python's self-regression playback (`tests/parity_runner.py`) left the measurement type it set, which the start-tap-race file's set-up had been resetting before the state-notification cases ran; it now puts the type back with Measure FLC. **Two writes settle** (batch C item 3, 2026-10-16): `status-message.json` SM24 — arming straight after the analyzer is made, the status settles on the prompt and stays — through two status-runner steps, `drainMainQueue` (ten passes, each waiting for everything queued on the main thread before it: Swift a main-queue continuation, Python `processEvents`, the web a zero timeout — no time passes) and `countStatusWrites`, and the field 'statusWrites' (Swift's status publisher, Python's `statusMessageChanged`, the web's change notifications, its one signal); Swift's status runner is async; the three hand-written cases and their 50 ms waits are gone. No production change. Mutations: a status that keeps re-queuing itself — Swift a sink writing it back through the main queue, Python and the web a status alternating between two values — fails SM24 in each; a single queued write does not (the first drain absorbs it: the case is about settling, and a write that settles is not the regression). **frozen-peak-recalc** (batch C item 4, 2026-10-16): `frozen-peak-recalc.json` — 44 cases under Swift's ids and meanings plus PR38 (a tap entry's modes, a function case) — through the app's paths only: each frozen measurement is a .guitartap document the runner writes from a spectrum spec (the `gaussians`/`flat` spec of `peaks.json`; the web's builder moved to `test/spectrumSpec.ts`) and its saved peaks, selection, names, label positions and per-tap entries, read with the edition's own reader and loaded; then Re-analyze, Peak Min, select, name, drag, a live frame, captures, Save, load and Redo. Peaks are named by frequency. Guitar cases sit inside the default 75–350 Hz analysis range (400 Hz became 330, PR12's 1000 Hz became 250). New ids for the editions' own real checks: PR47 (a live frame selects every peak, the web's), PR49 (New Tap on material clears its label positions, the web's); the web's per-tap floor case was not carried over. Found and decided (owner, 2026-10-16: (A), twice): the recalc's only caller is Re-analyze, which first clears the hand-modified flag, the selected-frequency cache and the modes, and is never offered for material — so its carry-forward of a hand-made selection, its carry-forward of modes and its material branch could not run; and its loading guard and complete/spectrum guard could not fire (a load never reaches Re-analyze; Re-analyze checks the same condition first). All removed in all three — Re-analyze classifies afresh, auto-selects and carries label positions and names ±5 Hz — and PR05, PR10, PR11, PR26, PR27 retired; the web's recalc had re-classified where Swift carried modes (the difference is gone with the branch). The comments describing the old carry-forward now say what the code does. Raised and decided (owner, 2026-10-16): the file's `selectedPeakFrequencies` is no longer read by GuitarTap, and stays — it is written for programs a user might write that read a .guitartap file without the selection algorithm; now documented as such in Appendix B of the manual and at each edition's field (Appendix B's `userModifiedSelection` row also corrected: it decides whether Reset to automatic selection is offered). Swift's live-frame analysis acts only while its engine reports running, Python's and the web's had no such check — now all three check (Python `mic.is_stopped`, the web its device's `running`); no app path delivers a frame without a running engine, so no case pins it. Mutations caught: Swift not carrying label positions PR12, PR19, PR20, PR21; Python keeping a stale selection on Re-analyze PR28; web not carrying names PR19, PR23, PR24. **Batch C items 1–4 complete** (run-review passed, owner, 2026-10-16; steps under "Step 11 batch C (items 1–4) run-review" below) — Swift `8b1989a`, Python `1e42d3e`, web `63b33b5`; found in the run-review and fixed separately: Python's table reading names from the analyzer `ca4b7fb`, the web's Safari microphone fix `60571e6`. Found and decided (owner, 2026-10-15: an architectural divergence, resolved): the Taps toggle was two view calls in Swift and Python (set `showingMultiTapComparison`, then `applyMultiTapComparisonOverlays`) and one model call on the web (`setMultiTapComparison`) — now one model call in all three, under Swift's name: `applyMultiTapComparisonOverlays` sets the flag itself, the toggles call only it, Python's view no longer writes the flag on entering a saved comparison (the model already has), and the web's method is renamed (mutation: Python's method not setting the flag fails CM15, CM23, CM24). Then found and decided (owner, 2026-10-15): where the per-tap overlay is kept differed — Swift's and Python's `applyMultiTapComparisonOverlays(true)` builds the taps and the average into the comparison the chart draws (`comparisonSpectra` / `_comparison_data`), the web's only set the mode and App asked the analyzer for the per-tap entries on every redraw; now the web's builds them into `comparisonEntries` (at the saved range, as Swift's `makeMeasurement()`; nothing when there are no taps, as Swift's guard), the chart draws `comparisonEntries` for either kind, App's `comparison` is the saved-measurement comparison (`isSavedMeasurementComparison`) and its separate per-tap path is gone. New shared case CM25 (the overlay holds each tap and the average), which the old web fails. Mutations caught: Swift comparison not standing detection down CM9, Python Clear not returning to live CM6, web per-tap taps kept CM15. **status-message** done: `status-message.json` SM1–SM23, every string reached through the app's own path — the armed prompts past a real warm-up (the natives had set warm-up fields), clipping through the input level, the device change, Pause/Resume, completion held through a Peak Min change, the loaded prompt, plate and brace completion, the material prompts through a warm-up chunk, the guitar loop's capturing / processing strings from real detection (Swift and Python had called `guitarLoopStatus` directly), Redo on fL and on fC (each edition had one), material progress and review (SM20's exact 'fL: 60.0 Hz …' — all three find the same peak), no resonance from a silent tap, and the file-playback auto-advance. `tooling/analyzer-steps` gains `setPeakMin`. The 'two writes settle' quiet-period case stays code in each edition (real time, batch C); the device change's restore is batch C; the web keeps its guard against strings it alone once produced. Swift's status cases no longer wait 50 ms. Mutations caught: Swift clipping ignored SM4, web paused prompt changed SM6. |
+| 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s scenario tests and `decay-tracking`'s DK9 | in progress — batches A and B and batch C items 1–5 done; next step 12, then C6. See **Step 11 — scenario slugs** below |
+| 12 | Parity links — every test slug linked to the code it tests, every model file in a group | all | **next** — see **Step 12 — parity links** below |
 | 12 | Cannot be shared — per-machine baselines, random draws, the filesystem | `self-regression`, `uuid-case`, `wav-dump-folder` | nothing to do |
 | 13 | Close Stage 2 and #17 | — | to do |
 
@@ -7559,6 +7560,477 @@ sliders still have no reset buttons (Swift and Python do): noted, not changed. N
 for more such misses (owner, 2026-10-15) found 39 across the three editions: filed as #32
 ([`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md)), to be fixed after this run-review. **All three editions passed steps 1–13 (owner, 2026-10-15). Run-review complete.**
 
+### Step 11 — scenario slugs
+
+The scenario slugs: their tests become shared step scripts, run by a small runner per edition. This section is step
+11's record — the status table first, then each item's decision and what was done, in the order of the table. The
+run-reviews are the sections after it.
+
+| # | item | batch | status | commits (Swift · Python · web) |
+|---|---|---|---|---|
+| A | DK9 | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | measurement-complete | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | tap-count-change | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | scenario-trace | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | state-invariants | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | tap-progress | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | annotation-state | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| A | session-pre-roll | A | done | `acce5cb` · `3b28c56` · `34eda6b` |
+| B | status-message | B | done | `d7389de` · `8527a21` · `eeaf68e` |
+| B | effective-peak-id | B | done | `d7389de` · `8527a21` · `eeaf68e` |
+| B | display-range scenarios | B | done | `d7389de` · `8527a21` · `eeaf68e` |
+| B | audio-clock-timers (bar the timeout) | B | done | `d7389de` · `8527a21` · `eeaf68e` |
+| B | comparison (and its format, into measurement-codable) | B | done | `d7389de` · `8527a21` · `eeaf68e` |
+| C1 | tap-decisions | C | done | `8b1989a` · `1e42d3e` · `63b33b5` |
+| C2 | start-tap-race retired; scenario-trace S2 and S5 | C | done | `8b1989a` · `1e42d3e` · `63b33b5` |
+| C3 | the status settle (two writes) | C | done | `8b1989a` · `1e42d3e` · `63b33b5` |
+| C4 | frozen-peak-recalc | C | done | `8b1989a` · `1e42d3e` · `63b33b5` |
+| C5 | web engine and auto-start; Python start() — architectural | C | done — run-review passed (owner, 2026-10-16) | `2c4f638` · `f1d29c1` · `37df25c` |
+| C6 | no-audio safety timeout on an injectable clock | C | to do |  |
+| C7 | device-change settle on the audio clock | C | to do |  |
+| — | run-review find: Python's table names (Re-analyze) | C | done | — · `ca4b7fb` · — |
+| — | run-review find: the web's Safari microphone after a dialog | C | done | — · — · `60571e6` |
+| — | run-review find: the web's New Tap left the loaded peaks (PR51) | C | done | — · — · `37df25c` |
+
+#### Background
+
+in progress — the owner (2026-10-02): "I agree that the comment on C is not acceptable. Staying as code means
+divergence".
+
+**Survey (2026-10-15, three readers, every edition's tests for each slug):** the reason for "stay as code" no longer
+holds — step 10 shared four of this group's slugs as step scripts with a small runner per edition, and nearly every
+case here is synchronous or runs on the audio clock the tests already feed (`audio-clock-feed`, the same in all
+three). Three obstacles are production mechanisms, not tests: (1) Swift published its frequency bins with
+`DispatchQueue.main.async`, so its tests slept 50 ms before a guitar tap; (2) the no-audio safety timeout
+(`afterAudioStall`) runs on wall-clock timers in all three, with no clock a test can set; (3) the settle timer after a
+device change lives in the analyzer in Swift (unreachable from a test) and Python (a test swaps the timer function),
+and in a React hook (a view) on the web. Same-named cases test different things: frozen-peak-recalc PR10, 12, 15, 16,
+18, 19, 27, 32 (and four spectrum generators); status-message redo (L vs C) and no-resonance (suffix vs string);
+annotation-state D11, D15; audio-clock-timers T2/T3 (state set by hand vs real taps). Defects seen (read): Python
+comparison range rounded to whole Hz and `comparison_snapshots` never cleared by `load_comparison`; the web's
+`loadComparison` / `clearComparison` do more than Swift's; Swift N10 omits the write it describes; the web's 220 Hz
+overlap case asks about an id that does not exist; Swift PR34 duplicates PR33 and PR10 may depend on an earlier test's
+Peak Min; start-tap-race R1 guards a deferred path no edition has; the web lacks `effective…PeakID`, the label /
+manual-override / auto-mode lookups and LoadedRange tests; MC11–MC12 are the web's alone; stale comments in each
+edition.
+
+**Plan (owner, 2026-10-15):** batch A, ready now — DK9, measurement-complete, tap-count-change, scenario-trace,
+state-invariants, tap-progress, annotation-state, session-pre-roll's remaining five; batch B after the same-name
+decisions — status-message, audio-clock-timers (bar the timeout), comparison, display-range's scenarios,
+effective-peak-id; batch C after the timing decisions — notification, the timeout cases, frozen-peak-recalc; each
+slug's defects fixed as it is reached. Decision (owner, 2026-10-15): Swift publishes the frequency bins at once when
+on the main thread (engine start, file playback, tests), queued only from another thread — the 50 ms waits go as each
+slug is reached.
+
+#### Batch A
+
+**DK9.** done: `decay-tracking.json` gains an 'analyzer' case list (DK9 as steps), run in all three; the hand-written DK9s
+removed.
+
+**measurement-complete.** done (2026-10-15): `measurement-complete.json` MC1–MC18 through each edition's real paths (process the captured taps,
+New Tap, Cancel, load, change Taps or the threshold); the web's load cases go through `loadMeasurement` (they called
+`restoreSnapshot`); MC11–MC12, the web's alone, shared; Python's signal and setter cases stay in its file as Python's
+own. Found by MC10 and decided (owner, 2026-10-15): when changing Taps or the threshold ends the loaded-settings
+warning differed — Swift clears it when the new value differs from the loaded one (`loadedNumberOfTaps` /
+`loadedTapDetectionThreshold`, each set only when the file carries it); Python only when a loaded value existed, and
+it recorded the current values at the end of every load; the web on any change, with no loaded values. Python and the
+web now follow Swift (Python drops the extra check and records each value where it restores it, and `set_tap_num`'s
+duplicate of the rule goes; the web keeps the loaded values on the analyzer, its threshold setter applies the rule on
+an actual change, and App's `noteLoadedSettingsDeviation` call goes). Also fixed: the web's load set Taps to 1 when a
+file carried no count, where Swift leaves it (MC18). New MC13–MC18. Mutations caught: web any-change rule MC14, web
+Taps-to-1 MC18, Python's extra check MC10.
+
+**tap-count-change.** done (2026-10-15): `tap-count-change.json` TC1–TC10, each case reaching its state through the app's paths in all three
+(decided, owner, 2026-10-15) — New Tap, real captured taps (a guitar or material capture finish on a synthetic tap),
+Accept, Redo, audio fed through a rest — where the natives had written the detection state, tap count, captured taps
+and prompt by hand; one starting point where the editions differed (Generic; the lower case from 4). TC7, the guard
+that keeps a later phase's instruction, first passed with the guard removed: listening for fC, the prompt the hook
+would write is the one already shown; it now reaches the fC redo, whose "— tap again" the hook would overwrite
+(mutation: the guard removed fails it in Swift and the web). Also decided (owner, 2026-10-15) and done: the web's
+`startTapSequence({arm: false})`, a parameter for tests only, is removed — its 36 test calls use `startTapSequence()`
+as the natives do, and the full web suite passes. New shared test helper `tooling/synthetic-tap` (the decaying-sine
+tap, written out in several test files per edition), used here; the other slugs move to it as they are reached. Also
+decided (owner, 2026-10-15) and done: the web's `acceptMaterial` / `redoMaterial` renamed `acceptCurrentPhase` /
+`redoCurrentPhase`, the names Swift and Python use. New shared test helper `tooling/analyzer-steps`: the steps the
+scenario case files share (settings, Taps, New Tap, Pause, Resume, Cancel, a guitar or material capture on a synthetic
+tap, Accept, Redo, audio through a rest), each through the app's path, run by one function per edition, so the runners
+keep only their own set-up and expectations.
+
+**scenario-trace.** done (2026-10-15): `scenario-trace.json` S1–S4, the trace as recorded states; the set-up made one (Generic, threshold
+−40 — the web had used Classical, Python a 256-point frequency axis and a stand-in microphone, and the natives set
+warm-up fields by hand, none needed), and Swift's 50 ms waits gone with the bins fix. S2 keeps its simulated stray
+detection; whether it, and start-tap-race R1, still guard anything is for that slug. Mutations caught: Python Resume
+doing nothing S3, web Cancel not restarting S4.
+
+**state-invariants.** done (2026-10-15): `state-invariants.json` V1–V13; the I1–I6 checker stays test code in each edition, its rules
+written out in the case file; the V cases reach their states through real steps (V3 now completes through a real
+capture and the capture window, where it had set the detection state, taps and count by hand), and the checker's own
+cases (V7, V9–V13) set a forbidden state with a `write` step named as such. Python's unused real-time `_pump_events`
+(its docstring still said the rest was a QTimer) went with the rewrite. `tooling/analyzer-steps` gains `setThreshold`.
+Mutations caught: Swift checker without I2 V9, web checker without I5 V12, Python Taps step doing nothing V4.
+
+**tap-progress.** done (2026-10-15): `tap-progress.json` TP1–TP15 — the taps expected, the bar over guitar taps, the cumulative material
+count across Accepts and through the FLC wait, Redo's rebase, Cancel during the FLC wait, a load tearing down a
+part-captured sequence, and the bar kept after a later Taps change; the web's own load-over-a-plate case (fixture
+`plate-umik-1-3-tap-swift-mac-1785359465`, carried by all three) is shared as TP15. Mutations caught: Python Accept
+resetting the count TP6/TP8/TP9/TP12, web and Swift Redo resetting it TP8/TP9.
+
+**annotation-state.** done (2026-10-15): `annotation-state.json` AS1–AS41 — label positions, selection and the user's mark, which peaks are
+annotated (with Show Unknown Modes off, shared from the web's own case), labels and the auto-detected mode, Reset to
+Auto, the definitive Air/Top/Back and the ratio, the guitar-type clean slate and a new sequence, a load replacing
+labels and positions, and a brace capture's unclassified peak. Decided (owner, 2026-10-15) and done: every case loads
+its peaks as the app loads a file and the analyzer classifies them — the editions had seeded different internal lists
+(Swift `allPeaks`, Python `peaks_above_peak_min`, the web `peaksAbovePeakMin` and `modeByPeak` by hand, skipping
+classification); where inputs differed, Swift's (D11's two auto Tops, D15's freeform label); the web's 220 Hz case,
+which asked about an id that did not exist, now asks about a peak the analyzer does not know, as Swift's does, and the
+real case — a material peak — is AS41. Also decided and done: the web's peak cards took their label, auto mode and
+override flag from App (`labelFor`, `overrides.has`, `modeByPeak`) — the web analyzer now has `effectiveModeLabel`,
+`autoDetectedMode` and `hasManualOverride`, as Swift's and Python's do, and the cards read them; and Python cleared a
+label through `set_mode_override(None)` (which also ran the uniqueness rule Swift's reset does not), accepting "auto"
+too — its view now calls `reset_mode_override`, as Swift's calls `resetModeOverride`, and `set_mode_override` only
+sets a label. The web's `peak-state-store.test.ts` (the same store cases) is replaced by the shared ones; the web
+keeps three cases of its own for its chart-marker and report helpers, and Swift two for its visibility enum's cycle
+and icons. Mutations caught: web label ignoring the user's AS19/AS20, Python Reset to Auto doing nothing AS21–AS23,
+Swift uniqueness rule off AS26/AS28.
+
+**session-pre-roll.** done (2026-10-15): its four hand-written cases join `session-pre-roll.json` as SR12–SR14 (idle bounded, the first tap
+freezing the latch, completely live after it — through a new `release` step and a `preRoll` field; each case's
+expectations now optional) and a `preRollSeconds` value each edition's constant is checked against; the capture
+probe's case stays code (it runs only with the probe on). Raised, not changed: the natives' Settings call
+`applyDumpCaptureAudioSetting` after writing the setting; the web's analyzer applies it itself when its stored setting
+changes. Mutation caught: web latch never freezing SR6/SR8/SR13/SR14.
+
+**Batch A complete** — Swift `acce5cb`, Python `3b28c56`, web `34eda6b`. Run-review (owner, 2026-10-15), all three
+editions passed: (1) load a saved measurement, change Taps away from its value and back → the loaded-settings banner
+goes at the change and stays gone (the threshold likewise on the web); (2) a peak given a name of its own, then Reset
+to Auto from its label menu → the auto mode's name returns (Python: a selected Top stays selected). A step for a file
+saved without a tap count was dropped — no saved file lacks one; MC18 pins it. The wand (Reset to automatic selection)
+resets the selection and keeps the labels, by design (AS10).
+
+#### Batch B
+
+**Decisions** — decided (owner, 2026-10-15): (1) the web's comparison follows Swift — `loadComparison` and the
+saved-comparison load no longer clear the previous result, the microphone warning or the ring-out (the
+saved-comparison load clears the highlight, as Swift's), the chart range is set only when something was compared, and
+`clearComparison` no longer touches the multi-tap flag; Python's comparison range keeps its fractions (it truncated to
+whole Hz) and `load_comparison` starts a fresh `comparison_snapshots` (it grew); (2) the web gains
+`effectiveLongitudinalPeakID` / `effectiveCrossPeakID` / `effectiveFlcPeakID` (its material record builder keeps
+reading the ids off the same three peaks); (3) Swift's clipping and dead-input overrides apply at once — no main-queue
+hop; found doing it: a @Published sink runs before the property changes, and `statusMessage.didSet` re-applies the
+overrides, so the hop had been hiding a stale read — the analyzer now keeps its own `isClipping` / `inputAppearsDead`,
+set by the sinks before applying, as Python and the web do (Swift's notification tests keep the analyzer's
+subscriptions, which they had removed); (4) material peak announcements are observed per edition, with no production
+change; (5) the web applies Dump Capture Audio from Settings' Apply, as the natives do, and `setSettings` no longer
+applies it.
+
+**status-message.** done: `status-message.json` SM1–SM23, every string reached through the app's own path — the armed prompts past a real
+warm-up (the natives had set warm-up fields), clipping through the input level, the device change, Pause/Resume,
+completion held through a Peak Min change, the loaded prompt, plate and brace completion, the material prompts through
+a warm-up chunk, the guitar loop's capturing / processing strings from real detection (Swift and Python had called
+`guitarLoopStatus` directly), Redo on fL and on fC (each edition had one), material progress and review (SM20's exact
+'fL: 60.0 Hz …' — all three find the same peak), no resonance from a silent tap, and the file-playback auto-advance.
+`tooling/analyzer-steps` gains `setPeakMin`. The 'two writes settle' quiet-period case stays code in each edition
+(real time, batch C); the device change's restore is batch C; the web keeps its guard against strings it alone once
+produced. Swift's status cases no longer wait 50 ms. Mutations caught: Swift clipping ignored SM4, web paused prompt
+changed SM6.
+
+**effective-peak-id.** done: `effective-peak-id.json` EP1–EP4 through real plate taps, in all three (the web had none; Python's file renamed
+from `test_wi2_…`). Mutations caught: web fC getter null EP3/EP4, Python fC getter returning fL EP2–EP4.
+
+**display-range scenarios.** done: `display-range.json` gains 'files' and 'scenarios' DR1–DR7 — the range a load publishes (a snapshot's exactly;
+the saved range without one), the analysis range a load leaves, the material peaks' announcements (a load's, and
+Redo's single clear) and the from-a-load mark; DR7, the web's sequence-start count, is the web's alone. Swift's
+LoadedRangeTests and MaterialPeakAnnouncementTests, Python's test_loaded_range and test_material_peak_announcement and
+the web's material-peak-announcement test become one runner each (the web had no LoadedRange cases). Found by DR2 and
+decided (owner, 2026-10-15): the web's load returned at once for a measurement with no spectrum (a file from before
+spectra were stored), where Swift and Python load it — the saved range, its own settings and peaks; the web now does
+too (`measurementToLive` takes the settings and handles no snapshot).
+
+**audio-clock-timers.** (bar the timeout) done: `audio-clock-timers.json` AT1–AT6 — the rest between material taps, the FLC hold and its
+warm-up anchor, the file's end releasing the capture window but not a rest, a tap detected from audio turning
+detection off, and file playback's auto-advance — each case reaching its state through real detection and captures
+(the natives had called `handleTapDetection` and set the phase and spectra by hand for T2/T3, as the web did not).
+`tooling/analyzer-steps` gains audio at a level (`advance` with 'level' / 'extra', `audioChunks`). The two
+safety-timeout cases stay code in each edition until batch C; the web keeps its own file-playback pacing case.
+Mutation caught: web rests halved AT1/AT2.
+
+**comparison.** done: `comparison.json` CM1–CM24 — entries, labels (numbered duplicates, shared from the web), the range, the mode,
+detection standing down or left alone, a load ending a comparison, the per-tap overlay giving way and turning off,
+each entry's Air/Top/Back from its source's selection and labels, saving a comparison (Python's save cases, shared —
+Swift had none) and loading it back, New Tap ending a comparison (guitar and plate, shared from the web). CM15 found a
+gap in the web's change above — `loadComparison` had emptied the per-tap taps only through `clearResult` — now done as
+Swift does. The comparison-format cases (an entry written and read back, a field left out, a legacy entry healed, the
+stored map read back, a plain record not a comparison) moved into `measurement-codable.json` as its `comparison`
+group, CR1–CR5, replacing Swift's ComparisonModePersistence suite, Python's TestComparisonEntryCodable,
+TestComparisonDefinitiveModes and TestResolvedModePeaks, and the web's format describes; what those held that the
+shared cases lacked was added — an entry's guitar type after loading (CM17 `entryGuitarType`) and no peaks giving no
+modes (classify RM04). Python's own `comparisonChanged` signal cases stay in its comparison file. CR1 found (owner,
+2026-10-16: fix it): a saved comparison has no peaks and no `selectedPeakIDs`, and Swift's and the web's read-time
+selection heal established an empty selection for it and flagged it healed — every comparison read as healed, so a
+library holding one was saved again at each launch, and an opened comparison read as changed; Python's heal already
+ran only with peaks. Now the heal runs only with peaks in all three (SH6: no peaks and no selection, not healed);
+mutation: the guard removed fails CR1 and SH6 in each edition. Batch B full suites green (2026-10-16); run-review
+passed in all three (owner, 2026-10-16; steps under "Step 11 batch B run-review" below). Found and decided (owner,
+2026-10-15: an architectural divergence, resolved): the Taps toggle was two view calls in Swift and Python (set
+`showingMultiTapComparison`, then `applyMultiTapComparisonOverlays`) and one model call on the web
+(`setMultiTapComparison`) — now one model call in all three, under Swift's name: `applyMultiTapComparisonOverlays`
+sets the flag itself, the toggles call only it, Python's view no longer writes the flag on entering a saved comparison
+(the model already has), and the web's method is renamed (mutation: Python's method not setting the flag fails CM15,
+CM23, CM24). Then found and decided (owner, 2026-10-15): where the per-tap overlay is kept differed — Swift's and
+Python's `applyMultiTapComparisonOverlays(true)` builds the taps and the average into the comparison the chart draws
+(`comparisonSpectra` / `_comparison_data`), the web's only set the mode and App asked the analyzer for the per-tap
+entries on every redraw; now the web's builds them into `comparisonEntries` (at the saved range, as Swift's
+`makeMeasurement()`; nothing when there are no taps, as Swift's guard), the chart draws `comparisonEntries` for either
+kind, App's `comparison` is the saved-measurement comparison (`isSavedMeasurementComparison`) and its separate per-tap
+path is gone. New shared case CM25 (the overlay holds each tap and the average), which the old web fails. Mutations
+caught: Swift comparison not standing detection down CM9, Python Clear not returning to live CM6, web per-tap taps
+kept CM15.
+
+**Batch B complete** — Swift `d7389de`, Python `8527a21`, web `eeaf68e`.
+
+#### Batch C
+
+Survey and decisions (owner, 2026-10-16). Survey (three readers, every edition): The items below are in the order they
+are built; each item's survey finding and decision come first, then what was done.
+
+##### C1 — tap-decisions
+
+**Survey and decision.** tap-decisions was in no batch: the same cases in all three, on the audio clock; Swift's noise-floor seed sets the
+level by hand where the others feed audio; Swift's 50 ms wait for the frequency bins waits for nothing since the bins
+decision. Decided: shared in batch C; the 50 ms wait removed; Python's pipeline-delivery class (Qt signal connections,
+a risk the others' single-assignment callbacks do not have) stays Python's own, so noted in the case file.
+
+**Done.** done (batch C item 1, 2026-10-16): `tap-decisions.json` T1–T14 (T1e and T6 each split into the two analyzers they
+compared; the settle, seed, confirmation and resume cases numbered T9–T14) and the onset alignment O1–O3, through the
+shared steps in all three; `confirmChunks` checked against each edition's constant. `tooling/analyzer-steps` gains
+`newTapSkippingWarmUp`, and `audioChunks` feeds exactly n chunks (it had gone through the seconds, where rounding
+could add one). Found and decided (owner, 2026-10-16: (A)): Swift seeded a new sequence's noise floor, and re-anchored
+the latch on Accept, Redo and the phase restarts, from the level meter's value (`fftAnalyzer.level.inputLevelDB`, set
+a buffer at a time on the main thread), where Python and the web use the level of the chunk the analyzer last received
+— Swift now reads its own `lastChunkLevelDB`, as its resume and re-arm already did, so a fed chunk seeds it as in the
+others. Swift's 50 ms wait for the frequency bins is gone with its runner. T7's value is the EMA's (−55.38; Swift's
+old comment said ≈ −57.4, its check only > −58). Python's pipeline-delivery class stays its own, so noted in the case
+file. Mutations caught: Swift seeding from the meter T11; Python with no hysteresis margin T1f, T5; web confirming on
+one chunk T12, T13 and the constant.
+
+##### C2 — start-tap-race retired; S2 and S5
+
+**Survey and decision.** start-tap-race R1 guards the deferred start Swift removed in `df17a48` (Python and the web never had one) and tests
+nothing; R2–R4 repeat S1–S3; R5 (pause, then Cancel) is its own. S2's hand-set idle is reachable by no real path.
+Decided: start-tap-race retired, R5 moved into scenario-trace; S2 reaches its state through a real detection (warm-up,
+audio above the threshold), as AT1/AT5; the stale comments on the deferred start fixed.
+
+**Done.** (batch C item 2, 2026-10-16): the three start-tap-race files are gone (R1 guarded the deferred start removed in
+`df17a48`; R2–R4 repeated S1–S3) and the web's tag no longer names the slug. `scenario-trace.json` S2 now reaches its
+state through a real detection — warm-up, two loud chunks — and records it (postWarmUp, postDetect), where it had set
+the detection state idle by hand; the `strayDetection` step is gone from the three runners. S5 is R5: Cancel from a
+paused sequence starts a fresh one listening — reached through a real tap and re-arm, where R5 had set the tap count
+by hand. The comments that still described a deferred start (Swift's and Python's same-value guard on the detection
+state, Python's per-sequence clear) now describe what the code does. Mutations caught: a detection not standing
+detection down S2 (Swift, Python); web Cancel leaving a paused sequence paused S5. Found by the full suite after this:
+Python's self-regression playback (`tests/parity_runner.py`) left the measurement type it set, which the
+start-tap-race file's set-up had been resetting before the state-notification cases ran; it now puts the type back
+with Measure FLC.
+
+##### C3 — The status settle (two writes)
+
+**Survey and decision.** "Two writes settle" has no timer in any edition — the writes are synchronous; the case pins that, once the main queue
+drains, no further status writes come (the bouncing-sink regression). Decided: a shared drain-the-main-queue step and
+a status-writes check; Swift's status runner becomes async; no production change.
+
+**Done.** (batch C item 3, 2026-10-16): `status-message.json` SM24 — arming straight after the analyzer is made, the status
+settles on the prompt and stays — through two status-runner steps, `drainMainQueue` (ten passes, each waiting for
+everything queued on the main thread before it: Swift a main-queue continuation, Python `processEvents`, the web a
+zero timeout — no time passes) and `countStatusWrites`, and the field 'statusWrites' (Swift's status publisher,
+Python's `statusMessageChanged`, the web's change notifications, its one signal); Swift's status runner is async; the
+three hand-written cases and their 50 ms waits are gone. No production change. Mutations: a status that keeps
+re-queuing itself — Swift a sink writing it back through the main queue, Python and the web a status alternating
+between two values — fails SM24 in each; a single queued write does not (the first drain absorbs it: the case is about
+settling, and a write that settles is not the regression).
+
+##### C4 — frozen-peak-recalc
+
+**Survey and decision.** frozen-peak-recalc: PR12, 15, 16, 18, 19, 27, 28, 29, 32 mean different things across the editions, four spectrum
+generators, state set by hand; the web's recalc re-classifies every peak where Swift carries each peak's mode forward
+(±5 Hz), and has no non-guitar branch. Decided: the web's recalc aligned with Swift; one `frozen-peak-recalc.json`
+under Swift's ids and meanings, spectra from the shared `gaussians`/`flat` spec of `peaks.json`, through real entry
+points; the editions' own checks that test something real kept as new ids.
+
+**Done.** (batch C item 4, 2026-10-16): `frozen-peak-recalc.json` — 44 cases under Swift's ids and meanings plus PR38 (a tap
+entry's modes, a function case) — through the app's paths only: each frozen measurement is a .guitartap document the
+runner writes from a spectrum spec (the `gaussians`/`flat` spec of `peaks.json`; the web's builder moved to
+`test/spectrumSpec.ts`) and its saved peaks, selection, names, label positions and per-tap entries, read with the
+edition's own reader and loaded; then Re-analyze, Peak Min, select, name, drag, a live frame, captures, Save, load and
+Redo. Peaks are named by frequency. Guitar cases sit inside the default 75–350 Hz analysis range (400 Hz became 330,
+PR12's 1000 Hz became 250). New ids for the editions' own real checks: PR47 (a live frame selects every peak, the
+web's), PR49 (New Tap on material clears its label positions, the web's); the web's per-tap floor case was not carried
+over. Found and decided (owner, 2026-10-16: (A), twice): the recalc's only caller is Re-analyze, which first clears
+the hand-modified flag, the selected-frequency cache and the modes, and is never offered for material — so its
+carry-forward of a hand-made selection, its carry-forward of modes and its material branch could not run; and its
+loading guard and complete/spectrum guard could not fire (a load never reaches Re-analyze; Re-analyze checks the same
+condition first). All removed in all three — Re-analyze classifies afresh, auto-selects and carries label positions
+and names ±5 Hz — and PR05, PR10, PR11, PR26, PR27 retired; the web's recalc had re-classified where Swift carried
+modes (the difference is gone with the branch). The comments describing the old carry-forward now say what the code
+does. Raised and decided (owner, 2026-10-16): the file's `selectedPeakFrequencies` is no longer read by GuitarTap, and
+stays — it is written for programs a user might write that read a .guitartap file without the selection algorithm; now
+documented as such in Appendix B of the manual and at each edition's field (Appendix B's `userModifiedSelection` row
+also corrected: it decides whether Reset to automatic selection is offered). Swift's live-frame analysis acts only
+while its engine reports running, Python's and the web's had no such check — now all three check (Python
+`mic.is_stopped`, the web its device's `running`); no app path delivers a frame without a running engine, so no case
+pins it. Mutations caught: Swift not carrying label positions PR12, PR19, PR20, PR21; Python keeping a stale selection
+on Re-analyze PR28; web not carrying names PR19, PR23, PR24.
+
+**Batch C items 1–4 complete** (run-review passed, owner, 2026-10-16; steps under "Step 11 batch C (items 1–4)
+run-review" below) — Swift `8b1989a`, Python `1e42d3e`, web `63b33b5`; found in the run-review and fixed separately:
+Python's table reading names from the analyzer `ca4b7fb`, the web's Safari microphone fix `60571e6`.
+
+##### C5 — web engine and auto-start; Python start()
+
+**Survey and decision.** Found: the web's auto-start at engine start has no guard, where Swift starts only when idle (not detecting, not
+complete, not paused, no taps). Decided: check whether it can discard a completed or loaded measurement, then align
+with Swift.
+
+**Found and decided (owner, 2026-10-16).** The web's auto-start at engine start is unguarded: the hook starts a sequence the moment the engine's start resolves —
+at launch and on Retry microphone — so a measurement loaded while the mic had failed, or while the browser's
+permission prompt was up, is replaced by a new sequence. Swift's and Python's analyzer start it one pass later, only
+when not detecting, not complete, not paused and with no taps. Decided: make the web architecturally the same as Swift
+and Python, all three layers: (1) start — an analyzer start() that starts the engine, anchors the warm-up and, one
+pass later, makes the guarded auto-start; the hook calls it and keeps the alerts and Retry; (2) wiring — the analyzer
+subscribes to its engine (chunks, frames, dead input, device changes, with the device-change timer moved into the
+analyzer as it is), the engine's single callbacks object becoming subscriptions, and the hook subscribes only to what
+it displays (live spectrum, metrics, device list, the could-not-open alert); (3) engine lifetime — one engine created
+with the analyzer and kept for its life, Retry restarting the same engine, and the remount race handled in the engine
+(a start while one is in flight joins it; a stop records that it should not be running). The guarded auto-start
+becomes its own model method in all three (Swift's closure split out of start(); Python already has
+_auto_start_tap_sequence; the web's new), and the shared cases call it — the engine's hardware start stays untested in
+all three alike (a test that only the web's headless engine could run would itself be a divergence). Python's
+start(parent_widget), which does view wiring and loads the saved measurements where Swift's starts the engine, is
+brought to Swift's shape (owner). Proposed, to confirm: the engine's own config (tapDetectionThreshold, numberOfTaps),
+written by App's setConfig and never read, removed.
+
+**Design (for review, 2026-10-16).** Swift's shape, which the other two take: `init(fftAnalyzer:)` keeps the
+engine for the analyzer's life, loads the saved measurements and sets up the subscriptions to the engine; the view
+calls `start()`, which starts the engine, anchors the warm-up and, one main-queue pass later, makes the guarded
+auto-start; the view keeps the start's error alerts and the retry.
+
+1. **The guarded auto-start, one method in all three.** Swift: the closure in `start()` becomes
+   `autoStartTapSequence()` (only when not detecting, not complete, not paused and no taps → `requestStartTapSequence()`),
+   which `start()` calls one main-queue pass later. Python: `_auto_start_tap_sequence` renamed
+   `auto_start_tap_sequence`. Web: a new `autoStartTapSequence()` with the same guard.
+2. **Shared cases** in `scenario-trace.json`, through a new step `{"engineStarted": true}` that calls that method —
+   what the engine coming up does, without hardware in any edition: S6 nothing on screen → a sequence starts; S7 a
+   loaded measurement → it stays; S8 a paused sequence → it stays paused; S9 a sequence with a tap taken → it carries
+   on. The web fails S7 today.
+3. **Web, layer 1 — start.** An async `analyzer.start()`: start the engine, anchor the warm-up, then one pass later
+   (`setTimeout(0)`, as Python's main-loop pass) the guarded auto-start; a failure is thrown to the hook, which shows
+   the permission or engine alert as now. `armForCurrentType` and `onStarted` go.
+4. **Web, layer 2 — wiring.** The engine's callbacks object becomes subscriptions (`engine.onAudioFrame(fn)` and the
+   like, each returning an unsubscribe, the pattern `level.onClipping` already uses). The analyzer subscribes when it
+   is given its engine: each chunk → `processAudioFrame`, each frame → `onFftFrame`, dead input →
+   `setInputAppearsDead`, an input change → `handleDeviceChange`, its 3 s timer moved from the hook into the analyzer
+   as it is (C7 then moves it onto the audio clock in all three). The hook subscribes only to what it displays: the
+   live spectrum, the metrics, the device list, the could-not-open alert. The tests that pass callbacks to the engine
+   (file-playback, audio-clock-timers) subscribe instead.
+5. **Web, layer 3 — one engine.** `useTapToneAnalyzer` creates the analyzer with its engine, once; `engineRef` goes
+   (App reads the analyzer's engine where it needs one). Retry calls `analyzer.start()` again on the same engine. The
+   engine's `start()` joins a start already in flight, and its `stop()` during a start records that it should not be
+   running, which the start checks after each step — so React's remount (mount, unmount, remount) leaves one engine
+   running, by the engine's own rule, and the hook's orphaned-engine check goes.
+6. **Python, start() in Swift's shape.** `start()` starts the engine — the stream (`mic.start()`, now in FftCanvas's
+   constructor) and the processing thread (`proc_thread.start()`, now in FftCanvas `start_analyzer`) — anchors the
+   warm-up and schedules the guarded auto-start; a start failure is raised to the canvas, which reports it as now.
+   The saved measurements are loaded when the analyzer is made, as Swift's `init` does. The Qt parenting and the
+   hot-plug wiring, which need the parent widget and which Swift has no counterpart of, stay a Python-only step the
+   canvas calls first, named for what it does (`attach_to_view(parent_widget)`). FftCanvas's restart of a thread
+   that has died, and its start of the thread for a file playback, go through `analyzer.start()`.
+7. The web engine's own config (`tapDetectionThreshold`, `numberOfTaps`), written by App's `setConfig` and never
+   read, removed with its two calls.
+
+Approved (owner, 2026-10-16): the design; item 6's Python-only `attach_to_view` step ("if we have to have a parent
+then we have to have a parent"); item 7 ("dead code should be removed").
+
+Tests: each layer's own suites, the new S6–S9 with mutations, then the full suites; run-review of launch, Retry
+microphone after a load, a remount (web dev build), file playback, and a device change, in all three.
+
+**Done, steps 1–2 (2026-10-16; Swift 2c4f638, Python f1d29c1, web 37df25c).** The guarded auto-start is one method in all three: Swift's closure in start() split out as autoStartTapSequence(),
+called one main-queue pass later as before; Python's renamed auto_start_tap_sequence(); the web's
+autoStartTapSequence() new (the hook still calls requestStartTapSequence() until step 3). tooling/analyzer-steps gains
+engineStarted (that method) and loadFixture, moved from the frozen-peak runners, which now reach it through the shared
+steps. scenario-trace.json S6–S9: nothing under way → a sequence starts; a loaded measurement (the Contreras fixture —
+a load leaves no taps counted, so only the complete check protects it) → it stays; paused before any tap → it stays
+paused; a tap taken → it carries on. Mutations: Swift without the complete check S7; Python without the paused check
+S8; the web without the taps check S9 — each guard condition pinned by its own case (the first S7/S8, a finished
+measurement and a pause after a tap, were also held by the taps check, and were changed when the Swift and Python
+mutants passed).
+
+**Done, steps 3–5 — the web (2026-10-16; web 37df25c).** The engine's callbacks object is gone: each event is a subscription (onAudioFrame, onSpectrum, onMetrics,
+onDeviceStateChanged, onInputChanged, onInputOpenFailed, onInputAppearsDead), returning its removal. The analyzer is
+created with its engine (useTapToneAnalyzer: new TapToneAnalyzer(new RealtimeFFTAnalyzer()); tests attach a headless
+one with setDevice) and, when given it, subscribes to each chunk, each frame, a dead input, clipping and an input
+change; the 3 s device-change settle moved from the hook into the analyzer as it was. analyzer.start() starts the
+engine, anchors the warm-up and, one pass later, makes the guarded auto-start; analyzer.stop() stops it. The hook
+shows what the engine reports — the level, live spectrum, metrics, devices, the could-not-open alert — starts the
+analyzer when the app comes up and stops it when it goes, and reports a failed start; Retry starts the same engine
+again. App's engineRef, armForCurrentType, onStarted and tapThresholdRef are gone. The engine's start joins a start in
+flight, and a stop during a start ends it at its next step (each await in the start checks), so React's remount leaves
+one input — the hook's orphaned-engine check is gone. The engine's dead config (tapDetectionThreshold, numberOfTaps)
+and App's two setConfig calls are removed. Tests: the engines the tests built with callbacks now subscribe or are
+attached; status-message's fake engine (stubs of methods the engine no longer has) is a real headless one; new
+web-only engine-start.test.ts (a second start joins; a stop during a start leaves no input; start-stop-start leaves
+one) — mutations: no join fails the join and remount cases, a stop that tears down at once fails the remount case.
+Full web suite 1262 + 3 new pass; typecheck and lint clean.
+
+**Done, step 6 — Python (2026-10-16; Python f1d29c1).** start(parent_widget) is split as Swift's shape asks: attach_to_view(parent_widget) — the Qt parenting, the hot-plug
+wiring and the calibration's device name, which need the widget and have no Swift counterpart (owner: if we have to
+have a parent, we have to have a parent) — called by FftCanvas after construction; load_persisted_measurements(),
+called from __init__ as Swift's init calls loadPersistedMeasurements() (the healed-library save with it); and start(),
+which starts the engine — the processing thread, then the input stream, each only if not running, so a file can still
+play when no input opens — anchors the warm-up and schedules the guarded auto-start, raising a stream failure as
+Swift's start() throws. FftCanvas no longer opens the stream in its constructor; its start_analyzer() — at startup,
+for a file's first playback, and for a thread that has died — calls analyzer.start() and records a failure in
+engine_start_error, which the window reports as before. The test engine's stream start does nothing (a test instance
+has no stream, as its restart, close and watchdog already say): without it, the pipeline test that calls
+start_analyzer opened the real microphone, and one such run crashed in PortAudio's callback at exit. Full Python suite
+1348 passed, 1 skipped.
+
+##### C6 — no-audio safety timeout
+
+**Survey and decision.** The no-audio safety timeout is the same in all three, on the wall clock by design, its tests sleeping. Decided: the
+analyzer takes a clock it reads now from and schedules on (the real one in the app, a manual one in tests); a shared
+step stalls it.
+
+##### C7 — device-change settle
+
+**Survey and decision.** the settle after a device change differs — the timer is in the analyzer in Swift and Python and in a React hook on the
+web; Swift and Python stand the detector down on a change and re-arm it after the settle, the web never touches the
+detection state; Swift waits 3 s and then for the next FFT frame, Python restores after 3 s; the web merges repeated
+changes into one restore, the natives schedule one per change. Decided: the web stands the detector down and re-arms
+as Swift; the timer moves into the analyzer in all three and the settle runs on the audio clock (3 s of audio, then
+the next frame), driven in tests by `advance`; raised, to be looked at: whether one restore per change can cut a later
+change's settle short.
+
+### Step 12 — parity links
+
+**Finding (owner, 2026-10-16: "We are doing a slug sweep to clean up problems in the slugs and testing and we make it
+worse").** A test slug is linked to the code it tests only by that code's `@parity <group> tests=…` annotation, and
+the generator's check ("every testable impl group has test evidence") never asked the reverse. Counted 2026-10-16:
+
+- **16 shared test slugs listed by no production group** — nine created in steps 10–11 (`audio-clock-timers`,
+  `comparison`, `display-range`, `effective-peak-id`, `import-persistence`, `measurement-load`,
+  `peak-selection-persistence`, `session-pre-roll`, `tap-count-change`) and seven older (`field-precision`,
+  `measurement-codable`, `measurement-type-name`, `mic-selection`, `peak-heal`, `self-regression`, `uuid-case`).
+- **46 model files in no group** — Swift 18 of 43, Python 17 of 44, the web 11 of 30 — among them the whole load,
+  save and comparison code (`+MeasurementManagement`, `tap_tone_analyzer_measurement_management`, `decode.ts`,
+  `encode.ts`).
+
+Decided (owner, 2026-10-16), in order:
+
+| # | item | status |
+|---|---|---|
+| 12.1 | `gen_parity_map.py` fails (and CI with it) when a test slug is listed by no production group, or a model / state / audio / measurement file is in no group and not marked `@parity none` with a reason | to do |
+| 12.2 | A table for the owner's approval: each of the 16 slugs → the groups whose code it is about (what it tests, not everything it calls); each of the 46 files → its group, a new group (e.g. `model/measurement-management`), or `@parity none` with a reason. Then the annotations, and the generator passing | to do |
+| 12.3 | Working rule: a new or moved shared test slug gets its `tests=` link on the code it tests in the same change | done (memory) |
+
 **Step 11 batch B run-review.** The clipping warning, Dump Capture Audio, the per-tap overlay and reading a saved
 comparison changed in the models, and the views that show them are not covered by the tests, so batch B is
 run-reviewed before the commit. Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
@@ -7629,6 +8101,47 @@ whenever it stops while in use — at once where the browser allows, else on the
 change; (B) the three browser dialogs are in-page: the custom label (`CustomLabelDialog`, Swift's
 CustomModeLabelPopover), Delete Measurement? and Delete All Measurements? (`AlertModal`, Swift's titles and
 messages), in the theme's colours. Not unit-tested (no AudioContext in the test environment); steps 5–7.
+
+**Step 11 C5 run-review.** The engine's start changed in all three (the web's and Python's start-up rebuilt, Swift's
+auto-start split into a method), and the views that start it are not covered by the tests. Launch: Xcode scheme
+`guitar_tap` · `.venv/bin/python -m guitar_tap` · web `npm run build && npm run preview`, then clear the service
+worker after the build (F30's run-review steps). Same list per edition, Swift first; (P) / (W) marks a step for
+Python or the web only.
+
+1. Launch. → The guitar prompt appears, the level meter moves, and a tap is detected.
+2. Load a saved measurement, then press New Tap and tap. → The loaded measurement shows until New Tap; the tap is
+   detected.
+3. (W) With the microphone blocked for the site, reload; then allow it and press Retry microphone. → The alert,
+   then a working microphone after Retry, with no reload.
+4. (W) Load a measurement while the microphone alert is showing, then press Retry microphone. → The loaded
+   measurement stays on screen. **n/a (owner, 2026-10-16):** not reachable by hand — the alert covers the page,
+   a click outside it dismisses it, and Retry is only on the alert; a measurement on screen when the engine's start
+   completes is pinned by the shared case S7 in all three.
+5. (P) Play File before tapping anything, then press New Tap and tap. → The file plays and analyses; afterwards
+   the microphone works.
+6. Plug in or unplug a microphone. → "Audio device changed - reinitializing…", then the prompt; a tap is detected.
+7. (W) In the dev build (`npm run dev`). → The console shows one `🎤 Starting` (passed, owner, 2026-10-16).
+
+**Run-review progress.** Web, step 2 (owner, 2026-10-16): after Load then New Tap, the loaded measurement's peak dots stayed until the first
+live frame. The web's New Tap (startTapSequence → clearResult) cleared the frozen spectrum, selection, names and label
+positions but not the peaks and their modes, where Swift's and Python's startTapSequence clear them at once (allPeaks
+= [], identifiedModes = []) — not from C5; the first run-review to load then press New Tap. Fixed (owner): the web's
+startTapSequence clears the peaks and modes and refreshes the display at the same point. New shared case PR51 (a
+loaded fixture, New Tap → no peaks); mutation: the web without the clear fails it. The tap-tone-analyzer group's tests
+now name frozen-peak-recalc. Step 2 to be re-run on the web.
+
+| step | Swift | Python | web |
+|---|---|---|---|
+| 1–2, 6 | ✅ (2026-10-16) | ✅ (2026-10-16) | ✅ (2026-10-16; step 2 after the New Tap fix) |
+| 3, 7 | n/a | n/a | ✅ (2026-10-16) |
+| 4 | n/a | n/a | n/a — not reachable by hand (above) |
+| 5 | n/a | ✅ (2026-10-16) | n/a |
+
+All three editions passed (owner, 2026-10-16). **Run-review complete.** Also checked (owner): choosing a
+microphone in the app's own Settings still changes the microphone, in all three. Whether it restarts an engine whose
+start failed — the recovery the "Audio Engine Error" message names — is not verified: there is no known way to make
+the start fail by hand in Swift or Python. The web alone also has Retry on its alerts (a page cannot open the
+browser's settings, where Swift's permission alert opens System Settings).
 
 ## Expect production defects, not just test cleanup
 

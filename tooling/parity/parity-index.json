@@ -536,6 +536,7 @@
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
+        "test/frozen-peak-recalc",
         "test/measurement-complete",
         "test/scenario-trace",
         "test/state-invariants"
@@ -1989,6 +1990,10 @@
     {
       "repo": "web",
       "path": "test/drawn-points.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/engine-start.test.ts"
     },
     {
       "repo": "web",

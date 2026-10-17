@@ -182,5 +182,6 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `test/capture-audio.test.ts` | web |
 | `test/chart-zoom-limits.test.ts` | web |
 | `test/drawn-points.test.ts` | web |
+| `test/engine-start.test.ts` | web |
 | `test/menu-placement.test.ts` | web |
 | `test/png-pixels-per-inch.test.ts` | web |
