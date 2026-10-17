@@ -19,7 +19,9 @@ Because paths are *discovered* by grouping (never restated in the tags), the
 copies of a mapping can never disagree, and a canonical-side rename can't
 leave a stale path — the only failure mode is a slug that lands in exactly one
 repo (a typo, or something that should be `@parity none`), which `--check`
-reports.
+reports. `--check` also asks the reverse: a test group that no code group names in its `tests=` (a test
+linked to nothing it tests), and a file in an edition's code directories (platforms.py `code_dirs`) with no
+tag at all (code in no group, and not marked `@parity none`).
 
 Usage:
     .venv/bin/python tooling/parity/gen_parity_map.py            # regenerate PARITY-MAP.md + parity-index.json
@@ -193,6 +195,13 @@ def build_index(all_tags: list[Tag]) -> tuple[list[dict], list[dict], list[dict]
         for slug in sorted(groups)
     ]
     compute_equivalence(group_list, problems)
+
+    # Unlinked test group: a test slug that no code group names in its tests=, so nothing says what it tests.
+    linked = {t for g in group_list if not g["slug"].startswith("test/") for t in g["tests"]}
+    for g in group_list:
+        if g["slug"].startswith("test/") and g["slug"] not in linked:
+            anchor = next((g[p][0] for p in PLATFORMS if g[p]), "?")
+            problems.append({"kind": "unlinked-test-slug", "slug": g["slug"], "path": anchor})
     platform_specific.sort(key=lambda e: (e["repo"], e["path"]))
     return group_list, platform_specific, problems
 
@@ -284,11 +293,31 @@ def render_json(groups: list[dict], platform_specific: list[dict]) -> str:
 
 
 # ── Commands ─────────────────────────────────────────────────────────────────
+def ungrouped_files(all_tags: list[Tag]) -> list[dict]:
+    """Files in an edition's code directories that carry no `@parity` tag: in no group and not `@parity none`."""
+    tagged = {(t.repo, t.relpath) for t in all_tags}
+    problems: list[dict] = []
+    for repo, root in REPOS.items():
+        plat = platforms.BY_KEY[repo]
+        for d in plat.code_dirs:
+            for dirpath, dirnames, filenames in os.walk(root / d):
+                dirnames[:] = [x for x in dirnames if x not in SKIP_DIRS and not x.startswith(".")]
+                for name in sorted(filenames):
+                    if Path(name).suffix not in plat.exts or name == "__init__.py" or name.endswith(".d.ts"):
+                        continue
+                    rel = (Path(dirpath) / name).relative_to(root).as_posix()
+                    if (repo, rel) not in tagged:
+                        problems.append({"kind": "ungrouped-file", "repo": repo, "path": rel})
+    return problems
+
+
 def collect() -> tuple[list[dict], list[dict], list[dict]]:
     all_tags: list[Tag] = []
     for repo, root in REPOS.items():
         all_tags.extend(scan_repo(repo, root))
-    return build_index(all_tags)
+    groups, platform_specific, problems = build_index(all_tags)
+    problems.extend(ungrouped_files(all_tags))
+    return groups, platform_specific, problems
 
 
 def print_problems(problems: list[dict]) -> None:
@@ -302,6 +331,12 @@ def print_problems(problems: list[dict]) -> None:
         elif p["kind"] == "bad-tests-ref":
             print(f"  BAD tests=  `{p['slug']}` links to `{p['ref']}`, which is not an "
                   f"existing test/* group", file=sys.stderr)
+        elif p["kind"] == "unlinked-test-slug":
+            print(f"  UNLINKED  `{p['slug']}` ({p['path']}) is in no code group's tests= — add it to "
+                  f"the group of the code it tests", file=sys.stderr)
+        elif p["kind"] == "ungrouped-file":
+            print(f"  UNGROUPED  {p['repo']}:{p['path']} has no @parity tag — put it in a group, or "
+                  f"`@parity none` with the reason", file=sys.stderr)
 
 
 # Impl areas expected to carry test evidence; view/* is UI (review-only by design).

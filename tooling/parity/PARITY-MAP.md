@@ -19,40 +19,50 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 
 | slug | Swift | Python | Web | Equivalence |
 |---|---|---|---|---|
+| `audio/buffer-watchdog` | `GuitarTap/Models/RealtimeFFTAnalyzer+Watchdog.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
+| `audio/device-management` | `GuitarTap/Models/AVAudioDevice.swift`<br>`GuitarTap/Models/RealtimeFFTAnalyzer+DeviceManagement.swift` | `src/guitar_tap/models/audio_device.py`<br>`src/guitar_tap/models/realtime_fft_analyzer_device_management.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
+| `audio/engine-control` | `GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/realtime-analyzer` | `GuitarTap/Models/RealtimeFFTAnalyzer.swift` | `src/guitar_tap/models/realtime_fft_analyzer.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/tap-analyzer` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dead-input` | `GuitarTap/Models/DeadInput.swift`<br>`GuitarTapTests/DeadInputThresholdTests.swift` | `src/guitar_tap/models/dead_input.py`<br>`tests/test_dead_input_threshold.py` | `src/audio/deadInput.ts`<br>`test/dead-input-threshold.test.ts` | review only |
 | `dsp/analysis-quality` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/dsp/analysisQuality.ts` | tests |
-| `dsp/calibration` | `GuitarTap/Models/MicrophoneCalibration.swift` | `src/guitar_tap/models/microphone_calibration.py` | `src/dsp/calibration.ts` | tests |
+| `dsp/calibration` | `GuitarTap/Models/MicrophoneCalibration.swift` | `src/guitar_tap/models/microphone_calibration.py` | `src/dsp/calibration.ts`<br>`src/measurement/calibrationStore.ts` | tests |
 | `dsp/decay` | `GuitarTap/Models/TapToneAnalyzer+DecayTracking.swift` | `src/guitar_tap/models/tap_tone_analyzer_decay_tracking.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/fft` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py` | `src/dsp/fft.ts` | tests |
 | `dsp/find-peaks` | `GuitarTap/Models/ResonantPeak.swift` | `src/guitar_tap/models/resonant_peak.py` | `src/measurement/types.ts` | tests |
 | `dsp/gated-capture` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/gated-fft` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/state/tapToneAnalyzer.ts` | tests |
-| `dsp/guitar-fft` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
-| `dsp/guitar-modes` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/guitarModes.ts` | tests |
+| `dsp/guitar-fft` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py` | `src/audio/realtimeFFTAnalyzer.ts`<br>`src/dsp/guitarFFT.ts` | tests |
+| `dsp/guitar-modes` | `GuitarTap/Models/GuitarMode.swift`<br>`GuitarTap/Models/GuitarType.swift` | `src/guitar_tap/models/guitar_mode.py`<br>`src/guitar_tap/models/guitar_type.py` | `src/dsp/guitarModes.ts` | tests |
 | `dsp/material-properties` | `GuitarTap/Models/MaterialProperties.swift` | `src/guitar_tap/models/material_properties.py` | `src/dsp/material.ts` | tests |
 | `dsp/peak-analysis` | `GuitarTap/Models/TapToneAnalyzer+PeakAnalysis.swift` | `src/guitar_tap/models/tap_tone_analyzer_peak_analysis.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/pitch` | `GuitarTap/Models/Pitch.swift` | `src/guitar_tap/models/pitch.py` | `src/dsp/pitch.ts` | tests |
+| `dsp/session-recording` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/audio/sampleBuffer.ts`<br>`src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/spectrum-average` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/wav` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/dsp/wav.ts` | tests |
 | `model/appearance` | `GuitarTap/Models/Appearance.swift` | `src/guitar_tap/models/appearance.py` | `src/presentation/appearance.ts` | tests |
 | `model/export-filename` | `GuitarTap/Models/ExportFilename.swift` | `src/guitar_tap/models/export_filename.py` | `src/measurement/exportFilename.ts` | tests |
 | `model/guitar-mode-classify` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/classify.ts`<br>`src/presentation/modeColors.ts` | tests |
 | `model/input-level` | `GuitarTap/Models/InputLevel.swift` | `src/guitar_tap/models/input_level.py` | `src/audio/inputLevel.ts` | tests |
-| `model/material-measurement-inputs` | `GuitarTap/Models/MaterialMeasurementInputs.swift` | `src/guitar_tap/models/material_measurement_inputs.py` | `src/measurement/materialMeasurementInputs.ts` | tests |
+| `model/material-measurement-inputs` | `GuitarTap/Models/MaterialMeasurementInputs.swift`<br>`GuitarTap/Models/PlateStiffnessPreset.swift` | `src/guitar_tap/models/material_measurement_inputs.py`<br>`src/guitar_tap/models/plate_stiffness_preset.py` | `src/measurement/materialMeasurementInputs.ts` | tests |
 | `model/material-selection` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts` | tests |
 | `model/measurement-amend` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/amend.ts` | tests |
+| `model/measurement-codable` | `GuitarTap/Models/SpectrumSnapshot.swift`<br>`GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/spectrum_snapshot.py`<br>`src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/base64.ts`<br>`src/measurement/decode.ts`<br>`src/measurement/encode.ts`<br>`src/measurement/floatJson.ts` | tests |
+| `model/measurement-management` | `GuitarTap/Models/TapToneAnalyzer+MeasurementManagement.swift` | `src/guitar_tap/models/tap_tone_analyzer_measurement_management.py` | `src/measurement/store.ts`<br>`src/state/tapToneAnalyzer.ts` | tests |
 | `model/measurement-name` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/measurementName.ts` | tests |
+| `model/measurement-type` | `GuitarTap/Models/MeasurementType.swift`<br>`GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/measurement_type.py`<br>`src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts`<br>`src/settings.ts` | tests |
 | `model/wav-dump-folder` | `GuitarTap/Models/WavDumpFolder.swift` | `src/guitar_tap/models/wav_dump_folder.py` | — | tests |
 | `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
-| `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | review only |
-| `state/button-enablement` | `GuitarTap/Models/ButtonEnablement.swift` | `src/guitar_tap/models/button_enablement.py` | `src/state/buttonEnablement.ts` | tests |
+| `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | tests |
+| `state/annotation-management` | `GuitarTap/Models/TapToneAnalyzer+AnnotationManagement.swift` | `src/guitar_tap/models/tap_tone_analyzer_annotation_management.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/button-enablement` | `GuitarTap/Models/AnalysisDisplayMode.swift`<br>`GuitarTap/Models/ButtonEnablement.swift` | `src/guitar_tap/models/analysis_display_mode.py`<br>`src/guitar_tap/models/button_enablement.py` | `src/state/buttonEnablement.ts` | tests |
+| `state/mode-lookup` | `GuitarTap/Models/TapToneAnalyzer+AnalysisHelpers.swift` | `src/guitar_tap/models/tap_tone_analyzer_analysis_helpers.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/mode-overrides` | `GuitarTap/Models/TapToneAnalyzer+ModeOverrideManagement.swift`<br>`GuitarTap/Models/UserAssignedMode.swift` | `src/guitar_tap/models/tap_tone_analyzer_mode_override_management.py`<br>`src/guitar_tap/models/user_assigned_mode.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts`<br>`src/settingsStore.ts` | tests |
 | `state/status-message` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-detection` | `GuitarTap/Models/TapToneAnalyzer+TapDetection.swift` | `src/guitar_tap/models/tap_tone_analyzer_tap_detection.py` | `src/state/tapToneAnalyzer.ts` | tests |
-| `state/tap-tone-analyzer` | `GuitarTap/Models/TapToneAnalyzer+Control.swift` | `src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
-| `state/visible-peaks` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/tap-tone-analyzer` | `GuitarTap/Models/DetectionState.swift`<br>`GuitarTap/Models/MaterialTapPhase.swift`<br>`GuitarTap/Models/TapToneAnalyzer+Control.swift` | `src/guitar_tap/models/detection_state.py`<br>`src/guitar_tap/models/material_tap_phase.py`<br>`src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/visible-peaks` | `GuitarTap/Models/AnnotationVisibilityMode.swift`<br>`GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/annotation_visibility_mode.py`<br>`src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `test/analysis-quality` | `GuitarTapTests/AnalysisQualityTests.swift` | `tests/test_analysis_quality.py` | `test/analysis-quality.test.ts` | test suite |
 | `test/annotation-state` | `GuitarTapTests/AnnotationStateTests.swift` | `tests/test_annotation_state.py` | `test/annotation-state.test.ts` | test suite |
 | `test/audio-clock-timers` | `GuitarTapTests/AudioClockTimerTests.swift` | `tests/test_audio_clock_timers.py` | `test/audio-clock-timers.test.ts` | test suite |
@@ -117,7 +127,9 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `tooling/parity-runner` | — | `tests/parity_runner.py` | `test/parityRunner.ts` | review only |
 | `tooling/self-baseline` | — | `tests/self_baseline.py` | `test/selfBaseline.ts` | review only |
 | `tooling/synthetic-tap` | `GuitarTapTests/SyntheticTap.swift` | `tests/synthetic_tap.py` | `test/syntheticTap.ts` | review only |
-| `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | review only |
+| `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | tests |
+| `util/new-id` | — | `src/guitar_tap/utilities/new_uuid.py` | `src/measurement/newId.ts` | tests |
+| `util/test-sandbox` | `GuitarTap/Models/TestSandbox.swift` | `src/guitar_tap/models/settings_scope.py` | — | review only |
 | `util/timing-activity` | `GuitarTap/Utilities/TimingActivity.swift` | `src/guitar_tap/utilities/timing_activity.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |
 | `view/axis-ticks` | `GuitarTap/Views/Utilities/AxixTickGenerator.swift` | `src/guitar_tap/views/utilities/axis_tick_generator.py` | `src/presentation/axisTicks.ts` | tests |
@@ -177,6 +189,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `src/components/ReleaseNotes.tsx` | web |
 | `src/hooks/useScheme.ts` | web |
 | `src/measurement/dumpWav.ts` | web |
+| `src/measurement/index.ts` | web |
 | `src/presentation/chartLimits.ts` | web |
 | `src/presentation/pngPixelsPerInch.ts` | web |
 | `test/capture-audio.test.ts` | web |

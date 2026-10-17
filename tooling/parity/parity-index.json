@@ -1,6 +1,54 @@
 {
   "groups": [
     {
+      "slug": "audio/buffer-watchdog",
+      "swift": [
+        "GuitarTap/Models/RealtimeFFTAnalyzer+Watchdog.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/realtime_fft_analyzer_engine_control.py"
+      ],
+      "web": [
+        "src/audio/realtimeFFTAnalyzer.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "audio/device-management",
+      "swift": [
+        "GuitarTap/Models/AVAudioDevice.swift",
+        "GuitarTap/Models/RealtimeFFTAnalyzer+DeviceManagement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/audio_device.py",
+        "src/guitar_tap/models/realtime_fft_analyzer_device_management.py"
+      ],
+      "web": [
+        "src/audio/realtimeFFTAnalyzer.ts"
+      ],
+      "tests": [
+        "test/mic-selection"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "audio/engine-control",
+      "swift": [
+        "GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/realtime_fft_analyzer_engine_control.py"
+      ],
+      "web": [
+        "src/audio/realtimeFFTAnalyzer.ts"
+      ],
+      "tests": [
+        "test/file-playback"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "audio/realtime-analyzer",
       "swift": [
         "GuitarTap/Models/RealtimeFFTAnalyzer.swift"
@@ -13,6 +61,7 @@
       ],
       "tests": [
         "test/file-playback",
+        "test/self-regression",
         "test/tap-decisions"
       ],
       "equivalence": "tests"
@@ -29,6 +78,8 @@
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
+        "test/effective-peak-id",
+        "test/tap-count-change",
         "test/tap-decisions",
         "test/tap-progress"
       ],
@@ -76,11 +127,13 @@
         "src/guitar_tap/models/microphone_calibration.py"
       ],
       "web": [
-        "src/dsp/calibration.ts"
+        "src/dsp/calibration.ts",
+        "src/measurement/calibrationStore.ts"
       ],
       "tests": [
         "test/calibration",
-        "test/file-playback"
+        "test/file-playback",
+        "test/self-regression"
       ],
       "equivalence": "tests"
     },
@@ -114,7 +167,8 @@
       ],
       "tests": [
         "test/file-playback",
-        "test/gated-fft"
+        "test/gated-fft",
+        "test/self-regression"
       ],
       "equivalence": "tests"
     },
@@ -148,6 +202,7 @@
       "tests": [
         "test/file-playback",
         "test/guitar-capture-window",
+        "test/self-regression",
         "test/tap-decisions"
       ],
       "equivalence": "tests"
@@ -177,20 +232,24 @@
         "src/guitar_tap/models/realtime_fft_analyzer_fft_processing.py"
       ],
       "web": [
-        "src/audio/realtimeFFTAnalyzer.ts"
+        "src/audio/realtimeFFTAnalyzer.ts",
+        "src/dsp/guitarFFT.ts"
       ],
       "tests": [
-        "test/file-playback"
+        "test/file-playback",
+        "test/self-regression"
       ],
       "equivalence": "tests"
     },
     {
       "slug": "dsp/guitar-modes",
       "swift": [
-        "GuitarTap/Models/GuitarMode.swift"
+        "GuitarTap/Models/GuitarMode.swift",
+        "GuitarTap/Models/GuitarType.swift"
       ],
       "python": [
-        "src/guitar_tap/models/guitar_mode.py"
+        "src/guitar_tap/models/guitar_mode.py",
+        "src/guitar_tap/models/guitar_type.py"
       ],
       "web": [
         "src/dsp/guitarModes.ts"
@@ -231,6 +290,7 @@
       "tests": [
         "test/dsp",
         "test/frozen-peak-recalc",
+        "test/peak-selection-persistence",
         "test/peaks"
       ],
       "equivalence": "tests"
@@ -248,6 +308,23 @@
       ],
       "tests": [
         "test/pitch"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "dsp/session-recording",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py"
+      ],
+      "web": [
+        "src/audio/sampleBuffer.ts",
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/session-pre-roll"
       ],
       "equivalence": "tests"
     },
@@ -280,6 +357,7 @@
       ],
       "tests": [
         "test/file-playback",
+        "test/self-regression",
         "test/tap-decisions"
       ],
       "equivalence": "tests"
@@ -355,10 +433,12 @@
     {
       "slug": "model/material-measurement-inputs",
       "swift": [
-        "GuitarTap/Models/MaterialMeasurementInputs.swift"
+        "GuitarTap/Models/MaterialMeasurementInputs.swift",
+        "GuitarTap/Models/PlateStiffnessPreset.swift"
       ],
       "python": [
-        "src/guitar_tap/models/material_measurement_inputs.py"
+        "src/guitar_tap/models/material_measurement_inputs.py",
+        "src/guitar_tap/models/plate_stiffness_preset.py"
       ],
       "web": [
         "src/measurement/materialMeasurementInputs.ts"
@@ -401,6 +481,48 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/measurement-codable",
+      "swift": [
+        "GuitarTap/Models/SpectrumSnapshot.swift",
+        "GuitarTap/Models/TapToneMeasurement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/spectrum_snapshot.py",
+        "src/guitar_tap/models/tap_tone_measurement.py"
+      ],
+      "web": [
+        "src/measurement/base64.ts",
+        "src/measurement/decode.ts",
+        "src/measurement/encode.ts",
+        "src/measurement/floatJson.ts"
+      ],
+      "tests": [
+        "test/measurement-codable",
+        "test/peak-heal",
+        "test/peak-selection-persistence"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "model/measurement-management",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer+MeasurementManagement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_measurement_management.py"
+      ],
+      "web": [
+        "src/measurement/store.ts",
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/comparison",
+        "test/import-persistence",
+        "test/measurement-load"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/measurement-name",
       "swift": [
         "GuitarTap/Models/TapToneMeasurement.swift"
@@ -413,6 +535,25 @@
       ],
       "tests": [
         "test/measurement-name"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "model/measurement-type",
+      "swift": [
+        "GuitarTap/Models/MeasurementType.swift",
+        "GuitarTap/Models/TapToneMeasurement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/measurement_type.py",
+        "src/guitar_tap/models/tap_tone_measurement.py"
+      ],
+      "web": [
+        "src/measurement/types.ts",
+        "src/settings.ts"
+      ],
+      "tests": [
+        "test/measurement-type-name"
       ],
       "equivalence": "tests"
     },
@@ -455,15 +596,36 @@
       "web": [
         "src/presentation/displayRange.ts"
       ],
-      "tests": [],
-      "equivalence": "review only"
+      "tests": [
+        "test/display-range"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "state/annotation-management",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer+AnnotationManagement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_annotation_management.py"
+      ],
+      "web": [
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/annotation-state",
+        "test/frozen-peak-recalc"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "state/button-enablement",
       "swift": [
+        "GuitarTap/Models/AnalysisDisplayMode.swift",
         "GuitarTap/Models/ButtonEnablement.swift"
       ],
       "python": [
+        "src/guitar_tap/models/analysis_display_mode.py",
         "src/guitar_tap/models/button_enablement.py"
       ],
       "web": [
@@ -471,6 +633,42 @@
       ],
       "tests": [
         "test/button-enablement"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "state/mode-lookup",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer+AnalysisHelpers.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_analysis_helpers.py"
+      ],
+      "web": [
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/frozen-peak-recalc",
+        "test/measurement-codable"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "state/mode-overrides",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer+ModeOverrideManagement.swift",
+        "GuitarTap/Models/UserAssignedMode.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_mode_override_management.py",
+        "src/guitar_tap/models/user_assigned_mode.py"
+      ],
+      "web": [
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/annotation-state",
+        "test/frozen-peak-recalc"
       ],
       "equivalence": "tests"
     },
@@ -519,6 +717,7 @@
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
+        "test/audio-clock-timers",
         "test/status-message",
         "test/tap-decisions"
       ],
@@ -527,15 +726,20 @@
     {
       "slug": "state/tap-tone-analyzer",
       "swift": [
+        "GuitarTap/Models/DetectionState.swift",
+        "GuitarTap/Models/MaterialTapPhase.swift",
         "GuitarTap/Models/TapToneAnalyzer+Control.swift"
       ],
       "python": [
+        "src/guitar_tap/models/detection_state.py",
+        "src/guitar_tap/models/material_tap_phase.py",
         "src/guitar_tap/models/tap_tone_analyzer_control.py"
       ],
       "web": [
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
+        "test/audio-clock-timers",
         "test/frozen-peak-recalc",
         "test/measurement-complete",
         "test/scenario-trace",
@@ -546,9 +750,11 @@
     {
       "slug": "state/visible-peaks",
       "swift": [
+        "GuitarTap/Models/AnnotationVisibilityMode.swift",
         "GuitarTap/Models/TapToneAnalyzer.swift"
       ],
       "python": [
+        "src/guitar_tap/models/annotation_visibility_mode.py",
         "src/guitar_tap/models/tap_tone_analyzer.py"
       ],
       "web": [
@@ -1457,6 +1663,34 @@
       "web": [
         "src/precision.ts"
       ],
+      "tests": [
+        "test/field-precision"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "util/new-id",
+      "swift": [],
+      "python": [
+        "src/guitar_tap/utilities/new_uuid.py"
+      ],
+      "web": [
+        "src/measurement/newId.ts"
+      ],
+      "tests": [
+        "test/uuid-case"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "util/test-sandbox",
+      "swift": [
+        "GuitarTap/Models/TestSandbox.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/settings_scope.py"
+      ],
+      "web": [],
       "tests": [],
       "equivalence": "review only"
     },
@@ -1970,6 +2204,10 @@
     {
       "repo": "web",
       "path": "src/measurement/dumpWav.ts"
+    },
+    {
+      "repo": "web",
+      "path": "src/measurement/index.ts"
     },
     {
       "repo": "web",
