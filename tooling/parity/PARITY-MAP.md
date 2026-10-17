@@ -51,6 +51,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/measurement-management` | `GuitarTap/Models/TapToneAnalyzer+MeasurementManagement.swift` | `src/guitar_tap/models/tap_tone_analyzer_measurement_management.py` | `src/measurement/store.ts`<br>`src/state/tapToneAnalyzer.ts` | tests |
 | `model/measurement-name` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/measurementName.ts` | tests |
 | `model/measurement-type` | `GuitarTap/Models/MeasurementType.swift`<br>`GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/measurement_type.py`<br>`src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts`<br>`src/settings.ts` | tests |
+| `model/wall-clock` | `GuitarTap/Models/WallClock.swift` | `src/guitar_tap/models/wall_clock.py` | `src/state/wallClock.ts` | tests |
 | `model/wav-dump-folder` | `GuitarTap/Models/WavDumpFolder.swift` | `src/guitar_tap/models/wav_dump_folder.py` | — | tests |
 | `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
 | `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | tests |

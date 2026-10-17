@@ -558,6 +558,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/wall-clock",
+      "swift": [
+        "GuitarTap/Models/WallClock.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/wall_clock.py"
+      ],
+      "web": [
+        "src/state/wallClock.ts"
+      ],
+      "tests": [
+        "test/audio-clock-timers"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/wav-dump-folder",
       "swift": [
         "GuitarTap/Models/WavDumpFolder.swift"
