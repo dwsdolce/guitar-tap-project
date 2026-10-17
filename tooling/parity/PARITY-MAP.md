@@ -199,3 +199,4 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `test/engine-start.test.ts` | web |
 | `test/menu-placement.test.ts` | web |
 | `test/png-pixels-per-inch.test.ts` | web |
+| `test/testIds.ts` | web |

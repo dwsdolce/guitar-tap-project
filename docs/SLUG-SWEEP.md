@@ -6890,9 +6890,10 @@ the progress table and the entries below. Stage 2 is finished when every row say
 
 | # | item | status |
 |---|---|---|
-| O1 | Id case on decode: Swift's ids are `UUID`s, so it reads an id in any case and writes it uppercase; Python and the web keep the string as the file holds it and compare ids as strings. A file whose ids differ only in case — `selectedPeakIDs` lowercase against uppercase peak ids, say — matches in Swift and not in the others (recorded in Python's `test_uuid_case.py` docstring, tracked nowhere). Surveyed and decided (2026-10-16): UUIDs are UUIDs in all three, one rule — plan O1.1–O1.10 below | in progress — O1.1–O1.2 |
+| O1 | Id case on decode: Swift's ids are `UUID`s, so it reads an id in any case and writes it uppercase; Python and the web keep the string as the file holds it and compare ids as strings. A file whose ids differ only in case — `selectedPeakIDs` lowercase against uppercase peak ids, say — matches in Swift and not in the others (recorded in Python's `test_uuid_case.py` docstring, tracked nowhere). Surveyed and decided (2026-10-16): UUIDs are UUIDs in all three, one rule — plan O1.1–O1.10 below | done — run-reviewed in all three (2026-10-17); Swift 050217d, Python f85eeff, web 08e35bc |
 | O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7) | open |
 | O3 | Two slugs break the area naming: `dead-input` (no area; its group holds test files) and `models/capture-probe` (`models/` for `model/`) — renames in all three (step 13) | open |
+| O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither | open |
 
 **O1 survey (2026-10-16).** Where lowercase ids come from: Python minted `str(uuid.uuid4())` — lowercase — until
 `8a1f2eb` (2026-09-20), so files and libraries saved by the shipped Python 1.0.0–1.0.2 hold lowercase ids; Swift and the
@@ -6936,14 +6937,14 @@ owner's approval before the build:
 |---|---|---|
 | O1.1 | Scan this Mac: the Swift and Python libraries, the web library (exported to Downloads by the owner), every `.guitartap` — does anything fail the rule (an id that is not a strict UUID)? | done — none fails (below) |
 | O1.2 | History: did any version of any edition ever write an id that is not a UUID (empty, missing, a placeholder)? If none did, no customer's file fails the rule unless edited by hand | done — none did (below) |
-| O1.3 | The library rule, all three, first (owner, 2026-10-16: yes): a library that fails to load is never overwritten, and the user is told. Swift and Python (one file): rename it `saved_measurements-unreadable-<date>.json` beside it, start empty, tell the user once where it was kept and that fixing it and renaming it back restores it. The web (one IndexedDB record per measurement): skip the unreadable records and leave them in storage, tell the user how many, offer Delete them — a browser user cannot edit them. Committed on its own after its own run-review; O1.4–O1.9 together after | to do |
-| O1.4 | Python: every id a `uuid.UUID` — peaks, measurements, tap and comparison entries, selections, mode-name and label-position keys, plate/brace peak ids, calibration ids (~25 source files; Qt signals carry the object). Read parses, either case; written uppercase; `new_uuid()` returns a UUID; the scattered `.upper()` go | to do |
-| O1.5 | Web: a branded `Uuid` — a canonical uppercase string at run time (a UUID object would break `Map`/`Set` keys, which compare objects by identity, and React keys), made only by `parseUuid()` (validates, uppercases) or `newId()`; the compiler finds every raw string used as an id (~18 source files); the IndexedDB library parsed on load | to do |
-| O1.6 | The strict form in Python and the web, as Swift's `UUID(uuidString:)`: 36 characters, hyphenated 8-4-4-4-12, either case. Python's `uuid.UUID()` alone also takes braces, `urn:uuid:` and unhyphenated hex — too lenient | to do |
-| O1.7 | Swift: the mode-name and label-position readers stop swallowing bad ids — one rule for every field; otherwise unchanged | to do |
-| O1.8 | Tests: the ~80 made-up ids (`"air"`, `"top"`, `"p1"` …) in 7 Python and web test files and the 36 in one shared case file become UUIDs; new shared `measurement-codable` cases — a lowercase file, a mixed-case file, an invalid id in each id field (rejected); `uuid-case` adjusted | to do |
-| O1.9 | Docs: App. B states the rule — ids are RFC 9562 UUIDs, read in either case, written uppercase, an invalid one rejects the file (reaches shipped users through the online manual) | to do |
-| O1.10 | Run-review: load, save, export, comparison and the library in all three; a Python 1.0.x file, a mixed-case file, a file with a bad id | to do |
+| O1.3 | The library rule, all three, first (owner, 2026-10-16: yes): a library that fails to load is never overwritten, and the user is told. Swift and Python (one file): rename it `saved_measurements-unreadable-<date>.json` beside it, start empty, tell the user once where it was kept and that fixing it and renaming it back restores it. The web (one IndexedDB record per measurement): skip the unreadable records and leave them in storage, tell the user how many, offer Delete them — a browser user cannot edit them. Committed on its own after its own run-review; O1.4–O1.9 together after | built (2026-10-17, uncommitted) — below |
+| O1.4 | Python: every id a `uuid.UUID` — peaks, measurements, tap and comparison entries, selections, mode-name and label-position keys, plate/brace peak ids, calibration ids (~25 source files; Qt signals carry the object). Read parses, either case; written uppercase; `new_uuid()` returns a UUID; the scattered `.upper()` go | built (2026-10-17, uncommitted) — below; calibration ids too (Open 1) |
+| O1.5 | Web: a branded `Uuid` — a canonical uppercase string at run time (a UUID object would break `Map`/`Set` keys, which compare objects by identity, and React keys), made only by `parseUuid()` (validates, uppercases) or `newId()`; the compiler finds every raw string used as an id (~18 source files); the IndexedDB library parsed on load | built (2026-10-17, uncommitted) — below; calibration ids too (Open 1) |
+| O1.6 | The strict form in Python and the web, as Swift's `UUID(uuidString:)`: 36 characters, hyphenated 8-4-4-4-12, either case. Python's `uuid.UUID()` alone also takes braces, `urn:uuid:` and unhyphenated hex — too lenient | built (2026-10-17, uncommitted) — below |
+| O1.7 | Swift: the mode-name and label-position readers stop swallowing bad ids — one rule for every field; otherwise unchanged | built (2026-10-17, uncommitted) — below |
+| O1.8 | Tests: the ~80 made-up ids (`"air"`, `"top"`, `"p1"` …) in 7 Python and web test files and the 36 in one shared case file become UUIDs; new shared `measurement-codable` cases — a lowercase file, a mixed-case file, an invalid id in each id field (rejected); `uuid-case` adjusted | built (2026-10-17, uncommitted) — below |
+| O1.9 | Docs: App. B states the rule — ids are RFC 9562 UUIDs, read in either case, written uppercase, an invalid one rejects the file (reaches shipped users through the online manual) | written (2026-10-17, uncommitted) — below |
+| O1.10 | Run-review: load, save, export, comparison and the library in all three; a Python 1.0.x file, a mixed-case file, a file with a bad id | done — all three, steps 1–9 with step 9 as rewritten (owner, 2026-10-17) |
 
 **O1.1 scan (2026-10-16, read-only).** Every id in every measurement — the measurement `id`, peak ids, `selectedPeakIDs`,
 the plate/brace peak ids, the mode-name and label-position keys, tap-entry ids, peaks and selections, comparison-entry
@@ -6962,6 +6963,206 @@ edition ever wrote an id that is not a UUID; a customer's file fails the rule on
 software. Found on the way, covered by the rule: a MISSING id is handled three ways today — Swift fails the decode,
 Python mints a new id, and the web reads it as `''` and would write that back — under the rule it is invalid in all
 three.
+
+**Progress (overnight 2026-10-16/17, uncommitted — for the owner's review).**
+
+- **O1.3 the library rule.** Swift `setAsideUnreadableLibrary(at:)` / Python `_set_aside_unreadable_library`: a library
+  that fails to load is renamed `<name>-unreadable-<yyyyMMdd-HHmmss>.json` beside itself, the library starts empty,
+  and `libraryLoadFailure` / `library_load_failure` carries the message, shown once ("Saved Measurements Unreadable",
+  after the window is up — Swift an `.alert`, Python beside the engine-error report); if the rename fails, the file
+  stays and `isLibraryWriteBlocked` / `is_library_write_blocked` stops every library write for the session. The web
+  (`readLibrary()` in store.ts): each stored record has its ids checked as on reading a file (`canonicalIds`); one
+  that fails is skipped and left in storage, the app says so at launch with Keep / Delete (`deleteUnreadable`).
+  Tests: Swift and Python — a library cut short mid-write, or whole but holding a bad id, is kept aside byte for byte, a later import writes a new
+  library beside it; a read-only folder blocks every write. Web — a stored record with a bad id is skipped, kept
+  through another save, and gone only after Delete. Mutations (no setting aside / no record check) fail them.
+  Noted, not changed: the web reads its library in the Measurements panel and App, not in the analyzer as Swift does.
+- **O1.6 strict reading, Python and the web.** One parser beside the minting helper — Python `parse_uuid` in
+  `utilities/new_uuid.py`, the web `parseUuid` in `newId.ts` (both `util/new-id`) — accepting exactly Swift's form
+  (hyphenated 8-4-4-4-12, either case) and returning it uppercase; `InvalidIdError` otherwise. Every id is parsed
+  when a measurement is read (Python `_canonical_ids` on the file's dict before decoding; the web `canonicalIds` on
+  the decoded model, plus every key in the map readers so a key whose value is a dropped legacy form is still
+  checked). A missing id is invalid (Python no longer mints one; the web no longer reads it as `''`). Python's
+  scattered `.upper()` calls are gone.
+- **O1.7 Swift.** `checkUUIDKeys` checks every key of the mode-name and label-position maps, in the flat or the object
+  form, before their tolerant readers run; a key that is not a UUID fails the decode.
+- **O1.8 shared cases.** `measurement-codable.json` group `ids`, ID1–ID23: all-lowercase and mixed-case files read
+  with selection, mode name and label position on their peak and are written back with no lowercase id; a missing or
+  invalid id in each id field (measurement, peaks, selection, plate/brace ids, both map forms, a key with a legacy
+  value, tap entries, comparison entries, source, mode peak ids) is rejected; braces, no hyphens and `urn:uuid:` are
+  rejected; two controls read. And `import-persistence` IP10–IP11, all three: an import of a file with a bad id fails and
+  leaves the library and its file as they were, and a file with a good and a bad measurement adds neither. Mutations: Swift without the key check fails ID8–ID11; Python without the check
+  fails all but the controls, with a lenient `uuid.UUID` parser ID21–ID23; the web without `canonicalIds` 17 cases,
+  without the map-reader check ID11. Test ids made up as strings became UUIDs (Python minting through `new_uuid()`;
+  the web's `testId(n)` helper in `test/testIds.ts`).
+- **O1.5 the web, ids as a type.** `Uuid` (newId.ts) — a string at run time, branded so only `parseUuid()` and
+  `newId()` make one — on every id field of the measurement types, the analyzer's id-keyed state (selection, mode
+  names, label positions, modes, highlight, material ids), `classifyAll`, the chart's markers and hit-tests and their
+  handlers; `idEntries()` gives an id-keyed map's entries with their keys as ids. The decoder keeps the file's raw
+  ids typed as unchecked until `canonicalIds()` checks them — the one check. The compiler found every other place
+  (61 errors, all fixed). Tests use `testId(n)` for readable fixed UUIDs.
+- **O1.4 Python, ids as a type.** Every id is a `uuid.UUID`: `new_uuid()` mints one, `parse_uuid()` reads one
+  (strict form, either case), `uuid_text()` writes one (uppercase) — the writers (`to_dict` of the measurement, peaks,
+  tap and comparison entries, the map keys) write text, the readers parse. The three peak-table signals that carry an
+  id (`annotationUpdate`, `selectionToggled`, `modeOverrideChanged`) are `object`. Found and fixed on the way: the
+  mode-name and label-position readers tested `isinstance(k, str)` and would have dropped every entry. Tests compare
+  ids as UUIDs; `uuid-case` now pins that ids are UUIDs written uppercase (and still that nothing mints outside the
+  helper).
+- **O1.9 App. B.** "Ids": every id is a UUID written uppercase, read in either case, and a file with one missing or
+  in another form cannot be opened. "The saved-measurements library": kept, renamed, and how to restore it; the
+  browser edition's unreadable records. (App. B is in Swift's manual — the online manual every edition links to.)
+- **Suites (2026-10-17):** Swift passed (2 skipped, as before); Python 1379 passed, 1 skipped; the web 1295 passed,
+  1 skipped; `--check` current, 142 groups.
+- **Open — for the owner:**
+  1. *Calibration ids:* decided (owner, 2026-10-17: "make the UUID handling consistent. It seems safe enough") and
+     done, uncommitted. Python and the web hold calibration ids as UUIDs (Python `uuid.UUID`, the web `Uuid`),
+     written uppercase, read strictly; a stored active or device-mapped id that is not a UUID counts as none, as
+     Swift's `UUID(uuidString:)` gives nil. Found on the way: the wipe risk was in all three — Swift's `loadAll()` and
+     the web's `listCalibrations()` also gave `[]` on a list they could not read, and the next save wrote over it.
+     Now one rule: a stored calibration list that cannot be read is moved to `<key>-unreadable-<yyyyMMdd-HHmmss>`
+     (UserDefaults / QSettings / localStorage), logged, and the list starts empty — no alert, a calibration can be
+     imported again. Tests, each edition: a damaged list is kept byte for byte and a later save leaves it alone;
+     the web also reads a lowercase id as the same id. Mutations (no setting aside) fail them. Also found: Qt's
+     `findData()` matches a Python object only by identity — an equal UUID read back separately is not found; the
+     app compares `itemData(i) == id` and never uses it for ids (a test did, now by equality). Suites: Swift
+     passed, Python 1384, the web 1300.
+  2. *Release notes:* decided (owner, 2026-10-17: yes) and written, uncommitted — Swift and Python "Saved Measurements
+     and Files" under Improvements (an unreadable library kept, not written over; ids read in either case, a file
+     with a missing or malformed id refused); Python also two Bug Fixes (Play File could freeze the app — C6; exports
+     of 1.0.x measurements lost their dragged label positions); the web the same as an Improvements item, its
+     unreadable records left out of the list and kept, with Delete offered.
+  3. *Where the web reads its library:* decided (owner, 2026-10-17: "We are striving for architectural alignment so
+     move it") and done, uncommitted — the analyzer holds `savedMeasurements` and `unreadableMeasurements` and loads
+     them at construction (`loadPersistedMeasurements`, as Swift's init), again after every save, edit, delete,
+     Delete All and import; the Measurements panel shows the analyzer's list (`measurements` prop from the
+     snapshot) instead of reading the store, and App's alert reads the analyzer (`keepUnreadableMeasurements` /
+     `deleteUnreadableMeasurements`). Test: the analyzer holds the library and the unreadable record; Keep keeps it,
+     Delete removes it. Fast suite 1277 passed.
+
+- **The failed-import message (owner, 2026-10-17: "they should all have the same text message … Including the illegal
+  id (as in python) is desirable … also make the alert consistent").** One message in all three, from one model-level
+  function — Swift `TapToneAnalyzer.importErrorMessage(for:fileName:)`, Python `import_error_message`, the web
+  `TapToneAnalyzer.importErrorMessage`: `Could not import "<file>": the file is not a valid GuitarTap measurement
+  ("<value>" in <field> is not a UUID).` for an id (`<field> is missing` when there is none), the same without the
+  bracket for any other content, Swift's and Python's "Could not read … the system denied access" for a permission
+  failure, otherwise what went wrong. Shown in an "Import Error" alert with OK in all three — the web's red line in
+  the Measurements panel is gone (it had been left when the success message became an alert, `04c66b9`). Swift names
+  the id from its decoder's own failure (`InvalidIDError.from`: the field from the coding path, the value read from
+  the file), its two import paths share the function; Python no longer wraps the named-id error in a generic one.
+  Shared: `import-persistence` IP10 (a bad measurement id) and IP12 (no id) pin the exact text; all three pass.
+- **Export failures (owner, 2026-10-17: yes, Swift's way in all three).** Every export failure is an "Export Failed"
+  alert with OK: the chart could not be drawn — Swift's sentence, already the same in all three — or `Could not save
+  "<file>": <reason>.` for a file that could not be written (Python `export_failure_message`, the web
+  `exportFailureMessage`; Swift writes through the system's save panel and reports none). Python's measurement list
+  and main window drop "Export Error" and the raw text; the web's Measurements panel drops its red line (the last
+  one) and its main window "Error" becomes "Export Failed" — keeping, for the PDF only, the web's own reload hint
+  when a stale cached app could not load the report code. Tests (Python, web): the two messages.
+- **A measurement with no spectrum (owner, 2026-10-17: (A)).** Export Spectrum is not offered for it — disabled in
+  the row menu of all three (Swift `.disabled`, Python `setEnabled`, the web `disabled`, with the chart menu's
+  disabled look) — by one property, `hasExportableSpectrum` / `has_exportable_spectrum`: a comparison's entries, or
+  the guitar spectrum or a plate/brace's longitudinal one, as Swift's renderer reads them. Before: Swift offered it and
+  did nothing; Python said "no spectrum snapshot"; the web failed inside its image code. Shared: `measurement-codable`
+  DC11–DC13. Then (owner, 2026-10-17: "if there is no spectrum there is no PDF to export, there is no spectrum
+  image to export, and there is no measurement to export. A comparison does have a spectrum … so be careful"): the
+  property, renamed `hasSpectrum` / `has_spectrum` (a comparison's, in its entries), greys out Export Measurement,
+  Export Spectrum and Export PDF — and Swift's Save Measurement to Disk — in all three. No measurement on this Mac
+  lacks one (700 checked, every library and file): only a hand-written file or other software's can.
+
+- **No spectrum is not a measurement (owner, 2026-10-17: "loading a measurement with no spectrum fails as an illegal
+  measurement (since there is no way for the application to create one)" — "Go").** Replaces the greying above. All
+  three refuse, on reading a file or a library record, a measurement with no guitar spectrum and no plate/brace
+  longitudinal one, or a comparison of fewer than two entries — Swift `NoSpectrumError` at the end of its decoder,
+  Python `NoSpectrumError` in `from_dict`, the web `checkMeasurement` (ids, then spectrum; also used for the stored
+  records) — and Import says `… not a valid GuitarTap measurement (no spectrum).` `hasSpectrum`, the greyed export
+  items and their CSS are gone. Data: every shared case and edition test that left out a spectrum or used a
+  one-entry comparison only for brevity now has a valid one (measurement-codable DC1–DC10, WR1–WR4, ID1–ID23 with a
+  second entry for ID16–ID20, CR2–CR5; comparison CM20 compares two; the web's PR38 runner; Python's and Swift's
+  round-trip tests through `_create` / `aSpectrum()`). New: DC11 (no spectrum, refused), DC14 (one-entry comparison,
+  refused); DC12–DC13 read a guitar and a plate. Before this landed the owner deleted the step-9 measurement from
+  Swift's library (it would have made the library unreadable).
+- **Next, decided (owner, 2026-10-17: "Yes"):** (1) retire CM3, CM8 (comparison), DR2 (display-range), PR37
+  (frozen-peak-recalc) — each about a loaded measurement with no spectrum, which no longer exists; (2) then survey,
+  and bring to the owner as a list before deleting anything, the code that exists only for such a measurement (some
+  checks also serve other states — Re-analyze is unavailable with nothing loaded too). (3) Swift warnings reported by
+  the owner: `normalizedName` / `normalizedNotes` called from a nonisolated context in
+  `TapToneAnalyzer+MeasurementManagement.swift` (lines ~592, 593, 627, 631). Then the full suites, once, and the
+  owner finishes the run-review (left: web steps 6 and 8, and step 9 as rewritten).
+- **Done (2026-10-17, uncommitted):** CM3, CM8, DR2, PR37 retired, with the stored entries only they used (comparison
+  `With`, `Without`, `Without2`; display-range `no-spectrum`); the three slugs pass in all three. Swift warnings fixed:
+  `.flatMap(TapToneMeasurement.normalizedName)` passed a main-actor function as a nonisolated value — now
+  `.flatMap { TapToneMeasurement.normalizedName($0) }` (four places); the rebuild shows no warnings.
+- **Survey of code for a measurement with no spectrum (2026-10-17) — for the owner.** Most checks of the guitar
+  spectrum are not about a missing spectrum but about guitar against plate/brace (a plate has no guitar spectrum):
+  which measurements Compare accepts (Swift `comparableMeasurements` / `isComparable`, the comparison's
+  `withSnapshots`; Python's list view and `with_snapshots`; the web's `isComparable`, `withSnapshots` and App's
+  count), the row's spectrum icon, the Details pane's choice of snapshot, the renderer's `primarySnapshot`. These stay.
+  The one branch that exists only for a loaded measurement with neither spectrum: Swift `loadMeasurement`'s last
+  `else { setFrozenSpectrum(frequencies: [], magnitudes: []) }` (after the plate/brace and guitar branches), and its
+  counterparts in Python and the web — to remove, with the owner's go. Re-analyze's check stays (it is also what
+  makes Re-analyze unavailable with nothing loaded).
+  The web's counterpart is `measurementToLive`'s no-`snap` handling, whose comment calls it "a measurement saved before
+  spectra were stored … Mirrors Swift loadMeasurement's old-format branch". Checked against the history: Swift stored
+  the spectrum from `87a7410` (2026-02-08), before its first release (Beta 1.0, 2026-02-20); Python 0.9 and 0.10
+  (2023) saved no measurements; Python 1.0 (2026-06-17) saved the guitar spectrum on every guitar save (its
+  `spectrum_snapshot=None` is the plate/brace save, which stores the longitudinal one); the web always has. So the
+  "old format" is development files from before February 2026 — no shipped edition wrote one, and none of the 700
+  measurements on the owner's Mac lacks a spectrum. Refusing them is safe.
+- **Done (owner, 2026-10-17: "Remove"), uncommitted:** the no-spectrum branch is gone in all three — Swift
+  `loadMeasurement`'s last `else`, Python's matching `else`, the web `measurementToLive`'s no-`snap` handling (the
+  type, range and view now come from the measurement's spectrum). Python keeps `if snap is not None` around setting
+  the spectrum, as Swift's `if let`: tests that build a measurement in memory, not from a file, reach it without one.
+- **An empty spectrum is no spectrum (owner, 2026-10-17: "An empty spectrum means there is no spectrum … yes to all
+  3"; DC16–DC18 kept).** The spectrum check in all three (Swift's decoder, Python `from_dict`, the web
+  `checkMeasurement`) counts a spectrum as present only if it has points and as many magnitudes as frequencies — for
+  the guitar spectrum, a plate/brace's longitudinal one, and each comparison entry's. The optional cross and FLC
+  spectra are not checked. Shared cases: `measurement-codable` DC15 (no points), DC16 (frequencies and magnitudes
+  differ in number), DC17 (a plate/brace longitudinal spectrum with no points), DC18 (a comparison entry with no
+  points), all refused; `import-persistence` IP13 (no spectrum) and IP14 (no points) — the import fails with the exact
+  "(no spectrum)." message and the library and its file are as they were (new stored measurements `no-spectrum`,
+  `empty-spectrum`). Library: Swift's and Python's unreadable-library tests run four kinds — cut short, bad id, no
+  spectrum, empty spectrum; the web's unreadable-record test three (bad id, no spectrum, empty spectrum). Test data:
+  the ML/SH case builder in all three had an empty spectrum, now two points; the web's SB2 reads its snapshot back
+  on its own (`decodeSnapshot`), as Swift's, instead of inside a measurement. Suites (run before the owner's go — not
+  asked for): Swift 278 tests passed, Python 1396 passed, 1 skipped, the web 1310 passed, 1 skipped.
+- **Run-review (owner, 2026-10-17): complete in all three**, steps 1–9 below, step 9 as rewritten.
+
+**O1.10 run-review (for the owner).** Launch: Xcode scheme `guitar_tap` · `.venv/bin/python -m guitar_tap` · web
+`npm run build && npm run preview`, then clear the service worker after the build (F30's run-review steps). Same list
+per edition, Swift first; (N) natives only, (W) the web only.
+
+1. Launch. → The saved measurements are all there, as before, with no alert.
+2. Load a saved guitar measurement with named peaks and dragged labels. → Selection, names and label positions as saved.
+3. Export it as a `.guitartap`, Export Spectrum and Export PDF. → All three as before; the PDF's labels where dragged.
+4. Open a `.guitartap` saved by Python 1.0.x (lowercase ids — e.g. `dws-2024-umik-1-python-mac-1784225140.guitartap`
+   from the test fixtures). → It opens with its selection and names; saving it again works.
+5. Compare two saved measurements, save the comparison, open it again. → The comparison as saved.
+6. Open `step6-bad-peak-id.guitartap` (in Downloads › "GuitarTap O1 run-review": the Contreras fixture with its first
+   peak id changed to `not-a-uuid`). → An "Import Error" alert with OK, reading: Could not import
+   "step6-bad-peak-id.guitartap": the file is not a valid GuitarTap measurement ("not-a-uuid" in peaks[].id is not a
+   UUID).
+7. (N) Quit. Rename the library — Swift
+   `~/Library/Containers/com.dolcesfogato.GuitarTap/Data/Documents/saved_measurements.json`, Python
+   `~/Library/Application Support/guitar-tap/saved_measurements.json` — to `saved_measurements-original.json`; copy
+   `step7-saved_measurements-cut-short.json` (same folder in Downloads) there as `saved_measurements.json`; launch.
+   → "Saved Measurements Unreadable", naming the file it was kept as; no new `saved_measurements.json` (one is
+   written only when something is saved). Quit, delete the `saved_measurements-unreadable-…json`, and rename
+   `saved_measurements-original.json` back.
+8. In Settings, check the imported calibrations, then quit and relaunch. → The same calibrations listed, and the
+   one chosen for the microphone still applied.
+9. Import `step9-no-spectrum.guitartap` (same folder in Downloads: the Contreras fixture with its spectrum removed).
+   → An "Import Error" alert reading: Could not import "step9-no-spectrum.guitartap": the file is not a valid
+   GuitarTap measurement (no spectrum). Nothing is added.
+
+What the tests already pin, so these two steps are only what is seen: an import that fails leaves the library and its
+file as they were, and a file is imported whole or not at all (`import-persistence` IP10–IP11, all three); a library
+cut short or holding a bad id is kept aside byte for byte, the library starts empty, a later save writes a new one
+beside it, and one that cannot be moved is never written (Swift and Python library tests, both damaged libraries);
+the web's unreadable stored record — not reachable by hand, a browser user cannot edit one — is skipped, kept and
+removed only on Delete (the store test). A measurement with no spectrum, or one with no points: an import fails with
+"(no spectrum)." (IP13–IP14, all three), and a library holding one is unreadable (the library tests, all three).
+
+- Found on the way: the Swift filter `-only-testing:GuitarTapTests/MeasurementCodableTests` names no suite (the file's
+  suites are `MeasurementCodecTests`, `MeasurementLogicTests` …) and runs nothing — use the suite names.
 
 What users would see: Python 1.0.x files and libraries (lowercase ids) behave the same in all three, Python exports keep
 their dragged label positions, files are written back uppercase on their next save; a file with an id that is not a

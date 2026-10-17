@@ -2268,6 +2268,10 @@
     {
       "repo": "web",
       "path": "test/png-pixels-per-inch.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/testIds.ts"
     }
   ]
 }
