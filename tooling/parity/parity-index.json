@@ -689,6 +689,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "state/route-change-settle",
+      "swift": [
+        "GuitarTap/Models/TapToneAnalyzer.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_analyzer_control.py"
+      ],
+      "web": [
+        "src/state/tapToneAnalyzer.ts"
+      ],
+      "tests": [
+        "test/notification"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "state/settings-store",
       "swift": [
         "GuitarTap/Models/TapDisplaySettings.swift"
@@ -2164,10 +2180,6 @@
     {
       "repo": "python",
       "path": "tests/test_settings_calibration_details.py"
-    },
-    {
-      "repo": "python",
-      "path": "tests/test_state_notification.py"
     },
     {
       "repo": "python",
