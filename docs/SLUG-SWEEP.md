@@ -6884,7 +6884,88 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s scenario tests and `decay-tracking`'s DK9 | done — batches A, B and C (C1–C7) — see **Step 11 — scenario slugs** below |
 | 12 | Cannot be shared — per-machine baselines, random draws, the filesystem | `self-regression`, `uuid-case`, `wav-dump-folder` | nothing to do |
 | 13 | Parity links — every test slug linked to the code it tests, every model file in a group | all | done (Swift 3543ac7, Python bb752af, web 0296fd0) — see **Step 13 — parity links** below |
-| 14 | Close Stage 2 and #17 | — | to do |
+| 14 | Close Stage 2 and #17 | — | to do — the open items below first |
+
+**Open before closing (2026-10-16).** Raised along the way, not yet decided or done:
+
+| # | item | status |
+|---|---|---|
+| O1 | Id case on decode: Swift's ids are `UUID`s, so it reads an id in any case and writes it uppercase; Python and the web keep the string as the file holds it and compare ids as strings. A file whose ids differ only in case — `selectedPeakIDs` lowercase against uppercase peak ids, say — matches in Swift and not in the others (recorded in Python's `test_uuid_case.py` docstring, tracked nowhere). Surveyed and decided (2026-10-16): UUIDs are UUIDs in all three, one rule — plan O1.1–O1.10 below | in progress — O1.1–O1.2 |
+| O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7) | open |
+| O3 | Two slugs break the area naming: `dead-input` (no area; its group holds test files) and `models/capture-probe` (`models/` for `model/`) — renames in all three (step 13) | open |
+
+**O1 survey (2026-10-16).** Where lowercase ids come from: Python minted `str(uuid.uuid4())` — lowercase — until
+`8a1f2eb` (2026-09-20), so files and libraries saved by the shipped Python 1.0.0–1.0.2 hold lowercase ids; Swift and the
+web have always written uppercase. How each edition reads them:
+
+- **Swift**: every id is a `UUID`. Decoding accepts either case, and the ids compare as values, so case never matters;
+  it writes them back uppercase. (An id that is not a UUID at all fails the decode — the ports accept any string.)
+- **Python**: ids stay strings as the file has them, except that label-offset keys are uppercased at decode
+  (`from_dict`), and the plate/brace peak ids are matched uppercased at load; selections, mode names and tap entries
+  compare exactly. So inside Python a 1.0.x measurement has lowercase peak ids and uppercase offset keys. Read, not
+  run: an export straight from a saved measurement (`exportable_spectrum_chart`, `annotation_positions.get(peak_id)`)
+  finds no offsets for those peaks, so dragged labels go back to their default positions; re-saving such a measurement
+  without loading it writes the mixed case into the file; and the duplicate-peak heal does not drop a removed peak's
+  offset (its key is uppercased, the removed id is not).
+- **Web**: ids stay strings as the file has them and compare exactly. A consistently lowercase file works; a mixed-case
+  one — such as Python's re-save above — loses whichever selections, names and label positions differ in case.
+
+Options: (A) every id uppercased when read, in Python and the web, as Swift's `UUID` does in effect — the scattered
+uppercasing in Python goes — with shared `measurement-codable` cases: a lowercase file and a mixed-case file read with
+their selection, names and label positions intact, and written back uppercase. (B) Compare ids without regard to case
+wherever they are compared — many places, easy to miss one. Recommended: (A). Not proposed: refusing a non-UUID id as
+Swift does.
+
+**The standard.** A UUID is a 128-bit number; its string is hexadecimal, and RFC 4122 §3 (kept by RFC 9562) says the
+digits a–f "are output as lower case characters and are case insensitive on input". So `3f2a…` and `3F2A…` are the same
+id, and a reader must accept both. Swift, comparing `UUID` values, follows it; Python and the web, comparing strings,
+do not. (Swift writes uppercase — Apple's `uuidString` — against the RFC's lowercase recommendation for output; the
+ports copied it. Allowed for any reader that reads UUIDs as UUIDs.)
+
+**Swift and an id that is not a UUID — three behaviours today.** The measurement `id`, a peak `id`, `selectedPeakIDs`,
+the plate/brace peak ids and the tap-entry ids: the decode throws, and the whole file fails (opening a `.guitartap`
+reports an error). `peakModeOverrides`: the legacy reader drops just the bad entries, silently. `peakAnnotationOffsets`:
+every label position of that measurement is dropped, silently (`try?`). The last two are lenient by accident — code
+written to tolerate older formats that also swallows bad ids. And if the library (`saved_measurements.json`) fails to
+decode, Swift logs it and starts with an empty library, which the next save writes over the file — read, not run.
+
+**Decided (owner, 2026-10-16): one rule in all three, and UUIDs are UUIDs in all three — not strings.** Plan, for the
+owner's approval before the build:
+
+| # | item | status |
+|---|---|---|
+| O1.1 | Scan this Mac: the Swift and Python libraries, the web library (exported to Downloads by the owner), every `.guitartap` — does anything fail the rule (an id that is not a strict UUID)? | done — none fails (below) |
+| O1.2 | History: did any version of any edition ever write an id that is not a UUID (empty, missing, a placeholder)? If none did, no customer's file fails the rule unless edited by hand | done — none did (below) |
+| O1.3 | The library rule, all three, first (owner, 2026-10-16: yes): a library that fails to load is never overwritten, and the user is told. Swift and Python (one file): rename it `saved_measurements-unreadable-<date>.json` beside it, start empty, tell the user once where it was kept and that fixing it and renaming it back restores it. The web (one IndexedDB record per measurement): skip the unreadable records and leave them in storage, tell the user how many, offer Delete them — a browser user cannot edit them. Committed on its own after its own run-review; O1.4–O1.9 together after | to do |
+| O1.4 | Python: every id a `uuid.UUID` — peaks, measurements, tap and comparison entries, selections, mode-name and label-position keys, plate/brace peak ids, calibration ids (~25 source files; Qt signals carry the object). Read parses, either case; written uppercase; `new_uuid()` returns a UUID; the scattered `.upper()` go | to do |
+| O1.5 | Web: a branded `Uuid` — a canonical uppercase string at run time (a UUID object would break `Map`/`Set` keys, which compare objects by identity, and React keys), made only by `parseUuid()` (validates, uppercases) or `newId()`; the compiler finds every raw string used as an id (~18 source files); the IndexedDB library parsed on load | to do |
+| O1.6 | The strict form in Python and the web, as Swift's `UUID(uuidString:)`: 36 characters, hyphenated 8-4-4-4-12, either case. Python's `uuid.UUID()` alone also takes braces, `urn:uuid:` and unhyphenated hex — too lenient | to do |
+| O1.7 | Swift: the mode-name and label-position readers stop swallowing bad ids — one rule for every field; otherwise unchanged | to do |
+| O1.8 | Tests: the ~80 made-up ids (`"air"`, `"top"`, `"p1"` …) in 7 Python and web test files and the 36 in one shared case file become UUIDs; new shared `measurement-codable` cases — a lowercase file, a mixed-case file, an invalid id in each id field (rejected); `uuid-case` adjusted | to do |
+| O1.9 | Docs: App. B states the rule — ids are RFC 9562 UUIDs, read in either case, written uppercase, an invalid one rejects the file (reaches shipped users through the online manual) | to do |
+| O1.10 | Run-review: load, save, export, comparison and the library in all three; a Python 1.0.x file, a mixed-case file, a file with a bad id | to do |
+
+**O1.1 scan (2026-10-16, read-only).** Every id in every measurement — the measurement `id`, peak ids, `selectedPeakIDs`,
+the plate/brace peak ids, the mode-name and label-position keys, tap-entry ids, peaks and selections, comparison-entry
+ids and `sourceMeasurementID` — against the strict form. Swift's library: 101 measurements, all ids valid and uppercase.
+Python's library: 67 measurements, all valid; lowercase ids from before 2026-09-20; two measurements ("Test of UUID",
+2026-09-21) have an uppercase measurement id over lowercase peak ids — every reference to a peak in the same case as the
+peak, so nothing breaks. The web library (exported by the owner): 31 measurements, all valid and uppercase. Every
+`.guitartap` Spotlight or a search of the home folder finds — 443 files, 524 measurements: none unreadable, none with an
+invalid id, none mixing case within a reference; 31 hold lowercase ids (old Python).
+
+**O1.2 history (2026-10-16).** Swift: every stored id has always been a `UUID` (the other `id: String` in its history are
+enum and test-sandbox ids, never written to a file). Python: minted `str(uuid.uuid4())` from the start — valid, lowercase
+— until `8a1f2eb` (2026-09-20) made it uppercase; the empty-string ids in its history are view-widget defaults, never
+written. The web: minted with `crypto.randomUUID()` from the start, uppercased since `fbd2231` (2026-09-21). So no
+edition ever wrote an id that is not a UUID; a customer's file fails the rule only if edited by hand or written by other
+software. Found on the way, covered by the rule: a MISSING id is handled three ways today — Swift fails the decode,
+Python mints a new id, and the web reads it as `''` and would write that back — under the rule it is invalid in all
+three.
+
+What users would see: Python 1.0.x files and libraries (lowercase ids) behave the same in all three, Python exports keep
+their dragged label positions, files are written back uppercase on their next save; a file with an id that is not a
+UUID is refused with an error in all three — only a hand-edited or third-party file can have one.
 
 ### Stage 2 progress
 
