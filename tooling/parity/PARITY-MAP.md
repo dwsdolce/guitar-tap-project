@@ -20,11 +20,11 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | slug | Swift | Python | Web | Equivalence |
 |---|---|---|---|---|
 | `audio/buffer-watchdog` | `GuitarTap/Models/RealtimeFFTAnalyzer+Watchdog.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
+| `audio/dead-input` | `GuitarTap/Models/DeadInput.swift` | `src/guitar_tap/models/dead_input.py` | `src/audio/deadInput.ts` | tests |
 | `audio/device-management` | `GuitarTap/Models/AVAudioDevice.swift`<br>`GuitarTap/Models/RealtimeFFTAnalyzer+DeviceManagement.swift` | `src/guitar_tap/models/audio_device.py`<br>`src/guitar_tap/models/realtime_fft_analyzer_device_management.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/engine-control` | `GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/realtime-analyzer` | `GuitarTap/Models/RealtimeFFTAnalyzer.swift` | `src/guitar_tap/models/realtime_fft_analyzer.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/tap-analyzer` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
-| `dead-input` | `GuitarTap/Models/DeadInput.swift`<br>`GuitarTapTests/DeadInputThresholdTests.swift` | `src/guitar_tap/models/dead_input.py`<br>`tests/test_dead_input_threshold.py` | `src/audio/deadInput.ts`<br>`test/dead-input-threshold.test.ts` | review only |
 | `dsp/analysis-quality` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/dsp/analysisQuality.ts` | tests |
 | `dsp/calibration` | `GuitarTap/Models/MicrophoneCalibration.swift` | `src/guitar_tap/models/microphone_calibration.py` | `src/dsp/calibration.ts`<br>`src/measurement/calibrationStore.ts` | tests |
 | `dsp/decay` | `GuitarTap/Models/TapToneAnalyzer+DecayTracking.swift` | `src/guitar_tap/models/tap_tone_analyzer_decay_tracking.py` | `src/state/tapToneAnalyzer.ts` | tests |
@@ -53,7 +53,6 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/measurement-type` | `GuitarTap/Models/MeasurementType.swift`<br>`GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/measurement_type.py`<br>`src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts`<br>`src/settings.ts` | tests |
 | `model/wall-clock` | `GuitarTap/Models/WallClock.swift` | `src/guitar_tap/models/wall_clock.py` | `src/state/wallClock.ts` | tests |
 | `model/wav-dump-folder` | `GuitarTap/Models/WavDumpFolder.swift` | `src/guitar_tap/models/wav_dump_folder.py` | — | tests |
-| `models/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
 | `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | tests |
 | `state/annotation-management` | `GuitarTap/Models/TapToneAnalyzer+AnnotationManagement.swift` | `src/guitar_tap/models/tap_tone_analyzer_annotation_management.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/button-enablement` | `GuitarTap/Models/AnalysisDisplayMode.swift`<br>`GuitarTap/Models/ButtonEnablement.swift` | `src/guitar_tap/models/analysis_display_mode.py`<br>`src/guitar_tap/models/button_enablement.py` | `src/state/buttonEnablement.ts` | tests |
@@ -75,6 +74,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |
 | `test/classify` | `GuitarTapTests/ClassifyCasesTests.swift` | `tests/test_classify_cases.py` | `test/classify-cases.test.ts`<br>`test/classify.test.ts` | test suite |
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
+| `test/dead-input-threshold` | `GuitarTapTests/DeadInputThresholdTests.swift` | `tests/test_dead_input_threshold.py` | `test/dead-input-threshold.test.ts` | test suite |
 | `test/decay-tracking` | `GuitarTapTests/DecayTrackingTests.swift` | `tests/test_decay_tracking.py` | `test/decay-tracking.test.ts` | test suite |
 | `test/display-range` | `GuitarTapTests/DisplayRangeExpansionTests.swift`<br>`GuitarTapTests/DisplayRangeScenarioTests.swift` | `tests/test_display_range_expansion.py`<br>`tests/test_display_range_scenarios.py` | `test/display-range-scenarios.test.ts`<br>`test/display-range.test.ts` | test suite |
 | `test/dsp` | `GuitarTapTests/DSPTests.swift` | `tests/test_dsp.py` | `test/dsp.test.ts` | test suite |
@@ -129,6 +129,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `tooling/parity-runner` | — | `tests/parity_runner.py` | `test/parityRunner.ts` | review only |
 | `tooling/self-baseline` | — | `tests/self_baseline.py` | `test/selfBaseline.ts` | review only |
 | `tooling/synthetic-tap` | `GuitarTapTests/SyntheticTap.swift` | `tests/synthetic_tap.py` | `test/syntheticTap.ts` | review only |
+| `util/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
 | `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | tests |
 | `util/new-id` | — | `src/guitar_tap/utilities/new_uuid.py` | `src/measurement/newId.ts` | tests |
 | `util/test-sandbox` | `GuitarTap/Models/TestSandbox.swift` | `src/guitar_tap/models/settings_scope.py` | — | review only |

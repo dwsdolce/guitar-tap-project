@@ -15,6 +15,22 @@
       "equivalence": "review only"
     },
     {
+      "slug": "audio/dead-input",
+      "swift": [
+        "GuitarTap/Models/DeadInput.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/dead_input.py"
+      ],
+      "web": [
+        "src/audio/deadInput.ts"
+      ],
+      "tests": [
+        "test/dead-input-threshold"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "audio/device-management",
       "swift": [
         "GuitarTap/Models/AVAudioDevice.swift",
@@ -84,23 +100,6 @@
         "test/tap-progress"
       ],
       "equivalence": "tests"
-    },
-    {
-      "slug": "dead-input",
-      "swift": [
-        "GuitarTap/Models/DeadInput.swift",
-        "GuitarTapTests/DeadInputThresholdTests.swift"
-      ],
-      "python": [
-        "src/guitar_tap/models/dead_input.py",
-        "tests/test_dead_input_threshold.py"
-      ],
-      "web": [
-        "src/audio/deadInput.ts",
-        "test/dead-input-threshold.test.ts"
-      ],
-      "tests": [],
-      "equivalence": "review only"
     },
     {
       "slug": "dsp/analysis-quality",
@@ -588,20 +587,6 @@
       "equivalence": "tests"
     },
     {
-      "slug": "models/capture-probe",
-      "swift": [
-        "GuitarTap/Models/CaptureProbe.swift"
-      ],
-      "python": [
-        "src/guitar_tap/models/capture_probe.py"
-      ],
-      "web": [
-        "src/state/captureProbe.ts"
-      ],
-      "tests": [],
-      "equivalence": "review only"
-    },
-    {
       "slug": "presentation/display-range",
       "swift": [
         "GuitarTap/Models/DisplayRange.swift"
@@ -934,6 +919,20 @@
       ],
       "web": [
         "test/comparison.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/dead-input-threshold",
+      "swift": [
+        "GuitarTapTests/DeadInputThresholdTests.swift"
+      ],
+      "python": [
+        "tests/test_dead_input_threshold.py"
+      ],
+      "web": [
+        "test/dead-input-threshold.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1680,6 +1679,20 @@
       ],
       "web": [
         "test/syntheticTap.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "util/capture-probe",
+      "swift": [
+        "GuitarTap/Models/CaptureProbe.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/capture_probe.py"
+      ],
+      "web": [
+        "src/state/captureProbe.ts"
       ],
       "tests": [],
       "equivalence": "review only"
