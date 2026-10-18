@@ -6891,7 +6891,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | # | item | status |
 |---|---|---|
 | O1 | Id case on decode: Swift's ids are `UUID`s, so it reads an id in any case and writes it uppercase; Python and the web keep the string as the file holds it and compare ids as strings. A file whose ids differ only in case — `selectedPeakIDs` lowercase against uppercase peak ids, say — matches in Swift and not in the others (recorded in Python's `test_uuid_case.py` docstring, tracked nowhere). Surveyed and decided (2026-10-16): UUIDs are UUIDs in all three, one rule — plan O1.1–O1.10 below | done — run-reviewed in all three (2026-10-17); Swift 050217d, Python f85eeff, web 08e35bc |
-| O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7) | open |
+| O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7). Widened (owner, 2026-10-17): the status-derivation functions the same in structure, not only behaviour, and how the web analyzer reads its settings — section **O2** below | done — run-reviewed in all three (2026-10-17); Swift e59469e, Python 02d1227, web 379faa2 |
 | O3 | Two slugs break the area naming: `dead-input` (no area; its group holds test files) and `models/capture-probe` (`models/` for `model/`) — renames in all three (step 13) | open |
 | O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither | open |
 
@@ -7167,6 +7167,176 @@ removed only on Delete (the store test). A measurement with no spectrum, or one 
 What users would see: Python 1.0.x files and libraries (lowercase ids) behave the same in all three, Python exports keep
 their dragged label positions, files are written back uppercase on their next save; a file with an id that is not a
 UUID is refused with an error in all three — only a hand-edited or third-party file can have one.
+
+**O2 — the armed prompt, and how the web analyzer reads its settings (owner, 2026-10-17: "Start O2"; asked
+whether the change made it the same as Swift architecturally, not just functionally — it did not; then "Why
+not fix item 5 as part of O2 since it is directly related?" — "Yes").** Two parts: the status-derivation
+functions, and — directly related, since they read the measurement type — how the web analyzer gets its
+settings.
+
+| # | item | status |
+|---|---|---|
+| O2.1 | The status-derivation functions as Swift's (`TapToneAnalyzer.swift`, section "Status derivation"): `tapPrompt`, `pausedStatus`, `armedPrompt`, `materialArmPrompt`, `statusAfterSettle`, `restoredStatus`, `guitarLoopStatus`, in that order, in the analyzer's main file | done — run-reviewed (2026-10-17), uncommitted |
+| O2.2 | The web analyzer reads its settings as Swift's reads `TapDisplaySettings` — survey done, plan and decisions below | done — items 1–4, D3, E1–E4; run-reviewed in all three (2026-10-17), uncommitted |
+
+**O2.1 done (uncommitted).** The web: `restingPrompt()` is `armedPrompt()`, and its guitar branch calls
+`guitarLoopStatus(false)` (it held a copy of that function's body); the seven are together in Swift's order under
+one heading, with Swift's comments — the `statusAfterSettle` comment that sat above `restoredStatus` and an
+orphan comment for a method that no longer exists are gone; `materialArmPrompt` asks "plate?" as Swift's does
+(it asked "brace?" — the same result with two material types); they are no longer private, as Swift's are
+internal, so the `notification` test calls `armedPrompt()` directly. Python: the seven moved from
+`tap_tone_analyzer_control.py` to `tap_tone_analyzer.py`, in Swift's order, after `number_of_taps` as Swift has
+them after `numberOfTaps`; otherwise unchanged. Swift: no change. Tests: the web 77 (`state-notification`,
+`status-message`, `tap-count-change`, `tap-progress`, `scenario-trace`), Python 92; `--check` current.
+*Seen, for the owner:* (a) Swift's own section has `guitarLoopStatus`'s doc comment above `pausedStatus`, stacked
+on that constant's comment, and none on `guitarLoopStatus`; (b) Python keeps the other status constants
+(`ROUTE_CHANGE_STATUS`, `CLIPPING_WARNING_STATUS`, `DEAD_INPUT_STATUS`) and `_resolved_status` (Swift
+`applyStatusOverrides`) in the control mixin, where Swift has them in `TapToneAnalyzer.swift`; (c) the web's
+`PAUSED_STATUS` is a module constant, Swift's a static on the analyzer, Python's a class attribute.
+
+**O2.2 survey (2026-10-17, read-only).** Swift's analyzer reads `TapDisplaySettings` where it needs a setting, in
+every analyzer file; Python's reads `TapDisplaySettings` (`_tds`) the same way. The web's keeps copies, refreshed
+by `applyStoreSettings` on every change of the settings store (`attachSettingsStore`, from App):
+
+| setting | Swift (Python the same) | the web |
+|---|---|---|
+| measurement type | read where used — 29 places across the analyzer files | a copy, `this.measurementType`; also set by `setMeasurementTypeAndNotify` |
+| Measure FLC | read where used (5) | a copy, `this.measureFlc`, by `setMeasureFlc` |
+| guitar type | read where used: the measurement type's guitar type, else the guitar type last stored | derived from the copied measurement type, else Generic — a plate or brace is saved with guitar type Generic where Swift writes the last guitar type (read, not run) |
+| Show Unknown Modes, Dump Capture Audio, the display range, the plate/brace and body defaults | read where used | read from a copy of the whole settings, `this.settings`, replaced by `setSettings` on every change |
+| tap threshold, Peak Min, annotation mode | analyzer state (`@Published`), set from the settings at construction and on reset (`TapToneAnalyzer.swift:1551–1556`); the control sets the analyzer, and the analyzer writes the setting (`didSet`) | analyzer fields overwritten from the store on every change; the control writes the STORE (App `updateSettings({ tapDetectionThreshold })`, `({ peakMinThreshold })`; the annotation cycle sets the analyzer, then App writes the store) — the direction is reversed |
+| the analysis range (30–2000 Hz) | a fixed constant in `TapDisplaySettings` | a fixed constant in `settings.ts` — the same |
+
+Without a store (a unit test) the web analyzer keeps the settings it was given: 12 web test files set the copies
+through `setSettings`, `setMeasureFlc` or `setMeasurementTypeAndNotify`. Swift's tests write `TapDisplaySettings`
+in a sandbox (`TestSandbox`), Python's write `_tds` in one (`settings_scope`). The comments that say "the web has
+no analyzer-visible global, so App mirrors it" date from before step 10 gave the web its store.
+
+**O2.2 plan (for the owner's approval; nothing changed yet).**
+1. The analyzer reads the settings store where it uses a setting, everywhere Swift reads `TapDisplaySettings`.
+   The copies `settings`, `measurementType` and `measureFlc` go, with `setSettings`, `setMeasureFlc`,
+   `setMeasurementTypeAndNotify` and the re-seeding in `applyStoreSettings`. What the analyzer must DO on a change
+   stays an explicit model call, as in Swift (a type change is `changeMeasurementType`, as now).
+2. The tap threshold, Peak Min and annotation mode are analyzer state as in Swift: set from the store at
+   construction and on reset; the controls set the analyzer, and the analyzer writes the store. App stops writing
+   them to the store itself.
+3. Tests set settings in the store, sandboxed per test, as Swift's and Python's; the 12 files move off the setters.
+4. The guitar type follows Swift's rule.
+
+*Decisions (owner, 2026-10-17: "D1 (a). D2 Follow Swift D3 Yes"):* the plan approved; D1 (a), D2 Swift's rule, D3 all three fixed in O2.
+- **D1 — which store the analyzer reads.** (a) The app's one store, the `settingsStore` module instance, read
+  directly as Swift reads the global `TapDisplaySettings`, with tests resetting it per test as Swift's sandbox does;
+  or (b) a store given to the analyzer at construction, tests passing their own. (a) is Swift's shape —
+  recommended.
+- **D2 — the guitar type of a plate or brace.** Swift's rule needs the web to keep the last guitar type when the
+  type changes to plate or brace (a new stored setting, as Swift's `guitarTypeKey`). Recommended: Swift's rule.
+- **D3 — the three items seen in O2.1** (Swift's misplaced comment; Python's other status constants and
+  `_resolved_status` in the control mixin; the web's `PAUSED_STATUS` as a module constant): fix in O2, or leave.
+  Recommended: fix all three in O2 — Swift's comment moved to `guitarLoopStatus`, Python's constants and
+  `_resolved_status` moved to `tap_tone_analyzer.py` where Swift has them, the web's constant a static on the
+  analyzer.
+
+**O2 progress (2026-10-17, uncommitted).**
+- **D3(a), D3(c) done.** Swift: `guitarLoopStatus`'s comment moved onto it from above `pausedStatus` (comment only).
+  The web: the paused status is `TapToneAnalyzer.pausedStatus`, a static, with Swift's comment.
+- **O2.2 items 1–3 done (the web).** The analyzer reads `settingsStore` — the app's one store, D1 (a) — where it
+  uses a setting, as Swift reads `TapDisplaySettings`; the copies `settings`, `measurementType` and `measureFlc`,
+  and `setSettings`, `setMeasureFlc`, `setMeasurementTypeAndNotify`, `attachSettingsStore` and
+  `applyStoreSettings`, are gone. The tap threshold, Peak Min and annotation mode are analyzer state as in Swift:
+  set from the store at construction, saved to it on every change (the threshold and Peak Min setters, as Swift's
+  didSets; `cycleAnnotationVisibility`, as Swift's); App's Threshold and Peak Min controls set the analyzer
+  (`setTapDetectionThreshold`, new, and `setPeakMinThreshold`), its annotation button no longer writes the store,
+  and Settings' Done sets the analyzer's Peak Min, as Swift's Settings sets `peakMinThreshold`. A load writes the
+  measurement's settings to the store and sets those three on the analyzer, as Swift's load sets the properties.
+  Tests: the step runner as Swift's (`makeStepsAnalyzer()` returns the analyzer; `runAnalyzerStep(step, a)`; the
+  settings step writes the store, the Threshold and Peak Min steps set the analyzer, the visibility step sets the
+  analyzer's mode, as Swift's `AnalyzerSteps.swift` and `AnnotationStateTests`); every test sets settings in
+  `settingsStore`; `test/setup.ts` puts the store back to the defaults before each test (each test file has its
+  own instance, saving nothing — Swift's tests have their own settings per process). Web: typecheck and lint
+  clean; fast suite 1289 passed, 1 skipped; `--check` current after regenerating (`test/setup.ts` listed, web only).
+- **Kept, for the owner (E1 below):** `watchSettings()` — the analyzer subscribes to the store only to re-derive
+  the displayed peaks and tell the view when a setting changes (App calls it, as it called `attachSettingsStore`).
+- **Seen, not checked:** Swift's Settings Done starts a new sequence when Measure FLC changes
+  (`measurementChanged` includes it, `TapSettingsView+Actions.swift`); the web's `applySettings` acts only on a
+  type change.
+
+*Questions for the owner:*
+- **E1 — telling the web view of a settings change.** The web view shows a snapshot the analyzer caches (the
+  visible peaks, the tap total, whether it is a guitar), rebuilt only when the analyzer notifies. Swift's views
+  re-read the analyzer's computed values whenever they redraw — closing Settings redraws them — so Swift needs
+  nothing like it. Keeping the store subscription for this alone (re-derive and notify, no copying) is the web's
+  form of that redraw. The alternative is App calling the analyzer after each settings change, as Swift's Settings
+  calls `onApply`. Recommended: keep `watchSettings()`.
+- **E2 — D2 described wrongly.** Swift's guitar type for a plate or brace is not "the last guitar type used":
+  `TapDisplaySettings.guitarType` is the measurement type's guitar type, else a stored guitar type that only
+  loading a guitar measurement writes (`loadMeasurement`, `TapDisplaySettings.guitarType = …`; Settings writes
+  only the measurement type) — else Generic. So a plate saved after loading a Classical measurement records
+  Classical, and one saved on a fresh install records Generic. Python is the same. Following Swift means the web
+  stores that guitar type on a guitar load and reads it for a plate or brace. Still follow Swift?
+- **E3 — D3(b) is larger than described.** Python's status override is one unit — `_set_status_message`, the three
+  status constants, `_set_clipping`, `_set_input_appears_dead`, `_apply_status_overrides`, `_resolved_status` —
+  all in the control mixin, all in `TapToneAnalyzer.swift` in Swift. Moving only the constants and
+  `_resolved_status` would split it. Move the whole unit? Swift's route-change handling
+  (`handleRouteChangeRestart`) is in the same file too, Python's in the control mixin — include it?
+
+**O2, second round (owner, 2026-10-17: "E2 - Yes. E3 Yes - web and python should follow swift on the change of
+Measure FLC"; E1 asked how Python does it and why React cannot work as Swift does).**
+- **E2 done (the web).** A stored guitar type apart from the measurement type (`Settings.guitarType`, default
+  Generic), written by every load whose spectrum names one (`loadedSettingsPatch`, as Swift's load writes
+  `TapDisplaySettings.guitarType`), read through `guitarTypeSetting()` — the measurement type when it is a guitar,
+  else the stored one, as Swift's getter — by the analyzer's classification, its saves (guitar and material) and
+  the per-tap snapshots, and App's guitar type. New shared cases, `material-measurement-inputs` M14 (a plate saved
+  with no guitar measurement loaded records Generic) and M15 (a plate saved after loading a Classical guitar
+  measurement records Classical); the Swift and Python runners read the saved `guitarType`. All three pass; the
+  web with its old rule fails M15.
+- **E3 done (Python).** The status-override unit (`_set_status_message`, the three status constants,
+  `_set_clipping`, `_set_input_appears_dead`, `_apply_status_overrides`, `_resolved_status`) and the route-change
+  handling (`handle_route_change_restart`, `_restore_detection_after_route_change`) moved from
+  `tap_tone_analyzer_control.py` to `tap_tone_analyzer.py`, after the status derivation, unchanged; the map now
+  lists `state/route-change-settle` in `tap_tone_analyzer.py`, beside Swift's `TapToneAnalyzer.swift`. Python's
+  status, settle and device tests 151 passed.
+- **Measure FLC — not done; it is part of a larger difference, for the owner (E4).** Swift's Settings Done:
+  `measurementChanged` = a type change other than guitar to guitar, or a Measure FLC change → `requestStartTapSequence()`;
+  else a guitar-to-guitar change → `reclassifyForGuitarTypeChange()`; no check of whether the engine runs. Python:
+  restarts only across the guitar/material boundary (and only while running), or — through a separate
+  cancel-then-`start_plate_analysis` path — on a type or FLC change while the old type is material and running;
+  an FLC change under a guitar type, or while stopped, does nothing. The web (`changeMeasurementType`, the
+  owner's 2026-10-15 decision that Settings' Done calls the model): a guitar-to-guitar change reclassifies, any
+  other type change clears the result and starts a sequence if the engine runs; an FLC change does nothing.
+- Web fast suite, Python and Swift targeted suites pass; `--check` current after regenerating.
+
+**O2, third round (owner, 2026-10-17: "E1 Yes, make the change. E4 match swift").**
+- **E1 done (the web).** `watchSettings()` is gone, with App's call: nothing subscribes the analyzer to the
+  settings. Its snapshot records the settings object it was built under and is rebuilt at the next read when
+  `settingsStore.get()` is another (the store makes a new one on every change) — App redraws on every settings
+  change, so the view re-reads what depends on a setting, as Swift's views re-read the analyzer's computed
+  values. What the analyzer stores is refreshed by explicit model calls, as in Swift. Test (web only, in
+  `settings-store.test.ts`): a settings change shows in the next snapshot with no notify; without the rebuild it
+  fails.
+- **E4 done (the web and Python).** Settings' Done decides as Swift's: `measurementChanged` = a type change other
+  than guitar to guitar, or a Measure FLC change → a new tap sequence (`requestStartTapSequence` /
+  `restart_tap_sequence`), with no check of whether the engine runs; else a guitar-to-guitar change →
+  `reclassifyForGuitarTypeChange`. The web: `changeMeasurementType` is gone (it replaced the 2026-10-15 shape, as
+  the owner chose), App's `applySettings` computes the two flags as Swift's `applySettings`; the annotation
+  test's guitar-type step is Swift's (the setting, then the re-derivation). Python: the cancel-before-saving and
+  `start_plate_analysis` paths are gone; `_on_measurement_type_changed` takes Swift's `measurement_changed`
+  (it took `crosses_boundary`, the guitar/material boundary only) and no longer checks `_is_running` (set once,
+  when the engine first starts, never cleared). No edition has a test of Settings' Done (Swift's is view code) —
+  the run-review below covers it.
+- Web fast suite 1292 passed, 1 skipped; Python fast suite 1376 passed, 1 skipped; Swift targeted suites passed;
+  `--check` current.
+
+**O2 run-review — passed in all three (owner, 2026-10-17).** Same list per edition, Swift first; (W) the web only.
+1. Launch. → The status reads as before ("Tap the guitar..." once warmed up).
+2. Set Taps to 3 before tapping. → "Tap the guitar 3 times..."; tap once → "Tap 1/3 captured. Tap again...".
+3. Change the type to Material (Plate), Measure FLC off, Taps 2; Done. → A new sequence: "Ready for fL tap (×2 each for L, C)".
+4. Open Settings, turn Measure FLC on; Done. → A new sequence: "Ready for fL tap (×2 each for L, C, FLC)" (before, the web and Python kept the old sequence).
+5. With the type still Plate, turn Measure FLC off while the engine is running mid-sequence (one fL tap taken); Done. → The sequence restarts at fL.
+6. Change the type to Classical Guitar; Done; then to Flamenco Guitar; Done. → The first starts a new sequence; the second keeps the measurement and re-labels its peaks.
+7. Move the Threshold and Peak Min sliders; quit and relaunch. → Both as left.
+8. Cycle the annotation button; quit and relaunch. → The mode as left.
+9. (W) With a guitar measurement shown, turn Show Unknown Modes off and on in Settings. → The unknown peaks' labels go and come back at once on Done.
+10. Load a saved Classical guitar measurement; change the type to Material (Plate); measure and save a plate; export it as a `.guitartap` and open the file in a text editor. → Its `longitudinalSnapshot` has `"guitarType" : "Classical"` (as Swift and Python already did; the web wrote "Generic").
 
 ### Stage 2 progress
 

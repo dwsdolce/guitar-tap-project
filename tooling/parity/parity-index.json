@@ -694,7 +694,7 @@
         "GuitarTap/Models/TapToneAnalyzer.swift"
       ],
       "python": [
-        "src/guitar_tap/models/tap_tone_analyzer_control.py"
+        "src/guitar_tap/models/tap_tone_analyzer.py"
       ],
       "web": [
         "src/state/tapToneAnalyzer.ts"
@@ -2268,6 +2268,10 @@
     {
       "repo": "web",
       "path": "test/png-pixels-per-inch.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/setup.ts"
     },
     {
       "repo": "web",

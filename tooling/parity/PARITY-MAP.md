@@ -59,7 +59,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `state/button-enablement` | `GuitarTap/Models/AnalysisDisplayMode.swift`<br>`GuitarTap/Models/ButtonEnablement.swift` | `src/guitar_tap/models/analysis_display_mode.py`<br>`src/guitar_tap/models/button_enablement.py` | `src/state/buttonEnablement.ts` | tests |
 | `state/mode-lookup` | `GuitarTap/Models/TapToneAnalyzer+AnalysisHelpers.swift` | `src/guitar_tap/models/tap_tone_analyzer_analysis_helpers.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/mode-overrides` | `GuitarTap/Models/TapToneAnalyzer+ModeOverrideManagement.swift`<br>`GuitarTap/Models/UserAssignedMode.swift` | `src/guitar_tap/models/tap_tone_analyzer_mode_override_management.py`<br>`src/guitar_tap/models/user_assigned_mode.py` | `src/state/tapToneAnalyzer.ts` | tests |
-| `state/route-change-settle` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer_control.py` | `src/state/tapToneAnalyzer.ts` | tests |
+| `state/route-change-settle` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/settings-store` | `GuitarTap/Models/TapDisplaySettings.swift` | `src/guitar_tap/models/tap_display_settings.py` | `src/settings.ts`<br>`src/settingsStore.ts` | tests |
 | `state/status-message` | `GuitarTap/Models/TapToneAnalyzer.swift` | `src/guitar_tap/models/tap_tone_analyzer.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `state/tap-detection` | `GuitarTap/Models/TapToneAnalyzer+TapDetection.swift` | `src/guitar_tap/models/tap_tone_analyzer_tap_detection.py` | `src/state/tapToneAnalyzer.ts` | tests |
@@ -199,4 +199,5 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `test/engine-start.test.ts` | web |
 | `test/menu-placement.test.ts` | web |
 | `test/png-pixels-per-inch.test.ts` | web |
+| `test/setup.ts` | web |
 | `test/testIds.ts` | web |
