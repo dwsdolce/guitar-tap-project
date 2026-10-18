@@ -19,7 +19,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 
 | slug | Swift | Python | Web | Equivalence |
 |---|---|---|---|---|
-| `audio/buffer-watchdog` | `GuitarTap/Models/RealtimeFFTAnalyzer+Watchdog.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
+| `audio/buffer-watchdog` | `GuitarTap/Models/RealtimeFFTAnalyzer+Watchdog.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/dead-input` | `GuitarTap/Models/DeadInput.swift` | `src/guitar_tap/models/dead_input.py` | `src/audio/deadInput.ts` | tests |
 | `audio/device-management` | `GuitarTap/Models/AVAudioDevice.swift`<br>`GuitarTap/Models/RealtimeFFTAnalyzer+DeviceManagement.swift` | `src/guitar_tap/models/audio_device.py`<br>`src/guitar_tap/models/realtime_fft_analyzer_device_management.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
 | `audio/engine-control` | `GuitarTap/Models/RealtimeFFTAnalyzer+EngineControl.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/audio/realtimeFFTAnalyzer.ts` | tests |
@@ -69,6 +69,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/audio-clock-timers` | `GuitarTapTests/AudioClockTimerTests.swift` | `tests/test_audio_clock_timers.py` | `test/audio-clock-timers.test.ts` | test suite |
 | `test/axis-ticks` | `GuitarTapTests/AxisTicksTests.swift` | `tests/test_axis_ticks.py` | `test/axis-ticks.test.ts` | test suite |
 | `test/brace` | `GuitarTapTests/BracePropertiesTests.swift` | `tests/test_brace.py` | `test/brace.test.ts` | test suite |
+| `test/buffer-watchdog` | `GuitarTapTests/BufferWatchdogTests.swift` | `tests/test_buffer_watchdog.py` | `test/buffer-watchdog.test.ts` | test suite |
 | `test/button-enablement` | `GuitarTapTests/ButtonEnablementTests.swift` | `tests/test_button_enablement.py` | `test/button-enablement.test.ts` | test suite |
 | `test/calibration` | `GuitarTapTests/CalibrationTests.swift` | `tests/test_calibration.py` | `test/calibration.test.ts` | test suite |
 | `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |

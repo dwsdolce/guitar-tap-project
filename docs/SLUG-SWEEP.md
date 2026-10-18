@@ -6893,7 +6893,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | O1 | Id case on decode: Swift's ids are `UUID`s, so it reads an id in any case and writes it uppercase; Python and the web keep the string as the file holds it and compare ids as strings. A file whose ids differ only in case — `selectedPeakIDs` lowercase against uppercase peak ids, say — matches in Swift and not in the others (recorded in Python's `test_uuid_case.py` docstring, tracked nowhere). Surveyed and decided (2026-10-16): UUIDs are UUIDs in all three, one rule — plan O1.1–O1.10 below | done — run-reviewed in all three (2026-10-17); Swift 050217d, Python f85eeff, web 08e35bc |
 | O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7). Widened (owner, 2026-10-17): the status-derivation functions the same in structure, not only behaviour, and how the web analyzer reads its settings — section **O2** below | done — run-reviewed in all three (2026-10-17); Swift e59469e, Python 02d1227, web 379faa2 |
 | O3 | Two slugs break the area naming: `dead-input` (no area; its group holds test files) and `models/capture-probe` (`models/` for `model/`) — renames in all three (step 13). Decided (owner, 2026-10-17: "1 as proposed 2 (b)"): `dead-input` split into `audio/dead-input tests=test/dead-input-threshold` (DeadInput.swift, dead_input.py, deadInput.ts) and `test/dead-input-threshold` (the three test files; the web and Python "— paired with …" notes moved off the tag line); `models/capture-probe` is `util/capture-probe` — a diagnostic in the app, like `util/test-sandbox`, in an area not expected to have tests (as `model/capture-probe` it would have been a coverage gap whose only evidence, the probe-only `session-pre-roll` test, is skipped while the probe is off). Tag lines only; `--check` current, 143 groups; `audio/dead-input` reads tests; the dead-input tests pass (Python 16, web 16) | done (2026-10-17); Swift 626f023, Python 0e311c7, web 8c0dd71 |
-| O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither | open |
+| O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither. Planned, decided and built — section **O4** below | committed (Swift 99be16b, Python 054be12, web 078c2fc); run-review round 1 (macOS, iOS) passed 2026-10-18, round 2 (Windows, Linux) to do |
 
 **O1 survey (2026-10-16).** Where lowercase ids come from: Python minted `str(uuid.uuid4())` — lowercase — until
 `8a1f2eb` (2026-09-20), so files and libraries saved by the shipped Python 1.0.0–1.0.2 hold lowercase ids; Swift and the
@@ -7337,6 +7337,280 @@ Measure FLC"; E1 asked how Python does it and why React cannot work as Swift doe
 8. Cycle the annotation button; quit and relaunch. → The mode as left.
 9. (W) With a guitar measurement shown, turn Show Unknown Modes off and on in Settings. → The unknown peaks' labels go and come back at once on Done.
 10. Load a saved Classical guitar measurement; change the type to Material (Plate); measure and save a plate; export it as a `.guitartap` and open the file in a text editor. → Its `longitudinalSnapshot` has `"guitarType" : "Classical"` (as Swift and Python already did; the web wrote "Generic").
+
+**O4 — a test of the buffer watchdog's tick (owner, 2026-10-17: "O4 it is").** Survey (read-only). The
+decision is already a pure function, tested in all three (`watchdogDecision` in `audio/dead-input`,
+`test/dead-input-threshold`). Untested is everything around it, in each engine: the tick's guards (running, no
+file playing, not recovering, the 4 s start-up grace), the recovery (attempt count, 0.5 / 1 / 2 / 4 s backoff,
+giving up after the last attempt while still watching), a healthy tick clearing the warning, the count and the
+given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Python alone tests
+pieces of it (`stream-restart-coordination` SR3–SR6, by monkeypatching).
+
+What stands in the way of a shared test, in all three: the tick and the stamps read the system clock (Swift
+`CACurrentMediaTime` / `Date`, Python `time.monotonic`, the web `performance.now`); the tick runs on a real 1 s
+timer (`Timer`, `QTimer`, `setInterval`); the backoff on a real delay (`asyncAfter`, `QTimer.singleShot`,
+`setTimeout`); and the restart opens real audio (Swift `stop()` then `start()`, Python `_close_stream_only()` then
+`reinitialize_portaudio()`, the web re-acquiring the stream).
+
+*Plan (for the owner's approval).*
+1. The engine takes a wall clock — the `WallClock` the analyzer already takes (C6), `ManualWallClock` in tests:
+   the tick's time and start-up grace, the buffer and signal stamps, and the backoff delay all read or schedule
+   through it. The repeating 1 s timer stays; a test calls the tick itself, as Python's SR3 does.
+2. One stand-in for the restart in all three: the recovery's restart goes through one replaceable engine member
+   (default: what each does now), so a test can make it succeed or fail and see when it ran.
+3. Shared cases `buffer-watchdog.json`, slug `test/buffer-watchdog`, as step scripts (start, buffers with or
+   without signal for some seconds, a tick, the restart succeeding or failing; checks on the attempt count, the
+   recovering and given-up flags, the dead-input warning, the restarts made): the guards; starved and dead input
+   each starting a recovery; the backoff sequence; giving up while still watching and holding the warning; a
+   healthy tick clearing all of it; a recovery not counting as signal; a failed restart retrying at once.
+4. `audio/buffer-watchdog tests=test/buffer-watchdog` — the map's one coverage gap closed.
+
+*Differences found — for the owner:*
+- **F1 — the web does not stop before the backoff.** Swift's recovery stops the engine when it schedules the
+  restart, and Python closes the stream; the web keeps its stream and re-acquires in place after the backoff.
+- **F2 — a healthy tick and the permission flag.** Swift's clears an earlier "permission denied" determination
+  (real audio disproves it). Python has the flag but its tick does not clear it; the web has no such flag.
+- **F3 — platform-only, proposed to stay so (cases marked for their edition):** Swift's wrong-device decision
+  (macOS can move a running engine to the default input; PortAudio and the browser open a device by id and do
+  not) and its macOS authorization guard; the web's suspended-context guard (a backgrounded tab); Python's
+  retry of an owed PortAudio re-initialise from the tick (#24).
+
+**O4 decisions and progress (owner, 2026-10-17: "F1 yes, F2 Yes, F3 Accept leaving them"; G1 — where a start
+sets up the watchdog — "(b) it is. Go").** Built, uncommitted:
+- **The wall clock.** Each engine has its own `wallClock` / `wall_clock` (the system's by default; the test's
+  `ManualWallClock`): the buffer and signal stamps, the start time, the tick's time and grace, and the backoff
+  (`wallClock.after`, replacing `asyncAfter` / `QTimer.singleShot` / `setTimeout`) all go through it. The web
+  keeps its watchdog times in milliseconds (`nowMs()`), as before. The 1 s timer stays; a test calls the tick
+  (`checkBufferWatchdog` / `_check_buffer_watchdog`, no longer private in Swift and the web).
+- **The restart stand-in.** `watchdogRestart` / `watchdog_restart` — nil restarts as before (Swift `start()`,
+  Python `reinitialize_portaudio()`, the web re-acquiring the input).
+- **G1 (b).** One setup function: `startBufferWatchdog(isRecovery:)` / `start_buffer_watchdog(is_watchdog_recovery)`
+  / `startBufferWatchdog(isRecovery)` — the stamps, a deliberate start's clean slate, the timer. Swift's `start()`
+  calls it where its inline lines were (no observable change: when `start()` runs during file playback the stamps
+  are now skipped with the timer, and the next live start makes them); Python's was already this (its stamps now
+  also run in a test engine, the timer still does not); the web's recovery calls it after re-acquiring, and a
+  deliberate start now resets the attempt count, as Swift's and Python's do.
+- **F1 done.** The web's recovery closes the stream (`closeStreamOnly`, keeping the context and worklet, as
+  Python closes its stream) when it schedules the restart, and re-acquires after the backoff (`doWatchdogRestart`).
+- **Shared cases** `buffer-watchdog.json` BW1–BW11 (`test/buffer-watchdog`), run in all three with the same
+  runner shape — time moves in 0.5 s steps (exact in binary), the tick at each whole second: the grace (BW1),
+  a recovery and its restart after 0.5 s (BW2), the backoff 0.5 / 1 / 2 / 4 / 4 / 4 s and giving up while still
+  watching (BW3), dead input (BW4), a restart observing no signal — BlackHole (BW5), signal clearing it all (BW6),
+  a failed restart retrying (BW7), a file playing (BW8), not running (BW9), a deliberate start's clean slate
+  (BW10), signal flowing (BW11). All 11 pass in all three. Mutations caught: the web without the reset (BW10),
+  Python with another backoff (4 cases) or stamping signal on a recovery (4), Swift stamping signal on a recovery.
+- **`audio/buffer-watchdog tests=test/buffer-watchdog`** — `--check`: every testable group has test evidence;
+  144 groups, no problems.
+
+*For the owner:*
+- **F2 corrected — nothing to do.** Python has no "permission denied" flag (its permission handling is implicit:
+  PortAudio fails to open the stream), so there is nothing for its tick to clear; the web has none either.
+  Swift's clearing of `microphonePermissionDenied` is a Swift-only platform difference, with F3's.
+- **G2 — done (owner, 2026-10-17: "(a)"):** `microphoneAuthorized`, a replaceable engine member (default: the `AVCaptureDevice` check on macOS, granted on iOS); the tick's guard calls it; the Swift test sets it granted. BW1–BW11 pass. The question was: **G2 — Swift's permission guard in the tests.** Swift's tick returns at once unless macOS reports the
+  microphone authorized. On this Mac it does, so the cases ran; on the GitHub runner (`test.yml` runs the unit
+  plan) it will not, and BW2–BW7 would fail there. Proposed: (a) the permission check through one more
+  replaceable engine member (default the `AVCaptureDevice` check), set to granted by the test — Swift only, as
+  only Swift has the check; or (b) the suite skips itself when the permission is not granted (it would not run in
+  CI). Recommended (a).
+- **F4 — after every restart has failed (read, not run).** Swift's recovery stops the engine before each restart
+  (`stop()` clears the start time; the engine is marked not running), and Python's closes the stream (marked
+  stopped): once the attempts run out after failed restarts, their ticks return at once — no dead-input warning.
+  The web closes only the stream and keeps the context running, so its ticks go on, and after giving up it shows
+  the dead-input warning. BW7 checks only what all three share (the restarts, the count, given up). Which should
+  it be?
+  Asked (owner, 2026-10-17): is one more robust? Read: in none of the three does the watchdog reopen the input
+  once it has given up — a reconnect, a device change or a new selection does, in all three. What differs is
+  what the user is told (checked again on the owner's question, read, not run): no edition says that
+  restarts were tried and failed — that is only logged. Swift's recovery stops the engine, so `isRunning` goes
+  false: the status-bar dot turns to the error colour, the peak readout goes, the Results and Metrics panels
+  read "Stopped", and the chart shows its "Starting..." placeholder; `engineStartFailed` is not shown (it only
+  lets a new selection restart the engine). Python's "Analyzing" / "Stopped" labels follow a view flag set
+  once at the first start and refreshed by FFT frames, so with the stream closed they keep "Analyzing" and
+  the last status — nothing changes on screen. The web keeps its context running and, after giving up, shows
+  "No audio input — check the microphone connection".
+- **F5 — the permission state (asked by the owner, 2026-10-17, as F2's root; corrected after the owner's test).**
+  Swift: the engine checks `AVCaptureDevice` at every start (asks when not determined, throws when denied), and
+  3 s after a start reads a perfectly silent input under a denied status as a denial — both set
+  `microphonePermissionDenied`, which the view shows as its alert; a healthy watchdog tick clears it. Python: the
+  same check, once, at launch, in the view (`views/utilities/platform_adapters.py` `MacAccess`, the same text);
+  denied, it shows the dialog and quits — no flag, no after-start check (its engine notes say PortAudio does not
+  deliver silence on a denial; not verified). The owner's test (permission off, Python launched) shows that
+  dialog. The web: the browser's — `getUserMedia` rejects.
+
+**O4, F4 decided and built (owner, 2026-10-17: "Both" — keep watching and say so; the plan and wording
+approved).** Uncommitted. In all three: the engine records whether its last start or restart failed (Swift's
+`engineStartFailed`, now also Python `engine_start_failed` and the web `engineStartFailed` — set by a failed
+restart, cleared by a successful start or restart); when the recovery gives up and that last restart failed, the
+engine raises `inputCouldNotRestart` / `input_could_not_restart` and re-arms the watchdog as a recovery, so it
+keeps watching (Swift's tick also runs once given up when the engine is stopped, Python's when its stream is
+closed); a healthy tick and a deliberate start clear it. The analyzer shows "⚠ The microphone could not be
+restarted — check its connection, or choose it again in Settings" above every other input warning (Swift
+`couldNotRestartStatus`, Python `COULD_NOT_RESTART_STATUS`, the web `COULD_NOT_RESTART_WARNING`), through the
+same path as the dead input (Swift a sink, Python a thread signal, the web an engine event). Cases: BW7 now
+checks the warning and, after the re-armed grace, the dead input; BW12 (signal returning after failed restarts
+clears it all), BW13 (a deliberate start clears it); `notification` N19 (it outranks dead input and clipping;
+clearing all three restores the status) — which caught Swift recording the new warning as its real status (its
+`statusMessage` didSet now excludes it, as it does the other warnings). Python's SR4 records the backoff through
+the engine's wall clock (it had patched `QTimer.singleShot`, which the system clock happens to use). Python 79,
+web 73, Swift three suites — pass; `--check` current, every testable group has test evidence.
+
+**O4, F5 — microphone permission, every edition and platform: plan approved (owner, 2026-10-17: "Move python
+to swift's shape"; "Of course I want windows covered … Python runs and is shipped to customers on all 3";
+recovery without a restart "is a core question"; the plan, its Windows detection, its recovery and the status
+warning — "Yes and yes").** Step 0 (owner's Windows test, Python, access off): PortAudio refuses to open the
+stream with −9996 "Invalid device" and the generic "Audio Engine Error" shows — Windows makes a denial look like
+a missing device.
+
+| # | item | status |
+|---|---|---|
+| F5.1 | The engine decides and publishes `microphonePermissionDenied` / `microphone_permission_denied` at every start, in every edition. macOS (Swift, Python): authorized → go on; not determined → ask, return, and resume the start through a callback once granted; denied or restricted → the flag and a permission error. iOS (Swift): the record-permission request moves from the view's `toggleAnalyzer()` into the engine's start. Windows (Python): read `HKCU\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone` `Value` and its `NonPackaged` subkey — either "Deny" → the flag and a permission error. Linux (Python): no per-app permission — nothing to detect. Web: the browser's refusal (`NotAllowedError` / `SecurityError`) decided in the engine, not the hook | built (2026-10-17, uncommitted) |
+| F5.2 | Python on macOS gains Swift's 3-second check after a start, with `shouldDeclarePermissionDenied` ported | built (2026-10-17, uncommitted) |
+| F5.3 | One alert in every edition: "Microphone Access Required" — "GuitarTap needs microphone access to analyse tap tones. Please enable it in …, then restart GuitarTap.", the path by platform (macOS System Settings → Privacy & Security → Microphone; iOS Settings → Privacy & Security → Microphone — fixing Swift's iOS text; Windows Settings → Privacy & security → Microphone); the web: "Please allow microphone access for this site in your browser settings, then reload the page." Buttons Open Settings and Cancel (macOS, iOS, Windows `ms-settings:privacy-microphone`); the web OK. Revised (owner, 2026-10-18 — the run-review found macOS keeps a running app on "denied" until it restarts; "tell the user (on all platforms) to check permissions and restart the app"; "Keep as it stands" — no Quit button): Retry dropped | built (2026-10-18, uncommitted) |
+| F5.4 | No edition quits: Python's launch-time `MacAccess` dialog and its exit go | built (2026-10-17, uncommitted) |
+| F5.5 | While the flag is set the status line says "⚠ Microphone access required — enable it in Settings, then restart GuitarTap" (the web: "…then reload the page"), above every other input warning; a successful start clears it | built (2026-10-18, uncommitted) |
+| F5.6 | Recovery without a restart — Retry, and starting by itself on returning to the app — built, then withdrawn (owner, 2026-10-18): on macOS a permission granted while the app runs does not reach it until it restarts (macOS says so as the setting changes), and recovering on some platforms but not others was not worth the complication. Every edition tells the user to restart (reload); Swift's `didBecomeActive` handler, Python's application-state handler and `microphone_authorized()`, and the web hook's permission-change and visibility listeners are gone. The run-review also found that a Retry whose start failed did not show Swift's alert again (shown while the alert was closing) — gone with Retry | withdrawn (2026-10-18) |
+| F5.7 | A healthy watchdog tick clears the flag in every edition (F2) | built (2026-10-17, uncommitted) |
+| F5.8 | Tests: the decision function in the shared dead-input table; the flag cleared by a healthy tick (buffer-watchdog); the new warning's precedence (notification); Python's Windows registry reading as a pure function. Run-review per platform: deny → the alert, the app stays open, the status says so; grant in Settings and come back → it starts with no relaunch, by Retry and by returning | built (2026-10-17, uncommitted) |
+
+*Notes, not acted on:* Swift's sample-rate-0 failure tells the user to check permissions as well as the device
+(it cannot tell which at that point); Swift retries a `kAUStartIO` start failure once, Python does not. *Open:*
+F6 — after a failed start, Python looks ready (the status "Tap the guitar...", a green dot, Pause enabled) while
+the Results panel reads "Stopped" (the owner's Windows screenshot); to check in all three (owner, 2026-10-17:
+"Yes … which we need to resolve before I do the run review"). Found (read, and Python reproduced offscreen
+with the stream open failing as on Windows, −9996): Swift feeds the shared button rule's "FFT running" from
+the engine's `isRunning`, so after a failed start New Tap is greyed (case B9) — and its status dot shows the
+error colour and the chart its "Starting..." placeholder; the web feeds it `running`, set only by a start that
+succeeded. Python feeds it the view's own `_is_running`, set true before the start and never cleared — so after
+a failed start New Tap stays enabled and the indicators read running (the reproduction: `_is_running` true,
+no stream, New Tap enabled, "Tap the guitar to begin"). What armed a sequence after OK in the owner's second
+screenshot is not in the reproduction (nothing arms there). The owner's Windows log of that run shows no device
+refresh after the failure, and the owner may have pressed New Tap before the second screenshot — which, enabled
+by the cause above, arms a sequence on a stream that never opened: the cause is the same. In no edition does anything on screen say, once the alert is closed,
+that the engine is not running.
+
+*F6 decided and built (owner, 2026-10-17: the plan — "Yes"), uncommitted.* (1) Python's running state follows
+the engine, as Swift's: the engine keeps `is_running` (set by a start that succeeds, a file's playback and a
+recovery's reopen; cleared by a stop and a recovery's close) with a `runningChanged` signal, which drives the
+view's `set_running`; the view's `_is_running` reads it — the button rule's "FFT running" (B9) included — and the
+view no longer sets it itself, nor writes "Stopped" over the status line. (2) In all three a deliberate start
+that fails for anything but the permission raises `inputCouldNotStart` / `input_could_not_start` (its own flag:
+Swift's `engineStartFailed` is also set during a recovery's failed restarts and by a failed switch that keeps the
+previous device), cleared by a start that succeeds; the analyzer shows "⚠ The audio input could not be started
+— check it, or choose another input in Settings" just below the permission warning. (3) The not-running
+placeholders say "Audio input unavailable" instead of "Starting..." when the permission is refused or a start
+failed (Swift `inputUnavailable`): Swift's chart and status bar; Python's chart overlay, which now says
+"Starting..." while not running (it said "Press Start to begin" and was hidden at any start) and follows the
+engine's signals; the web's status bar, which now says "Starting..." or that while not running. Case
+`notification` N21 (the precedence), all three. Python reproduced offscreen with the open failing as on Windows:
+New Tap greyed, the status bar showing the warning, the chart "Audio input unavailable"; with the real
+microphone: running, the placeholder hidden. Python fast 1401, the web fast 1309, Swift four suites and the iOS
+build — pass; `--check` current.
+
+**O4, F5 built (2026-10-17, uncommitted).** Swift: the engine raises `microphonePermissionDenied` itself — a
+denied or restricted start, a refused request, a start `audioEngine.start()` refuses for permission (one test,
+`RealtimeFFTAnalyzer.isPermissionError`, which the view and the analyzer now call instead of repeating the
+codes), and the 3-second check; a start that succeeds clears it. iOS: the record-permission request moved from
+the view's `toggleAnalyzer()` into the engine's start, resuming through `onPermissionGranted` (now on both
+platforms). The view's alert follows the flag (it no longer resets it, and its separate launch-time check on
+macOS is gone), gains Retry, and says "Settings → Privacy & Security → Microphone" on iOS; on macOS, coming
+back to the app with the permission granted starts the engine (`didBecomeActiveNotification`,
+`microphoneAuthorized()`). The analyzer shows "⚠ Microphone access required — enable it in Settings" above every
+other input warning (`microphoneAccessStatus`, excluded from the recorded status). Built for macOS and the iOS
+simulator. Python: the engine checks at every start — macOS through AVFoundation (asking when not determined,
+resuming through `on_permission_granted`, which the analyzer sets to its full start), Windows through the two
+consent values (`windows_microphone_access_denied`), Linux nothing — raising `MicrophonePermissionError` and
+the flag (`microphone_permission_denied`, a thread signal); Swift's 3-second check on macOS
+(`should_declare_permission_denied`); a healthy tick clears the flag. `MacAccess`, its launch-time dialog and
+its exit are gone; `platform_adapters.py` now opens the microphone setting (macOS's two URLs, as Swift;
+Windows `ms-settings:privacy-microphone`). The view shows Swift's alert — the platform's path, Open Settings,
+Retry, Cancel — and starts the engine when the application becomes active with the permission granted; the
+canvas no longer reports a refusal as an "Audio Engine Error". The web: the engine decides
+(`isPermissionError`) and raises `microphonePermissionDenied` with its event; the analyzer's warning as above;
+the hook re-checks on the browser's permission change and on the page becoming visible again. Tests: Python's
+permission decision and Windows consent (8 cases); `buffer-watchdog` BW14 (a healthy tick clears the flag) and
+`notification` N20 (the warning's precedence), all three. Python fast 1400, the web fast 1308, Swift's three
+suites — pass; `--check` current.
+
+*Run-review, first attempt (owner, 2026-10-18, Swift macOS): a crash at launch* — "Unexpectedly found nil while
+implicitly unwrapping an Optional value" in `RealtimeFFTAnalyzer+EngineControl.swift`. F5.1 had inserted the iOS
+permission check between macOS's check and the line that takes the input on macOS, so on macOS the input was
+never taken and the engine's first use of it crashed. Fixed: the input is taken after the permission check on
+both platforms (iOS took it early only because its view asked first). No unit test runs the engine's real
+`start()`; this is what the run-review is for. Built for macOS and the iOS simulator. The same console showed "Charts: Custom UnitPoint
+values are not supported in AxisValueLabel's anchor property" — chased (owner, 2026-10-18): Charts prints it for
+any chart on macOS 27.0.1 / Xcode 27.0, a plain `Chart` with its default axes included (a standalone render of
+each variant, ours and none); not the app's labels, nothing to change.
+
+**O4 run-review (for the owner) — round 1 passed (owner, 2026-10-18); round 2 to do.** Two rounds (owner, 2026-10-18): round 1 on macOS and iOS now; round 2 on
+Windows and its Linux VM after the O4 commits, which those machines take from the pushed repos. One list per
+platform and edition, so no step has exceptions.
+
+What the steps expect to see:
+- *The permission alert:* "Microphone Access Required" — "GuitarTap needs microphone access to analyse tap tones.
+  Please enable it in ⟨this platform's settings path⟩, then restart GuitarTap." — Open Settings, Cancel. The web:
+  "…Please allow microphone access for this site in your browser settings, then reload the page." — OK.
+- *The permission warning* (status line): "⚠ Microphone access required — enable it in Settings, then restart
+  GuitarTap"; the web: "…then reload the page".
+- *The no-input warning* (status line): "⚠ The audio input could not be started — check it, or choose another
+  input in Settings", with New Tap greyed and "Audio input unavailable" on the chart (Python) or the status bar
+  (Swift, the web).
+
+*Round 1 — macOS, Swift and Python* (Python: the installed app, or run from a terminal — then the microphone
+setting and the bundle id are the terminal's: Terminal `com.apple.Terminal`, Visual Studio Code
+`com.microsoft.VSCode`).
+1. Launch with the microphone allowed. → It starts as before; no alert.
+2. Quit. System Settings ▸ Privacy & Security ▸ Microphone ▸ GuitarTap off. Launch. → The permission alert, with
+   "System Settings → Privacy & Security → Microphone"; the permission warning; the app stays open.
+3. Cancel. → The alert closes; the permission warning stays.
+4. Turn GuitarTap back on in that setting; choose Quit & Reopen in macOS's prompt (or quit and launch). → It
+   starts; the status line returns to the tap prompt.
+5. Quit. In Terminal: `tccutil reset Microphone com.dolcesfogato.GuitarTap` (Swift) or `tccutil reset Microphone
+   com.dolcesfogato.guitar-tap` (Python). Launch. → macOS asks; Allow. → It starts.
+6. Quit, reset again as in 5, launch; Don't Allow. → The permission alert and warning.
+
+*Round 1 — macOS, the web in Safari*
+1. Open the page with the microphone allowed. → It starts as before; no alert.
+2. Safari ▸ Settings ▸ Websites ▸ Microphone ▸ the site (`localhost` for the local preview) ▸ Deny. Reload. →
+   The permission alert (the web's text, OK); the permission warning.
+3. OK. → The alert closes; the warning stays.
+4. Set the site to Allow; reload. → It starts; the status line returns to the tap prompt.
+
+*Round 1 — iOS, Swift*
+1. Launch with the microphone allowed. → It starts as before; no alert.
+2. Settings ▸ GuitarTap ▸ Microphone off; launch GuitarTap. → The permission alert, with "Settings → Privacy &
+   Security → Microphone"; the permission warning; the app stays open.
+3. Cancel. → The alert closes; the warning stays.
+4. Open Settings (the alert's button, or Settings ▸ GuitarTap) and turn the microphone on. → iOS restarts
+   GuitarTap; it starts.
+
+*Round 2 — Windows, Python*
+1. Launch with the microphone allowed. → It starts as before; no alert.
+2. Quit. Settings ▸ Privacy & security ▸ Microphone ▸ "Let desktop apps access your microphone" off. Launch. →
+   The permission alert, with "Settings → Privacy & security → Microphone"; the permission warning.
+3. Cancel. → The alert closes; the warning stays.
+4. Turn the setting back on; quit and launch. → It starts.
+5. Quit. Settings ▸ System ▸ Sound ▸ the microphone ▸ Properties ▸ Audio ▸ Don't allow. Launch. → "Audio Engine
+   Error", not the permission alert; after OK, the no-input warning.
+6. Set it back to Allow; choose it in GuitarTap's Settings. → It starts; the warning goes.
+
+*Round 2 — Windows, the web* (the browser's site setting, as on macOS)
+1. Deny the site the microphone; reload. → The permission alert (the web's text, OK); the permission warning.
+2. Allow it; reload. → It starts.
+3. With the site allowed, turn the microphone off as in Windows step 5; reload. → "Audio Engine Error"; the
+   no-input warning.
+
+*Round 2 — Linux VM, Python and the web*
+1. Launch Python (and open the page). → Each starts as before.
+2. `pactl list cards` — note the card's "Active Profile" — then `pactl set-card-profile <card name> off`. Launch
+   Python (reload the page). → "Audio Engine Error"; the no-input warning.
+3. `pactl set-card-profile <card name> <the noted profile>`; choose the input in Settings. → It starts; the
+   warning goes.
+
+Not covered by hand: the no-input case on macOS and iOS (the built-in microphone cannot be turned off) — it rests
+on Python's offscreen reproduction and the shared case N21, and Swift's start-failure path has no automated test;
+Windows' microphone switch probably does not reach the Linux VM (its virtual sound card stays present and would
+deliver silence — the dead-input warning), hence `pactl`. The F4 warnings (restarts failed, and the dead input
+after them) are not reachable on demand; the shared cases BW7, BW12–BW13 and N19 pin them.
 
 ### Stage 2 progress
 

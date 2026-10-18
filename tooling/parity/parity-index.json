@@ -11,8 +11,10 @@
       "web": [
         "src/audio/realtimeFFTAnalyzer.ts"
       ],
-      "tests": [],
-      "equivalence": "review only"
+      "tests": [
+        "test/buffer-watchdog"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "audio/dead-input",
@@ -848,6 +850,20 @@
       ],
       "web": [
         "test/brace.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/buffer-watchdog",
+      "swift": [
+        "GuitarTapTests/BufferWatchdogTests.swift"
+      ],
+      "python": [
+        "tests/test_buffer_watchdog.py"
+      ],
+      "web": [
+        "test/buffer-watchdog.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
