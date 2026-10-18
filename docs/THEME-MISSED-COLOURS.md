@@ -39,7 +39,7 @@ File:line references are as found on 2026-10-15; verify before editing.
 | 11 | Plate placeholder "Select a longitudinal (L) peak" / "Select a cross-grain (C) peak"; brace "Select the fL (L) peak…" | `statusWarning` / `textSecondary` (TapAnalysisResultsView.swift:797–803, 942) | only "Select peaks above…" | no placeholder (MaterialResults.tsx:241) | open |
 | 12 | "No peaks detected in visible range" | `textSecondary` (TapAnalysisResultsView.swift:512) | absent | "No peaks above Peak Min." | open |
 | 13 | Chart Options section headers | `textSecondary` (SpectrumView.swift:1291) | absent (QMenu) | secondary | open |
-| 14 | Status bar "Starting..." | `textSecondary` when not running (Controls.swift:569) | blank | shown on a different condition, `status.peakReadout` | open |
+| 14 | Status bar "Starting..." — since #17 O4 F6 (2026-10-18) "Audio input unavailable" instead when the permission is refused or a start failed | `textSecondary` when not running (Controls.swift:569) | blank (the chart's overlay says it, not the status bar) | shown when not running, as Swift's, since F6 — in `status.peakReadout` | open |
 | 15 | Loaded-settings banner icon | separate `statusWarning` icon, pulsing (Controls.swift:472) | same | "⚠" glyph in the text, no pulse | open |
 | 16 | Measurements empty state | icon secondary, title primary semibold, message secondary (EmptyStateView.swift:24–36) | one secondary label, no icon | one secondary paragraph, no icon | open |
 | 17 | Slider reset buttons | `textSecondary` (Controls.swift:615, 630) | same | absent | open |
@@ -69,6 +69,8 @@ File:line references are as found on 2026-10-15; verify before editing.
 | 37 | Mode-boundary label chip | mode colour on mode colour at 0.15 (SpectrumView+ChartContent.swift:78) | no chip | 0.16 on screen, 0.15 export | open |
 | 38 | Peak Min value label on the chart | on `chart.readout.background` (ChartContent.swift:202) | no background | same as Swift | open |
 | 39 | Chart title | default (SpectrumView.swift:533) | `chart.title` | `chart.title` | open |
+| **G** | **a text glyph each platform draws its own way — no edition sets its colour, so no inventory saw it** | | | | |
+| 40 | "⚠" (U+26A0) in the status-line warnings (dead input, wrong device, clipping, could not be restarted, could not be started, microphone access) and the web's loaded-settings banner (item 15) | plain symbol in the text's colour (macOS, iOS) | plain symbol on Linux; the orange colour emoji on Windows (owner's screenshot, 2026-10-18) | as the platform's browser and fonts draw it | open — follow each "⚠" with U+FE0E (text presentation) in all three editions and their shared cases, so every platform draws the plain symbol as Swift does; to check on Windows (Qt) |
 
 Weight only, noted with item 9's area: Plate Cross/Long and Long/Cross values are bold in Swift and the web, regular
 in Python.

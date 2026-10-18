@@ -7589,15 +7589,36 @@ setting and the bundle id are the terminal's: Terminal `com.apple.Terminal`, Vis
    The permission alert, with "Settings → Privacy & security → Microphone"; the permission warning.
 3. Cancel. → The alert closes; the warning stays.
 4. Turn the setting back on; quit and launch. → It starts.
-5. Quit. Settings ▸ System ▸ Sound ▸ the microphone ▸ Properties ▸ Audio ▸ Don't allow. Launch. → "Audio Engine
-   Error", not the permission alert; after OK, the no-input warning.
-6. Set it back to Allow; choose it in GuitarTap's Settings. → It starts; the warning goes.
+5. In GuitarTap's Settings choose an input that delivers nothing — "Microphone (Realtek HD Audio Mic input)" with
+   nothing plugged into the jack — and wait about a minute. → "⚠ The microphone could not be restarted — check its
+   connection, or choose it again in Settings".
+6. Choose a working input in Settings. → It starts; the warning goes.
 
-*Round 2 — Windows, the web* (the browser's site setting, as on macOS)
-1. Deny the site the microphone; reload. → The permission alert (the web's text, OK); the permission warning.
-2. Allow it; reload. → It starts.
-3. With the site allowed, turn the microphone off as in Windows step 5; reload. → "Audio Engine Error"; the
-   no-input warning.
+*Round 2 — Windows, the web in Chrome*
+1. Click the site-information icon at the left of the address bar ▸ Microphone ▸ Block (or Chrome ▸ Settings ▸
+   Privacy and security ▸ Site settings ▸ Microphone ▸ "Not allowed to use your microphone" ▸ Add ▸ the site,
+   `http://localhost:4173` for the local preview). Reload. → The permission alert (the web's text, OK); the
+   permission warning.
+2. The same icon ▸ Microphone ▸ Allow (or remove the site from "Not allowed"); reload. → It starts.
+
+*F7 — the web, an input coming back (found in round 2, owner's Chrome log on the Linux VM, 2026-10-18; owner:
+"Yes" — the fix, and the "default" one with it), committed — web 653b7bb.* With the card off then back on, the web recovered
+when the card returned during the recovery, but stuck on "could not be restarted" when it returned after the
+recovery gave up: Chrome sent no device change then (nothing was capturing), and the handler would not have
+reopened anyway — it acted only on a device new to a non-empty list or on the selected device vanishing, and the
+selection was Chrome's "default" alias, which the web's list never contains (so every device change logged
+"disconnected — switching to the default input"). Fixed, in the web only: (1) while the input could not be
+restarted, the watchdog's tick asks the browser every 5 s for a real input (`inputAvailable`) and reopens it,
+with a deliberate start's clean slate — the natives hear of the device from the system; (2) Swift's first-list
+rule (`applyInputDeviceList`, previous list empty): a list that was empty and now has inputs opens the saved input
+if listed, else the default; (3) the selection is the real device behind Chrome's "default" / "communications"
+alias (`realDeviceId`: the device the alias's label names, else the one sharing its groupId), so what is saved is a
+real device, as Swift and Python save theirs — the start-up selection, a fallback and a recovery's reopen alike;
+the browser still opens its own default first (#17 step 8). Swift's `isAutoSelectable` accepts every device (its
+default is the only one passed), so the web needs no filter. Tests (web): the reopen after failed restarts, and
+nothing reopened while no input is listed; the alias resolution (label, group, a real id unchanged); MS26 (the
+only input gone and back opens the saved input). Mutations: without the re-check, without the first-list branch —
+each fails its test. Web fast suite 1315.
 
 *Round 2 — Linux VM, Python and the web*
 1. Launch Python (and open the page). → Each starts as before.
@@ -7605,12 +7626,33 @@ setting and the bundle id are the terminal's: Terminal `com.apple.Terminal`, Vis
    Python (reload the page). → "Audio Engine Error"; the no-input warning.
 3. `pactl set-card-profile <card name> <the noted profile>`; choose the input in Settings. → It starts; the
    warning goes.
+4. The web (F7): with the page running, `pactl set-card-profile <card name> off`; wait until the status line reads
+   "⚠ The microphone could not be restarted…" and a further minute; switch to another application and back; then
+   set the profile back. → Within about 5 s the page reopens the input and the warning goes, with no reload. The
+   console shows "An input is available again" or "an input is available again — reopened", and no "disconnected —
+   switching to the default input" lines while nothing is unplugged.
 
-Not covered by hand: the no-input case on macOS and iOS (the built-in microphone cannot be turned off) — it rests
+*Round 2 — macOS, the web in Chrome (F7, the "default" fix)*
+1. Clear the service worker, reload, and choose the UMIK-1 in Settings. Plug in or unplug something else
+   (headphones). → The UMIK-1 stays selected; the console has no "switching to the default input" line.
+2. Forget the saved input: in the console, `localStorage.removeItem('gt.inputDeviceId')`, then reload. → The console's
+   "Selected:" line names the real device (its label), not "a device not in the list (id default…)".
+
+Not covered by hand: the no-input case on macOS, iOS and Windows (the built-in microphone cannot be turned off
+on a MacBook or iOS; on Windows, disabling the default input makes Python fall back to another — Stereo Mix in the
+owner's test, 2026-10-18 — as it should, and disabling every input is not a reasonable test) — it rests
 on Python's offscreen reproduction and the shared case N21, and Swift's start-failure path has no automated test;
 Windows' microphone switch probably does not reach the Linux VM (its virtual sound card stays present and would
-deliver silence — the dead-input warning), hence `pactl`. The F4 warnings (restarts failed, and the dead input
-after them) are not reachable on demand; the shared cases BW7, BW12–BW13 and N19 pin them.
+deliver silence — the dead-input warning), hence `pactl`. The F4 warning was reached by hand on Windows (the owner's test, 2026-10-18: an input that
+delivers nothing — the Realtek mic jack with nothing plugged in — gave "could not be restarted" after the
+recovery's attempts), hence Windows step 5; the shared cases BW7, BW12–BW13 and N19 pin it too.
+
+*Seen in round 2, not O4 — recorded, not acted on (owner, 2026-10-18: "Yes"):*
+- Python's input list on Windows includes outputs ("PC Speaker (Realtek HD Audio output with SST)", "PC Speaker
+  (Realtek HD …io 2nd output with SST)") and nameless entries ("Microphone Array 1 ()", "2 ()", "3 ()"). Not yet
+  known whether this is new or the WASAPI loopback and array endpoints Python has always listed.
+- Python's Results panel kept "Analyzing" after the watchdog gave up: its "Analyzing" / "Stopped" label is
+  refreshed only when audio frames arrive, so it goes stale once they stop.
 
 ### Stage 2 progress
 
