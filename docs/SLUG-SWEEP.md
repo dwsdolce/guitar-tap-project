@@ -7653,7 +7653,9 @@ recovery's attempts), hence Windows step 5; the shared cases BW7, BW12–BW13 an
 
 #### Loose ends from O4
 
-Five items found during O4 and its run-review, fixed after it (owner, 2026-10-18: "Fix them now").
+Items found during O4 and its run-review, fixed after it (owner, 2026-10-18: "Fix them now"; L6–L8 from the
+L run-review, owner, 2026-10-18: "Go"; L9–L10 found doing them, owner, 2026-10-18: "Fix both please"; L11 found doing L10, owner, 2026-10-18: "Please
+fix").
 
 | item | what | status |
 |---|---|---|
@@ -7662,6 +7664,12 @@ Five items found during O4 and its run-review, fixed after it (owner, 2026-10-18
 | L3 | Python's Windows input list shows outputs and nameless entries | done — Python 5c25b72 |
 | L4 | Python's "Analyzing" label goes stale | done — Python 5c25b72 |
 | L5 | The web's start-up log says "a device not in the list" | done — web a41a8f9 |
+| L6 | Python's recovery reads a refused permission as an input that could not be restarted | done — Python a9dd622 |
+| L7 | Python's status-bar peak readout goes stale when the engine stops | done — Python a9dd622 |
+| L8 | After failed restarts, all three say "Starting..." | done — Swift 4c8d812, Python a9dd622, web e9d27dd |
+| L9 | Python's watchdog does not stand down while macOS reports the microphone not authorized | done — Python a9dd622 (BW15: Swift 4c8d812) |
+| L10 | The web's chart has no not-running placeholder | done — web e9d27dd |
+| L11 | Python's chart placeholder has no image | done — Python a9dd622 |
 
 - **L1 — Swift's sample-rate-0 message.** Swift told the user, after a device reported 0 Hz, to check the
   microphone permission as well as the device. Since F5 the permission is decided before that point (the start
@@ -7690,28 +7698,79 @@ Five items found during O4 and its run-review, fixed after it (owner, 2026-10-18
 - **L5 — the web's start-up log.** At start-up the web selected the input before loading the list, so the
   "Selected:" line could not name it. Swift loads the list (`availableInputDevices`) before it selects. *Done:*
   the web lists the inputs first, then selects; the line names the device.
+- **L6 — a refused permission during recovery (Python).** Found in the L run-review (Windows, 2026-10-18): with
+  "Let desktop apps access your microphone" turned off while Python ran, the input stopped, the recovery's six
+  restarts each failed with −9996, and the status said "The microphone could not be restarted — check its
+  connection…"; nothing said to restart, and turning access back on changed nothing (no endpoint notification
+  comes, so nothing reopens — F5.6: a permission granted while running needs a restart). Swift's recovery
+  restarts through `start()`, which checks the permission and raises the flag; Python's restarted through
+  `reinitialize_portaudio`, which does not. *Done:* Python's recovery restart checks the permission first (as
+  `start()` does: Windows' consent values, macOS's authorization), so the status says "⚠ Microphone access
+  required — enable it in Settings, then restart GuitarTap". The web is not affected (the browser's own
+  permission). Test: `test_buffer_watchdog.py`, a refused Windows consent during recovery raises the flag and
+  never reopens the device — restarting through `reinitialize_portaudio` again fails it.
+- **L7 — Python's peak readout.** Swift's status bar shows "Peak: …" while the engine runs and, while it does
+  not, "Audio input unavailable" or "Starting..."; Python's readout was written only per audio frame, so it kept
+  the last "Peak: …" (the owner's screenshot, 2026-10-18). The web already did as Swift. *Done:* Python's
+  readout follows the running state and the input flags. Test: `test_export_e2e.py`'s window, started with no
+  microphone, shows "Audio input unavailable" — making the update do nothing fails all ten cases.
+- **L8 — "Starting..." after failed restarts (all three).** The chart's not-running placeholder and the status
+  bar's readout say "Audio input unavailable" only for `inputUnavailable` — the permission refused or a start
+  failed — so after the recovery's restarts failed they said "Starting..." (the owner's screenshot). *Done:*
+  `inputUnavailable` includes `inputCouldNotRestart` in all three; Python gains `input_unavailable` on the
+  engine and the web an `inputUnavailable` getter on the engine (the snapshot reads it), as Swift's. Shared
+  cases: `inputUnavailable` checked in BW7, BW12 and BW13 — the old definition fails them in all three.
+- **L9 — the watchdog and macOS's authorization (Python).** Swift's tick does nothing while macOS reports the
+  microphone not authorized (`guard microphoneAuthorized()`): a permission problem is the permission check's,
+  not a wedge to restart. Python's tick had no such guard. *Done:* Python's tick has it, with a
+  `microphone_authorized` stand-in as Swift's (True off macOS — Windows' consent is checked at each start, Linux
+  has none). The web has no such report (the browser's permission), so the case is for the natives: BW15 (`"only":
+  "natives"`), no recovery however long no buffers come while not authorized — removing the guard fails it.
+- **L10 — the web's chart placeholder.** Swift's chart shows, while the engine is not running, its waveform image
+  over "Audio input unavailable" or "Starting..."; the web's showed only the status-bar text. *Done:* the web
+  draws the same over its chart (the waveform icon at 48 px and the caption, in the secondary text colour).
+  No automated test (the web has no DOM tests): run-review step 5.
+- **L11 — Python's chart placeholder.** Python's was 18 pt text alone; Swift's is the waveform image over a
+  caption. *Done:* Python draws the waveform icon (48 px) over the caption (12 pt, the status bar's caption
+  size), in the secondary text colour, centred on the chart. Test: `test_export_e2e.py`'s window, started with
+  no microphone, shows the placeholder with "Audio input unavailable"; checked by eye in an offscreen grab.
+  Found with it: Swift's chart also has a "Loading..." state (running, no frequencies yet) that cannot occur —
+  `frequencies` is filled with zeros when the engine is made and never emptied — so Python and the web lack
+  nothing there.
 
 Tests run (2026-10-18): Swift BufferWatchdog and StateNotification; Python `test_mic_selection.py`,
-`test_buffer_watchdog.py`, the fast suite (1403 passed, 1 skipped); web typecheck, lint, `mic-selection` and
-`buffer-watchdog`, the fast suite (1315 passed, 1 skipped); the parity map check. L2's detection checked against
+`test_buffer_watchdog.py`, `test_export_e2e.py`, the fast suite (1404 passed, 1 skipped); web typecheck, lint,
+`mic-selection`, `buffer-watchdog` and `state-notification`, the fast suite (1315 passed, 1 skipped); the
+parity map check. After L9–L11: Swift BufferWatchdog (BW1–BW15); Python fast suite 1405 passed, 1 skipped; web
+typecheck, lint, fast suite 1315 passed, 1 skipped; the parity map check. L2's detection checked against
 PortAudio's error shapes (`kAUStartIO`, another host error, an open failure).
 
 *L run-review:*
 1. Windows, Python: start with the log on; open Settings and the input list. → Each microphone appears once,
    with no "PC Speaker" entries and no names ending "()"; each "Found input device" log line ends "(Windows
-   WASAPI)".
-2. Windows, Python: in Sound settings disable the default input, then enable it again. → After each change the
-   list is as in step 1, and the log's "Found input device" lines end "(Windows WASAPI)".
-3. Windows, Python: select the Realtek microphone jack with nothing plugged in (as round 2's step 5), and wait
-   for "could not be restarted". → The Results panel reads "Stopped" with the stopped dot; with Analysis Metrics
-   open, it reads "Stopped" too.
-4. Windows, Python: select a working microphone again. → The Results panel (and Analysis Metrics) read
-   "Analyzing".
-5. macOS, Chrome and Safari, web: reload with the console open. → The "Found input device" lines come before the
-   "Selected:" line, which names the device in quotes (not "a device not in the list").
+   WASAPI)". *Passed (owner, 2026-10-18).*
+2. Windows, Python: Settings → System → Sound → under Input, click the microphone in use → Properties → Audio →
+   "Allow apps and Windows to use this device for audio": Don't allow; then set it back to Allow. → After each
+   change the list is as in step 1, and the log's "Found input device" lines end "(Windows WASAPI)".
+3. Windows, Python: Settings → Privacy & security → Microphone → "Let desktop apps access your microphone": Off,
+   and wait about 30 s. → The "Microphone Access Required" alert appears (Open Settings, Cancel); after Cancel
+   the status says "⚠ Microphone access required — enable it in Settings, then restart GuitarTap"; the chart
+   shows the waveform image over "Audio input unavailable", and the status bar's readout says the same; the
+   Results panel reads "Stopped". Then set it back to On and restart GuitarTap. → It starts on the microphone.
+4. macOS, Chrome and Safari, web (`npm run build`, then `npm run preview`): reload with the console open. → The
+   "Found input device" lines come before the "Selected:" line, which names the device in quotes (not "a device
+   not in the list"). *Passed on macOS (owner, 2026-10-18).*
+5. macOS, Chrome, web (`npm run build`, then `npm run preview`): in the address bar's site settings set
+   Microphone to Block, then reload. → Over the chart, the waveform icon and "Audio input unavailable"; the
+   status bar's readout says the same. Set Microphone back to Allow and reload. → The placeholder goes and the
+   live spectrum shows. *Passed on macOS Chrome (owner, 2026-10-18).*
 
 Not covered by hand: L1 (a device reporting 0 Hz) and L2 (the `kAUStartIO` race) cannot be produced on demand;
-L1 is a message change, L2 rests on the check above.
+L1 is a message change, L2 rests on the check above. "Could not be restarted" with its "Stopped" label (L4) and
+"Audio input unavailable" after failed restarts (L8) have no hand step: WASAPI does not list the Realtek jack
+with nothing plugged in, and the privacy switch now gives the permission warning (L6). L4's "Stopped" was seen
+in the owner's screenshot (2026-10-18); L8 rests on BW7, BW12 and BW13. L9 has no hand step: on macOS, turning
+the microphone off for a running app makes macOS offer to quit it; it rests on BW15.
 
 ### Stage 2 progress
 
