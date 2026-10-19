@@ -16,6 +16,7 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
+- [#16](https://github.com/dwsdolce/guitar-tap-project/issues/16) · [`PLATFORM-BASELINES.md`](PLATFORM-BASELINES.md) — Windows and Linux baselines checked on the real machines, iPad and iPhone minted, the parity tolerance set
 - [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32) · [`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md) — theme colours the inventories missed: an edition using a default colour where Swift uses a role
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
