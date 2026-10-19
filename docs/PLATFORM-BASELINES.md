@@ -52,7 +52,7 @@ cross-edition tolerance; one iOS baseline will do if iPad and iPhone agree. The 
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Windows and Linux: the full suites run on the real Windows machine and the Linux VM, against the CI-minted baselines | open — the Windows and Linux sessions |
+| 1 | Windows and Linux: the full suites run on the real Windows machine and the Linux VM, against the CI-minted baselines | **Linux done** (2026-10-19, all four steps); Windows open |
 | 2 | macOS: the full suites of Swift, Python and the web | open — on the owner's go |
 | 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | open — on the owner's go |
 | 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | to plan after item 3 |
@@ -78,4 +78,41 @@ Report here, under this item: the machine, the commits run, and each step's resu
 name and message.
 
 *Windows:* not yet run.
-*Linux:* not yet run.
+*Linux:* **all four steps pass** (2026-10-19).
+
+Machine: the Linux VM — VMware guest, `Linux-7.0.0-38-generic`, glibc 2.39, Intel i7-12700H; Python 3.14.8 /
+NumPy 2.5.4; Node 26.11.1 / V8 `14.6.202.34-node.37`.
+Commits run: `guitar_tap` `6a4a4e6`, `GuitarTapWeb` `ee20ac9`, hub `180c810` — all three already at or above
+the required commits and level with `origin/main`, so step 1 pulled nothing.
+
+| Step | Result |
+|---|---|
+| 2. `.venv/bin/python -m pytest` | **1469 passed, 1 skipped** (6:37). `test_self_regression` **passed, not skipped**; `test_oracle_sync` passed, not skipped |
+| 3. `npm run test` | **68 files, 1352 passed, 1 skipped** (2:53), `self-regression` and `file-playback` included |
+| 4. `Tooling/run-export-check.sh` | **20 exports checked, 0 failing** |
+| 4. `npm run test:exports` | **10 Playwright exports passed, then 20 exports checked, 0 failing** |
+
+The one skip is the same deliberate test in both editions — `the capture probe is switched off`
+(`test_session_pre_roll` / `session-pre-roll.test.ts`), not a baseline skip.
+
+**The baselines were minted on CI hardware quite unlike this machine**, which makes the pass worth more than a
+formality: Python's Linux baseline came from an Azure runner (`Linux-6.17.0-1022-azure`), the web's from an
+**AMD EPYC 7763**, against an Intel i7-12700H in a VM here. Same Python 3.14.8 / NumPy 2.5.4 / glibc 2.39 and
+the same Node and V8. The configuration key (edition × OS × arch) therefore does hold across machines at
+`selfTolerances`, which is what it claims to do.
+
+**On the Node pin.** The web suite was first run on this machine's Node 24.18.0 (V8 13.6) and passed with the
+identical count; it was then re-run on the pinned 26.11.1 (V8 `14.6.202.34-node.37`, matching the baseline's
+provenance exactly) and the result was the same again. So at `selfTolerances` the web suite is insensitive to
+that V8 major change — but the pinned version is what the figures above were taken on.
+
+**Setting this machine up, for whoever runs Windows** (none of it a product problem, all of it stopped the run):
+
+- `GuitarTapWeb` needs **its own `.venv`** for the export checker — `python3.14 -m venv .venv` then
+  `.venv/bin/pip install -r requirements-dev.txt`, per that repo's README. Without it
+  `run-export-check.sh` stops with "No .venv: set it up as the README's …".
+- After `npm ci` under the pinned Node, **Playwright's browser build moves** and must be reinstalled:
+  `npx playwright install chromium`. Until then all ten export tests fail with
+  `browserType.launch: Executable doesn't exist … chromium_headless_shell-1248`. Note that
+  `npm run test:exports` still **exits 0** in that state, so the failure has to be read out of the output
+  rather than trusted to the exit status.
