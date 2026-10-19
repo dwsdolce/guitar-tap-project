@@ -6,7 +6,7 @@ closed. **Archived record.**
 - **The method this work earned →** [`process/PARITY-TEST-METHOD.md`](../../process/PARITY-TEST-METHOD.md).
   Read that. This file is the evidence behind it.
 - **The sweep of the other 43 slugs →** [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17)
-  · [`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md).
+  · [`docs/completed/SLUG-SWEEP.md`](SLUG-SWEEP.md).
 
 Found 2026-07-23 during the Phase 4a Python port; re-measured and finished 2026-09-19/20.
 
@@ -703,7 +703,7 @@ is "however many rows the table has when the rename happens" — count it then.
 Shared case data and the sweep of the other 43 slugs were never frozen-recalc work, and keeping them
 here is what made this issue grow without bound. They moved to #17 and were **renumbered there** —
 what this record calls Stage 4 (the sweep) is #17's **Stage 1**, and Stage 3 (shared case data) is
-its **Stage 2**. See [`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md).
+its **Stage 2**. See [`docs/completed/SLUG-SWEEP.md`](SLUG-SWEEP.md).
 
 The order was deliberately swapped on the way out. Designing the shared case format against this
 slug alone would fit the mechanism to a sample of one, and this is the least representative slug
@@ -791,5 +791,5 @@ Suites: Swift green, Python 616 passed / 1 skipped (`oracle-sync`, private hub),
 2 skipped (`oracle-sync`, `mint-baseline` — both environment-gated).
 
 **What remains is NOT listed here.** This is a dated log of what was done. Issue #8 is closed;
-what is left belongs to #17 ([`docs/SLUG-SWEEP.md`](../SLUG-SWEEP.md)).
+what is left belongs to #17 ([`docs/completed/SLUG-SWEEP.md`](SLUG-SWEEP.md)).
 

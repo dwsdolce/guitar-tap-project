@@ -153,7 +153,7 @@ what protects the port — it is the part that says which slugs are trustworthy 
 Stage 2 (shared case data) is a *maintenance* win that would also make Android cheaper, but the port
 does not strictly wait on it. A defensible middle: require Stage 1 for the slugs Android actually
 ports in Phases 2–3 (DSP, capture, state), rather than all 44 before any Kotlin is written.
-See [`SLUG-SWEEP.md`](SLUG-SWEEP.md).
+See [`completed/SLUG-SWEEP.md`](completed/SLUG-SWEEP.md).
 
 ### Finish before the Android UI (Phase 4)
 

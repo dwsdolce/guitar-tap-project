@@ -1,6 +1,6 @@
 # Sweep every `@parity` slug
 
-**Issue:** [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · **Status:** ⏳ Stage 2 next — Stage 1 complete 2026-10-02
+**Issue:** [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) · **Status:** ✅ COMPLETE 2026-10-19 — Stage 1 complete 2026-10-02, Stage 2 complete 2026-10-19
 
 ## The problem
 
@@ -56,7 +56,7 @@ Four defect shapes to look for. All four occurred in #8 and none is visible to `
 | an assertion that holds by construction | asserting a peak is in a list the branch just set to `[thatPeak]` |
 | the same rule asserted under two slugs | `WoodQuality.color` pinned in both `test/quality-colors` and `test/plate`, which then disagreed (F8) |
 
-[`process/PARITY-TEST-METHOD.md`](../process/PARITY-TEST-METHOD.md) is the method — eight rules,
+[`process/PARITY-TEST-METHOD.md`](../../process/PARITY-TEST-METHOD.md) is the method — eight rules,
 including how to verify a test is worth keeping (mutate it) and how to avoid the false greens that
 caught us three times.
 
@@ -2844,7 +2844,7 @@ so and then proposes fixing one more field.
 The sweep that followed measured all three editions. Its result — that Swift has zero instances, that
 web is **not** an instance and must not be "fixed" into one, and that the three editions' observable
 surfaces are shaped by three different questions — is recorded in
-[`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) under "The observable surface", because the owner
+[`RESTRUCTURE-NOTES.md`](../RESTRUCTURE-NOTES.md) under "The observable surface", because the owner
 routed it to #1 on 2026-09-22: *"it is what I think is required — i.e. ideally it would be the same
 observable set expressed the same way, so both."* Two live Python defects it turned up are **F41**.
 
@@ -3285,7 +3285,7 @@ and 5 ms move nothing, 15 ms moves all 54 REG-G2 values. Swift has the same stru
 the sweep (April–May 2026, shipped in 1.0–1.0.2) and hid under the old 1 Hz / 1 dB bar. The earlier
 "file playback is deterministic" bullet was wrong — it was deterministic only at one speed. Moved to
 [#19](https://github.com/dwsdolce/guitar-tap-project/issues/19), detail in
-[`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md). **Not an S6 gate** (owner,
+[`PLAYBACK-WALL-CLOCK-TIMING.md`](PLAYBACK-WALL-CLOCK-TIMING.md). **Not an S6 gate** (owner,
 2026-09-23). Until #19 is fixed, a Python self-regression failure that lists only late-sequence
 REG-G2/REG-P2 values is #19; anything else is not.
 
@@ -3541,7 +3541,7 @@ Python 719, web 642 — all pass; parity map 103 groups.
 ### S7 — Capture / DSP pipeline (5 slugs)
 
 Status: ✅ **CLOSED 2026-09-27** — all 5 slugs read; every finding it produced (F49–F54) fixed and run-reviewed
-in all three. #19 finished during it (see [`PLAYBACK-WALL-CLOCK-TIMING.md`](completed/PLAYBACK-WALL-CLOCK-TIMING.md));
+in all three. #19 finished during it (see [`PLAYBACK-WALL-CLOCK-TIMING.md`](PLAYBACK-WALL-CLOCK-TIMING.md));
 its two remaining "noticed" items (the Python minter's settings sandbox, timers leaking between playback
 cases) were settled in F52 item 8.
 
@@ -6861,7 +6861,7 @@ fixture built for one test became the pattern for a suite.
 **Relative size.** The owner's read, 2026-09-20, is that Stage 1 overwhelms Stage 2. The measurement
 supports it: Stage 1 is 40 test slugs across nine subsystems with production defects expected, where
 Stage 2 is a mechanical move of the case-shaped subset. This bears on what #17 should gate — see
-[`ANDROID-PLAN.md`](ANDROID-PLAN.md), which records that how much of #17 gates the Android port is a
+[`ANDROID-PLAN.md`](../ANDROID-PLAN.md), which records that how much of #17 gates the Android port is a
 judgement, not a given.
 
 ### Stage 2 plan — what is left
@@ -6884,7 +6884,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | 11 | C — scenario slugs: they stay as code, so what makes their tests the same in all three is **not yet decided** | `scenario-trace`, `tap-decisions`, `state-invariants`, `start-tap-race`, `session-pre-roll`, `tap-count-change`, `tap-progress`, `status-message`, `annotation-state`, `audio-clock-timers`, `comparison`, `frozen-peak-recalc`, `notification`, `measurement-complete`, `effective-peak-id`, and `display-range`'s scenario tests and `decay-tracking`'s DK9 | done — batches A, B and C (C1–C7) — see **Step 11 — scenario slugs** below |
 | 12 | Cannot be shared — per-machine baselines, random draws, the filesystem | `self-regression`, `uuid-case`, `wav-dump-folder` | nothing to do |
 | 13 | Parity links — every test slug linked to the code it tests, every model file in a group | all | done (Swift 3543ac7, Python bb752af, web 0296fd0) — see **Step 13 — parity links** below |
-| 14 | Close Stage 2 and #17 | — | to do — the open items below first |
+| 14 | Close Stage 2 and #17 | — | done (2026-10-19): this record moved to `docs/completed/`, the links fixed, the Issue closed with its Resolution |
 
 **Open before closing (2026-10-16).** Raised along the way, not yet decided or done:
 
@@ -8700,7 +8700,7 @@ colours. Fixed in both. Python's Taps, Threshold and Peak Min labels were in the
 each edition's colour literals, and an item drawn in the default colour has none, so it never appeared. The web's
 sliders still have no reset buttons (Swift and Python do): noted, not changed. New step 13, in all three. A sweep
 for more such misses (owner, 2026-10-15) found 39 across the three editions: filed as #32
-([`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md)), to be fixed after this run-review. **All three editions passed steps 1–13 (owner, 2026-10-15). Run-review complete.**
+([`THEME-MISSED-COLOURS.md`](../THEME-MISSED-COLOURS.md)), to be fixed after this run-review. **All three editions passed steps 1–13 (owner, 2026-10-15). Run-review complete.**
 
 ### Step 11 — scenario slugs
 
@@ -9470,7 +9470,7 @@ logged for later. Logging it is how divergence persists.
 ## Background
 
 - The #8 record, which is the evidence for all of the above:
-  [`docs/completed/FROZEN-RECALC-TEST-PARITY.md`](completed/FROZEN-RECALC-TEST-PARITY.md)
+  [`docs/completed/FROZEN-RECALC-TEST-PARITY.md`](FROZEN-RECALC-TEST-PARITY.md)
 - Possible overlap worth checking before starting:
   [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) — restore `TEST-PLAN.md` as the
   tri-platform test definition.

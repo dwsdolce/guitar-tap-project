@@ -151,7 +151,7 @@ Sketch:
 
 ## Related
 
-- [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) `SLUG-SWEEP.md` — **F31** (the
+- [#17](https://github.com/dwsdolce/guitar-tap-project/issues/17) [`completed/SLUG-SWEEP.md`](completed/SLUG-SWEEP.md) — **F31** (the
   disarm defect this came from, fixed) and **F24** (`displayMode` as a required input to the button
   rule; the trap-the-user bug that is Reading B without a visible selector).
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) `RESTRUCTURE-NOTES.md` — the
