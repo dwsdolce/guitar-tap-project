@@ -17,6 +17,20 @@
       "equivalence": "tests"
     },
     {
+      "slug": "audio/chunking",
+      "swift": [
+        "GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift"
+      ],
+      "python": [],
+      "web": [
+        "public/spectrum-processor.js"
+      ],
+      "tests": [
+        "test/audio-chunking"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "audio/dead-input",
       "swift": [
         "GuitarTap/Models/DeadInput.swift"
@@ -359,7 +373,8 @@
       "tests": [
         "test/file-playback",
         "test/self-regression",
-        "test/tap-decisions"
+        "test/tap-decisions",
+        "test/wav-dump-folder"
       ],
       "equivalence": "tests"
     },
@@ -495,7 +510,8 @@
         "src/measurement/base64.ts",
         "src/measurement/decode.ts",
         "src/measurement/encode.ts",
-        "src/measurement/floatJson.ts"
+        "src/measurement/floatJson.ts",
+        "src/measurement/types.ts"
       ],
       "tests": [
         "test/measurement-codable",
@@ -600,6 +616,7 @@
         "src/presentation/displayRange.ts"
       ],
       "tests": [
+        "test/comparison",
         "test/display-range"
       ],
       "equivalence": "tests"
@@ -780,7 +797,8 @@
         "src/state/tapToneAnalyzer.ts"
       ],
       "tests": [
-        "test/annotation-state"
+        "test/annotation-state",
+        "test/comparison"
       ],
       "equivalence": "tests"
     },
@@ -808,6 +826,18 @@
       ],
       "web": [
         "test/annotation-state.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/audio-chunking",
+      "swift": [
+        "GuitarTapTests/AudioChunkingTests.swift"
+      ],
+      "python": [],
+      "web": [
+        "test/audio-chunking.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -931,6 +961,7 @@
         "GuitarTapTests/ComparisonModeTests.swift"
       ],
       "python": [
+        "tests/test_comparison_annotation_guard.py",
         "tests/test_comparison_mode.py"
       ],
       "web": [
@@ -1013,6 +1044,32 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/export-directory",
+      "swift": [
+        "GuitarTapTests/ExportDirectoryTests.swift"
+      ],
+      "python": [
+        "tests/test_export_directory.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/export-e2e",
+      "swift": [
+        "GuitarTapUITests/GuitarTapUITests.swift"
+      ],
+      "python": [
+        "tests/test_export_e2e.py"
+      ],
+      "web": [
+        "e2e/export.spec.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/export-filename",
       "swift": [
         "GuitarTapTests/ExportFilenameTests.swift"
@@ -1049,7 +1106,8 @@
         "tests/test_file_playback_regression.py"
       ],
       "web": [
-        "test/file-playback.test.ts"
+        "test/file-playback.test.ts",
+        "test/wav-decode.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -1259,6 +1317,7 @@
         "tests/test_mic_selection.py"
       ],
       "web": [
+        "test/calibration-store.test.ts",
         "test/mic-selection.test.ts"
       ],
       "tests": [],
@@ -1565,7 +1624,10 @@
       "python": [
         "tests/test_wav_dump_folder.py"
       ],
-      "web": [],
+      "web": [
+        "test/capture-audio.test.ts",
+        "test/wav-dump.test.ts"
+      ],
       "tests": [],
       "equivalence": "test suite"
     },
@@ -1626,6 +1688,18 @@
       "equivalence": "review only"
     },
     {
+      "slug": "tooling/material-cases",
+      "swift": [],
+      "python": [
+        "tests/material_cases.py"
+      ],
+      "web": [
+        "test/materialCases.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "tooling/mint-baseline",
       "swift": [],
       "python": [
@@ -1670,6 +1744,18 @@
       "web": [
         "test/parityRunner.ts"
       ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "tooling/playback-support",
+      "swift": [
+        "GuitarTapTests/PlaybackTestSupport.swift"
+      ],
+      "python": [
+        "tests/playback_support.py"
+      ],
+      "web": [],
       "tests": [],
       "equivalence": "review only"
     },
@@ -1862,6 +1948,20 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/file-exporter",
+      "swift": [
+        "GuitarTap/Views/Utilities/MeasurementFileExporter.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/measurement_file_exporter.py"
+      ],
+      "web": [],
+      "tests": [
+        "test/export-directory"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/frequency-format",
       "swift": [
         "GuitarTap/Views/Utilities/Extensions.swift"
@@ -2049,6 +2149,7 @@
         "src/presentation/pdfReport.ts"
       ],
       "tests": [
+        "test/export-e2e",
         "test/pdf-report"
       ],
       "equivalence": "tests"
@@ -2134,6 +2235,7 @@
         "src/presentation/spectrumExport.ts"
       ],
       "tests": [
+        "test/export-e2e",
         "test/spectrum-export"
       ],
       "equivalence": "tests"
@@ -2192,11 +2294,11 @@
     },
     {
       "repo": "python",
-      "path": "tests/test_capture_opens_no_window.py"
+      "path": "tests/conftest.py"
     },
     {
       "repo": "python",
-      "path": "tests/test_chart_zoom_limits.py"
+      "path": "tests/test_capture_opens_no_window.py"
     },
     {
       "repo": "python",
@@ -2208,6 +2310,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_qtimer_slots.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_settings_calibration_details.py"
     },
     {
@@ -2216,27 +2322,19 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_tap_threshold_storage.py"
+    },
+    {
+      "repo": "python",
+      "path": "tests/test_threshold_sliders.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_update_checker.py"
     },
     {
       "repo": "python",
       "path": "tests/test_wasapi_raw_open.py"
-    },
-    {
-      "repo": "python",
-      "path": "tests/test_wi10_qtimer_slots.py"
-    },
-    {
-      "repo": "swift",
-      "path": "GuitarTapTests/AudioChunkingTests.swift"
-    },
-    {
-      "repo": "swift",
-      "path": "GuitarTapTests/DrawnPointsTests.swift"
-    },
-    {
-      "repo": "swift",
-      "path": "GuitarTapTests/ExportDirectoryTests.swift"
     },
     {
       "repo": "swift",
@@ -2249,6 +2347,18 @@
     {
       "repo": "swift",
       "path": "GuitarTapTests/SpectrumViewGestureTests.swift"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTapTests/TestRunner.swift"
+    },
+    {
+      "repo": "web",
+      "path": "e2e/app.ts"
+    },
+    {
+      "repo": "web",
+      "path": "e2e/smoke.spec.ts"
     },
     {
       "repo": "web",
@@ -2276,18 +2386,6 @@
     },
     {
       "repo": "web",
-      "path": "test/capture-audio.test.ts"
-    },
-    {
-      "repo": "web",
-      "path": "test/chart-zoom-limits.test.ts"
-    },
-    {
-      "repo": "web",
-      "path": "test/drawn-points.test.ts"
-    },
-    {
-      "repo": "web",
       "path": "test/engine-start.test.ts"
     },
     {
@@ -2300,7 +2398,23 @@
     },
     {
       "repo": "web",
+      "path": "test/saveFromAnalyzer.ts"
+    },
+    {
+      "repo": "web",
       "path": "test/setup.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/skippedReporter.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/spectrumSpec.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/support/canvasStandIn.ts"
     },
     {
       "repo": "web",

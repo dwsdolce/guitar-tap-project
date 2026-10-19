@@ -27,10 +27,9 @@ An impl tag may link its behavioural test group with an optional attribute:
 
 The generator uses that link to fill the map's **Equivalence** column — the honest
 answer to "are the contents *actually* equivalent, or just co-located?" A linked
-`test/*` group makes the impl group **oracle**-backed (it has a `g#-…` web oracle
-test) and/or **tests**-backed (paired Swift+Python tests); unlinked groups read
-**review only**. The map asserts *location*; equivalence is proven by the oracle +
-paired tests, and this column shows which rows actually have that proof.
+`test/*` group makes the impl group **tests**-backed; unlinked groups read
+**review only**. The map asserts *location*; equivalence is proven by the linked
+tests, and this column shows which rows actually have that proof.
 
 ## Commands
 

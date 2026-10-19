@@ -6894,6 +6894,8 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7). Widened (owner, 2026-10-17): the status-derivation functions the same in structure, not only behaviour, and how the web analyzer reads its settings — section **O2** below | done — run-reviewed in all three (2026-10-17); Swift e59469e, Python 02d1227, web 379faa2 |
 | O3 | Two slugs break the area naming: `dead-input` (no area; its group holds test files) and `models/capture-probe` (`models/` for `model/`) — renames in all three (step 13). Decided (owner, 2026-10-17: "1 as proposed 2 (b)"): `dead-input` split into `audio/dead-input tests=test/dead-input-threshold` (DeadInput.swift, dead_input.py, deadInput.ts) and `test/dead-input-threshold` (the three test files; the web and Python "— paired with …" notes moved off the tag line); `models/capture-probe` is `util/capture-probe` — a diagnostic in the app, like `util/test-sandbox`, in an area not expected to have tests (as `model/capture-probe` it would have been a coverage gap whose only evidence, the probe-only `session-pre-roll` test, is skipped while the probe is off). Tag lines only; `--check` current, 143 groups; `audio/dead-input` reads tests; the dead-input tests pass (Python 16, web 16) | done (2026-10-17); Swift 626f023, Python 0e311c7, web 8c0dd71 |
 | O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither. Planned, decided and built — section **O4** below | done — Swift 99be16b, Python 054be12, web 078c2fc, F7 web 653b7bb; run-review passed on every platform and edition (2026-10-18) |
+| O5 | Rule 1 not met at the close-out check (2026-10-18): 25 files in the test directories carried no `@parity` tag — the ten Stage 1 listed (2026-09-20) and never tagged, and fifteen since. Tagging them found Rule 2 gaps and three divergences from Swift; decided (owner, 2026-10-18: "Please do what you suggested"): tag them all, `--check` fails on an untagged test file, close the gaps, follow Swift on the divergences — section **O5** below | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| O6 | Reading the 26 files tagged `none` (2026-10-18) found twins under `none`, Rule 2 gaps, three defects and wrong or missing tag reasons; decided (owner, 2026-10-18: "It all needs cleaned up"): all of it, before closing — section **O6** below | done (Swift 0fe7630, Python 389e898, web fbd2630); run-review steps 1–3, 5–9 passed, step 4 (Windows) to run |
 
 **O1 survey (2026-10-16).** Where lowercase ids come from: Python minted `str(uuid.uuid4())` — lowercase — until
 `8a1f2eb` (2026-09-20), so files and libraries saved by the shipped Python 1.0.0–1.0.2 hold lowercase ids; Swift and the
@@ -7778,6 +7780,238 @@ L1 is a message change, L2 rests on the check above. "Could not be restarted" wi
 with nothing plugged in, and the privacy switch now gives the permission warning (L6). L4's "Stopped" was seen
 in the owner's screenshot (2026-10-18); L8 rests on BW7, BW12 and BW13. L9 has no hand step: on macOS, turning
 the microphone off for a running app makes macOS offer to quit it; it rests on BW15.
+
+#### O5 — every test file tagged, and what tagging them found
+
+`gen_parity_map.py --check` checked only the code directories for untagged files; it now checks the test
+directories too (`test_dirs` in `platforms.py`), so an untagged test file fails it. Each untagged test file was
+read against the other editions' tests and the shared cases (2026-10-18).
+
+| item | what | status |
+|---|---|---|
+| T | Tag every test file | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G1 | Cycling the annotation visibility saves the mode — tested only in Python | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G2 | Setting a threshold on the analyzer saves it (MS22) — not in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G3 | No peak labels while comparing — tested only in Python | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G4 | With no microphone, "Audio input unavailable" on the chart and the status bar — tested only in Python | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G5 | The dump WAV's format (mono float32 at the capture rate) — tested only in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G6 | Calibration file parsing and the flat extension outside the file's range — tested only in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G7 | Saving from the analyzer — tested only in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G8 | A save with no dragged label — tested only in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D1 | The web falls back to the global calibration when no device is known | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D2 | The web saves `tapEntries` only for more than one entry | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D3 | Python blocks labels in its annotation layer while comparing | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D4 | With no label dragged, Swift writes `"peakAnnotationOffsets": {}`; Python and the web omit the key | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| H | Project labels in test code and file names; `test_wi6`'s stale docstring and unused import; the parity map's dead "oracle" equivalence | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+
+- **T.** Helpers shared between editions: `tooling/playback-support` (Swift `PlaybackTestSupport`, Python
+  `playback_support`), `tooling/material-cases` (Python `material_cases`, web `materialCases`). Helpers and tests
+  one edition has by design: `@parity none` with the reason (Swift `TestRunner`; Python `conftest`,
+  `test_threshold_sliders`, `test_tap_threshold_storage`; web `saveFromAnalyzer`, `skippedReporter`,
+  `spectrumSpec`, `support/canvasStandIn`, `e2e/app.ts`, `e2e/smoke.spec.ts`). The export end-to-end tests are a
+  new slug, `test/export-e2e` (Swift `GuitarTapUITests`, Python `test_export_e2e`, web `e2e/export.spec.ts`),
+  linked from `view/spectrum-export` and `view/pdf-report`. The rest went into the slug they test, or were
+  removed where the shared cases now pin all of it: web `g3a-calibration` (CP1–CP9, CAL1–CAL3), `g6`, `g7`,
+  `g8`, `g9` (PR52–PR55, `export-filename`, `measurement-codable`, LD1–LD8, `pdf-report`, the file-playback
+  provenance tests); `g0-wav` split into `wav-decode` (`test/file-playback`) and `wav-dump`
+  (`test/wav-dump-folder`); `calibration-store` keeps what only it tests (`test/mic-selection`).
+- **G1.** AS17 also checks `savedVisibility` — the mode the settings hold — in all three; Python's mock-based
+  tests of the same are removed.
+- **G2.** The web runs MS21 against its settings store (as Swift) and has MS22; its note "no counterpart" was
+  from before the web analyzer saved its thresholds (O2). Removing the web's save fails MS21–MS22.
+- **G5.** `wav-dump-folder.json`, WD1–WD2: the file written reads back as one channel of 32-bit floats at the
+  capture's rate with the samples written — Swift and Python through `dumpCaptureWAV` / `_dump_capture_wav` to
+  the dump folder, the web through `encodeWavFloat32`.
+- **G6.** `calibration.json`: CAL3 (the flat extension) and the parse cases CP1–CP9 — a UMIK-1 file, the Sens
+  Factor (with a + sign), SESSION REF and REW's SPL, separators, the 1–24000 Hz range, header names in any case,
+  "Sensitivity Factor" not read, a number not in full dropping the line, sorting, no data an error. Found and
+  fixed to Swift's rules: the web read "Sensitivity Factor", a factor with no "dB", no + sign, "100abc" as 100,
+  and gave no error for a file with no data (its callers checked instead; Play File now logs it and plays
+  without a calibration, as Swift's); Python's "Sens Factor" pattern allowed any spacing. Python's three dead
+  module-level calibration helpers (`parse_cal_metadata`, `parse_cal_file`, `interpolate_to_bins`), each with
+  rules of its own, are removed.
+- **G7.** `frozen-peak-recalc.json`: the `save` step takes a name and notes, and `saved` checks the selection,
+  names, dragged labels, name, notes, thresholds, tap count, Show Unknown Modes, measurement and guitar type,
+  per-phase spectra, tap entries and the stored colours of the tap comparison. PR52 (a guitar's per-peak state),
+  PR53 (a guitar's settings), PR54 (a plate's spectra, real tap count, Peak Min, name and notes), PR55 (tap
+  entries and their colours). Mutations caught (Python): a fixed tap count fails PR53–PR54; dropping the label
+  offsets fails PR32 and PR52.
+- **D1.** The web resolves a device's calibration or none, as Swift; the global id only records the last one
+  chosen. Python's docstring claimed the fallback its code never had; corrected.
+- **D2.** The web saves any tap entries there are, as Swift (a capture builds them only for more than one tap).
+- **D3.** Python's gate moved to the peaks model's visibility rule (Swift's feed); its test now runs through
+  the peaks model, and removing the gate fails it.
+- **H.** `test_wi1_settings_persistence` → `test_threshold_sliders`, `test_wi6_tap_display_settings` →
+  `test_tap_threshold_storage`, `test_wi10_qtimer_slots` → `test_qtimer_slots`; labels removed. The web's
+  `g`-numbered files are gone, so the map's "oracle" equivalence (a `g#` web file) could no longer occur:
+  removed from `gen_parity_map.py`, `tooling/TEST-COVERAGE.md` and `tooling/parity/README.md`.
+
+- **G3, G4.** Swift decided both inline in its views (`peaks:` / `annotationPeaks: isComparing ? nil : …`,
+  `fft.inputUnavailable ? "Audio input unavailable" : "Starting..."`), the web in `App.tsx`, so neither could be
+  tested there. Decided (owner, 2026-10-18: "As you recommend"): the analyzer decides, in all three, and the
+  views display it — `chartPeaks` / `chartAnnotationPeaks` (none while comparing) on the tap analyzer,
+  `notRunningMessage` on the engine (Python `chart_peaks`, `chart_annotation_peaks`, `not_running_message`).
+  Swift's chart and status bar read them; Python's canvas (its dots and its peak feed), peaks model (its labels),
+  chart placeholder and status bar read them; the web's `App` builds its markers from them and shows the
+  message. Shared cases: CM26 (`chartPeaks`, `chartLabels` — given, none while comparing, given again once
+  cleared) and `notRunningMessage` in BW7, BW12, BW13. Removing the web's comparison gate fails CM26.
+- **D4, G8.** Decided (owner, 2026-10-18: "As you recommend"): Swift omits the empty label map, as it omits an
+  empty override map and as WR2 has unset optionals omitted — Python and the web already did. PR56: a save with
+  no label dragged writes no `peakAnnotationOffsets` key in each edition's own file; one dragged, it does.
+  Swift's old behaviour fails PR56.
+
+Tests run (2026-10-18): Swift AnnotationState, BufferWatchdog, Calibration, ComparisonMode,
+FrozenPeakRecalculation, MicSelection, StateNotification, WavDumpFolder; iOS Simulator test build; Python fast
+suite (1420 passed, 1 skipped); web typecheck, lint, fast suite (1295 passed, 1 skipped — fewer than before by
+the removed web tests); the parity map (147 groups, no problems).
+
+#### O6 — what the files tagged `none` hold
+
+Each test and helper file tagged `@parity none` was read against the other editions' code and tests
+(2026-10-18).
+
+| item | what | status |
+|---|---|---|
+| T1 | The zoom's minimum span is tested in all three under `none` (Swift `SpectrumViewGestureTests`, Python `test_chart_zoom_limits`, web `chart-zoom-limits`) — one shared case file | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| T2 | Drawn points: Swift `DrawnPointsTests` and web `drawn-points` are the same three cases under `none` (Python draws the whole spectrum) — a two-edition slug | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| T3 | Dump Capture Audio: 5 of the web's 6 `capture-audio` tests twin `test/wav-dump-folder` | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| T4 | Python's `test_qtimer_slots` slot tests and a peak-card Re-analyze test repeat shared cases — removed | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G9 | The web worklet's re-chunking into 1024-sample chunks (Swift AC1–AC2) — untested in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G10 | Chart pan clamps, a pan of nothing, and a zoom of scale 1 — untested in Python and the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G11 | The default export folder (~/Documents/GuitarTap) — untested in Python | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G12 | Settings' calibration details follow the picker — untested in Swift and the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G13 | A recovery closes the stream when it schedules its restart, and the restart opens the selected device (Python SR4, SR6) — untested in Swift and the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| G14 | No saved-recording notice when saving is off — not in the web | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D5 | Python's peak cards find their peak by frequency: with two peaks at one frequency, starring, naming or resetting either does nothing | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D6 | Swift: a device change while a recovery's restart is pending (after a failed one) starts the engine alongside the pending restart; Python opens nothing then, the web guards on `isRecovering` | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D7 | Python finds the Documents folder two ways: the export default `~/Documents`, the dump folder Qt's (which follows a redirected Documents on Windows) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| H | Seven `none` tags with no reason, six with a wrong one; a stale comment in `test_qtimer_slots`; Swift's pan test says "0 Hz" and asserts 1 Hz | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D9 | The web's load was split into helpers Swift's has no counterpart for (`restoreSnapshot` for a guitar, `restoreMaterial` for a plate or brace, each freezing on its own, in its own order) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D10 | A file with no annotation mode: Swift and Python load "All", the web kept the current mode; Swift saves the loaded mode to the settings, Python did not | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D11 | A load during a capture: in Swift and Python the capture lands on the loaded measurement (traced); the web's load closed the gate | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D12 | The web's capture machinery (`armGuitarDetection`, `prepareMaterialCapture`, a capture index over fixed buffers) is a structure Swift's inline accumulation does not have — recommended restructuring to Swift's shape as its own step after the O5–O6 run-review | open — the owner's decision |
+| D13 | A comparison chart has no mode lines (owner, 2026-10-19: the lines belong to one guitar type; nothing says the compared measurements are one type). The analyzer decides — Swift `showsModeBoundaries`, Python `shows_mode_boundaries`, web `showsModeBoundaries` (snapshot): false for a comparison of saved measurements, true for a multi-tap guitar's per-tap overlay. The chart (Swift `showModeBoundaries:`, Python's bands, the web's `showModeBoundaries` render option) and the main view's exports read it; the Measurements list's export of a saved comparison drew Generic Guitar's lines in all three — now none. Shared cases CM27 (load / compare / New Tap / saved comparison) and CM28 (per-tap overlay keeps them), `modeLines` in all three runners | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D14 | The web's comparison / material legend made Swift's: each curve's 16 × 2 line and its label in the curve's colour (the legend read `color`, which the overlays no longer carry since #2's palette roles — no line drawn), caption-size text, 12 apart, the readout background with corner 6 and no border | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D15 | The mode-line labels made Swift's in Python and the web: a chip in the mode's colour on the mode's colour at 15 %, corner 4, centred on the range's lower line just inside the plot's top, slid inward at either side, drawn over the curves and dots and under the peak labels. Python had plain text right of the line, clipped at the top (now `_ModeChip`, riding an undrawn line above the curves; peak labels raised over it); the web drew the chip above the plot and under the curves. Step 1 retest (owner, Python): a chip whose line was off the chart was slid into view at the edge — Air at the upper left, Ring and Upper on top of each other at the upper right; now only a line inside the chart's range is labelled, as Swift's `visibleModeBoundaries` (the web already skipped them) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D16 | Step 1's first comparison shots (the web's Cancel enabled, Taps 1, Swift 88.3–336.7 Hz, the web without mode lines) carried state from before the comparison; redone from a fresh state all three agree, so nothing to fix. Play File: the web's was disabled while comparing — now open, as Swift's and Python's (playing a file starts a new measurement, which ends the comparison). The web's plays through the running browser audio, so it was also disabled while that is not running (before the microphone is granted, or when it is refused or cannot be opened); owner, 2026-10-19: all three behave the same — Swift's buttons (every layout) and File-menu command, and Python's button and menu action, now need the engine running (Swift `fft.isRunning`, Python `set_running`) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D17 | A comparison's range (owner, 2026-10-19 — settled after trying the Settings guitar range and the built-in default): a comparison spans its entries' ranges (the lowest lower bounds, the highest upper ones), whatever Settings or the screen held before — one rule, Swift `DisplayRange.spanning`, Python `spanning_range`, web `spanningRange` (the web's `comparisonAxisRange` folded in), used by a new comparison, a saved comparison with no range of its own, a save given none, and the Measurements list's images of a saved comparison and a multi-tap. A saved comparison keeps the chart's range it was saved with (a zoom included) and loading it shows that range, as every measurement does: a new optional `comparisonRange` {minFreq, maxFreq, minDB, maxDB} on the record, written by Save, read by the load and the list's export. Older builds ignore the field: a file carrying it opened with the shipped 1.0.2 Python and web code; Swift 1.0.2's decoder reads fields by name with no check on unknown keys. Appendix B documents it. Only guitars can be compared (a plate or brace save carries no `spectrumSnapshot`). Shared cases: the `settings` step's `range`, the file `oldPair` (a saved comparison with no range); CM5 / CM29 (a new comparison spans its entries with Settings on Classical / Plate), CM30 (saved with a zoom → loads with it, `savedRange`), CM31 / CM32 (`oldPair` spans its entries with Settings on Classical / Plate); WR5–WR6 (the field written back, or not added) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D18 | Python's main-view exports of a comparison (Export Spectrum, the comparison PDF) each built their own chart, at the widest range of the compared files, and its PDF report a third, with its own range fallback. Now one `_create_exportable_spectrum_view()` as Swift's `createExportableSpectrumView()` — the chart's range (`_chart_range`), its overlays (`_chart_overlay_spectra`, Swift's `materialSpectra`, read from the analyzer for live and loaded alike) — used by all three. The Measurements list's export of a saved comparison keeps the widest range, as Swift's (owner: the widest range also works; made consistent) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D19 | The web's two comparison loads shared a helper of its own, `applyComparison` (with `loadComparisonRecord`); Swift writes each load out — `loadComparison` and `loadMeasurement`'s comparison branch. Both now written out in Swift's order; the saved branch no longer clears the measurement's peaks (Swift's leaves them) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D20 | The web disabled Auto dB and Metrics while its audio was not running; Swift's and Python's never are. Now enabled, as Swift's | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+| D8 | Ending a comparison: Python's load, New Tap and per-tap overlay off call `clear_comparison()`; Swift and the web wrote the resets out at each place, their `clearComparison()` called only by tests; the web's load also went through a helper of its own, `enterFrozen()` (and had an uncalled `enterLive()`) | done (Swift 0fe7630, Python 389e898, web fbd2630) |
+
+- **T1, G10.** The zoom and pan rules are one pure function each, in every edition's display-range module —
+  Swift `DisplayRange.zoomed` / `panned`, Python `zoomed_range` / `panned_range`, web `zoomedRange` /
+  `pannedRange` — which the gestures call (Swift's zoom and pan handlers; Python's ViewBox zoom and its wheel
+  zoom and pan; the web chart's). Python had checked the minimum span itself and left the scaling to pyqtgraph;
+  the web's pan was inline and clamped one end only (unreachable: no range is wider than the bounds); none of
+  it shows. Shared cases in `display-range.json`: Z1–Z12 (zoom), P1–P6 (pan). Python's and the web's
+  zoom-limit files are removed; Swift's `SpectrumViewGestureTests` keep the SwiftUI wiring (reason corrected,
+  its "0 Hz" now 1 Hz). Checked by hand offscreen: Python's real chart zooms, refuses and pans as the cases.
+- **T2.** `drawnIndices` cases DP1–DP3 in `display-range.json`, Swift and the web; their two files removed.
+- **T3, G14.** The web's `capture-audio` is in `test/wav-dump-folder`, with "with saving off, no file is
+  named" added.
+- **T4.** `test_qtimer_slots` keeps its two Qt delivery tests; the slot tests (AT1, AT2, MC1, TP6 in the
+  shared cases) and its stale import comment are gone. The peak-card Re-analyze test stays: its table half is
+  Python's own.
+- **G9.** `test/audio-chunking`: the web runs the worklet (`public/spectrum-processor.js`) under stand-ins for
+  the browser's globals — blocks of 4800, 777, 512, 1024 and 128 frames reach the pipeline as whole chunks of
+  1024 in order (AC1), and the audio clock advances by whole chunks (AC2); Swift's `AudioChunkingTests` share
+  the slug (`audio/chunking` links both). A 1000-sample chunk fails five of six.
+- **G11, D7.** Python's export default takes Documents as the system names it (as its dump folder), so a
+  Documents moved to OneDrive is the one used; `tests/test_export_directory.py` and Swift's
+  `ExportDirectoryTests` are `test/export-directory`, linked from `view/file-exporter`.
+- **G12.** The calibration details Settings shows are one function in each edition (Swift and Python
+  `MicrophoneCalibration.details`, web `calibrationDetails`), which the Settings views show; cases CD1–CD2 in
+  `calibration.json`. Python's range line had an en dash where Swift's and the web's have a hyphen; now the
+  hyphen. Python's picker test stays (its dialog sets its labels itself).
+- **G13, D6.** BW2 checks the input is closed as soon as the recovery schedules its restart (`inputOpen`), in
+  all three. Swift's `restartsOnSelectionChange` gains `isRecovering`: no selection-change restart while a
+  recovery's restart is pending (MS31). The web had the guard only for an empty list: a device connected or
+  disconnected while the restart was pending opened a stream of its own; now it only selects, and the restart
+  opens the selection (two web tests; removing the guard fails both).
+- **D5.** Python's cards name their peak by id (signals carry it; `PeaksModel.row_of`), as Swift's rows and the
+  web's cards; three tests star, name and reset one of two same-frequency cards; a lookup by frequency fails
+  four. Latent, not reachable: findPeaks no longer makes such twins, and every edition heals a file's twins on
+  load (the owner, 2026-10-18, asked how to reach it; the run-review step written for it is withdrawn).
+- **D8.** Decided (owner, 2026-10-18: "It is an architectural divergence. We remove those. I think (a) makes
+  sense."; and, on `enterFrozen`, "WE REMOVE ARCHITECTURAL DIVERGENCES — unless there is a compelling platform
+  based reason for them and then we discuss them"): `clearComparison()` is the one place a comparison ends in
+  all three — Swift's and the web's load, New Tap and per-tap overlay off call it, as Python's did. The web's
+  load ends the comparison first, as Swift's; `enterFrozen()` and `enterLive()` are gone (the load's freeze —
+  detection idle, the recording cancelled — is the load's own, as Swift's). Swift's New Tap now also clears
+  the comparison snapshots (as Python's did; nothing reads them after). The shared step `clearComparison`,
+  which no user can take, is gone: CM6 ends a comparison with New Tap, CM20 with New Tap before loading the
+  saved one, CM26 with a load.
+- **D9.** Decided (owner, 2026-10-18: "Accept your recommendation"): the web's `loadMeasurement` is one function
+  in Swift's order — the comparison ended and the spectrum cleared first; name, notes and date; the
+  measurement's settings, then Peak Min; the peaks; the per-phase spectra (none for a guitar) or the frozen
+  spectrum; the identified L/C/FLC; frozen and complete; the label positions, selection, annotation mode and
+  overrides; the threshold and tap count; the microphone; the loaded-settings banner; the provenance; the tap
+  entries. `restoreSnapshot`, `restoreMaterial` and `restoreOffsets` are gone. Found with it and now as Swift: a
+  guitar loaded after a plate kept the plate's phase spectra on the web (LD12; the old way fails it).
+- **D10.** Found with D9 and fixed to Swift's (the owner's rule: divergences are removed): the web loads "All"
+  when the file has no mode; Python's load saves the mode. LD13–LD14 (`annotationVisibility`,
+  `savedAnnotationVisibility`); Python's missing save fails LD14, the web's old default fails LD14.
+- **D11.** Traced in all three (2026-10-18): a load while a tap is being captured — Swift and Python left the
+  capture gate open, so the window kept filling and its finish replaced the loaded peaks, selection and
+  ring-out (guitar) or counted a tap and moved to review (plate/brace); a re-arm then let further taps
+  cascade into "Analysis complete!" under the loaded name, and a capture finished just before the load
+  still ran its processing over it. The web's load closed the gate, so nothing landed. Decided (owner,
+  2026-10-18: "I agree with your recommendations. Go ahead and implement them"): one `abandonCapture()` in all
+  three — it closes the gate, empties the window, the pre-roll and the waiting pre-roll, drops the captured
+  taps (guitar and material), resets the capture ids (a pending timeout finds its capture gone), and bumps a
+  `captureGeneration` that the capture's scheduled processing and re-arms check; New Tap (in place of its own
+  resets), a load (both branches) and a comparison call it. Python's material phase reset no longer clears the
+  gate (Swift's does not; its comment claimed it did); the web's `disarmDetection` is gone. With it, the third
+  difference the trace found: Swift's guitar finish shows each captured tap's peaks (all selected, classified)
+  until the next tap or the average, Python's and the web's showed the last live frame's — Python and the web
+  now do as Swift. Test: a shared step `liveAudio` (real audio through the microphone's path, in all three
+  runners) and PR57 (a load mid-capture; the audio after it — the window, the rest, another tap — leaves the
+  loaded peaks, selection, completion and a tap count of 0); without the load's abandon it fails in all three.
+- **H.** Every `none` tag has its reason, each checked against the code.
+
+Tests run (2026-10-18): Swift AudioChunking, BufferWatchdog, Calibration, DisplayRangeExpansion,
+ExportDirectory, the gesture suites, MicSelection; iOS Simulator test build; Python fast suite (1435 passed, 1
+skipped); web typecheck, lint, fast suite (1319 passed, 1 skipped); the parity map (151 groups, no problems).
+
+*O5–O6 run-review:*
+1. macOS, Swift, Python and web: compare two saved guitar measurements. → The chart shows their curves with no
+   peak dots or labels and no mode lines; the legend is each curve's coloured line and its name in that colour,
+   with no border; Play File is enabled. Export Spectrum. → The image has no mode lines. Load one of them (or
+   press New Tap). → The measurement's dots, labels and mode lines are back; each mode's name is a tinted chip
+   centred on its line just inside the plot's top, over the curve, not clipped, and Air's and DP's stay inside
+   the plot at the sides — the same in all three. (Passed, owner, 2026-10-19, after D13–D16 and the Python
+   off-chart label fix.)
+2. macOS, Swift, Python and web: Settings with a calibration chosen. → The details read "Sensitivity: … dB",
+   "Data points: …" and the range as "10-20017 Hz" (a hyphen) in all three. (Passed, owner, 2026-10-19.)
+3. macOS, Python and web: zoom the chart in to its limit and out, and pan it to each end. → A zoom stops at
+   10 Hz / 10 dB wide; a pan stops at 1 Hz / 5 kHz and −120 / 20 dB without changing the width — as Swift.
+   (Passed, owner, 2026-10-19 — Swift, Python and web alike: a zoom ends at the last step at least 10 wide,
+   just over 10; a careful pan stops at exactly 1.0 Hz.)
+4. Windows, Python: Export Spectrum on a fresh install (or after clearing the last export folder). → The save
+   dialog opens in Documents\GuitarTap — the Documents folder Windows uses (OneDrive's, if Documents is there).
+5. macOS, Chrome, web: Settings → Calibration → None; reload. → No calibration is applied (the details are
+   gone) until one is chosen. (Passed, owner, 2026-10-19.)
+6. macOS, Swift, Python and web: a guitar, Taps 2, New Tap; tap once, and at once (within a second) load a
+   saved measurement; tap a few more times. → The loaded measurement stays as it is — its peaks, its
+   selection, no tap count — and nothing completes. New Tap then starts a normal sequence. (Passed, owner, 2026-10-19.)
+7. macOS, Python and web: a guitar, Taps 2, New Tap; tap once. → Between the taps the results show that tap's
+   peaks, as Swift does; after the second tap the averaged result. (Passed, owner, 2026-10-19.)
+8. macOS, Swift, Python and web: Settings → Classical Guitar, its range 80–300 Hz (Save Current View, or the
+   range fields); compare two saved guitar measurements. → The chart spans their saved ranges (the widest of
+   them, not 80–300 Hz). Export Spectrum and Export PDF. → Each image shows the chart's range. Settings →
+   Material (Plate); compare them again. → The same range. Zoom into a region of the comparison and Save it;
+   New Tap; load the saved comparison. → It opens at the zoomed region it was saved with. Load the 5-guitar
+   comparison fixture (saved before comparisons kept their range), on Plate and again on Classical Guitar. →
+   Both times it opens at the range that spans its entries, 75–350 Hz and −100 to 0 dB. (Passed, owner, 2026-10-19.)
+9. macOS, Swift, Python and web: start with the microphone refused (System Settings → Privacy & Security →
+   Microphone, the app off). → Play File (and the File menu's Play Audio File… in Swift and Python) is
+   disabled; Auto dB and Metrics are enabled. Allow it and start again. → Play File is enabled. (Passed, owner, 2026-10-19.)
+
+Not covered by hand: D5 (no file or capture can make two peaks at one frequency) — its three tests; D6 and the
+web's pending-restart change (a device change during a failed recovery's backoff) — MS31 and the web's two
+tests; G9 — the worklet's chunking cannot be seen.
 
 ### Stage 2 progress
 
