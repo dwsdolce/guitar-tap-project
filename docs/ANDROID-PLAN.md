@@ -139,14 +139,14 @@ exists, and anything that changes canonical Swift gets ported twice if the port 
 
 ### Finish before Android code starts (Phases 2–3)
 
-**Status 2026-09-20: all three original gates are CLOSED. One successor gate is open — #17.**
+**Status 2026-10-19: all the gates are CLOSED — the three original ones, and #17, their successor (closed 2026-10-19).**
 
 | Issue | Status | Why it gates the port |
 |---|---|---|
 | **#10 Unify test goldens onto the shared oracle** | ✅ **CLOSED** | The highest-leverage one. Only the web read `parity-oracle.json`; Swift and Python hardcoded the same numbers. All three suites now read the shared oracle, so Android consumes one source instead of becoming a fourth hardcoded copy. |
 | **#5 Material multi-tap: Swift ~2 dB / sub-bin below Python/web** | ✅ **CLOSED** | A numeric disagreement in the code Android mirrors. Re-measured on the current build and found already fixed — the archived finding was stale. "Canonical" is now unambiguous where Android's material path is validated. |
 | **#8 Python↔Swift fixture divergence (frozen-recalc)** | ✅ **CLOSED** | Android ports the tests and the fixtures. That slug is now 37 of 37 behaviours covered in all three editions, every test carrying its id. **But see #17 below — it closed this slug and opened the same question for the other 43.** |
-| **#17 Sweep every `@parity` slug** | ⏳ **OPEN — now the gate** | Inherits #8's reasoning and widens it. #8 read one slug out of 44 and found eight tests measuring nothing, two false-twin rows, and a data bug in shipped code — and that slug looked *healthier* than several others by test-count spread. Android ports tests and fixtures from all of them. Porting against fixtures that already disagree is how a day disappears into a phantom bug; porting against 43 unswept slugs is how a week does. |
+| **#17 Sweep every `@parity` slug** | ✅ **CLOSED** (2026-10-19) | Inherits #8's reasoning and widens it. #8 read one slug out of 44 and found eight tests measuring nothing, two false-twin rows, and a data bug in shipped code — and that slug looked *healthier* than several others by test-count spread. Android ports tests and fixtures from all of them. Porting against fixtures that already disagree is how a day disappears into a phantom bug; porting against 43 unswept slugs is how a week does. |
 
 **How much of #17 must land first is a judgement, not a given.** Its Stage 1 (sweep and triage) is
 what protects the port — it is the part that says which slugs are trustworthy to port from. Its
