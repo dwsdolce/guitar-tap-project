@@ -7708,7 +7708,11 @@ fix").
   `start()` does: Windows' consent values, macOS's authorization), so the status says "⚠ Microphone access
   required — enable it in Settings, then restart GuitarTap". The web is not affected (the browser's own
   permission). Test: `test_buffer_watchdog.py`, a refused Windows consent during recovery raises the flag and
-  never reopens the device — restarting through `reinitialize_portaudio` again fails it.
+  never reopens the device — restarting through `reinitialize_portaudio` again fails it. Found in the run-review
+  (step 3's log, owner, 2026-10-18) and fixed: the recovery's log put a refused permission where a device name
+  goes ("restart could not open 'Microphone access denied'"); it now names a device that could not be opened, and
+  otherwise logs the failure as Swift's ("restart failed (Microphone access denied) — retrying") — Python
+  0f1b19c.
 - **L7 — Python's peak readout.** Swift's status bar shows "Peak: …" while the engine runs and, while it does
   not, "Audio input unavailable" or "Starting..."; Python's readout was written only per audio frame, so it kept
   the last "Peak: …" (the owner's screenshot, 2026-10-18). The web already did as Swift. *Done:* Python's
@@ -7736,7 +7740,8 @@ fix").
   no microphone, shows the placeholder with "Audio input unavailable"; checked by eye in an offscreen grab.
   Found with it: Swift's chart also has a "Loading..." state (running, no frequencies yet) that cannot occur —
   `frequencies` is filled with zeros when the engine is made and never emptied — so Python and the web lack
-  nothing there.
+  nothing there. Removed from Swift as dead code (owner, 2026-10-18: "Yes"); macOS and iOS builds pass — Swift
+  cde0605.
 
 Tests run (2026-10-18): Swift BufferWatchdog and StateNotification; Python `test_mic_selection.py`,
 `test_buffer_watchdog.py`, `test_export_e2e.py`, the fast suite (1404 passed, 1 skipped); web typecheck, lint,
@@ -7751,12 +7756,14 @@ PortAudio's error shapes (`kAUStartIO`, another host error, an open failure).
    WASAPI)". *Passed (owner, 2026-10-18).*
 2. Windows, Python: Settings → System → Sound → under Input, click the microphone in use → Properties → Audio →
    "Allow apps and Windows to use this device for audio": Don't allow; then set it back to Allow. → After each
-   change the list is as in step 1, and the log's "Found input device" lines end "(Windows WASAPI)".
+   change the list is as in step 1, and the log's "Found input device" lines end "(Windows WASAPI)". *Passed
+   (owner, 2026-10-18).*
 3. Windows, Python: Settings → Privacy & security → Microphone → "Let desktop apps access your microphone": Off,
    and wait about 30 s. → The "Microphone Access Required" alert appears (Open Settings, Cancel); after Cancel
    the status says "⚠ Microphone access required — enable it in Settings, then restart GuitarTap"; the chart
    shows the waveform image over "Audio input unavailable", and the status bar's readout says the same; the
    Results panel reads "Stopped". Then set it back to On and restart GuitarTap. → It starts on the microphone.
+   *Passed (owner, 2026-10-18).*
 4. macOS, Chrome and Safari, web (`npm run build`, then `npm run preview`): reload with the console open. → The
    "Found input device" lines come before the "Selected:" line, which names the device in quotes (not "a device
    not in the list"). *Passed on macOS (owner, 2026-10-18).*
