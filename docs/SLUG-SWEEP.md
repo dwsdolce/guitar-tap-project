@@ -7472,8 +7472,8 @@ a missing device.
 | F5.7 | A healthy watchdog tick clears the flag in every edition (F2) | built (2026-10-17, uncommitted) |
 | F5.8 | Tests: the decision function in the shared dead-input table; the flag cleared by a healthy tick (buffer-watchdog); the new warning's precedence (notification); Python's Windows registry reading as a pure function. Run-review per platform: deny → the alert, the app stays open, the status says so; grant in Settings and come back → it starts with no relaunch, by Retry and by returning | built (2026-10-17, uncommitted) |
 
-*Notes, not acted on:* Swift's sample-rate-0 failure tells the user to check permissions as well as the device
-(it cannot tell which at that point); Swift retries a `kAUStartIO` start failure once, Python does not. *Open:*
+Swift's sample-rate-0 message and Python's missing `kAUStartIO` retry: fixed after the run-review, items L1 and
+L2 under "Loose ends from O4" below. *Open:*
 F6 — after a failed start, Python looks ready (the status "Tap the guitar...", a green dot, Pause enabled) while
 the Results panel reads "Stopped" (the owner's Windows screenshot); to check in all three (owner, 2026-10-17:
 "Yes … which we need to resolve before I do the run review"). Found (read, and Python reproduced offscreen
@@ -7639,8 +7639,8 @@ setting and the bundle id are the terminal's: Terminal `com.apple.Terminal`, Vis
    input" line.
 2. Forget the saved input: in the console, `localStorage.removeItem('gt.inputDeviceId')`, then reload. → The console's
    "Selected:" line's id is a real device's — the same id as one of the "Found input device" lines that follow —
-   not `default`. (At start-up the input is selected before the list loads, so that line says "a device not in
-   the list" even for a real device — as before F7.)
+   not `default`. (At the time, the input was selected before the list loaded, so that line said "a device not in
+   the list" even for a real device; item L5 below.)
 
 Not covered by hand: the no-input case on macOS, iOS and Windows (the built-in microphone cannot be turned off
 on a MacBook or iOS; on Windows, disabling the default input makes Python fall back to another — Stereo Mix in the
@@ -7651,12 +7651,67 @@ deliver silence — the dead-input warning), hence `pactl`. The F4 warning was r
 delivers nothing — the Realtek mic jack with nothing plugged in — gave "could not be restarted" after the
 recovery's attempts), hence Windows step 5; the shared cases BW7, BW12–BW13 and N19 pin it too.
 
-*Seen in round 2, not O4 — recorded, not acted on (owner, 2026-10-18: "Yes"):*
-- Python's input list on Windows includes outputs ("PC Speaker (Realtek HD Audio output with SST)", "PC Speaker
-  (Realtek HD …io 2nd output with SST)") and nameless entries ("Microphone Array 1 ()", "2 ()", "3 ()"). Not yet
-  known whether this is new or the WASAPI loopback and array endpoints Python has always listed.
-- Python's Results panel kept "Analyzing" after the watchdog gave up: its "Analyzing" / "Stopped" label is
-  refreshed only when audio frames arrive, so it goes stale once they stop.
+#### Loose ends from O4
+
+Five items found during O4 and its run-review, fixed after it (owner, 2026-10-18: "Fix them now").
+
+| item | what | status |
+|---|---|---|
+| L1 | Swift's sample-rate-0 message mentions permissions | done — Swift 9beff54 |
+| L2 | Python lacks Swift's single `kAUStartIO` retry | done — Python 5c25b72 |
+| L3 | Python's Windows input list shows outputs and nameless entries | done — Python 5c25b72 |
+| L4 | Python's "Analyzing" label goes stale | done — Python 5c25b72 |
+| L5 | The web's start-up log says "a device not in the list" | done — web a41a8f9 |
+
+- **L1 — Swift's sample-rate-0 message.** Swift told the user, after a device reported 0 Hz, to check the
+  microphone permission as well as the device. Since F5 the permission is decided before that point (the start
+  throws first on a refusal), so 0 Hz is the device's. *Done:* the message says "the input device reports a
+  sample rate of 0 Hz. Check that an audio input device is connected." Python and the web have no such check
+  (PortAudio and the browser fail the open instead).
+- **L2 — the `kAUStartIO` retry.** Swift's view retries a start that fails with Core Audio's `kAUStartIO`
+  ('iost', 1937010544 — a Continuity Audio device connecting or disconnecting at that moment) once after 1 s, and
+  shows "Audio Engine Error" only if the retry fails too. Python showed the error at once. *Done:* Python's
+  `start_analyzer` does the same: PortAudio reports the failure as an unanticipated host error carrying the
+  OSStatus (`exc.args[2][1]`), and a failed retry shows the same "Audio Engine Error" through a canvas signal
+  the window connects. macOS only in effect, as Swift (the code is Core Audio's). The web has no such failure.
+- **L3 — Python's Windows input list.** In the owner's round-2 screenshot the list showed "PC Speaker (Realtek
+  HD Audio output with SST)" and "Microphone Array 1 ()", "2 ()", "3 ()". These are WDM-KS pin names. The filter's
+  doc said WDM-KS was always dropped, but it was dropped only when a preferred API (WASAPI, else DirectSound,
+  else MME) was found — and the device-list refresh (a device added or removed) did not give the filter the
+  host-API names, so after a refresh nothing was preferred and every API's entries were listed. *Done:* WDM-KS
+  is always dropped; the start-up load and the refresh share one helper that gives the filter the host-API names;
+  each "Found input device" log line ends with its API ("(Windows WASAPI)"). Tests: two in
+  `tests/test_mic_selection.py` (a list from every API keeps only WASAPI's; with no API preferred, WDM-KS still
+  goes) — removing the fix fails one.
+- **L4 — Python's "Analyzing" label.** The Results panel's and the Metrics dialog's "Analyzing" / "Stopped"
+  indicators were refreshed only by FFT frame-rate updates, which stop with the engine, so after the watchdog
+  gave up they kept "Analyzing". Swift's follow `isRunning`. *Done:* both are also refreshed when the engine's
+  running state changes (`runningChanged` → `set_running`), as the status bar and buttons already were (F6).
+- **L5 — the web's start-up log.** At start-up the web selected the input before loading the list, so the
+  "Selected:" line could not name it. Swift loads the list (`availableInputDevices`) before it selects. *Done:*
+  the web lists the inputs first, then selects; the line names the device.
+
+Tests run (2026-10-18): Swift BufferWatchdog and StateNotification; Python `test_mic_selection.py`,
+`test_buffer_watchdog.py`, the fast suite (1403 passed, 1 skipped); web typecheck, lint, `mic-selection` and
+`buffer-watchdog`, the fast suite (1315 passed, 1 skipped); the parity map check. L2's detection checked against
+PortAudio's error shapes (`kAUStartIO`, another host error, an open failure).
+
+*L run-review:*
+1. Windows, Python: start with the log on; open Settings and the input list. → Each microphone appears once,
+   with no "PC Speaker" entries and no names ending "()"; each "Found input device" log line ends "(Windows
+   WASAPI)".
+2. Windows, Python: in Sound settings disable the default input, then enable it again. → After each change the
+   list is as in step 1, and the log's "Found input device" lines end "(Windows WASAPI)".
+3. Windows, Python: select the Realtek microphone jack with nothing plugged in (as round 2's step 5), and wait
+   for "could not be restarted". → The Results panel reads "Stopped" with the stopped dot; with Analysis Metrics
+   open, it reads "Stopped" too.
+4. Windows, Python: select a working microphone again. → The Results panel (and Analysis Metrics) read
+   "Analyzing".
+5. macOS, Chrome and Safari, web: reload with the console open. → The "Found input device" lines come before the
+   "Selected:" line, which names the device in quotes (not "a device not in the list").
+
+Not covered by hand: L1 (a device reporting 0 Hz) and L2 (the `kAUStartIO` race) cannot be produced on demand;
+L1 is a message change, L2 rests on the check above.
 
 ### Stage 2 progress
 
