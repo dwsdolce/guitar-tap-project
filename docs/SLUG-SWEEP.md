@@ -6893,7 +6893,7 @@ the progress table and the entries below. Stage 2 is finished when every row say
 | O1 | Id case on decode: Swift's ids are `UUID`s, so it reads an id in any case and writes it uppercase; Python and the web keep the string as the file holds it and compare ids as strings. A file whose ids differ only in case — `selectedPeakIDs` lowercase against uppercase peak ids, say — matches in Swift and not in the others (recorded in Python's `test_uuid_case.py` docstring, tracked nowhere). Surveyed and decided (2026-10-16): UUIDs are UUIDs in all three, one rule — plan O1.1–O1.10 below | done — run-reviewed in all three (2026-10-17); Swift 050217d, Python f85eeff, web 08e35bc |
 | O2 | The web names the armed prompt `restingPrompt()`; Swift and Python `armedPrompt()` / `_armed_prompt()` (C7). Widened (owner, 2026-10-17): the status-derivation functions the same in structure, not only behaviour, and how the web analyzer reads its settings — section **O2** below | done — run-reviewed in all three (2026-10-17); Swift e59469e, Python 02d1227, web 379faa2 |
 | O3 | Two slugs break the area naming: `dead-input` (no area; its group holds test files) and `models/capture-probe` (`models/` for `model/`) — renames in all three (step 13). Decided (owner, 2026-10-17: "1 as proposed 2 (b)"): `dead-input` split into `audio/dead-input tests=test/dead-input-threshold` (DeadInput.swift, dead_input.py, deadInput.ts) and `test/dead-input-threshold` (the three test files; the web and Python "— paired with …" notes moved off the tag line); `models/capture-probe` is `util/capture-probe` — a diagnostic in the app, like `util/test-sandbox`, in an area not expected to have tests (as `model/capture-probe` it would have been a coverage gap whose only evidence, the probe-only `session-pre-roll` test, is skipped while the probe is off). Tag lines only; `--check` current, 143 groups; `audio/dead-input` reads tests; the dead-input tests pass (Python 16, web 16) | done (2026-10-17); Swift 626f023, Python 0e311c7, web 8c0dd71 |
-| O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither. Planned, decided and built — section **O4** below | committed (Swift 99be16b, Python 054be12, web 078c2fc); run-review round 1 (macOS, iOS) passed 2026-10-18, round 2 (Windows, Linux) to do |
+| O4 | `audio/buffer-watchdog` has no test (the map's one coverage gap, as step 13 left it; the `--check` runs piped through `tail` hid the warning). The decision is tested — `watchdogDecision` / `watchdog_decision` in the shared `dead-input-threshold` tests, under the `dead-input` group, not linked to this one — but not the tick around it: the guards (not running, a file playing, already recovering, the 4 s start-up grace), the attempt count and 0.5 / 1 / 2 / 4 s backoff, giving up but still watching, a healthy tick clearing the warning, the count and the given-up latch, the dead-input warning's edges, and a restart not counting as signal seen. Testable: the tick reads the system clock directly and runs on a real 1 s timer, and its recovery restarts the audio — a test would give it the analyzer's `WallClock` (C6), call the tick and stand in for the restart. Python already calls the tick directly (SR3, SR6 in `stream-restart-coordination`). Seen, not checked: Swift's tick also handles a wrong-device decision (`wrongDevice`, `wrongDeviceExhausted`) and clears an earlier permission-denied determination on a healthy tick; Python's and the web's do neither. Planned, decided and built — section **O4** below | done — Swift 99be16b, Python 054be12, web 078c2fc, F7 web 653b7bb; run-review passed on every platform and edition (2026-10-18) |
 
 **O1 survey (2026-10-16).** Where lowercase ids come from: Python minted `str(uuid.uuid4())` — lowercase — until
 `8a1f2eb` (2026-09-20), so files and libraries saved by the shipped Python 1.0.0–1.0.2 hold lowercase ids; Swift and the
@@ -7488,7 +7488,7 @@ refresh after the failure, and the owner may have pressed New Tap before the sec
 by the cause above, arms a sequence on a stream that never opened: the cause is the same. In no edition does anything on screen say, once the alert is closed,
 that the engine is not running.
 
-*F6 decided and built (owner, 2026-10-17: the plan — "Yes"), uncommitted.* (1) Python's running state follows
+*F6 decided and built (owner, 2026-10-17: the plan — "Yes"); committed with O4 (Swift 99be16b, Python 054be12, web 078c2fc).* (1) Python's running state follows
 the engine, as Swift's: the engine keeps `is_running` (set by a start that succeeds, a file's playback and a
 recovery's reopen; cleared by a stop and a recovery's close) with a `runningChanged` signal, which drives the
 view's `set_running`; the view's `_is_running` reads it — the button rule's "FFT running" (B9) included — and the
@@ -7505,6 +7505,25 @@ engine's signals; the web's status bar, which now says "Starting..." or that whi
 New Tap greyed, the status bar showing the warning, the chart "Audio input unavailable"; with the real
 microphone: running, the placeholder hidden. Python fast 1401, the web fast 1309, Swift four suites and the iOS
 build — pass; `--check` current.
+
+*F7 — the web, an input coming back (found in round 2, owner's Chrome log on the Linux VM, 2026-10-18; owner:
+"Yes" — the fix, and the "default" one with it), committed — web 653b7bb.* With the card off then back on, the web recovered
+when the card returned during the recovery, but stuck on "could not be restarted" when it returned after the
+recovery gave up: Chrome sent no device change then (nothing was capturing), and the handler would not have
+reopened anyway — it acted only on a device new to a non-empty list or on the selected device vanishing, and the
+selection was Chrome's "default" alias, which the web's list never contains (so every device change logged
+"disconnected — switching to the default input"). Fixed, in the web only: (1) while the input could not be
+restarted, the watchdog's tick asks the browser every 5 s for a real input (`inputAvailable`) and reopens it,
+with a deliberate start's clean slate — the natives hear of the device from the system; (2) Swift's first-list
+rule (`applyInputDeviceList`, previous list empty): a list that was empty and now has inputs opens the saved input
+if listed, else the default; (3) the selection is the real device behind Chrome's "default" / "communications"
+alias (`realDeviceId`: the device the alias's label names, else the one sharing its groupId), so what is saved is a
+real device, as Swift and Python save theirs — the start-up selection, a fallback and a recovery's reopen alike;
+the browser still opens its own default first (#17 step 8). Swift's `isAutoSelectable` accepts every device (its
+default is the only one passed), so the web needs no filter. Tests (web): the reopen after failed restarts, and
+nothing reopened while no input is listed; the alias resolution (label, group, a real id unchanged); MS26 (the
+only input gone and back opens the saved input). Mutations: without the re-check, without the first-list branch —
+each fails its test. Web fast suite 1315.
 
 **O4, F5 built (2026-10-17, uncommitted).** Swift: the engine raises `microphonePermissionDenied` itself — a
 denied or restricted start, a refused request, a start `audioEngine.start()` refuses for permission (one test,
@@ -7541,7 +7560,7 @@ values are not supported in AxisValueLabel's anchor property" — chased (owner,
 any chart on macOS 27.0.1 / Xcode 27.0, a plain `Chart` with its default axes included (a standalone render of
 each variant, ours and none); not the app's labels, nothing to change.
 
-**O4 run-review (for the owner) — round 1 passed (owner, 2026-10-18); round 2 to do.** Two rounds (owner, 2026-10-18): round 1 on macOS and iOS now; round 2 on
+**O4 run-review — passed on every platform and edition (owner, 2026-10-18): round 1 (macOS, iOS) and round 2 (Windows, the Linux VM, and the macOS Chrome checks for F7).** Two rounds (owner, 2026-10-18): round 1 on macOS and iOS now; round 2 on
 Windows and its Linux VM after the O4 commits, which those machines take from the pushed repos. One list per
 platform and edition, so no step has exceptions.
 
@@ -7601,25 +7620,6 @@ setting and the bundle id are the terminal's: Terminal `com.apple.Terminal`, Vis
    permission warning.
 2. The same icon ▸ Microphone ▸ Allow (or remove the site from "Not allowed"); reload. → It starts.
 
-*F7 — the web, an input coming back (found in round 2, owner's Chrome log on the Linux VM, 2026-10-18; owner:
-"Yes" — the fix, and the "default" one with it), committed — web 653b7bb.* With the card off then back on, the web recovered
-when the card returned during the recovery, but stuck on "could not be restarted" when it returned after the
-recovery gave up: Chrome sent no device change then (nothing was capturing), and the handler would not have
-reopened anyway — it acted only on a device new to a non-empty list or on the selected device vanishing, and the
-selection was Chrome's "default" alias, which the web's list never contains (so every device change logged
-"disconnected — switching to the default input"). Fixed, in the web only: (1) while the input could not be
-restarted, the watchdog's tick asks the browser every 5 s for a real input (`inputAvailable`) and reopens it,
-with a deliberate start's clean slate — the natives hear of the device from the system; (2) Swift's first-list
-rule (`applyInputDeviceList`, previous list empty): a list that was empty and now has inputs opens the saved input
-if listed, else the default; (3) the selection is the real device behind Chrome's "default" / "communications"
-alias (`realDeviceId`: the device the alias's label names, else the one sharing its groupId), so what is saved is a
-real device, as Swift and Python save theirs — the start-up selection, a fallback and a recovery's reopen alike;
-the browser still opens its own default first (#17 step 8). Swift's `isAutoSelectable` accepts every device (its
-default is the only one passed), so the web needs no filter. Tests (web): the reopen after failed restarts, and
-nothing reopened while no input is listed; the alias resolution (label, group, a real id unchanged); MS26 (the
-only input gone and back opens the saved input). Mutations: without the re-check, without the first-list branch —
-each fails its test. Web fast suite 1315.
-
 *Round 2 — Linux VM, Python and the web*
 1. Launch Python (and open the page). → Each starts as before.
 2. `pactl list cards` — note the card's "Active Profile" — then `pactl set-card-profile <card name> off`. Launch
@@ -7633,10 +7633,14 @@ each fails its test. Web fast suite 1315.
    switching to the default input" lines while nothing is unplugged.
 
 *Round 2 — macOS, the web in Chrome (F7, the "default" fix)*
-1. Clear the service worker, reload, and choose the UMIK-1 in Settings. Plug in or unplug something else
-   (headphones). → The UMIK-1 stays selected; the console has no "switching to the default input" line.
+1. Clear the service worker and reload. Plug in a headset with a microphone (→ it becomes the input: a newly
+   connected microphone is switched to, as in Swift), then choose the UMIK-1 in Settings and unplug the headset —
+   an input that is not the one in use. → The UMIK-1 stays selected; the console has no "switching to the default
+   input" line.
 2. Forget the saved input: in the console, `localStorage.removeItem('gt.inputDeviceId')`, then reload. → The console's
-   "Selected:" line names the real device (its label), not "a device not in the list (id default…)".
+   "Selected:" line's id is a real device's — the same id as one of the "Found input device" lines that follow —
+   not `default`. (At start-up the input is selected before the list loads, so that line says "a device not in
+   the list" even for a real device — as before F7.)
 
 Not covered by hand: the no-input case on macOS, iOS and Windows (the built-in microphone cannot be turned off
 on a MacBook or iOS; on Windows, disabling the default input makes Python fall back to another — Stereo Mix in the
