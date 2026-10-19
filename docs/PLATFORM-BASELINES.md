@@ -2,8 +2,9 @@
 
 **Issue:** [#16](https://github.com/dwsdolce/guitar-tap-project/issues/16)
 
-Status: **OPEN — items 1–3 to run; items 4–5 planned after item 3.** Detail doc written 2026-10-19 (the Issue
-was opened before detail docs were the rule).
+Status: **OPEN — items 1–3 done (Windows and Linux confirmed on the real machines; macOS green; iOS run,
+three failures, item 3); item 4 next, then item 5.** Detail doc written 2026-10-19 (the Issue was opened before
+detail docs were the rule).
 
 ## What the baselines are
 
@@ -52,9 +53,9 @@ cross-edition tolerance; one iOS baseline will do if iPad and iPhone agree. The 
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Windows and Linux: the full suites run on the real Windows machine and the Linux VM, against the CI-minted baselines | **Linux done** (2026-10-19, all four steps); Windows open |
-| 2 | macOS: the full suites of Swift, Python and the web | open — on the owner's go |
-| 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | open — on the owner's go |
+| 1 | Windows and Linux: the full suites run on the real Windows machine and the Linux VM, against the CI-minted baselines | **done** (2026-10-19) — Linux and Windows, all four steps |
+| 2 | macOS: the full suites of Swift, Python and the web | passed (2026-10-19) |
+| 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | run (2026-10-19) — three failures, below |
 | 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | to plan after item 3 |
 | 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | after item 4 |
 
@@ -140,3 +141,25 @@ that V8 major change — but the pinned version is what the figures above were t
   `browserType.launch: Executable doesn't exist … chromium_headless_shell-1248`. Note that
   `npm run test:exports` still **exits 0** in that state, so the failure has to be read out of the output
   rather than trusted to the exit status.
+
+### 2. macOS, full suites (2026-10-19)
+
+All pass: Python `6a4a4e6` — 1469 passed, 1 skipped (the capture probe, switched off); web `ee20ac9` — 1352 passed,
+1 skipped; Swift `dc5620e` — 282 tests in 83 suites. CI the same day: Python passes on Windows, Linux and macOS;
+the web passes; Swift's unit, Mac and iPhone jobs pass (the iPhone job's earlier red runs were the CI simulator
+stalling in the Files picker — GuitarTap idle, Apple's document service not scheduled — and the same tests pass
+locally).
+
+### 3. iPad and iPhone simulators, Swift's full suite (2026-10-19, `dc5620e`)
+
+iPad Air 11-inch (M4) and iPhone 17: 247 tests in 81 suites, the same three failures on both:
+
+| Test | Case | Got (iOS) | Expected (macOS) | Difference | Kind |
+|---|---|---|---|---|---|
+| file-playback regression | REG-G2, air frequency | 87.2331 Hz | 87.23311 Hz | 7.6e-6 Hz | iOS's last bit against the macOS oracle at 1e-12 — what item 4 is for |
+| gated-FFT parity | GFFT3, 117.1875 Hz and the delta | −29.507292 dB, 20.192564 dB | −29.50729 dB, 20.192566 dB | 1.9e-6 dB | the same |
+| buffer watchdog | BW15 (no recovery while the microphone is not authorized) | 2 restarts, 2 attempts | 0, 0 | — | Swift's tick compiles its permission guard only on macOS (`#if os(macOS)`), though `microphoneAuthorized` already returns true elsewhere; so on iOS the case's "not authorized" never reaches the tick. Production is unaffected (iOS is always "authorized" there); Python calls the guard on every platform, its function answering per platform. **Fixed** (owner, 2026-10-19): the tick calls it on every platform, as Python's — Swift `c641dfa`; BW15 passes on the iPhone simulator and on macOS |
+
+So item 3 leaves the two oracle differences. They are about a million times below the cross-edition bar (0.02 Hz / 0.01 dB) and match the
+first iOS run of 2026-10-08. Item 4 gives iOS its own baseline, against which they are exact.
+
