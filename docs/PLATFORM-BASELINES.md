@@ -2,8 +2,8 @@
 
 **Issue:** [#16](https://github.com/dwsdolce/guitar-tap-project/issues/16)
 
-Status: **OPEN — items 1–3 done (Windows and Linux confirmed on the real machines; macOS green; iOS run,
-three failures, item 3); item 4 next, then item 5.** Detail doc written 2026-10-19 (the Issue was opened before
+Status: **OPEN — items 1–3 done; item 4 done (Swift `84f8845`) — iOS is two configurations, a device and the
+simulator, each with its baseline; item 5 next.** Detail doc written 2026-10-19 (the Issue was opened before
 detail docs were the rule).
 
 ## What the baselines are
@@ -56,7 +56,7 @@ cross-edition tolerance; one iOS baseline will do if iPad and iPhone agree. The 
 | 1 | Windows and Linux: the full suites run on the real Windows machine and the Linux VM, against the CI-minted baselines | **done** (2026-10-19) — Linux and Windows, all four steps |
 | 2 | macOS: the full suites of Swift, Python and the web | passed (2026-10-19) |
 | 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | run (2026-10-19) — three failures, below |
-| 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | to plan after item 3 |
+| 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | done (2026-10-19, Swift `84f8845`) — two configurations: device and simulator, below |
 | 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | after item 4 |
 
 Owner, 2026-10-19: Windows and Linux are done only when the minted tests pass on the real machines (item 1).
@@ -162,4 +162,116 @@ iPad Air 11-inch (M4) and iPhone 17: 247 tests in 81 suites, the same three fail
 
 So item 3 leaves the two oracle differences. They are about a million times below the cross-edition bar (0.02 Hz / 0.01 dB) and match the
 first iOS run of 2026-10-08. Item 4 gives iOS its own baseline, against which they are exact.
+
+### 4. iPad and iPhone baselines — plan (2026-10-19, for the owner's review)
+
+**How the others do it.** Python and the web each keep a self-baseline beside their tests,
+`self-baseline-<os>-<arch>.json`: `configuration` (edition, os, arch), `provenance` (when, on what, against which
+oracle version) and `values` — the oracle's own sections (`filePlayback`, `gatedFft`), computed by that
+configuration. The suite checks itself against it at `selfTolerances` (1e-12), and separately against the oracle at
+`tolerances`; a configuration never minted skips its regression check and says so. Minting is a deliberate tool,
+never the suite: the first mint must clear `bootstrapTolerances` against the oracle; a re-mint prints the diff and
+asks. `collect-baselines.py` gathers the files into the hub; `parity-report.py` measures across them.
+
+**Swift today.** Swift on macOS minted the oracle, so its tests (`FilePlaybackRegressionTests`,
+`GatedFFTParityTests`) check against the oracle at 1e-12. On iOS that is the wrong reference: item 3's two
+failures are iOS's last bit against macOS's numbers.
+
+**The plan.**
+
+1. **The file.** `GuitarTapTests/self-baseline-ios-arm64.json`, in the shared format: `configuration`
+   `{edition: swift, os: ios, arch: arm64}`; `provenance` (minted at, oracle version, the simulator and its iOS
+   version, Xcode); `values` computed by Swift's own oracle generator (`GenerateParityOracle`), so iOS's numbers
+   come from the code that makes the oracle.
+2. **Minting.** `Tooling/mint-baseline.sh --simulator <name>` in Swift, as Python's `mint-baseline.py` behaves: it
+   runs the generator in baseline mode on the simulator; the test hands the file out as a test attachment (as the
+   export UI tests do — a simulator test cannot be relied on to write into the repo); the script extracts it, and
+   then either checks a first mint against the oracle at `bootstrapTolerances` or prints the diff against the
+   existing file and asks. `--check` writes nothing.
+3. **The tests.** One reference for Swift's own regression checks: on macOS the oracle (it minted it), on iOS the
+   iOS self-baseline, at `selfTolerances` — `FilePlaybackRegressionTests` and `GatedFFTParityTests` read it. On iOS
+   the suite also checks against the oracle at `tolerances`, as Python and the web do. With no iOS baseline the
+   regression check skips with a notice.
+4. **One baseline for iPad and iPhone** (owner, 2026-10-08), if they agree: mint on the iPad Air simulator, then
+   run the iPhone 17 against it. If they differ at 1e-12, the key gains the device (`ios-ipad`, `ios-iphone`) and
+   each mints its own — to bring to the owner then.
+5. **The hub.** `collect-baselines.py` gathers Swift's iOS baseline as it does the others (today it takes Swift's
+   only from the oracle); `parity-report.py` then reports it — iOS against macOS is Swift's *platform* effect.
+6. **Tags.** Swift's new files join `tooling/mint-baseline` and `tooling/self-baseline`, which Python and the web
+   already carry.
+7. **CI.** Swift's CI ran its unit tests on macOS only; the iPad and iPhone jobs ran the export UI tests. Owner,
+   2026-10-19: the iPad and iPhone jobs run the unit suite too, so the iOS regression is checked on every push.
+8. **The physical iPad and iPhone** (owner, 2026-10-19): the minted baseline is also checked on the owner's own
+   devices — Swift's full suite run on each, connected to the Mac. If a device differs from the simulator's
+   baseline at 1e-12, the configuration key separates them (simulator and device) — to bring to the owner then.
+
+Verification: on the iPad Air and iPhone 17 simulators and on the physical iPad and iPhone, Swift's full suite
+passes; on macOS unchanged; a value altered in the iOS baseline fails the iOS regression check; CI's iPad and
+iPhone jobs run the unit suite and pass; `parity-report.py` lists the iOS configuration.
+
+### 5. The cross-edition tolerance — plan (2026-10-19)
+
+**Today's measurement** (`tooling/parity-report.py`, the seven configurations collected — iOS not yet in it):
+
+| Value | Worst distance from the oracle | Bar in force | Headroom |
+|---|---|---|---|
+| frequency | 2.04e-5 Hz (REG-B2 longitudinal) | 0.02 Hz | 981× |
+| magnitude | 1.16e-5 dB (REG-G2 tap 5 back) | 0.01 dB | 866× |
+| gated FFT | 4.17e-6 dB (GFFT3) | 0.001 dB | 240× |
+| q | 6.67e-7 (REG-P1 cross) | 1e-5 | 15× |
+| ring-out | 1.51e-9 s (REG-G1) | 1e-7 s | 66× |
+
+The oracle's note still gives the spread as 0.0076 Hz / 0.0030 dB, which set the bars at 0.02 / 0.01; since #3
+aligned the guitar capture in all three editions it is about 400 times smaller, so the bars no longer catch a
+divergence below them. The spread is almost all Swift against Python and the web (32-bit floats against 64-bit);
+Python against the web, and one operating system against another, differ by about 1e-14 or not at all.
+
+**The plan.**
+1. With the iOS baseline minted, re-run the report on all eight configurations — iOS against macOS is Swift's own
+   platform effect, not yet measured.
+2. Propose new bars at a few times the worst measured — of the order of 1e-4 Hz and 1e-4 dB, 5e-5 dB for the gated
+   FFT, the same margin for q and ring-out — frequency and magnitude together (the oracle's note: a magnitude
+   difference becomes a frequency one through the peak fit). The numbers are the owner's decision.
+3. Bring the oracle's notes (`_selfToleranceNote`, `_toleranceProvenanceNote`) up to today's measurement; record the
+   decision and the numbers here.
+4. Re-mint the oracle with the new bars on macOS, sync it to Python and the web, run the full suites, and hand
+   Windows and Linux the item 1 check again.
+
+#### Item 4 — done (2026-10-19, Swift `84f8845`)
+
+**What was found.** The first iOS baseline was minted on the iPad Air simulator, and the iPhone 17 simulator
+computed the same 94 values exactly. On the owner's **physical** iPad M5 (`iPad17,3`, iPadOS 27.0.1) and iPhone 17
+Pro Max, the suite failed the same three values — the other way: the devices compute exactly what macOS computes
+(all 94 values), and the **simulator** differs from both in REG-G2's air frequency (7.6e-6 Hz) and GFFT3 (1.9e-6
+dB). The simulator's runtime, not iOS, is what differs. Owner, 2026-10-19: two configurations (plan point 8's
+fallback) — a physical device mints its own baseline, as every configuration does, rather than borrow the oracle.
+
+**What is in place** (Swift `84f8845`; bytecode untracked in `a104591`):
+- `ParityOracle.configuration()` — the key `swift-ios-simulator-arm64` on a simulator, `swift-ios-arm64` on a
+  device; `ParityOracle.reference` — the oracle on macOS, else that configuration's self-baseline laid over the
+  oracle's cases (nil, with a notice, if never minted).
+- `GenerateParityOracleTests.generateSelfBaseline` — the oracle's own computation (`computeOracle`, shared with
+  `generateParityOracle`), written in the shared baseline format; on a device it reads the bundle's copy of the
+  oracle (a device cannot reach the Mac's source tree).
+- `Tooling/mint-baseline.py --simulator <name>` / `--device <name or UDID>` — first mint against the oracle's
+  `bootstrapTolerances`, a re-mint's diff and confirmation, `--check`; a device's file copied off with
+  `xcrun devicectl`.
+- `FilePlaybackRegressionTests` and `GatedFFTParityTests` — against the configuration's reference at
+  `selfTolerances`, and, off macOS, against the oracle at `tolerances`.
+- `GuitarTapTests/self-baseline-ios-simulator-arm64.json` (minted on the iPad Air simulator) and
+  `self-baseline-ios-arm64.json` (minted on the iPad M5: every value identical to the oracle).
+- `Tooling/test.sh --simulator <name>`; CI's new `unit-ios` job runs the unit plan on the iPad Air and iPhone 17
+  simulators. A physical device is checked by hand before a release (`process/RELEASE-CHECKLIST.md`, 1a).
+- Hub: `parity-report.py` expects `swift` on `darwin`, `ios` and `ios-simulator`; `platforms.py` scans Swift's
+  Python tooling (the mint tool joins `tooling/mint-baseline`); the two baselines collected into
+  `tooling/parity/baselines/`.
+
+**Verified** (2026-10-19): Swift's full unit suite passes on macOS (283), the iPad Air and iPhone 17 simulators
+(248 each), and the physical iPad M5 and iPhone 17 Pro Max (248 each); the iPhone simulator, checked with
+`mint-baseline.py --check`, is identical to the simulator baseline; nudging REG-G2's air frequency by 1e-4 Hz in
+an iOS baseline fails the iPhone's regression test on that value.
+
+**`parity-report.py`, nine configurations:** device iOS against macOS — 0 in every value; the simulator against
+macOS or a device — 1e-5 Hz (REG-G2 air), 2e-6 dB (GFFT3); the worst cross-edition distances are unchanged
+(2.04e-5 Hz, 1.16e-5 dB, Swift against Python and the web), so item 5 starts from those.
 

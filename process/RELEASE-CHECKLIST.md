@@ -59,6 +59,10 @@ redeploying the release you just cut still works.
 ### 1a. Version + code *(always)*
 - [ ] `MARKETING_VERSION` should **already** be `X.Y.Z` in both places in `GuitarTap.xcodeproj/project.pbxproj` (Debug + Release) — rolled at the start of this cycle (§6). Confirm it; bump here only if you are changing the planned number.
 - [ ] Land all app code for the release.
+- [ ] Run Swift's unit suite on a **physical** iPad or iPhone (Xcode, Product → Test on the device, or
+  `xcodebuild … -destination id=<UDID> test -only-testing:GuitarTapTests`). It checks the device against its own
+  baseline (`GuitarTapTests/self-baseline-ios-arm64.json`), which CI cannot: CI runs simulators, whose runtime
+  is a configuration of its own.
 
 ### 1b. Build & upload for testing *(optional — TestFlight / review)*
 - [ ] Xcode → **Archive** → Organizer → validate → **Upload** *(team `43QHHT3XK2`, app `id6759410596`)*.

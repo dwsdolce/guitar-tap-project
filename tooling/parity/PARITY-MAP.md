@@ -129,12 +129,12 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `tooling/capture-probe` | `GuitarTapTests/CaptureProbeTests.swift` | `Tooling/capture-probe.py` | `tooling/capture-probe.test.ts` | review only |
 | `tooling/gated-signal` | `GuitarTapTests/GatedTestSignal.swift` | `tests/gated_signal.py` | `test/gatedSignal.ts` | review only |
 | `tooling/material-cases` | — | `tests/material_cases.py` | `test/materialCases.ts` | review only |
-| `tooling/mint-baseline` | — | `Tooling/mint-baseline.py` | `tooling/mint-baseline.test.ts` | review only |
+| `tooling/mint-baseline` | `Tooling/mint-baseline.py` | `Tooling/mint-baseline.py` | `tooling/mint-baseline.test.ts` | review only |
 | `tooling/oracle-sync` | — | `tests/test_oracle_sync.py` | `test/oracle-sync.test.ts` | review only |
 | `tooling/parity-oracle` | `GuitarTapTests/ParityOracle.swift` | `tests/parity_oracle.py` | — | review only |
 | `tooling/parity-runner` | — | `tests/parity_runner.py` | `test/parityRunner.ts` | review only |
 | `tooling/playback-support` | `GuitarTapTests/PlaybackTestSupport.swift` | `tests/playback_support.py` | — | review only |
-| `tooling/self-baseline` | — | `tests/self_baseline.py` | `test/selfBaseline.ts` | review only |
+| `tooling/self-baseline` | `GuitarTapTests/ParityOracle.swift` | `tests/self_baseline.py` | `test/selfBaseline.ts` | review only |
 | `tooling/synthetic-tap` | `GuitarTapTests/SyntheticTap.swift` | `tests/synthetic_tap.py` | `test/syntheticTap.ts` | review only |
 | `util/capture-probe` | `GuitarTap/Models/CaptureProbe.swift` | `src/guitar_tap/models/capture_probe.py` | `src/state/captureProbe.ts` | review only |
 | `util/field-precision` | `GuitarTap/Models/FieldPrecision.swift` | `src/guitar_tap/models/field_precision.py` | `src/precision.ts` | tests |

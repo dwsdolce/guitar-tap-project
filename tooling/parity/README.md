@@ -95,6 +95,11 @@ ends in (the table in `parity-report.py`).
 A tracking edition cannot be checked at the regression bar against the oracle — the oracle holds Swift's numbers,
 and the distance to them is what the parity bar measures. So every configuration
 (**edition × OS × arch**) mints its own absolute self-baseline and is checked against itself.
+Swift on macOS minted the oracle, so the oracle is that configuration's baseline. Swift on iOS is two
+configurations, each minting its own with Swift's `Tooling/mint-baseline.py`: physical iPads and iPhones
+(`swift-ios-arm64`, minted on a device — they agree with each other and, today, with macOS exactly) and the iOS
+simulator (`swift-ios-simulator-arm64`, minted on a simulator — its runtime differs from a device's in the last
+bit of a few values). CI runs the simulator; a physical device is checked by hand before a release.
 
 The configuration key deliberately excludes library, runtime and compiler versions. A NumPy, V8 or
 Xcode upgrade that moves the numbers is precisely the event the regression bar exists to catch; keying on

@@ -54,7 +54,7 @@ class Platform:
 
 
 PLATFORMS: tuple[Platform, ...] = (
-    Platform("swift", "Swift", "GuitarTap", "PARITY_SWIFT", frozenset({".swift"}),
+    Platform("swift", "Swift", "GuitarTap", "PARITY_SWIFT", frozenset({".swift", ".py"}),
              "docc", "swift", canonical=True, fixtures="GuitarTapTests",
              code_dirs=("GuitarTap/Models",), test_dirs=("GuitarTapTests", "GuitarTapUITests")),
     Platform("python", "Python", "guitar_tap", "PARITY_PYTHON", frozenset({".py"}),

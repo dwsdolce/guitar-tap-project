@@ -50,7 +50,7 @@ TOLERANCE_KEYS = {
 
 # Editions and the OSs each is expected to reach, so a gap is reported rather than assumed absent.
 EXPECTED = {
-    "swift": ["darwin"],
+    "swift": ["darwin", "ios", "ios-simulator"],
     "python": ["darwin", "windows", "linux"],
     "web": ["darwin", "windows", "linux"],
     "kotlin": ["linux", "windows", "darwin"],

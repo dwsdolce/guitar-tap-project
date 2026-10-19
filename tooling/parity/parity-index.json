@@ -1701,7 +1701,9 @@
     },
     {
       "slug": "tooling/mint-baseline",
-      "swift": [],
+      "swift": [
+        "Tooling/mint-baseline.py"
+      ],
       "python": [
         "Tooling/mint-baseline.py"
       ],
@@ -1761,7 +1763,9 @@
     },
     {
       "slug": "tooling/self-baseline",
-      "swift": [],
+      "swift": [
+        "GuitarTapTests/ParityOracle.swift"
+      ],
       "python": [
         "tests/self_baseline.py"
       ],
