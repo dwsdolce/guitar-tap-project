@@ -77,7 +77,31 @@ Linux VM:
 Report here, under this item: the machine, the commits run, and each step's result — for a failure, the test's
 name and message.
 
-*Windows:* not yet run.
+*Windows:* **all four steps pass** (2026-10-19).
+
+Machine: the Windows machine — Dell G16 7620, `Windows-11-10.0.26300`, Intel i7-12700H; Python 3.14.8 / NumPy
+2.5.4; Node 26.11.1 / V8 `14.6.202.34-node.37`; Git Bash.
+Commits run: `guitar_tap` `6a4a4e6`, `GuitarTapWeb` `ee20ac9`, hub `0ba2a1e` — all three already at the required
+commits and level with `origin/main`, so step 1 pulled nothing.
+
+| Step | Result |
+|---|---|
+| 2. `.venv/Scripts/python -m pytest` | **1469 passed, 1 skipped** (6:50). `test_self_regression` **passed, not skipped**; `test_oracle_sync` passed, not skipped |
+| 3. `npm run test` | **68 files, 1352 passed, 1 skipped** (4:09), `self-regression` and `file-playback` included |
+| 4. `Tooling/run-export-check.sh` | **20 exports checked, 0 failing** |
+| 4. `npm run test:exports` | **10 Playwright exports passed, then 20 exports checked, 0 failing** |
+
+The one skip is the same as on Linux, in both editions: `the capture probe is switched off`.
+
+**Different hardware from the minting, again:** Python's Windows baseline came from a Windows Server 2025 runner
+on an AMD CPU (`AMD64 Family 26`), the web's from an **AMD EPYC 7763**, against an Intel i7-12700H on Windows 11
+here — same Python / NumPy, and the same Node and V8.
+
+**On the Node pin.** As on Linux, the web suite first ran on this machine's Node 24.20.0 (V8 13.6) and passed with
+the identical counts, export check included. It was then re-run on the pinned 26.11.1 (installed with `fnm`,
+followed by `npm ci` and `npx playwright install chromium`), and the result was the same again; the figures above
+are from the pinned run.
+
 *Linux:* **all four steps pass** (2026-10-19).
 
 Machine: the Linux VM — VMware guest, `Linux-7.0.0-38-generic`, glibc 2.39, Intel i7-12700H; Python 3.14.8 /
