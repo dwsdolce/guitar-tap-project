@@ -2,10 +2,10 @@
 
 **Issue:** [#16](https://github.com/dwsdolce/guitar-tap-project/issues/16)
 
-Status: **OPEN — items 1–5 done (Windows and Linux on the real machines, macOS, iOS as two configurations —
-device and simulator — each minted, the parity bars set at about ten times the measured spread); item 6, the flaky
-simulator export jobs on CI, before closing.** Detail doc written 2026-10-19 (the Issue was opened before
-detail docs were the rule).
+Status: **✅ COMPLETE (2026-10-19)** — items 1–6 done: Windows and Linux on the real machines, macOS, iOS as two
+configurations — device and simulator — each minted, the parity bars set at about ten times the measured spread,
+and the flaky simulator export jobs on CI fixed (three green runs in a row). Detail doc written 2026-10-19 (the
+Issue was opened before detail docs were the rule).
 
 ## What the baselines are
 
@@ -59,7 +59,7 @@ cross-edition tolerance; one iOS baseline will do if iPad and iPhone agree. The 
 | 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | run (2026-10-19) — three failures, below |
 | 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | done (2026-10-19, Swift `84f8845`) — two configurations: device and simulator, below |
 | 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | decided (owner, 2026-10-19) — 2e-4 Hz, 1e-4 dB, 5e-5 dB, 1e-5, 2e-8 s; verified on macOS, iOS simulators and devices; Swift `10aa335`, Python `42a010d`, web `2dcac47`; **done** — Windows and Linux pass on the real machines, CI passes |
-| 6 | Swift's simulator export UI jobs on CI fail now and then — the Files picker never draws (the simulator's document service not scheduled), nothing is exported; the next run passes. Seen on iPhone (`626f023`, `fb5b0e6`, `d6b6297`, `9beff54`, `4c8d812`, `cde0605`, `0fe7630`) and iPad (`e4d9951`, `fb5b0e6`, `85a290a`, `c641dfa`). Owner, 2026-10-19: dealt with before #16 closes | built (Swift `ad86feb`) — done when several CI runs in a row pass; below |
+| 6 | Swift's simulator export UI jobs on CI fail now and then — the Files picker never draws (the simulator's document service not scheduled), nothing is exported; the next run passes. Seen on iPhone (`626f023`, `fb5b0e6`, `d6b6297`, `9beff54`, `4c8d812`, `cde0605`, `0fe7630`) and iPad (`e4d9951`, `fb5b0e6`, `85a290a`, `c641dfa`). Owner, 2026-10-19: dealt with before #16 closes | **done** (Swift `ad86feb`, `4052e11`, `41dda63`) — three CI runs in a row pass with no export failures and no retries; below |
 
 Owner, 2026-10-19: Windows and Linux are done only when the minted tests pass on the real machines (item 1).
 
@@ -384,6 +384,6 @@ permissions) on a small runner. And the export test was one test for all five ca
 **Checked:** the iPhone 17 simulator's run with the plate case made to fail once: it was retried and passed,
 listed as "Passed only on a retry (1): testExportsPlate()", all 20 exports checked once, 0 failing. The Mac's
 run is checked on CI (locally it takes over the mouse and keyboard). Done when several CI runs in a row pass
-with no export failures. CI so far: `ad86feb` and `4052e11` (both with the wait), 20 of 20 exports on the Mac,
-iPad and iPhone, no retries.
+with no export failures. **Done:** `ad86feb` and `4052e11` (both with the wait) and `41dda63` (without it): every
+job green, 20 of 20 exports on the Mac, iPad and iPhone, no test passed only on a retry.
 
