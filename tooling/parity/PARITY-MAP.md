@@ -79,6 +79,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_annotation_guard.py`<br>`tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
 | `test/dead-input-threshold` | `GuitarTapTests/DeadInputThresholdTests.swift` | `tests/test_dead_input_threshold.py` | `test/dead-input-threshold.test.ts` | test suite |
 | `test/decay-tracking` | `GuitarTapTests/DecayTrackingTests.swift` | `tests/test_decay_tracking.py` | `test/decay-tracking.test.ts` | test suite |
+| `test/dimming` | `GuitarTapTests/DimmingTests.swift` | `tests/test_dimming.py` | `test/dimming.test.ts` | test suite |
 | `test/display-range` | `GuitarTapTests/DisplayRangeExpansionTests.swift`<br>`GuitarTapTests/DisplayRangeScenarioTests.swift` | `tests/test_display_range_expansion.py`<br>`tests/test_display_range_scenarios.py` | `test/display-range-scenarios.test.ts`<br>`test/display-range.test.ts` | test suite |
 | `test/dsp` | `GuitarTapTests/DSPTests.swift` | `tests/test_dsp.py` | `test/dsp.test.ts` | test suite |
 | `test/effective-peak-id` | `GuitarTapTests/EffectivePeakIDTests.swift` | `tests/test_effective_peak_id.py` | `test/effective-peak-id.test.ts` | test suite |
@@ -145,6 +146,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/axis-ticks` | `GuitarTap/Views/Utilities/AxixTickGenerator.swift` | `src/guitar_tap/views/utilities/axis_tick_generator.py` | `src/presentation/axisTicks.ts` | tests |
 | `view/chart-style` | `GuitarTap/Views/Utilities/ChartStyle.swift` | `src/guitar_tap/views/utilities/chart_style.py` | `src/presentation/chartStyle.ts` | tests |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
+| `view/dimming` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/App.css` | tests |
 | `view/dot-layer` | `GuitarTap/Views/SpectrumView.swift`<br>`GuitarTapTests/DotLayerTests.swift` | `src/guitar_tap/views/fft_canvas.py`<br>`tests/test_dot_layer.py` | `src/App.tsx`<br>`src/dsp/guitarModes.ts`<br>`test/dot-layer.test.ts` | review only |
 | `view/edit-sheet` | `GuitarTap/Views/Measurements/EditMeasurementView.swift` | `src/guitar_tap/views/measurements/edit_measurement_view.py` | `src/components/EditMeasurementSheet.tsx` | review only |
 | `view/file-exporter` | `GuitarTap/Views/Utilities/MeasurementFileExporter.swift` | `src/guitar_tap/views/utilities/measurement_file_exporter.py` | — | tests |

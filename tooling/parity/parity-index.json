@@ -999,6 +999,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/dimming",
+      "swift": [
+        "GuitarTapTests/DimmingTests.swift"
+      ],
+      "python": [
+        "tests/test_dimming.py"
+      ],
+      "web": [
+        "test/dimming.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/display-range",
       "swift": [
         "GuitarTapTests/DisplayRangeExpansionTests.swift",
@@ -1918,6 +1932,22 @@
       ],
       "tests": [],
       "equivalence": "review only"
+    },
+    {
+      "slug": "view/dimming",
+      "swift": [
+        "GuitarTap/Views/Utilities/Extensions.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/extensions.py"
+      ],
+      "web": [
+        "src/App.css"
+      ],
+      "tests": [
+        "test/dimming"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "view/dot-layer",
