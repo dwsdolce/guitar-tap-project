@@ -2,8 +2,9 @@
 
 **Issue:** [#16](https://github.com/dwsdolce/guitar-tap-project/issues/16)
 
-Status: **OPEN — items 1–3 done; item 4 done (Swift `84f8845`) — iOS is two configurations, a device and the
-simulator, each with its baseline; item 5 next.** Detail doc written 2026-10-19 (the Issue was opened before
+Status: **OPEN — items 1–5 done (Windows and Linux on the real machines, macOS, iOS as two configurations —
+device and simulator — each minted, the parity bars set at about ten times the measured spread); item 6, the flaky
+simulator export jobs on CI, before closing.** Detail doc written 2026-10-19 (the Issue was opened before
 detail docs were the rule).
 
 ## What the baselines are
@@ -57,8 +58,8 @@ cross-edition tolerance; one iOS baseline will do if iPad and iPhone agree. The 
 | 2 | macOS: the full suites of Swift, Python and the web | passed (2026-10-19) |
 | 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | run (2026-10-19) — three failures, below |
 | 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | done (2026-10-19, Swift `84f8845`) — two configurations: device and simulator, below |
-| 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | decided (owner, 2026-10-19) — 2e-4 Hz, 1e-4 dB, 5e-5 dB, 1e-5, 2e-8 s; verified on macOS, iOS simulators and devices; Swift `10aa335`, Python `42a010d`, web `2dcac47`; Windows and Linux to re-run |
-| 6 | Swift's simulator export UI jobs on CI fail now and then — the Files picker never draws (the simulator's document service not scheduled), nothing is exported; the next run passes. Seen on iPhone (`626f023`, `fb5b0e6`, `d6b6297`, `9beff54`, `4c8d812`, `cde0605`, `0fe7630`) and iPad (`e4d9951`, `fb5b0e6`, `85a290a`, `c641dfa`). Owner, 2026-10-19: dealt with before #16 closes | open |
+| 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | decided (owner, 2026-10-19) — 2e-4 Hz, 1e-4 dB, 5e-5 dB, 1e-5, 2e-8 s; verified on macOS, iOS simulators and devices; Swift `10aa335`, Python `42a010d`, web `2dcac47`; **done** — Windows and Linux pass on the real machines, CI passes |
+| 6 | Swift's simulator export UI jobs on CI fail now and then — the Files picker never draws (the simulator's document service not scheduled), nothing is exported; the next run passes. Seen on iPhone (`626f023`, `fb5b0e6`, `d6b6297`, `9beff54`, `4c8d812`, `cde0605`, `0fe7630`) and iPad (`e4d9951`, `fb5b0e6`, `85a290a`, `c641dfa`). Owner, 2026-10-19: dealt with before #16 closes | built (Swift `ad86feb`) — done when several CI runs in a row pass; below |
 
 Owner, 2026-10-19: Windows and Linux are done only when the minted tests pass on the real machines (item 1).
 
@@ -347,4 +348,37 @@ pass them unchanged on a third operating system — on hardware that minted no b
 Azure-kernel runner, the web's from an AMD EPYC 7763). Worth noting the limit of that, though: this VM runs on
 the very machine the Windows rows above were measured on, so the Windows and Linux results share a CPU and are
 not independent hardware evidence of each other — what they isolate is the operating system and toolchain.
+
+#### Item 6 — the flaky simulator export jobs (2026-10-19)
+
+**What fails.** Every red simulator export job since 2026-10-14, from its result bundle:
+
+| Run | Device | Exports before | Where it stopped |
+|---|---|---|---|
+| `626f023` | iPhone | 0 | the app failed to launch |
+| `d6b6297`, `cde0605`, `4c8d812`, `0fe7630` | iPhone | 0 | the Files picker never drew ("On My iPhone") |
+| `e4d9951` | iPad | 0 | the import did not finish after the pick |
+| `c641dfa`, `85a290a` | iPad | 0, 4 | the share sheet never appeared |
+| `fb5b0e6` | iPad / iPhone | 6 / 4 | the Save to Files picker stalled / the share sheet |
+| `9beff54` | iPhone | 10 | the share sheet's Save to Files |
+
+Always system UI — the share sheet, the document picker, the app's launch — never GuitarTap's own screens; mostly
+at the first system screen after boot. `0fe7630`'s spindump: GuitarTap idle (0.04 s of CPU in 157 s), Apple's
+document service unscheduled for 114 s behind the simulator's first-boot work (calls, push, wallpaper, storage,
+permissions) on a small runner. And the export test was one test for all five cases, so one stall lost every export.
+
+**Changes** (owner, 2026-10-19: all three; Swift's tests and scripts only):
+1. One test per case — `testExportsGuitar` … `testExportsComparison` — so a stall costs one case. On iOS each case
+   first clears the local files' exports, which a stalled case could leave for Save to Files to ask about.
+2. `run-export-uitests.sh` runs a failed test once more (`-retry-tests-on-failure -test-iterations 2`); the
+   manifest keeps one entry per export (a retried case attaches again what its failed run saved); a test that
+   passed only on its second run is listed at the end ("Passed only on a retry"), so a stall stays visible.
+3. On a simulator the script waits for its first-boot work to finish — its processes under 30 % of one core for
+   three readings 5 s apart, at most 3 minutes — after the Files warm-up. (The share sheet cannot be raised from
+   a script; the wait covers what starves it.)
+
+**Checked:** the iPhone 17 simulator's run with the plate case made to fail once: it was retried and passed,
+listed as "Passed only on a retry (1): testExportsPlate()", all 20 exports checked once, 0 failing. The Mac's
+run is checked on CI (locally it takes over the mouse and keyboard). Done when several CI runs in a row pass
+with no export failures.
 
