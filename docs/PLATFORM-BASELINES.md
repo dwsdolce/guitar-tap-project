@@ -307,3 +307,19 @@ each. `parity-report.py`: 10× headroom on frequency, 9× magnitude, 12× gated 
 **To do:** the Windows and Linux sessions run item 1's four steps again against the new oracle — `guitar_tap` at
 `42a010d` or later, `GuitarTapWeb` at `2dcac47` or later — and report here, under this item.
 
+*Windows:* **all four steps pass at the new bars** (2026-10-19), on the same machine as item 1 (Dell G16 7620,
+`Windows-11-10.0.26300`, i7-12700H; Python 3.14.8 / NumPy 2.5.4; Node 26.11.1 / V8 `14.6.202.34-node.37`).
+Commits run: `guitar_tap` `42a010d`, `GuitarTapWeb` `2dcac47`, hub `c405c75` — each pulled to `origin/main`; the
+web's `package-lock.json` and `.nvmrc` unchanged since item 1, so no reinstall.
+
+| Step | Result |
+|---|---|
+| 2. `.venv/Scripts/python -m pytest` | **1469 passed, 1 skipped** (6:48). `test_self_regression` (both tests) and `test_oracle_sync` **passed, not skipped** |
+| 3. `npm run test` | **68 files, 1352 passed, 1 skipped** (4:10); `oracle-sync`, `self-regression` and `file-playback` included |
+| 4. `Tooling/run-export-check.sh` | **20 exports checked, 0 failing** |
+| 4. `npm run test:exports` | **10 Playwright exports passed, then 20 exports checked, 0 failing** |
+
+The one skip is item 1's, in both editions: `the capture probe is switched off`.
+
+*Linux:* not yet run.
+
