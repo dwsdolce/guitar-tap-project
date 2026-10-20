@@ -2,7 +2,7 @@
 
 How the canonical Swift UI translates to Android. The counterpart of
 [WEB-UI-GUIDELINES.md](WEB-UI-GUIDELINES.md), written for the port in
-[ANDROID-PLAN.md](ANDROID-PLAN.md).
+[ANDROID-PLAN.md](../docs/ANDROID-PLAN.md).
 
 > **Status:** proposed 2026-09-16, as Phase 1 of the Android port. Nothing is implemented yet.
 
@@ -26,7 +26,7 @@ still ships — as a toolbar or overflow item — under its existing name.
    iPhone. Resolve each branch on its own merits against the Swift source — never by copying
    what Python or the web did. Python once copied the iOS `compactStatusBar` gate where macOS
    used `fullStatusBar`, and the bug outlived several releases
-   ([PLATFORM-PARITY-GAPS](completed/PLATFORM-PARITY-GAPS.md)).
+   ([PLATFORM-PARITY-GAPS](../docs/completed/PLATFORM-PARITY-GAPS.md)).
 
 2. **Layout selection follows Swift's predicate order.** Swift picks `phoneLandscapeLayout`
    when the device is a phone in a compact vertical size class, else `iPadHorizontalLayout`
@@ -76,7 +76,7 @@ still ships — as a toolbar or overflow item — under its existing name.
    44 px). Applies to toolbar icons, chart controls, list-row affordances and the peak-mode
    chips.
 
-10. **Theme comes from [THEME-SPEC.md](completed/THEME-SPEC.md), not from Material dynamic colour.**
+10. **Theme comes from the [style guide](STYLE-GUIDE.md) and its role table (`tooling/parity/cases/theme.json`), not from Material dynamic colour.**
     Appearance is System (default) / Light / Dark, resolved live when the OS flips. The spec
     fixes exact hex values for chrome, chart, mode colours, the magnitude gradient, the
     multi-tap palette and the quality labels — precisely so that platforms stop substituting

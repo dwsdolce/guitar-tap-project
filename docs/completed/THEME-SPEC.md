@@ -56,6 +56,9 @@ step 4).
 
 ## 3. Who defines which colours: the OS or the app
 
+The standing rules from §3 and §4 are kept in [`../../process/STYLE-GUIDE.md`](../../process/STYLE-GUIDE.md); this record
+keeps them as decided for #2.
+
 Each edition draws some things itself and has the operating system (or the browser) draw others:
 
 | drawn by the OS / browser | drawn by the app |

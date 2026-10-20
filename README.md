@@ -50,7 +50,9 @@ headers say — they need its qtawesome and its modules.
   baselines and their generators), [`tooling/TEST-COVERAGE.md`](tooling/TEST-COVERAGE.md), and the shared export
   checker [`tooling/export-check/`](tooling/export-check/).
 - **Process** — [`process/`](process/): the release runbook (`RELEASE-CHECKLIST.md`), bug tracking, the
-  developer-documentation standard, and where a document belongs (`DOC-PLACEMENT.md`).
+  developer-documentation standard, where a document belongs (`DOC-PLACEMENT.md`), how every edition looks
+  (`STYLE-GUIDE.md`), and how the UI translates to the web and to Android (`WEB-UI-GUIDELINES.md`,
+  `ANDROID-UI-GUIDELINES.md`).
 - **Shared material** — third-party references (`references/`) and the manual-test corpus of recordings and
   measurements from every edition (`Tests/`).
 

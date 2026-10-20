@@ -159,7 +159,7 @@ See [`completed/SLUG-SWEEP.md`](completed/SLUG-SWEEP.md).
 
 | Issue | Why | Status |
 |---|---|---|
-| **#2 Theme — Light / Dark / System** | [ANDROID-UI-GUIDELINES](ANDROID-UI-GUIDELINES.md) encodes the spec's exact hex values, so the theme's decisions should be made by the spec rather than accidentally by whichever edition implements first. | **Closed 2026-10-12.** Every colour role, light and dark, is in the shared table `tooling/parity/cases/theme.json`, which each edition's palette test checks — the source for Android's palette too. Record: [`completed/THEME-SPEC.md`](completed/THEME-SPEC.md). |
+| **#2 Theme — Light / Dark / System** | [ANDROID-UI-GUIDELINES](../process/ANDROID-UI-GUIDELINES.md) encodes the spec's exact hex values, so the theme's decisions should be made by the spec rather than accidentally by whichever edition implements first. | **Closed 2026-10-12.** Every colour role, light and dark, is in the shared table `tooling/parity/cases/theme.json`, which each edition's palette test checks — the source for Android's palette too. Record: [`completed/THEME-SPEC.md`](completed/THEME-SPEC.md). |
 | **#6 Results panel cross-platform consistency** | Presentation-only, but it is the panel Android copies. Settle it once rather than porting the disagreement and then fixing it in four places. | **Closed.** Record: [`completed/RESULTS-PANEL-CONSISTENCY.md`](completed/RESULTS-PANEL-CONSISTENCY.md). |
 
 ### Not blocking
@@ -254,7 +254,7 @@ Most of this pays off for all editions, not just Android.
   - Add the audio-contract detail the web port had to discover: the 200 ms pre-roll, fast-start vs fallback
     seeding, onset alignment (`max(10× noise RMS, 0.001)`, back 32 samples, window starts 100 ms before),
     the gated FFT (Hann, next power of two, cap 32768), the watchdog constants.
-- **`ANDROID-UI-GUIDELINES.md`:** the Android counterpart of [WEB-UI-GUIDELINES](WEB-UI-GUIDELINES.md).
+- **`ANDROID-UI-GUIDELINES.md`:** the Android counterpart of [WEB-UI-GUIDELINES](../process/WEB-UI-GUIDELINES.md).
   - Swift view → composable map; window-size-class rules.
   - How macOS menu shortcuts and the floating Results window translate.
   - Back-gesture behaviour for sheets.

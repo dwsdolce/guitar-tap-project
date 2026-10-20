@@ -1,76 +1,135 @@
 # Theme — colours the inventories missed
 
-Follow-on to #2 (record: [`completed/THEME-SPEC.md`](completed/THEME-SPEC.md)). Found 2026-10-15 during the #17
-load-path run-review: after a plate load, Python's Peak Min label and value were not faded as Swift's are, and
-neither were in Swift's colours.
+**Issue:** [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32)
 
-**Why #2 missed these.** Its inventories (`completed/theme/INVENTORY-*.md`) listed each edition's colour *literals*.
-An item drawn in the default colour has no literal, so where Swift names a role and an edition leaves the default
-(or the reverse), the item never appeared. This sweep went the other way: every place Swift sets a colour (or a
-dimming opacity), and the same item in Python and the web — plus items Python or the web colour where Swift leaves
-the system default. PDF/PNG exports were not swept (#2's export findings compared them).
+Status: **OPEN — every item decided (owner, 2026-10-20); no code changed.** Still to do before or with the code: the
+type inventory (style guide S4), the iOS right-click mechanism (13), the help text compared (F8), saved plate and
+brace files checked (11).
 
-**Already fixed** (in the #17 load-path work, uncommitted at filing): Peak Min row disabled and faded to 0.4 for
-plate/brace and in a comparison (Python, web — the web hid it); the Threshold value in `accentText` and the Peak Min
-value in `chartPeakMin`, medium weight (Python, web); Python's Taps / Threshold / Peak Min labels in `textSecondary`.
+Colour differences between the editions that #2 ([`completed/THEME-SPEC.md`](completed/THEME-SPEC.md)) did not
+cover: where one edition draws an item in the default colour and another names a role, or where the item is missing,
+plus how each edition handles colour (M) and the functional differences found with them (F). PDF/PNG exports are not
+included.
 
-**Python baseline.** The application stylesheet sets every `QLabel` to `text.primary` and a tagged widget to its
-role, with no `:disabled` variant (`views/utilities/palette.py` `_application_stylesheet`) — so no Python label ever
-greys when disabled. That is the cause of item 1 and should be fixed in the stylesheet, not per label.
+**"Default" means different things.** In Swift, "default" is the system's colour (no Palette role). In Python, an
+untagged `QLabel` is `text.primary`: the application stylesheet sets every label to it
+(`views/utilities/palette.py` `_application_stylesheet`) — so "default" in the Python column is `text.primary` for a
+label, and the platform's colour only for other widgets (table cells, buttons, frames). The stylesheet has `:disabled`
+rules for tinted and prominent buttons only, so `setEnabled(False)` alone does not change a label's colour; a label
+dims only where the code puts an opacity effect on it or its group (Peak Min, the peak threshold, a measurement row).
 
-File:line references are as found on 2026-10-15; verify before editing.
+**Decisions M1–M6 are made in the style guide** ([`../process/STYLE-GUIDE.md`](../process/STYLE-GUIDE.md), S1–S6); this
+doc applies them.
+
+**References** are to Swift `1a93221`, Python `26d0939`, web `d863ef7`. "Controls" / "Layouts" are Swift's
+`TapToneAnalysisView+Controls.swift` / `+Layouts.swift`; a bare Python line is `tap_tone_analysis_view.py`; a bare web
+`.css` line is `App.css`.
 
 ## Items
 
 | # | item | Swift | Python | web | status |
 |---|---|---|---|---|---|
+| **M** | **how colour is handled** | | | | |
+| M1 | State opacities are copied, not shared. `theme.json` shares two opacities (`peak.rowTint`, `status.messageBackground`); every other is a literal in each edition: dimmed 0.45, not applicable 0.4, tinted button fill 5 % / on 28 % / hover +10, mode chip 0.15 | `Extensions.swift:224` 0.45; `.opacity(… ? 1 : 0.4)` at Controls 703, 873, 1004, Layouts 625, 645, `TapSettingsView+Sections.swift:315`, `MeasurementsListView.swift:613`; hover 0.10 `TintedButtonStyle.swift:28` | `QGraphicsOpacityEffect` 0.4 (1074, 6014, `measurement_row_view.py:184`); `TINT_FILL = 0.05`, hover 0.15, pressed 0.22, on 0.28/0.38, tinted disabled 0.03 fill / 0.40 text, prominent hover 0.85, disabled 0.30 / 0.70 (`palette.py:498, 594–614`) | 0.45 (`.btn:disabled` 224, `.field.is-disabled` 806–809), 0.4 (731, 813, 1084, 1674), tint 5 % / 28 % / 15 % / 38 % (237–258, "measured from Swift's") | decided — S3 |
+| M2 | Disabled is three mechanisms. Swift: two kinds — `.disabledDimmed` (disabled + 0.45, "cannot act now") and `.opacity(0.4)` ("does not apply"); buttons grey natively | as M1 | per-widget opacity effects in some places, explicit `:disabled` colours on tinted / prominent buttons, nothing for labels — the Taps label is `setEnabled(False)` and still does not grey (item 1) | opacity on the whole control (`.btn:disabled`, `.field.is-disabled`) | decided — S5 |
+| M3 | Swift does not hold to "every colour is a role" (`Palette.swift`'s own rule; Python's stylesheet and the web pin every text): it leaves the system default in items 5 (path), 16 (empty-state title), 21, 22, 23, 31 (Measurement Details window), 32 / 33 (`Divider()`, not `separator`), 39, F3 (chart title) | system default at those items | pinned (`text.primary` for labels) | pinned | decided — S2 |
+| M4 | Buttons: platform in Swift, emulated in the others. Swift's `.tintedBordered` is the platform's `.bordered` (macOS: neutral bezel, label colour; iOS: tint-coloured label on a system fill) plus a 10 % hover wash in the environment tint — the accent unless the button is tinted. Group C items 19, 20, 26 follow from this | `TintedButtonStyle.swift:6–31` | 5 % fill in the button's role, hover in the role | same as Python | decided — S1 (b): app-drawn buttons |
+| M5 | Role names that do not match their use: Swift's `chart.title` colours the peak-annotation frequency, not the chart title (item 39); the web's `metric.*` roles are unused (item 10); the web's `.chart-title` rule is unused | `PeakAnnotations.swift:555` | — | `palette.ts:127–130`; App.css 1501 | decided — follows S2 and the items |
+| M6 | The warning glyph has no rule: "⚠" plain in some places, "⚠️" (U+FE0F, emoji form) in others, none with U+FE0E; the loaded-settings banner is an icon in Swift (SF Symbol) and Python (`mdi.alert`), the glyph in text on the web; the peak-range badge is the "⚠" glyph in Python and the web. Item 40 | see item 40 | see item 40 | see item 40 | decided — S6 |
+| **F** | **functional differences** | | | | |
+| F1 | Threshold disabled and dimmed 0.4 for a brace — one Swift layout only | Layouts 624–625, iPhone landscape only | always enabled (3541–3543) | always enabled (App.tsx 960–969) | decided — remove it from iPhone landscape: Threshold is the same in every layout and edition |
+| F2 | Crosshair toggle off-state: `toolbarInactive` in one Swift path, nil (default tint) in three; the `toolbarInactive` path (`ipadHeaderButtons`) looks unreachable on iOS | Controls 55, 144 `toolbarInactive`; Layouts 395, 531, 846 nil | no toggle | accent on a 5 % fill, 28 % on (App.tsx 831) | decided — one toggle look: the off state of the tinted toggle (S1), in every layout and on the web; the unreachable iPad path removed once confirmed |
+| F3 | One screen shows "Tap n/N" in two colours: iPhone landscape's tap controls in the default colour, its status bar (also on screen) in `status.tapCount` | Layouts 586, 595, 718 default; compact status bar 417–420 `statusTapCount` | — | — | decided — iPhone landscape's tap labels take the other layouts' colours |
+| F4 | Edit Measurement's Save stays accent while disabled (faded 0.45); the web's Save sheet drops the accent when it cannot save, as Python's does | `.confirmationAction` (`EditMeasurementView.swift:65–66`, 78–79) | Save sheet `set_commit_enabled` (`save_measurement_sheet.py:31–36`) | `EditMeasurementSheet.tsx:78` `btn-primary` always; `SaveSheet.tsx:68` drops it | decided — a prominent button that cannot act shows as a plain button, dimmed (style guide §5) |
+| F5 | UI an edition lacks (group B: items 12, 13, 16, 17, 18), and Swift and Python UI that should go (item 11) | 11 to remove | 11 to remove; lacks 12, 13, 16 (icon, title) | lacks 16 (icon, title), 17, 18; 12 in other words | decided, item by item |
+| F6 | The "wrong device" status warning exists in Swift only (not a colour item) | `TapToneAnalyzer.swift:607` | none | none | decided — no change: an accepted platform difference, settled in #30 |
+| F7 | Plate Cross/Long and Long/Cross values: bold in Swift, regular in Python's results (bold in its PDF), semibold on the web (weight, not colour) | `TapAnalysisResultsView.swift:761, 773` `bodyBold` | 1587–1604 regular | `.mat-value` 600 (320–321) | decided — bold, as Swift |
+| F8 | The chart's ⓘ help: on iPad (both orientations) it is cut off at the top and bottom — a popover asked to sit above the ⓘ (`arrowEdge: .bottom`), near the top of the screen, with 16 lines and no scroll view; on iPhone it becomes a sheet and shows whole. Its text is the same on every device: on iOS it lists ⇧ / ⌥ / ⌘ + Scroll and "Right-click: Reset axes & labels" | `SpectrumView.swift:489–527` | not compared yet | not compared yet | decided — open below the ⓘ, in a scroll view; text by device (pointer and keys where there is a pointer, touch where there is touch), the same in every edition |
 | **A** | **an edition leaves the default where Swift names a role** | | | | |
-| 1 | Taps field dimmed while a sequence is in flight | `.disabledDimmed` 0.45 on label, value, stepper (TapToneAnalysisView+Controls.swift:817; Extensions.swift:222) | `setEnabled(False)` only — not visibly dimmed (tap_tone_analysis_view.py ~3068) | 0.45 (App.css `.field.is-disabled`) | open |
-| 2 | Settings: mode-range names ("Air:", "Top:" …) | `textSecondary` (TapSettingsView+LayoutHelpers.swift:233) | default (tap_tone_analysis_view.py ~5686) | secondary (SettingsPanel.tsx:458) | open |
-| 3 | Settings: active calibration details | `textSecondary` (TapSettingsView+Sections.swift:100) | default (tap_tone_analysis_view.py ~6451) | secondary (`.ts-cal-details`) | open |
-| 4 | Settings: dump-folder buttons (Open Folder / Change… / Use Default) | accent tint (Sections.swift:336) | untinted (tap_tone_analysis_view.py ~6187) | no folder row | open |
-| 5 | Settings: "Saved to" + path | "Saved to" secondary, path primary (Sections.swift:330–331) | one label, all secondary (tap_tone_analysis_view.py ~6180) | no folder row | open |
-| 6 | Measurement Details: "No identified peaks" | `textSecondary` (MeasurementDetailView.swift:180) | default (measurement_detail_view.py:150) | secondary | open |
-| 7 | Edit Measurement: Save button | `.confirmationAction` (EditMeasurementView.swift:76) | plain (edit_measurement_view.py:130); its Save sheet is accent | accent (`btn-primary`) | open |
-| 8 | Notes editor border (Save, Edit sheets) | `separator` stroke (SaveMeasurementSheet.swift:109) | Qt default frame | separator | open |
-| 9 | Comparison / multi-tap table cells with a frequency | `textPrimary` (ComparisonResultsView.swift:99; MultiTapComparisonResultsView.swift:132) | no foreground — platform colour (comparison_results_view.py ~172) | primary | open |
-| 10 | Metrics sheet: processing time / CPU values by load | `metric.good/fair/high/overload` (FFTAnalysisMetricsView.swift:94–189) | same | default (MetricsPanel.tsx:108–124) | open |
+| 1 | Taps field dimmed while a sequence is in flight | `.disabledDimmed(tapCountLocked)` Controls 822 (also 655, 953, Layouts 599) | label and spin box `setEnabled(False)` (3147–3149); the label stays `text.secondary` (no `:disabled`), the spin box takes Qt's native disabled look | `.field.is-disabled` 0.45 (App.tsx 936; 806–809); ± through `.btn:disabled` | decided — S5: dimmed as a whole group |
+| 2 | Settings: mode-range names ("Air:", "Top:" …) | `textSecondary` (`TapSettingsView+LayoutHelpers.swift:232–233`) | untagged → `text.primary` (5552–5557) | secondary (`SettingsPanel.tsx:460`) | decided — toward Swift (`text.secondary`) |
+| 3 | Settings: active calibration details | `textSecondary` (`TapSettingsView+Sections.swift:100`) | untagged → `text.primary` (6311–6318) | secondary (`SettingsPanel.tsx:373`) | decided — toward Swift (`text.secondary`) |
+| 4 | Settings: dump-folder buttons (Open Folder / Change… / Use Default) | accent tint (Sections 336–347, via `LayoutHelpers.swift:148–149`) | untinted (6053–6055) — the dialog's calibration buttons are tinted (6295) | no folder row | decided — toward Swift (accent-tinted) |
+| 5 | Settings: "Saved to" + path | "Saved to" secondary, path system default (Sections 328–331) | one label, all secondary (6046–6058) | no folder row | decided — S2: Swift names the path's role; Python splits "Saved to" (secondary) from the path |
+| 6 | Measurement Details: "No identified peaks" | `textSecondary` (`MeasurementDetailView.swift:179–180`) | untagged → `text.primary` (`measurement_detail_view.py:150`) | secondary | decided — toward Swift (`text.secondary`) |
+| 7 | Edit Measurement: Save button | `.confirmationAction` (`EditMeasurementView.swift:65–66`, 78–79) | plain (`edit_measurement_view.py:130–131`); its Save sheet is accent | accent, even disabled (F4) | decided — F4 |
+| 8 | Notes editor border and fill (Save, Edit sheets) | `separator` stroke + `backgroundControl` fill, macOS (`SaveMeasurementSheet.swift:109–112`, `EditMeasurementView.swift:112`); iOS no stroke | Qt default frame (`save_measurement_sheet.py:59`, `edit_measurement_view.py:105`) | separator + control (2257, 2280) | decided — toward Swift (`separator` stroke, `background.control` fill) |
+| 9 | Comparison / multi-tap table cells with a frequency | `textPrimary` (`ComparisonResultsView.swift:99`; `MultiTapComparisonResultsView.swift:132`) | no foreground — platform colour (`comparison_results_view.py:174–177`; `multi_tap_comparison_results_view.py:150–176`) | primary | decided — toward Swift (`text.primary`) |
+| 10 | Metrics sheet: processing time / CPU values by load | `metric.good/fair/high/overload` (`FFTAnalysisMetricsView.swift:94–189`) | same (`fft_analysis_metrics_view.py:236–317`) | default (`MetricsPanel.tsx:111–121`); roles exist, unused (M5) | decided — toward Swift (the web uses `metric.*`) |
 | **B** | **the item (and so its colour) is missing** | | | | |
-| 11 | Plate placeholder "Select a longitudinal (L) peak" / "Select a cross-grain (C) peak"; brace "Select the fL (L) peak…" | `statusWarning` / `textSecondary` (TapAnalysisResultsView.swift:797–803, 942) | only "Select peaks above…" | no placeholder (MaterialResults.tsx:241) | open |
-| 12 | "No peaks detected in visible range" | `textSecondary` (TapAnalysisResultsView.swift:512) | absent | "No peaks above Peak Min." | open |
-| 13 | Chart Options section headers | `textSecondary` (SpectrumView.swift:1291) | absent (QMenu) | secondary | open |
-| 14 | Status bar "Starting..." — since #17 O4 F6 (2026-10-18) "Audio input unavailable" instead when the permission is refused or a start failed | `textSecondary` when not running (Controls.swift:569) | blank (the chart's overlay says it, not the status bar) | shown when not running, as Swift's, since F6 — in `status.peakReadout` | open |
-| 15 | Loaded-settings banner icon | separate `statusWarning` icon, pulsing (Controls.swift:472) | same | "⚠" glyph in the text, no pulse | open |
-| 16 | Measurements empty state | icon secondary, title primary semibold, message secondary (EmptyStateView.swift:24–36) | one secondary label, no icon | one secondary paragraph, no icon | open |
-| 17 | Slider reset buttons | `textSecondary` (Controls.swift:615, 630) | same | absent | open |
-| 18 | Loading overlay | `ProgressView` default (LoadingOverlay.swift:28) | spinner `text.onColor` | absent | open |
+| 11 | Plate placeholders "Select peaks above to calculate properties" / "Select a longitudinal (L) peak" / "Select a cross-grain (C) peak"; brace "Select the fL (L) peak above to calculate properties" — shown only when a completed plate or brace lacks its L/C peak or its dimensions, which a capture never produces (the properties show only once complete, and every phase completes with its peak); there is no UI to select a material peak | `TapAnalysisResultsView.swift:792–806`, 938–944 | brace placeholder (1322); plate "Select peaks above…" only (1398) | none | decided — remove the placeholders from Swift and Python; the web needs nothing |
+| 12 | "No peaks detected in visible range" | `textSecondary` (`TapAnalysisResultsView.swift:511–512`) | absent | "No peaks above Peak Min." (App.tsx 1239) | decided — Python adds it; the web uses Swift's words |
+| 13 | Chart Options section headers | `textSecondary` (`SpectrumView.swift:1291–1294`) | absent (QMenu, separators only; `fft_canvas.py:1397–1409`) | secondary, uppercase (`SpectrumChart.tsx:609, 614`) | decided — F5: one plain platform menu from ⋯ and right-click, everywhere |
+| 14 | Status bar "Starting..." / "Audio input unavailable" when not running | `textSecondary` (Controls 575–577) | as Swift, `text.secondary` (2457–2466) | `status.peakReadout` (App.tsx 1361–1365; 2184) | decided — toward Swift (the web in `text.secondary`) |
+| 15 | Loaded-settings banner icon | separate `statusWarning` icon, pulsing (Controls 477–480, compact 381–384) | same (`mdi.alert`, 1949–2000) | "⚠" glyph in the text, no pulse (App.tsx 1290) | decided — S6: an icon in every edition (the web gains the pulsing `status.warning` icon) |
+| 16 | Measurements empty state | icon secondary, title semibold in the system default, message secondary (`EmptyStateView.swift:24–34`) | one secondary label, no icon (`measurements_list_view.py:93–98`) | one secondary paragraph, no icon (`MeasurementsPanel.tsx:415`) | decided — Python and the web add the icon and title |
+| 17 | Slider reset buttons | `textSecondary` (Controls 618–620, 633–635) | same (1015–1016) | absent | decided — the web adds them |
+| 18 | Loading overlay | shown from the Export click through the save panel (`TapToneAnalysisView+Actions.swift:306–329`; `Layouts.swift:292–304`); "Saving measurement with chart image…" never shows (flag set and cleared in one call, `Actions.swift:148, 164`) | after the file is chosen, while writing (`tap_tone_analysis_view.py:4718–4727`, 4764); "Starting audio…" at start-up (715) | none; export buttons disabled while one runs | decided — F5: no export overlay in any edition; Python's start-up overlay removed |
 | **C** | **an edition names a role where Swift uses the system default — decide which way** | | | | |
-| 19 | Header icon buttons (Re-analyze, Select None, wand) | `.tintedBordered`, no tint | secondary icon on `background.subtle` | same as Python | open |
-| 20 | Export Spectrum / Export PDF | `.tintedBordered`, no tint | native button, primary icon | `background.picker` fill | open |
-| 21 | Quick Start section headers | system list header | secondary | secondary | open |
-| 22 | Material instructions box (title, surface) | GroupBox default | title secondary bold; panel + separator | same as Python | open |
-| 23 | Measurement Details group boxes | GroupBox default | QGroupBox default | `background.subtle` | open |
-| 24 | Hover: measurement row / row ⋯ button | none | row `background.subtle` | ⋯ subtle + border | open |
-| 25 | Row menu Delete | `role: .destructive` | default | `status.error` | open |
-| 26 | Cancel / Redo fill | text in role, neutral fill (Controls.swift:918) | 5 % fill in the role | tinted fill | open |
-| 27 | Chart ⋯ / ⓘ buttons | secondary, plain (SpectrumView.swift:470, 491) | same | + border and readout-background circle | open |
-| 28 | Material spectra legend text | series colour (SpectrumView.swift:572) | series colour | secondary, + border | open |
+| 19 | Header icon buttons (Re-analyze, Select None, wand) | `.tintedBordered`, no tint (`TapAnalysisResultsView.swift:221, 252, 264`) | secondary icon on `background.subtle` (1174–1221) | same as Python (App.tsx 1152–1197; 1897–1908); neither has Swift's hover wash | decided — S1: app-drawn buttons in the style guide's look |
+| 20 | Export Spectrum / Export PDF | `.tintedBordered`, no tint (`TapAnalysisResultsView.swift:373, 384`) | native button, primary icon, text untagged (1765–1777) | `background.picker` fill + 10 % accent hover (1761–1772) | decided — S1: app-drawn buttons in the style guide's look |
+| 21 | Quick Start section headers | system list header (`HelpView.swift:57–59`) | secondary, pinned header on panel + separator (`help_view.py:36–44, 78, 750–757`) | same as Python (`QuickStartGuide.tsx:537`; 113–136) | decided — S2: Swift names the header's role; the others match it |
+| 22 | Material instructions box (title, surface) | `GroupBox` default (`TapToneAnalysisView+SpectrumViews.swift:284`) | title secondary bold; panel, a top separator line only, no radius (2018–2036) | title secondary; panel, full separator border, radius 10 (1437–1450) | decided — S2: Swift names the roles of its box; the others match it |
+| 23 | Measurement Details group boxes | `GroupBox` default (`MeasurementDetailView.swift:75, 151, 177`) | `QGroupBox` default (`measurement_detail_view.py:75, 128, 145`) | `background.subtle`, radius 8 (749–759) | decided — S2: Swift names the roles of its box; the others match it |
+| 24 | Hover: measurement row / row ⋯ button | no row fill; ⋯ `textSecondary`, shown on hover (`MeasurementsListView.swift:231–238`; `MeasurementRowView.swift:30–43`) | row `background.subtle` (`measurement_row_view.py:218–226`) | ⋯ subtle + separator border, no row hover (2451–2470) | decided — a row highlight (`background.subtle`) on hover in every edition; the ⋯ shows on hover, as Swift |
+| 25 | Row menu Delete | `role: .destructive` (`MeasurementsListView.swift:595`) — red on iOS; an ordinary item in a macOS menu | default (`measurements_list_view.py:351, 364`) | `status.error` (2511–2517) | decided — S1a: the web drops `status.error` from Delete |
+| 26 | Cancel / Redo | label in `statusWarning` / `toolbarInactive`, platform `.bordered` fill, accent hover wash (Controls 757–759, 920–925, 1059–1061; Layouts 700–703) | 5 % fill in the role, hover 15 % (1098–1101, 3182–3200) | same as Python (App.tsx 1038–1046; 237–269) | decided — S1: app-drawn buttons in the style guide's look |
+| 27 | Chart ⋯ / ⓘ buttons | secondary, `.plain` (`SpectrumView.swift:470–493`) | secondary, hover primary (`fft_canvas.py:592–608, 690–696`) | + separator border and readout-background circle, hover primary + accent border; help glyph "?" (`SpectrumChart.tsx:540–555`; 1524–1570) | decided — as Swift: plain secondary icons, no border, no hover colour |
 | **D** | **surfaces** | | | | |
-| 29 | Tap-controls bar | `background.subtle`, radius 8 (Controls.swift:792) | separator bottom border only | panel + border, radius 10 | open |
-| 30 | App button row | none | separator bottom border | panel + border | open |
-| 31 | Settings / Measurement Details window background | `backgroundPanel` | window background | panel | open |
-| 32 | Measurement Details footer | panel + divider (MeasurementDetailView.swift:43, 52) | none | panel + separator | open |
-| 33 | Sheet title bar (Save / Play File / Saved Measurements) | panel + divider (SheetTitle.swift:23) | native title only | panel + separator | open |
-| **E** | **Swift disagrees with itself (iOS layouts)** | | | | |
-| 34 | iPhone landscape "Taps:" and "Tap n/N" labels | default (Layouts.swift:584, 711); elsewhere secondary / `status.tapCount` | — | — | open |
-| 35 | iPhone landscape Threshold row dimmed 0.4 for brace | Layouts.swift:622; no other layout or edition | always enabled | always enabled | open |
-| 36 | Crosshair toggle, off state | `toolbar.inactive` (Controls.swift:55, 144), nil (Layouts.swift:394, 529, 842) | — | accent | open |
-| **F** | **on the chart (#2 step 5a) — slipped through** | | | | |
-| 37 | Mode-boundary label chip | mode colour on mode colour at 0.15 (SpectrumView+ChartContent.swift:78) | no chip | 0.16 on screen, 0.15 export | open |
-| 38 | Peak Min value label on the chart | on `chart.readout.background` (ChartContent.swift:202) | no background | same as Swift | open |
-| 39 | Chart title | default (SpectrumView.swift:533) | `chart.title` | `chart.title` | open |
-| **G** | **a text glyph each platform draws its own way — no edition sets its colour, so no inventory saw it** | | | | |
-| 40 | "⚠" (U+26A0) in the status-line warnings (dead input, wrong device, clipping, could not be restarted, could not be started, microphone access) and the web's loaded-settings banner (item 15) | plain symbol in the text's colour (macOS, iOS) | plain symbol on Linux; the orange colour emoji on Windows (owner's screenshot, 2026-10-18) | as the platform's browser and fonts draw it | open — follow each "⚠" with U+FE0E (text presentation) in all three editions and their shared cases, so every platform draws the plain symbol as Swift does; to check on Windows (Qt) |
+| 29 | Tap-controls bar | `background.subtle`, radius 8 (Controls 797–799; narrow 764–766) | separator bottom border only (947–952) | panel + border, radius 10 (App.tsx 929; 36–45) | decided — as Swift: `background.subtle`, radius 8, no border |
+| 30 | App button row | none (Controls 40–102) | separator bottom border (862–869) | panel + border (App.tsx 794; 36–50) | decided — as Swift: no surface |
+| 31 | Settings / Measurement Details window background | Settings `backgroundPanel` (`TapSettingsView.swift:205`); Measurement Details the system window background (`MeasurementDetailView.swift:72`, a plain `NSWindow`) | window background, both | panel, both (853–855) | decided — S2: Swift names its window backgrounds; the others match |
+| 32 | Measurement Details footer | panel + system `Divider()` (`MeasurementDetailView.swift:43, 52`) | none (`measurement_detail_view.py:201–209`) | panel + separator (921–927) | decided — S2: `separator` for the divider, panel surface; the others match |
+| 33 | Sheet title bar (Save / Play File / Saved Measurements) | panel + system `Divider()` (`SheetTitle.swift:21–23`) | native title only | panel + separator (893–899) | decided — S2: `separator` for the divider, panel surface; the others match |
+| **Chart** | **on the chart** | | | | |
+| 38 | Peak Min value label on the chart | on `chart.readout.background` (ChartContent 205) | no background (`fft_canvas.py:511–516, 680–682`) | same as Swift (`spectrumRender.ts:336`) | decided — toward Swift (Python draws the label on `chart.readout.background`) |
+| 39 | Chart title | system default, screen and export (`SpectrumView.swift:533`; `ExportableSpectrumChart.swift:266`) | `chart.title` (`fft_canvas.py:673`; export 1113) | `chart.title` (`spectrumRender.ts:175`) | decided — S2, M5: the chart title in `chart.title` in every edition |
+| **G** | **a text glyph each platform draws its own way** | | | | |
+| 40 | "⚠" (U+26A0) in user-facing text. Status-line warnings — clipping, dead input, could not restart, microphone access, could not start (all three), wrong device (Swift only) — plain "⚠"; Python's "No audio input device available" and the peak-range badge (Python, web), plain; the import alert's microphone warning and the Help / Quick Start plate-and-brace note, "⚠️" (U+FE0F); the web's loaded-settings banner (item 15), plain. Shared cases: `status-message.json`, `notification.json` (plain), `import-persistence.json` (U+FE0F). None is followed by U+FE0E | `TapToneAnalyzer.swift:597–619`; `+MeasurementManagement.swift:650`; `HelpView.swift:254` | `tap_tone_analyzer.py:924–935`; 5330; `shared/peak_card_widget.py:321`; `tap_tone_analyzer_measurement_management.py:199`; `help_view.py:410` | `state/tapToneAnalyzer.ts:81–93, 1405`; App.tsx 1290; `PeakCard.tsx:162`; `QuickStartGuide.tsx:316` | decided — S6: "⚠" in the text form (U+FE0E) everywhere it is text |
 
-Weight only, noted with item 9's area: Plate Cross/Long and Long/Cross values are bold in Swift and the web, regular
-in Python.
+## Decisions
+
+- **M1–M6** — decided in the style guide (owner, 2026-10-20): M1 → S3, M2 → S5, M3 → S2, M4 → S1 (b), M6 → S6; M5
+  follows from S2 and the items (the chart title in `chart.title`, the web's metric values in `metric.*`, the unused
+  `.chart-title` rule removed).
+- **F1** — decided (owner, 2026-10-20): iPhone landscape is wrong; Threshold behaves the same in every layout and edition — the brace-only disabling and dimming are removed.
+- **F2** — decided (owner, 2026-10-20): a crosshair toggle exists only without a hover pointer (Swift on iOS, the
+  web on touch). Its off state is the off state of the tinted toggle (style guide S1), the same in every layout and on
+  the web; `toolbarInactive` is kept for "not available". The iPad header path is removed once confirmed unreachable.
+- **F3** — decided (owner, 2026-10-20): iPhone landscape's tap labels take the other layouts' colours
+  (`textSecondary`; "Tap n/N" in `status.tapCount`).
+- **F4** — decided (owner, 2026-10-20): a sheet's Save is a prominent button; while it cannot act it shows as a plain
+  button, dimmed — in every sheet and edition (the rule is in the style guide, §5).
+- **F5** — item by item:
+  - **11** — decided (owner, 2026-10-20): remove the "Select…" placeholders from Swift and Python; the web needs
+    nothing. They are unreachable in use (a completed plate or brace always has its peaks) and ask for a selection
+    no edition has a UI for. Check to follow: whether any saved plate or brace file lacks its L/C peak or its
+    dimensions, and what a file like that should be.
+  - **12** — decided (owner, 2026-10-20): Python adds "No peaks detected in visible range"; the web uses Swift's words.
+  - **16** — decided (owner, 2026-10-20): Python and the web add Swift's icon and title to the empty state.
+  - **17** — decided (owner, 2026-10-20): the web adds the slider reset buttons.
+  - **13** — decided (owner, 2026-10-20): the chart's resets are one plain platform menu, worded "Reset Both Axes to
+    Saved" … "Reset Labels", in every edition and device. The ⋯ opens it everywhere — in Swift a `Menu` (macOS, iPad,
+    iPhone), replacing the "Chart Options" popover and the iPhone sheet; on the web a menu drawn as the platform's,
+    with no title or headers. Right-click opens the same menu wherever there is a pointer — iPad and iPhone with a
+    mouse too, by the secondary button only (a long press stays the pan / crosshair drag); the iOS mechanism to be
+    confirmed. Touch alone uses the ⋯.
+  - **18** — decided (owner, 2026-10-20): **no export overlay in any edition.** Today it means three things: Swift
+    shows it from the click through the save panel; Python only after the file is chosen, while it writes (a flash at
+    most); the web never. Exports take well under a second once the file is chosen, and the disabled buttons already
+    stop a second one. Swift's and Python's export overlays go — with Swift's "Saving measurement with chart image…",
+    which never shows (its flag is set and cleared in one synchronous call) — and Python's "Starting audio…" at
+    start-up, which no other edition has. The loading overlay is then unused in every edition.
+- **F6** — decided (owner, 2026-10-20): no change. The fault exists only on macOS, where the system can move a
+  running engine to its default input; Swift's watchdog restarts it and warns if it cannot. PortAudio binds a stream
+  to its device, and Python checks the opened device's name and treats another as a failed open; a browser's track is
+  bound to its device. Settled in #30 (`completed/WRONG-INPUT-DEVICE.md`).
+- **F7** — decided (owner, 2026-10-20): bold, as Swift.
+- **F8** — decided (owner, 2026-10-20): the help opens below the ⓘ, in a scroll view, so it is never cut off; its
+  text follows the device as decision 13 does — pointer and keyboard lines where there is a pointer, touch lines
+  (pinch, drag, ⋯) on touch — and says the same in every edition for the same device (Python's and the web's help to be
+  compared).
+- **Colour items** — decided (owner, 2026-10-20): where Swift names a role and another edition does not (2, 3, 4, 6,
+  8, 9, 10, 14, 38), the others follow Swift; the items under a style-guide rule (1, 5, 15, 19–23, 26, 31–33, 39, 40)
+  follow the rule. Item 24: a row highlight on hover in every edition (Swift gains it). Item 27 and the bars (29, 30):
+  as Swift.

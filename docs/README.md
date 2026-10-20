@@ -10,13 +10,11 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Reference (living — consult, don't complete)
 - [`INVENTORY.md`](INVENTORY.md) — the spec extracted from canonical Swift; the contract the port is measured against.
 - [`PLAN.md`](PLAN.md) — overall migration plan & parity bar.
-- [`WEB-UI-GUIDELINES.md`](WEB-UI-GUIDELINES.md) — how the desktop/mobile UI translates to the web (port-era).
-- [`ANDROID-UI-GUIDELINES.md`](ANDROID-UI-GUIDELINES.md) — how the Swift UI translates to Android (tablet-first).
 
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32) · [`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md) — theme colours the inventories missed: an edition using a default colour where Swift uses a role
+- [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32) · [`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md) — theme colours the inventories missed (an edition using a default colour where Swift uses a role), and the divergences in how colour is handled (M1–M6) and in function (F1–F7)
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
@@ -106,5 +104,5 @@ cause it uncovered is **not** finished and lives in
 ## Elsewhere in the hub
 - [`../tooling/`](../tooling/) — the parity system (`PARITY-MAP.md`, `parity-index.json`, `parity-oracle.json`, the generators) + [`TEST-COVERAGE.md`](../tooling/TEST-COVERAGE.md).
   - `sync-oracle.sh` vendors the oracle *out* to each repo; `collect-baselines.py` pulls each configuration's self-baseline *in* to `parity/baselines/`, and `parity-report.py` turns them into the edition-vs-platform numbers behind the parity tolerance ([`completed/PARITY-AND-REGRESSION-BASELINES.md`](completed/PARITY-AND-REGRESSION-BASELINES.md)). `compare-capture-probes.py` localises a cross-edition capture difference for [#7](https://github.com/dwsdolce/guitar-tap-project/issues/7).
-- [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model), `CROSS-EDITION-INVESTIGATION.md` (how to find out why two editions disagree about a number). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
+- [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model), `CROSS-EDITION-INVESTIGATION.md` (how to find out why two editions disagree about a number), `STYLE-GUIDE.md` (how every edition looks: platform or app, colour, opacity, type, control states, icons), `WEB-UI-GUIDELINES.md` (how the desktop/mobile UI translates to the web), `ANDROID-UI-GUIDELINES.md` (how the Swift UI translates to Android, tablet-first). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 - [`images/`](images/), [`playback-validation/`](playback-validation/) — screenshots + the playback-validation harness.

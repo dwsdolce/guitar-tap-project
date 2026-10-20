@@ -102,7 +102,7 @@ edition in `platforms.py`, with Android's slot already pointing at
 
 ## 4. New document: Android UI guidelines
 
-[ANDROID-UI-GUIDELINES.md](ANDROID-UI-GUIDELINES.md) — the counterpart of the web guidelines:
+[ANDROID-UI-GUIDELINES.md](../process/ANDROID-UI-GUIDELINES.md) — the counterpart of the web guidelines:
 tablet-first priority, layout selection mirroring Swift's predicate order, results inline on a
 tablet versus a sheet on a phone, the zone-dependent chart gestures, annotation drag and reset,
 the visible ⋯ affordance, the deliberate friction on load and delete, 48 dp targets, and the
