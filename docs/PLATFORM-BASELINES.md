@@ -321,5 +321,30 @@ web's `package-lock.json` and `.nvmrc` unchanged since item 1, so no reinstall.
 
 The one skip is item 1's, in both editions: `the capture probe is switched off`.
 
-*Linux:* not yet run.
+*Linux:* **all four steps pass at the new bars** (2026-10-19), on the same machine as item 1 — a VMware guest on
+the Windows machine above, `Linux-7.0.0-38-generic`, glibc 2.39, i7-12700H; Python 3.14.8 / NumPy 2.5.4;
+Node 26.11.1 / V8 `14.6.202.34-node.37` (the pinned `.nvmrc` version).
+Commits run: `guitar_tap` `42a010d`, `GuitarTapWeb` `2dcac47`, hub `c405c75` — each at `origin/main`; the web's
+`package-lock.json` unchanged since item 1 (only the oracle and the mint tool moved), so no reinstall.
+
+All three vendored oracles — hub, Python and web — carry the new bars byte-identically (`freqHz` 2e-4, `magDb`
+1e-4, `gatedFftDb` 5e-5, `q` 1e-5, `ringOutSec` 2e-8) at `oracleVersion` `777a951`, so the sync landed and, as
+expected, nothing needed re-minting.
+
+| Step | Result |
+|---|---|
+| 2. `.venv/bin/python -m pytest` | **1469 passed, 1 skipped** (6:29). `test_self_regression` (both tests) and `test_oracle_sync` **passed, not skipped** — re-run on their own to record them |
+| 3. `npm run test` | **68 files, 1352 passed, 1 skipped** (2:53); `oracle-sync`, `self-regression` and `file-playback` included |
+| 4. `Tooling/run-export-check.sh` | **20 exports checked, 0 failing** |
+| 4. `npm run test:exports` | **20 exports checked, 0 failing** |
+
+The one skip is item 1's, in both editions: `the capture probe is switched off`. Counts identical to item 1's
+run at the old bars.
+
+What this adds over item 1: that run cleared the old bar with roughly 1000× to spare, so it said little about
+the bar itself. These bars sit about 10× above the worst measured distance, and both tracking editions still
+pass them unchanged on a third operating system — on hardware that minted no baseline (Python's came from an
+Azure-kernel runner, the web's from an AMD EPYC 7763). Worth noting the limit of that, though: this VM runs on
+the very machine the Windows rows above were measured on, so the Windows and Linux results share a CPU and are
+not independent hardware evidence of each other — what they isolate is the operating system and toolchain.
 
