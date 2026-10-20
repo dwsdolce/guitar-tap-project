@@ -373,12 +373,17 @@ permissions) on a small runner. And the export test was one test for all five ca
 2. `run-export-uitests.sh` runs a failed test once more (`-retry-tests-on-failure -test-iterations 2`); the
    manifest keeps one entry per export (a retried case attaches again what its failed run saved); a test that
    passed only on its second run is listed at the end ("Passed only on a retry"), so a stall stays visible.
-3. On a simulator the script waits for its first-boot work to finish — its processes under 30 % of one core for
-   three readings 5 s apart, at most 3 minutes — after the Files warm-up. (The share sheet cannot be raised from
-   a script; the wait covers what starves it.)
+3. ~~On a simulator the script waits for its first-boot work to finish~~ — **removed** (owner, 2026-10-19; Swift `41dda63`). Its
+   processes under 30 % of one core for three readings 5 s apart, at most 3 minutes (Swift `ad86feb`), never
+   happened on CI: every simulator job ran out the 3 minutes at 75–187 % CPU. Its busiest processes when the wait
+   ended (Swift `4052e11`) were system work that never ends: on the iPad the animated wallpapers
+   (`Unity2025Poster` 94.7 %, `AegirPoster` 94.6 %), `diagnosticd` 18.7 % and `WeatherPoster` 7.1 %; on the iPhone
+   `diagnosticd` 38.5 %, `apsd` 24.2 %, `BackgroundShortcutRunner` 22.4 % and `linkd` 11.1 %. So the wait was a
+   fixed 3-minute sleep; the split and the retry carry a stall, and the retry list names it.
 
 **Checked:** the iPhone 17 simulator's run with the plate case made to fail once: it was retried and passed,
 listed as "Passed only on a retry (1): testExportsPlate()", all 20 exports checked once, 0 failing. The Mac's
 run is checked on CI (locally it takes over the mouse and keyboard). Done when several CI runs in a row pass
-with no export failures.
+with no export failures. CI so far: `ad86feb` and `4052e11` (both with the wait), 20 of 20 exports on the Mac,
+iPad and iPhone, no retries.
 
