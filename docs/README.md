@@ -16,7 +16,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#34](https://github.com/dwsdolce/guitar-tap-project/issues/34) · [`UNREADABLE-LIBRARY-ENTRY.md`](UNREADABLE-LIBRARY-ENTRY.md) — one unreadable measurement empties the library and fails an import; skip only that entry
 - [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32) · [`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md) — theme colours the inventories missed: an edition using a default colour where Swift uses a role
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
@@ -33,6 +32,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#34 (one unreadable measurement emptied the library) is **closed**; its record is
+[`completed/UNREADABLE-LIBRARY-ENTRY.md`](completed/UNREADABLE-LIBRARY-ENTRY.md) — one reader in every edition (a
+list of measurements, each entry decoded on its own): a library with an entry that cannot be read loads the rest,
+keeps a copy aside once and says where in the user's terms; an import imports the rest and says what it skipped.
 
 #16 (platform baselines) is **closed**; its record is
 [`completed/PLATFORM-BASELINES.md`](completed/PLATFORM-BASELINES.md) — Windows and Linux pass against their

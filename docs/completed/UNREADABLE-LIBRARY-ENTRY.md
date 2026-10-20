@@ -2,8 +2,9 @@
 
 **Issue:** [#34](https://github.com/dwsdolce/guitar-tap-project/issues/34)
 
-Status: **OPEN — item 1 (skip only the bad entry) done in every edition (Swift `1a93221`, Python `26d0939`,
-web `d863ef7`), checked on the iPad; item 2 answered — no path found.** Opened 2026-10-19.
+Status: **✅ COMPLETE (2026-10-19)** — item 1 done in every edition (Swift `1a93221`, Python `26d0939`, web
+`d863ef7`), checked on the iPad and green on CI; item 2 answered — no path saves an empty spectrum. Opened
+2026-10-19.
 
 ## What happened (2026-10-19, the iPad Pro M5)
 
@@ -93,8 +94,10 @@ name, so the library and an import are one format, read by one decoder in each e
 - Targeted tests pass: Swift ImportPersistence (macOS); Python `test_import_persistence.py` (29) and the
   decode-using suites (213); web `import-persistence.test.ts` (28) and the 17 suites that read files (385);
   web typecheck. Swift builds for iOS.
-- iPad, owner, 2026-10-19: restored the kept library and ran the Swift build — worked. That build's message
-  still gave the internal path; the place-in-the-user's-terms wording came after it.
+- iPad, owner, 2026-10-19: restored the kept library and ran the Swift build — worked; re-run with the final
+  wording (the place in the user's terms) — good.
+- CI, 2026-10-19: Swift (macOS, iPad and iPhone simulators, the export jobs with no retries), Python (macOS,
+  Linux, Windows) and the web — all green.
 
 ### 2 — can the app still save an empty spectrum?
 
