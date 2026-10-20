@@ -14,7 +14,7 @@ Each configuration (an edition on one operating system and architecture) checks 
 - **Regression** — the configuration against **its own** minted baseline, at `selfTolerances` (1e-12). Nothing
   legitimately moves it; a difference is a change to the analysis.
 - **Parity** — the edition against the **oracle** (Swift on macOS, `tooling/parity/parity-oracle.json`), at
-  `tolerances`: 0.02 Hz / 0.01 dB.
+  `tolerances`: 2e-04 Hz / 1e-04 dB (0.02 Hz / 0.01 dB until item 5, 2026-10-19).
 
 A baseline is minted by the configuration it belongs to, beside that repo's tests, and collected into the hub
 (`tooling/collect-baselines.py` → `tooling/parity/baselines/`), the one place that sees every configuration.
@@ -57,7 +57,8 @@ cross-edition tolerance; one iOS baseline will do if iPad and iPhone agree. The 
 | 2 | macOS: the full suites of Swift, Python and the web | passed (2026-10-19) |
 | 3 | iPad and iPhone simulators: Swift's full suite; record what differs from the macOS oracle | run (2026-10-19) — three failures, below |
 | 4 | iPad and iPhone baselines: Swift mints its own configuration's baseline on iOS, its regression check reads it there, `collect-baselines.py` gathers it and `parity-report.py` reports it | done (2026-10-19, Swift `84f8845`) — two configurations: device and simulator, below |
-| 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | after item 4 |
+| 5 | The tolerance re-measured with every configuration (`tooling/parity-report.py`) and decided | decided (owner, 2026-10-19) — 2e-4 Hz, 1e-4 dB, 5e-5 dB, 1e-5, 2e-8 s; verified on macOS, iOS simulators and devices; Swift `10aa335`, Python `42a010d`, web `2dcac47`; Windows and Linux to re-run |
+| 6 | Swift's simulator export UI jobs on CI fail now and then — the Files picker never draws (the simulator's document service not scheduled), nothing is exported; the next run passes. Seen on iPhone (`626f023`, `fb5b0e6`, `d6b6297`, `9beff54`, `4c8d812`, `cde0605`, `0fe7630`) and iPad (`e4d9951`, `fb5b0e6`, `85a290a`, `c641dfa`). Owner, 2026-10-19: dealt with before #16 closes | open |
 
 Owner, 2026-10-19: Windows and Linux are done only when the minted tests pass on the real machines (item 1).
 
@@ -274,4 +275,35 @@ an iOS baseline fails the iPhone's regression test on that value.
 **`parity-report.py`, nine configurations:** device iOS against macOS — 0 in every value; the simulator against
 macOS or a device — 1e-5 Hz (REG-G2 air), 2e-6 dB (GFFT3); the worst cross-edition distances are unchanged
 (2.04e-5 Hz, 1.16e-5 dB, Swift against Python and the web), so item 5 starts from those.
+
+#### Item 5 — decided (owner, 2026-10-19)
+
+Measured on all nine configurations (item 4's report): the worst distances are unchanged by iOS — 2.04e-5 Hz,
+1.16e-5 dB, 4.17e-6 dB (gated FFT), 6.67e-7 (q), 1.51e-9 s (ring-out), every one Swift against Python and the web.
+The bars, at about ten times the worst (owner: "they look good"):
+
+| Value | Worst | Was | Now | Headroom |
+|---|---|---|---|---|
+| frequency (`freqHz`) | 2.04e-5 Hz | 0.02 | **2e-4** | 10× |
+| magnitude (`magDb`) | 1.16e-5 dB | 0.01 | **1e-4** | 9× |
+| gated FFT (`gatedFftDb`) | 4.17e-6 dB | 1e-3 | **5e-5** | 12× |
+| q | 6.67e-7 | 1e-5 | **1e-5** (unchanged) | 15× |
+| ring-out (`ringOutSec`) | 1.51e-9 s | 1e-7 | **2e-8** | 13× |
+
+Frequency is twice magnitude because a dB difference becomes about 1.8 times as many Hz through the peak fit
+(2.455 bins/dB × 0.7324 Hz/bin) — the oracle's provenance note. The first-mint bar (`bootstrapTolerances`, 1 Hz /
+1 dB) is unchanged, so a new edition's first baseline is not held to these.
+
+**Done** (Swift `10aa335`, Python `42a010d`, web `2dcac47`): the bars and the oracle's two notes (`_selfToleranceNote`, `_toleranceProvenanceNote`)
+rewritten to today's measurement in Swift's oracle, published to the hub and synced to Python and the web (the
+values and `oracleVersion` unchanged, so no baseline needs re-minting); the old figures in the first-mint note and
+in Python's and the web's mint tools updated.
+
+**Verified at the new bars** (2026-10-19): Python 1469 passed, 1 skipped; web 1352 passed, 1 skipped; Swift on
+macOS 283, on the iPad Air and iPhone 17 simulators 248 each, on the physical iPad M5 and iPhone 17 Pro Max 248
+each. `parity-report.py`: 10× headroom on frequency, 9× magnitude, 12× gated FFT, 15× q. CI's new `unit-ios` jobs
+(Swift `a104591`) pass on the iPad Air and iPhone 17 simulators.
+
+**To do:** the Windows and Linux sessions run item 1's four steps again against the new oracle — `guitar_tap` at
+`42a010d` or later, `GuitarTapWeb` at `2dcac47` or later — and report here, under this item.
 
