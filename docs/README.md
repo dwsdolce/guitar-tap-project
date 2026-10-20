@@ -14,6 +14,8 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
+- [#36](https://github.com/dwsdolce/guitar-tap-project/issues/36) · [`SWIFT-RUNTIME-WARNINGS.md`](SWIFT-RUNTIME-WARNINGS.md) — Swift runtime warnings: the audio session activated on the main thread (iOS); the microphone-warning alert publishing during a view update
+- [#35](https://github.com/dwsdolce/guitar-tap-project/issues/35) · [`RESULTS-LIST-ON-RANGE-CHANGE.md`](RESULTS-LIST-ON-RANGE-CHANGE.md) — zoom and pan slow with many peaks: the results list rebuilt on every range change (Python, web)
 - [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32) · [`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md) — theme colours the inventories missed (an edition using a default colour where Swift uses a role), and the divergences in how colour is handled (M1–M6) and in function (F1–F7)
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale

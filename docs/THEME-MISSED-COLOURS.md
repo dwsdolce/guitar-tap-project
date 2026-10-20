@@ -2,9 +2,7 @@
 
 **Issue:** [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32)
 
-Status: **OPEN — every item decided (owner, 2026-10-20); no code changed.** Still to do before or with the code: the
-type inventory (style guide S4), the iOS right-click mechanism (13), the help text compared (F8), saved plate and
-brace files checked (11).
+Status: **OPEN — every item decided (owner, 2026-10-20); plan agreed; step 0 under way; no code changed.**
 
 Colour differences between the editions that #2 ([`completed/THEME-SPEC.md`](completed/THEME-SPEC.md)) did not
 cover: where one edition draws an item in the default colour and another names a role, or where the item is missing,
@@ -25,6 +23,37 @@ doc applies them.
 `TapToneAnalysisView+Controls.swift` / `+Layouts.swift`; a bare Python line is `tap_tone_analysis_view.py`; a bare web
 `.css` line is `App.css`.
 
+## Plan
+
+Agreed by the owner, 2026-10-20. Lock-step: each step in Swift first, then Python and the web, with its own commits and
+targeted tests; the full suites and a run-review on every platform at the end.
+
+| Step | What | Items | Status |
+|---|---|---|---|
+| 0 | Groundwork, no app change: a secondary-click-only chart menu on iOS that leaves the pan / crosshair drag alone (a spike, Swift branch `spike/ios-right-click`, for the owner to try on the iPad); the chart help compared per device (done — F8, F9); saved plate and brace files checked for a missing L/C peak or dimensions (done — 140 in 382 files on this Mac, none; the web's browser storage not reachable) | 13, F8, F9, 11 | spike waiting for the owner's try |
+| 1 | Shared opacities: every opacity named in `theme.json`, read through each palette, checked by the theme tests; the source checks refuse an opacity literal once the last one is replaced (step 3) | S3, M1 | **done** — Swift `d3894fb`, Python `283b131`, web `782ec0b`; the source checks to follow in step 3; the web's export baseline to re-mint (its card shadow) |
+| 2 | One dimming mechanism: "cannot act now" and "does not apply" as opacity on the whole group, from the named opacities; a Python helper | S5, M2, 1, F1 | — |
+| 3 | App-drawn buttons: Swift's plain / tinted / prominent / toggle styles in the guide's look; a prominent button that cannot act shows plain, dimmed | S1, M4, F4, 4, 7, 19, 20, 26, F2 | — |
+| 4 | No unset colours: Swift names every role it leaves to the platform; the others match | S2, M3, M5, 5, 21–23, 31–33, 39, F3 | — |
+| 5 | Colour items toward Swift | 2, 3, 6, 8, 9, 10, 14, 38 | — |
+| 6 | Menus and the chart: one plain chart menu from ⋯ and right-click; the web's Delete; chart ⋯ / ⓘ; the help popover and its text by device; the same gestures everywhere; row hover | 13, 25, 27, F8, F9, 24 | — |
+| 7 | UI added or removed | 11, 12, 15, 16, 17, 18, 29, 30 | — |
+| 8 | Symbols and weight: "⚠" with U+FE0E everywhere, the shared cases included; one icon set on the web; Cross/Long bold | 40, S6, F7 | — |
+| 9 | Verification: full suites on the owner's go; the export regression baselines re-minted where a change is intended, each listed first; run-review by platform | all | — |
+
+**Step 1 — the named opacities** (owner, 2026-10-20): `control.dimmed` 0.45 (cannot act now; also the disabled menu
+picker, 0.5 today in Python and the web, and the web's disabled menu items, 0.4); `control.notApplicable` 0.4;
+`button.tintFill` 0.05, `button.tintHover` 0.15, `button.tintPressed` 0.22, `button.tintOn` 0.28,
+`button.tintOnHover` 0.38; `button.prominentHover` 0.85; `button.plainHover` 0.10 (accent); `peak.rowHighlight`
+0.12; `mode.chipFill` 0.15; `peak.pitchCents` 0.8 (on screen and in exports, all three — Python and the web draw the
+cents at full strength on screen today); `export.summaryChipFill` 0.1; `export.cardShadow` 0.5;
+`status.warningPulseLow` 0.2. Dropped by the decided rules: Python's disabled button colours (S5), the brace-only
+Threshold fade (F1), Swift's second dimming of the comparison check circle. Also decided: Swift's peak label shadow
+removed (`.black.opacity(0.15)`); Python's peak dots solid (now 200 / 255). The chart-style opacities stay in
+`chart-style.json`.
+
+The type inventory (style guide S4) is separate work, not part of #32; only F7 touches type here.
+
 ## Items
 
 | # | item | Swift | Python | web | status |
@@ -44,7 +73,8 @@ doc applies them.
 | F5 | UI an edition lacks (group B: items 12, 13, 16, 17, 18), and Swift and Python UI that should go (item 11) | 11 to remove | 11 to remove; lacks 12, 13, 16 (icon, title) | lacks 16 (icon, title), 17, 18; 12 in other words | decided, item by item |
 | F6 | The "wrong device" status warning exists in Swift only (not a colour item) | `TapToneAnalyzer.swift:607` | none | none | decided — no change: an accepted platform difference, settled in #30 |
 | F7 | Plate Cross/Long and Long/Cross values: bold in Swift, regular in Python's results (bold in its PDF), semibold on the web (weight, not colour) | `TapAnalysisResultsView.swift:761, 773` `bodyBold` | 1587–1604 regular | `.mat-value` 600 (320–321) | decided — bold, as Swift |
-| F8 | The chart's ⓘ help: on iPad (both orientations) it is cut off at the top and bottom — a popover asked to sit above the ⓘ (`arrowEdge: .bottom`), near the top of the screen, with 16 lines and no scroll view; on iPhone it becomes a sheet and shows whole. Its text is the same on every device: on iOS it lists ⇧ / ⌥ / ⌘ + Scroll and "Right-click: Reset axes & labels" | `SpectrumView.swift:489–527` | not compared yet | not compared yet | decided — open below the ⓘ, in a scroll view; text by device (pointer and keys where there is a pointer, touch where there is touch), the same in every edition |
+| F8 | The chart's ⓘ help: on iPad (both orientations) it is cut off at the top and bottom — a popover asked to sit above the ⓘ (`arrowEdge: .bottom`), near the top of the screen, with 16 lines and no scroll view; on iPhone it becomes a sheet and shows whole. No edition fits its text to the device: Swift shows the Scroll and ⇧ / ⌥ / ⌘ lines and "Right-click" on iOS, where they do not work; Python shows the Mac key symbols on Windows and Linux; the web shows keyboard lines on touch and touch lines on the desktop, in its own words ("Shift + Scroll", "Reset axes (Chart Options)"), behind a "?" | `SpectrumView.swift:489–527` | `fft_canvas.py:47–117` (no pinch lines; it has no pinch) | `SpectrumChart.tsx:73–87, 554–571` | decided — open below the ⓘ, in a scroll view; text by device, in Swift's wording |
+| F9 | Chart gestures differ: scroll zoom / pan by region with ⇧ / ⌥ / ⌘ — Swift macOS, Python and the web, but not Swift on an iPad with a mouse or trackpad; ⌘ + Scroll zooms around the cursor in Swift and the web, around the view's centre in Python; trackpad pinch by region in Swift, none in Python, both axes only on the web (Chromium and Firefox send it as Ctrl + wheel; Safari's gesture events are not handled) | `SpectrumView+GestureHandlers.swift:108–192` (macOS only); `zoomGesture` | `fft_canvas.py:1349–1393` | `SpectrumChart.tsx:247–281` | decided — the same gestures the same way wherever the hardware allows |
 | **A** | **an edition leaves the default where Swift names a role** | | | | |
 | 1 | Taps field dimmed while a sequence is in flight | `.disabledDimmed(tapCountLocked)` Controls 822 (also 655, 953, Layouts 599) | label and spin box `setEnabled(False)` (3147–3149); the label stays `text.secondary` (no `:disabled`), the spin box takes Qt's native disabled look | `.field.is-disabled` 0.45 (App.tsx 936; 806–809); ± through `.btn:disabled` | decided — S5: dimmed as a whole group |
 | 2 | Settings: mode-range names ("Air:", "Top:" …) | `textSecondary` (`TapSettingsView+LayoutHelpers.swift:232–233`) | untagged → `text.primary` (5552–5557) | secondary (`SettingsPanel.tsx:460`) | decided — toward Swift (`text.secondary`) |
@@ -125,10 +155,14 @@ doc applies them.
   to its device, and Python checks the opened device's name and treats another as a failed open; a browser's track is
   bound to its device. Settled in #30 (`completed/WRONG-INPUT-DEVICE.md`).
 - **F7** — decided (owner, 2026-10-20): bold, as Swift.
-- **F8** — decided (owner, 2026-10-20): the help opens below the ⓘ, in a scroll view, so it is never cut off; its
-  text follows the device as decision 13 does — pointer and keyboard lines where there is a pointer, touch lines
-  (pinch, drag, ⋯) on touch — and says the same in every edition for the same device (Python's and the web's help to be
-  compared).
+- **F8** — decided (owner, 2026-10-20): the help opens below the ⓘ, in a scroll view, so it is never cut off. It lists
+  only what works on the device in use, in one wording (Swift's): pointer lines (scroll, drag, right-click) where there
+  is a pointer, modifier lines where there is a keyboard, pinch lines where there is a trackpad or touch. Keys as ⇧ ⌥ ⌘ ⌃
+  on Apple platforms, "Shift / Alt / Ctrl" on Windows and Linux. The web's "?" becomes ⓘ (S6).
+- **F9** — decided (owner, 2026-10-20): the same chart gestures, the same way, wherever the hardware allows. An iPad
+  with a mouse or trackpad gets scroll zoom and pan, as macOS; Python's ⌘ + Scroll zooms around the cursor; Python
+  gains trackpad pinch on macOS, by region (Qt's native zoom gesture — on Windows and Linux a trackpad pinch already
+  arrives as Ctrl + Scroll); the web's trackpad pinch picks the axis by region, and Safari's pinch is checked.
 - **Colour items** — decided (owner, 2026-10-20): where Swift names a role and another edition does not (2, 3, 4, 6,
   8, 9, 10, 14, 38), the others follow Swift; the items under a style-guide rule (1, 5, 15, 19–23, 26, 31–33, 39, 40)
   follow the rule. Item 24: a row highlight on hover in every edition (Swift gains it). Item 27 and the bars (29, 30):
