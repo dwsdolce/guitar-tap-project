@@ -20,7 +20,8 @@ situation and report "Audio input unavailable" in the status bar and on the char
 On 2026-10-20 GitHub's `ubuntu-latest` runner moved from Ubuntu 24.04 to 26.04. On 26.04 PortAudio connects to a
 PulseAudio-protocol server when it starts (on a desktop, PipeWire's `pipewire-pulse`); the runner has none, so every
 Python test that imports the audio code failed to load (Python `283b131`, run on `ubuntu-latest`). On 24.04 it fell
-back to ALSA. CI is being given a sound server (PipeWire, a dummy device) so it tests as a desktop has it.
+back to ALSA. CI now runs a sound server — PipeWire with its PulseAudio service and a dummy device — so it tests as a desktop has
+it (Python `bbc8ca4`; with it, SR6 fakes its device list, which it had been reading from the machine).
 
 **For the Linux session:** CI's Linux runner is now Ubuntu 26.04 (from 2026-10-20). Running the Python suite on a
 machine without a sound server — a VM with no desktop session — fails the same way until this is fixed; on a desktop

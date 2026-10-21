@@ -2,7 +2,7 @@
 
 **Issue:** [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32)
 
-Status: **OPEN — every item decided (owner, 2026-10-20); plan agreed; steps 0–2 done.**
+Status: **OPEN — every item decided (owner, 2026-10-20); plan agreed; steps 0–3 done.**
 
 Colour differences between the editions that #2 ([`completed/THEME-SPEC.md`](completed/THEME-SPEC.md)) did not
 cover: where one edition draws an item in the default colour and another names a role, or where the item is missing,
@@ -33,7 +33,7 @@ targeted tests; the full suites and a run-review on every platform at the end.
 | 0 | Groundwork, no app change, in three parts. **(a) The iOS right-click spike** — Swift branch `spike/ios-right-click`, `aa58790`, local: a transparent UIKit layer takes only the secondary mouse button and opens the chart menu at the click, leaving pan, pinch and the crosshair drag alone; each peak label reports its frame, so a click on a label opens the label's own menu. Tried by the owner on the iPad with a mouse, 2026-10-20: every step passes. Brought onto main in step 6. **(b) The chart help compared** per edition and device — gave F8's extension and F9. **(c) Saved plate and brace files checked** for a missing L/C peak or dimensions: the test fixtures of the hub and the three editions, and the Swift and Python libraries on this Mac — 140 measurements in 382 files, none missing anything (the web's library, in the browser, and other devices' libraries not reachable) | 13, F8, F9, 11 | **done** |
 | 1 | Shared opacities: every opacity named in `theme.json`, read through each palette, checked by the theme tests; the source checks refuse an opacity literal once the last one is replaced (step 3) | S3, M1 | **done** — Swift `d3894fb`, Python `283b131`, web `782ec0b`; the source checks to follow in step 3 |
 | 2 | One dimming mechanism: "cannot act now" and "does not apply" as opacity on the whole group, from the named opacities; a Python helper | S5, M2, 1, F1 | **done** — Swift `5f18467`, Python `dd80d88`, web `00710f7`; tested by the shared `dimming.json` (`test/dimming`, linked from `view/dimming`) |
-| 3 | App-drawn buttons: Swift's plain / tinted / prominent / toggle styles in the guide's look; a prominent button that cannot act shows plain, dimmed | S1, M4, F4, 4, 7, 19, 20, 26, F2 | — |
+| 3 | App-drawn buttons: Swift's plain / tinted / prominent / toggle styles in the guide's look; a prominent button that cannot act shows plain, dimmed | S1, M4, F4, 4, 7, 19, 20, 26, F2 | **done** — Swift `3126559`, Python `672c866`, web `310d538`: the four kinds and the shape in every edition, tested by the shared `button-style.json` (`test/button-style`); the source checks refuse an opacity number; buttons checked on screen by the owner in all three, 2026-10-20 |
 | 4 | No unset colours: Swift names every role it leaves to the platform; the others match | S2, M3, M5, 5, 21–23, 31–33, 39, F3 | — |
 | 5 | Colour items toward Swift | 2, 3, 6, 8, 9, 10, 14, 38 | — |
 | 6 | Menus and the chart: one plain chart menu from ⋯ and right-click; the web's Delete; chart ⋯ / ⓘ; the help popover and its text by device; the same gestures everywhere; row hover | 13, 25, 27, F8, F9, 24 | — |

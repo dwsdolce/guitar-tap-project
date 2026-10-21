@@ -71,32 +71,25 @@ What must match is what shows with the window active: the roles, the layout, and
 
 ### 1.3 Buttons and menus
 
-**Buttons are drawn by the app in every edition** (S1): fill, label and border in roles, and every state (section 5)
-with the opacities of section 3. Three kinds:
+**Buttons are drawn by the app in every edition** (S1): fill, label and border in roles, every state (section 5) at
+the opacities of section 3, and one shape — corner radius 6, padding 3 × 8 points (a prominent button 4 × 10), shared
+in `theme.json` (`button`). Four kinds:
 
-- **plain:** an action with no particular meaning;
-- **tinted:** a role names its colour (Cancel in `status.warning`, an accent action);
-- **prominent:** the main action of a sheet (Save), filled with its role.
+| Kind | For | Look |
+|---|---|---|
+| plain | an action with no particular meaning (Export Spectrum) | `text.primary` on `background.control`, a `separator` border; an accent wash at `button.plainHover` under the pointer |
+| tinted | a role names its colour (Cancel in `status.warning`, an accent action) | the label in the role on the role at `button.tintFill`; `button.tintHover`, `button.tintPressed`, `button.tintOn`, `button.tintOnHover` |
+| prominent | the main action of a sheet (Save, New Tap) | filled with its role, the label in `text.onColor`; the fill at `button.prominentHover` under the pointer |
+| icon | an icon with no frame (the chart's ⋯ and ⓘ, the row ⋯) | the icon in its role, no fill |
 
-A toggle drawn as a button (Auto dB, Taps, Crosshair) is a tinted button with an on state.
+A toggle drawn as a button (Auto dB, Taps, Crosshair) is a tinted button with an on state. A button that cannot act is
+drawn whole at `control.dimmed`; a prominent one, as a plain button, dimmed (section 5). The rule is one function or
+set of rules per edition, tested against `button-style.json` (`test/button-style`): Swift `AppButtonStyle`
+(`AppButtonLook.of`), Python `palette.button_look` (the stylesheet's button rules are made from it), the web's
+`.btn` rules in `App.css`.
 
-The looks are those Python and the web draw today, measured from Swift's (owner, 2026-10-20); Swift adopts them:
-
-- **plain:** label in `text.primary` on `background.control`, a `separator` border;
-- **tinted:** label in the role on a 5 % fill of it; hover 15 %, pressed 22 %, on 28 %, on + hover 38 %;
-- **prominent:** filled with the role, label in `text.onColor`; hover 85 %;
-- **cannot act:** as section 5 (a prominent button shows as a plain one, dimmed).
-
-The exact opacities become named opacities (section 3).
-
-Today:
-
-| | Swift | Python | Web |
-|---|---|---|---|
-| Plain button | platform `.bordered` (macOS: neutral bezel, label colour; iOS: label in the tint on a system fill) | platform `QPushButton` | app-drawn: `background.control` with a `separator` border; the border turns `accent.text` on hover |
-| Tinted button | platform `.bordered` with `.tint(role)`, plus a 10 % hover wash in the tint | app-drawn: label in the role on a 5 % fill of it; hover 15 %, pressed 22 %, on 28 %, on + hover 38 %; disabled: 3 % fill, 40 % label | app-drawn: as Python's, but disabled dims the whole button to 0.45 |
-| Prominent button | platform `.borderedProminent` | app-drawn: the role as the fill, `text.onColor` label; hover 85 %; disabled 30 % fill, 70 % label | app-drawn: `accent` fill, `text.onColor` label |
-| Toggle as a button | platform toggle; macOS's on fill (about 11 % in Light) | 28 % on | 28 % on |
+**Toolbar and title-bar buttons are the platform's** (owner, 2026-10-20): a sheet's Save / Cancel / Done in its title
+bar, the iPhone navigation bar's icons. They are window chrome (section 1.1); only their colour roles are the app's.
 
 **Menus are the platform's, and their items carry no colour of their own** (S1a). An item's meaning is marked
 semantically, never by a colour the app sets: destructive (Swift `role: .destructive`), disabled, separators and
@@ -130,27 +123,33 @@ colour.
    - Python: `_colour_guard.py`, run at start-up in a development checkout.
    - Web: `tooling/check-colours.mjs`, in the `predev`, `prebuild` and `prepreview` scripts.
 
-   Each refuses a colour written outside its palette module.
+   Each refuses a colour, or an opacity written as a number (0 and 1 excepted), outside its palette module; the
+   chart-style module holds the chart's shared opacities (`chart-style.json`).
 6. **Exports are drawn in the light scheme**, so they use the light values.
 
 ## 3. Opacity
 
 **Every opacity the app applies is a named opacity** in `theme.json` (`opacities`), with a light and a dark value,
-read through each palette module as a colour is; none is written in code (S3). The source check (section 2, rule 5)
-is to refuse an opacity literal as it refuses a colour.
+read through each palette module as a colour is; none is written in code (S3), and the source check (section 2,
+rule 5) refuses one.
 
-Today `theme.json` shares two: `peak.rowTint` (0.10 light, 0.20 dark) and `status.messageBackground` (0.12). These are
-numbers in each edition's code, to become named opacities:
-
-| What | Value today | Where |
+| Name | Value | For |
 |---|---|---|
-| Dimmed: the control cannot act now | 0.45 | Swift `.disabledDimmed`; web `.btn:disabled`, `.field.is-disabled` |
-| Not applicable: the control has no meaning here (Peak Min for a plate) | 0.4 | Swift `.opacity(… ? 1 : 0.4)`; Python opacity effects; web `.field.is-faded` and others |
-| Tinted button fill / hover / pressed / on / on + hover | 5 % / 15 % / 22 % / 28 % / 38 % | Python, web |
-| Hover wash on a platform button | 10 % | Swift `TintedButtonStyle` |
-| Python's tinted button, disabled | 3 % fill, 40 % label | Python stylesheet |
-| Python's prominent button: hover / disabled | 85 % / 30 % fill, 70 % label | Python stylesheet |
-| Mode-boundary label chip | 0.15 | all three |
+| `peak.rowTint` | 0.10 light, 0.20 dark | a peak row's tint over its mode colour |
+| `status.messageBackground` | 0.12 | a status message's box |
+| `control.dimmed` | 0.45 | a control that cannot act now, whole |
+| `control.notApplicable` | 0.4 | a control that has no meaning here, whole |
+| `button.tintFill` / `tintHover` / `tintPressed` / `tintOn` / `tintOnHover` | 0.05 / 0.15 / 0.22 / 0.28 / 0.38 | a tinted button's fill in its states |
+| `button.prominentHover` | 0.85 | a prominent button's fill under the pointer |
+| `button.plainHover` | 0.10 | the accent wash on a plain button under the pointer |
+| `peak.rowHighlight` | 0.12 | a highlighted peak row's fill |
+| `mode.chipFill` | 0.15 | a mode label's chip on the chart |
+| `peak.pitchCents` | 0.8 | the cents in a peak label |
+| `export.summaryChipFill` | 0.1 | an export's peak summary chip |
+| `export.cardShadow` | 0.5 | an export card's shadow (the scrim) |
+| `status.warningPulseLow` | 0.2 | the low point of a warning icon's pulse |
+
+The chart's own opacities (mode boundary, Peak Min line, leader line) are in `chart-style.json`.
 
 ## 4. Type
 
@@ -176,19 +175,17 @@ as Swift's `.disabledDimmed`, not a stylesheet rule. A button's states follow se
 cannot act shows as a plain button, dimmed**; it takes its fill when it can act (a sheet's Save before there is
 anything to save). **A list row shows `background.subtle` while the pointer is over it**, in every edition.
 
-Today:
-
-| State | Meaning | Today |
+| State | Meaning | How |
 |---|---|---|
 | enabled | can be used | — |
-| cannot act now | disabled for the moment (Taps while a sequence runs) | Swift: disabled + 0.45 on the whole group. Web: 0.45 on label and value. Python: disabled, but its labels keep their colour (the stylesheet has no `:disabled` rule for labels) |
-| does not apply | has no meaning for this measurement (Peak Min for a plate) | Swift: 0.4 on the whole row. Python: an opacity effect of 0.4 on the group. Web: `.field.is-faded` 0.4 |
-| hover | the pointer is over it | Swift: a 10 % wash on buttons, no row highlight. Python: its button hover, a `background.subtle` row. Web: its button hover, a bordered ⋯ |
-| pressed | held down | Python: 22 %. Swift and the web: the platform's |
-| on / selected | a toggle that is on; a selected row or peak | toggles: Swift macOS's fill (about 11 %); Python and the web 28 %. Selected peaks and rows: their own roles |
+| cannot act now | disabled for the moment (Taps while a sequence runs) | the whole group disabled and at `control.dimmed` — Swift `.disabledDimmed`, Python `disabled_dimmed`, the web's `.field.is-disabled` (`test/dimming`); a button, at `control.dimmed` (`test/button-style`) |
+| does not apply | has no meaning for this measurement (Peak Min for a plate) | the whole group disabled and at `control.notApplicable` — Swift `.notApplicableDimmed`, Python `not_applicable_dimmed`, the web's `.field.is-faded` (`test/dimming`) |
+| hover | the pointer is over it | a button: section 1.3. A list row: `background.subtle` — to do in Swift and the web (#32 item 24) |
+| pressed | held down | a tinted button: `button.tintPressed` |
+| on / selected | a toggle that is on; a selected row or peak | a toggle: `button.tintOn`. Selected peaks and rows: their own roles |
 | focused | has keyboard focus | the platform's focus ring |
 | highlighted | picked out on the chart or in a list (a hovered or chosen peak) | roles such as `chart.highlightedPeak` |
-| inactive window | the window is not frontmost | the platform's (section 1.2) |
+| inactive window | the window is not frontmost | the platform's for its own controls (section 1.2) |
 
 ## 6. Icons and text symbols
 

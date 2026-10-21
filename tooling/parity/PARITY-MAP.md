@@ -73,6 +73,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/brace` | `GuitarTapTests/BracePropertiesTests.swift` | `tests/test_brace.py` | `test/brace.test.ts` | test suite |
 | `test/buffer-watchdog` | `GuitarTapTests/BufferWatchdogTests.swift` | `tests/test_buffer_watchdog.py` | `test/buffer-watchdog.test.ts` | test suite |
 | `test/button-enablement` | `GuitarTapTests/ButtonEnablementTests.swift` | `tests/test_button_enablement.py` | `test/button-enablement.test.ts` | test suite |
+| `test/button-style` | `GuitarTapTests/ButtonStyleTests.swift` | `tests/test_button_style.py` | `test/button-style.test.ts` | test suite |
 | `test/calibration` | `GuitarTapTests/CalibrationTests.swift` | `tests/test_calibration.py` | `test/calibration.test.ts` | test suite |
 | `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |
 | `test/classify` | `GuitarTapTests/ClassifyCasesTests.swift` | `tests/test_classify_cases.py` | `test/classify-cases.test.ts`<br>`test/classify.test.ts` | test suite |
@@ -144,6 +145,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `util/timing-activity` | `GuitarTap/Utilities/TimingActivity.swift` | `src/guitar_tap/utilities/timing_activity.py` | `src/audio/realtimeFFTAnalyzer.ts` | review only |
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |
 | `view/axis-ticks` | `GuitarTap/Views/Utilities/AxixTickGenerator.swift` | `src/guitar_tap/views/utilities/axis_tick_generator.py` | `src/presentation/axisTicks.ts` | tests |
+| `view/button-style` | `GuitarTap/Views/Utilities/AppButtonStyle.swift` | `src/guitar_tap/views/utilities/palette.py` | `src/App.css` | tests |
 | `view/chart-style` | `GuitarTap/Views/Utilities/ChartStyle.swift` | `src/guitar_tap/views/utilities/chart_style.py` | `src/presentation/chartStyle.ts` | tests |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
 | `view/dimming` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/App.css` | tests |

@@ -913,6 +913,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/button-style",
+      "swift": [
+        "GuitarTapTests/ButtonStyleTests.swift"
+      ],
+      "python": [
+        "tests/test_button_style.py"
+      ],
+      "web": [
+        "test/button-style.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/calibration",
       "swift": [
         "GuitarTapTests/CalibrationTests.swift"
@@ -1900,6 +1914,22 @@
       ],
       "tests": [
         "test/axis-ticks"
+      ],
+      "equivalence": "tests"
+    },
+    {
+      "slug": "view/button-style",
+      "swift": [
+        "GuitarTap/Views/Utilities/AppButtonStyle.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/palette.py"
+      ],
+      "web": [
+        "src/App.css"
+      ],
+      "tests": [
+        "test/button-style"
       ],
       "equivalence": "tests"
     },
