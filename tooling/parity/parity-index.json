@@ -959,6 +959,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/chart-help",
+      "swift": [
+        "GuitarTapTests/ChartHelpTests.swift"
+      ],
+      "python": [
+        "tests/test_chart_help.py"
+      ],
+      "web": [
+        "test/chart-help.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/chart-menu",
       "swift": [
         "GuitarTapTests/ChartMenuTests.swift"
@@ -1980,6 +1994,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "view/chart-help",
+      "swift": [
+        "GuitarTap/Views/ChartHelp.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/chart_help.py"
+      ],
+      "web": [
+        "src/presentation/chartHelp.ts"
+      ],
+      "tests": [
+        "test/chart-help"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/chart-menu",
       "swift": [
         "GuitarTap/Views/ChartMenu.swift"
@@ -2369,6 +2399,7 @@
     {
       "slug": "view/spectrum-gestures",
       "swift": [
+        "GuitarTap/Views/ScrollInput.swift",
         "GuitarTap/Views/SpectrumView+GestureHandlers.swift"
       ],
       "python": [
@@ -2461,6 +2492,10 @@
     {
       "repo": "python",
       "path": "tests/test_wasapi_raw_open.py"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTap/Views/Utilities/PointerScroll.swift"
     },
     {
       "repo": "swift",

@@ -76,6 +76,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/button-enablement` | `GuitarTapTests/ButtonEnablementTests.swift` | `tests/test_button_enablement.py` | `test/button-enablement.test.ts` | test suite |
 | `test/button-style` | `GuitarTapTests/ButtonStyleTests.swift` | `tests/test_button_style.py` | `test/button-style.test.ts` | test suite |
 | `test/calibration` | `GuitarTapTests/CalibrationTests.swift` | `tests/test_calibration.py` | `test/calibration.test.ts` | test suite |
+| `test/chart-help` | `GuitarTapTests/ChartHelpTests.swift` | `tests/test_chart_help.py` | `test/chart-help.test.ts` | test suite |
 | `test/chart-menu` | `GuitarTapTests/ChartMenuTests.swift` | `tests/test_chart_menu.py` | `test/chart-menu.test.ts` | test suite |
 | `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |
 | `test/classify` | `GuitarTapTests/ClassifyCasesTests.swift` | `tests/test_classify_cases.py` | `test/classify-cases.test.ts`<br>`test/classify.test.ts` | test suite |
@@ -149,6 +150,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |
 | `view/axis-ticks` | `GuitarTap/Views/Utilities/AxixTickGenerator.swift` | `src/guitar_tap/views/utilities/axis_tick_generator.py` | `src/presentation/axisTicks.ts` | tests |
 | `view/button-style` | `GuitarTap/Views/Utilities/AppButtonStyle.swift` | `src/guitar_tap/views/utilities/palette.py` | `src/App.css` | tests |
+| `view/chart-help` | `GuitarTap/Views/ChartHelp.swift` | `src/guitar_tap/views/chart_help.py` | `src/presentation/chartHelp.ts` | tests |
 | `view/chart-menu` | `GuitarTap/Views/ChartMenu.swift` | `src/guitar_tap/views/chart_menu.py` | `src/presentation/chartMenu.ts` | tests |
 | `view/chart-style` | `GuitarTap/Views/Utilities/ChartStyle.swift` | `src/guitar_tap/views/utilities/chart_style.py` | `src/presentation/chartStyle.ts` | tests |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
@@ -175,7 +177,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/settings` | `GuitarTap/Views/Utilities/TapSettingsView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/components/SettingsPanel.tsx` | review only |
 | `view/spectrum-chart` | `GuitarTap/Views/SpectrumView.swift` | `src/guitar_tap/views/fft_canvas.py` | `src/components/SpectrumChart.tsx` | review only |
 | `view/spectrum-export` | `GuitarTap/Views/ExportableSpectrumChart.swift` | `src/guitar_tap/views/exportable_spectrum_chart.py` | `src/presentation/spectrumExport.ts` | tests |
-| `view/spectrum-gestures` | `GuitarTap/Views/SpectrumView+GestureHandlers.swift` | `src/guitar_tap/views/spectrum_view_gesture_handlers.py` | `src/components/SpectrumChart.tsx` | review only |
+| `view/spectrum-gestures` | `GuitarTap/Views/ScrollInput.swift`<br>`GuitarTap/Views/SpectrumView+GestureHandlers.swift` | `src/guitar_tap/views/spectrum_view_gesture_handlers.py` | `src/components/SpectrumChart.tsx` | review only |
 | `view/threshold-slider` | `GuitarTap/Views/Shared/ThresholdSlider.swift` | `src/guitar_tap/views/shared/threshold_slider.py` | `src/components/ThresholdMeter.tsx` | review only |
 | `view/validated-number-field` | `GuitarTap/Views/Utilities/ValidatedNumberField.swift` | `src/guitar_tap/views/shared/validated_number_field.py` | `src/components/NumberField.tsx` | review only |
 
@@ -200,6 +202,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_threshold_sliders.py` | python |
 | `tests/test_update_checker.py` | python |
 | `tests/test_wasapi_raw_open.py` | python |
+| `GuitarTap/Views/Utilities/PointerScroll.swift` | swift |
 | `GuitarTap/Views/Utilities/SecondaryClickMenu.swift` | swift |
 | `GuitarTapTests/GenerateParityOracle.swift` | swift |
 | `GuitarTapTests/SpectrumReplayProbeTests.swift` | swift |
