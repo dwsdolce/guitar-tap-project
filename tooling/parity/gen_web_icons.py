@@ -38,6 +38,8 @@ ICONS = {
     "backupRestore": "backup-restore",
     "undo": "undo",
     "moreCircle": "dots-horizontal-circle-outline",
+    "alert": "alert",
+    "tray": "inbox-outline",
     "autoDb": "swap-vertical-circle-outline",
     "autoDbOn": "swap-vertical-circle",
     "eye": "eye-outline",

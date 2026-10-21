@@ -13,7 +13,7 @@ A change to how the app looks starts here. Work tracked as an Issue applies the 
 How the UI's interaction translates to each platform (gestures, menus, layouts) is in
 [`WEB-UI-GUIDELINES.md`](WEB-UI-GUIDELINES.md) and [`ANDROID-UI-GUIDELINES.md`](ANDROID-UI-GUIDELINES.md).
 
-Status: **agreed** (S1–S7 and S1a, S1b decided by the owner, 2026-10-20), except the text styles themselves (S4 needs an inventory
+Status: **agreed** (S1–S7 and S1a, S1b decided by the owner, 2026-10-20; S1c, 2026-10-21), except the text styles themselves (S4 needs an inventory
 first). Where an edition does not yet follow a rule, the section says what it does today; #32
 brings them in line.
 
@@ -109,6 +109,19 @@ drawing is the platform's:
 - **Python:** Qt's native `QPushButton`, untagged, the confirming one `setDefault(True)`.
 - **The web**, which has no native dialog button: app-drawn in the same pattern — the confirming button prominent
   (plain and dimmed while it cannot act), the others plain.
+
+**A window closes with its own close; a sheet or panel with Done** (S1c). Where a view opens decides how it closes,
+not which view it is:
+
+- **a window** — Swift on macOS (the Quick Start Guide), Python's windows: the title bar's close; no button
+  of the app's. macOS and GNOME keep action buttons out of an ordinary, non-modal window, and a second close control
+  beside the title bar's is one too many.
+- **a sheet or an in-page panel** — Swift on iOS and iPadOS, the web's panels (the Quick Start Guide, Metrics,
+  Settings): no title bar to close it, so a Done in its head (Swift's `.cancellationAction`; the web's plain button),
+  and Esc where there is a keyboard. Done, not Close: Apple's word for leaving a sheet.
+
+So the same view can close two ways — the Quick Start Guide by the window's close in Swift on macOS and in Python, by
+Done in Swift on iOS and on the web — and each is how every other view in that container closes on that platform.
 
 Toolbar and title-bar buttons are the platform's too: the iPhone navigation bar's icons. They are window chrome
 (section 1.1); only their colour roles are the app's.
@@ -245,6 +258,7 @@ Today:
 | S1 | Buttons in the content are drawn by the app in every edition | owner, 2026-10-20 |
 | S1a | Menus are the platform's; their items carry no colour of their own, meaning marked semantically | owner, 2026-10-20 |
 | S1b | The buttons that close or confirm a sheet or dialog are the platform's; app-drawn in the same pattern on the web | owner, 2026-10-20 |
+| S1c | A window closes with its own close (no app button); a sheet or an in-page panel with Done | owner, 2026-10-21 |
 | S2 | A colour left unset is a platform colour | owner, 2026-10-20 |
 | S3 | Every opacity is a named opacity in `theme.json` | owner, 2026-10-20 |
 | S4 | Named text styles by purpose, defined after an inventory | owner, 2026-10-20 |

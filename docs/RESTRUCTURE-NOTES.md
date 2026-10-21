@@ -385,8 +385,8 @@ vanished on Reset to Saved) is fixed in the code but untested for that reason.
 The hand-in, sized for the spec:
 
 1. The main window creates the engine and the analyzer, does the calibration lookup and `start()`, then builds the
-   canvas — as Swift's view `init`. The ordering needs care: the canvas is built in a deferred step behind the
-   loading overlay, and `start()` is given the canvas as its `parent_widget` today.
+   canvas — as Swift's view `init`. The ordering needs care: the canvas is built in a deferred step after the
+   window shows, and `start()` is given the canvas as its `parent_widget` today.
 2. The canvas takes the analyzer: `FftCanvas(analyzer, …)`, so a test can hand it `TapToneAnalyzer.for_testing()`.
 3. The main window uses its own `self.analyzer`; the canvas's 26 re-emitted signals go, and the 37 connections go to
    the analyzer's signals — or, once Python moves to one object-level `changed` signal (above), to that.

@@ -373,7 +373,7 @@ About 41 Swift view files (~17.9k lines) map to composables of the same names:
 |---|---|
 | Shell | `TapToneAnalysisView` + Actions/Controls/Export/Layouts/SpectrumViews |
 | Chart | `SpectrumView` + extensions, `PeakAnnotations`, `AxixTickGenerator`, `ThresholdSlider` |
-| Results | `TapAnalysisResultsView`, `ComparisonResultsView`, `MultiTapComparisonResultsView`, `FFTAnalysisMetricsView`, `CombinedPeakModeRowView`, `EmptyStateView`, `LoadingOverlay` |
+| Results | `TapAnalysisResultsView`, `ComparisonResultsView`, `MultiTapComparisonResultsView`, `FFTAnalysisMetricsView`, `CombinedPeakModeRowView`, `EmptyStateView` |
 | Material | `MaterialDimensionsEditor`, `PlateBodyDimensionsEditor` |
 | Settings | `TapSettingsView` + extensions, `ValidatedNumberField` (restrict-on-entry precision) |
 | Library | `MeasurementsListView`, `…RowView`, `…DetailView`, `…EditView` |

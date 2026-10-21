@@ -2,7 +2,7 @@
 
 **Issue:** [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32)
 
-Status: **OPEN — every item decided (owner, 2026-10-20); plan agreed; steps 0–6 done.**
+Status: **OPEN — every item decided (owner, 2026-10-20); plan agreed; steps 0–7 done.**
 
 Colour differences between the editions that #2 ([`completed/THEME-SPEC.md`](completed/THEME-SPEC.md)) did not
 cover: where one edition draws an item in the default colour and another names a role, or where the item is missing,
@@ -38,7 +38,7 @@ targeted tests; the full suites and a run-review on every platform at the end.
 | 4 | No unset colours: Swift names every role it leaves to the platform; the others match | S2, M3, M5, 5, 21–23, 31–33, 39, F3, 41–52, 55 | **done** — Swift `bdbcb76`, Python `a025b72`, web `3f91dac`: one surface per window, sheet and popover (Swift `paletteSurface`, Python `palette.surface`); Python's lines through `palette.divider`, its icon buttons through `tag(icon=True)`; dialog buttons the platform's (S1b); a live frame on its own object (item 55, `test/live-frame`); checked on screen by the owner, 2026-10-20 |
 | 5 | Colour items toward Swift | 2, 3, 6, 8, 9, 10, 14, 38 | **done** — Python `4bebd21`, web `1701c8d` (Swift is the reference; nothing to change there): Python's notes editors one plain editor in a `notes_box`, its chart labels on one `_ChipLabel`; the web's Metrics values by load in `metric.*`; checked on screen by the owner, 2026-10-20 |
 | 6 | Menus and the chart: one plain chart menu from ⋯ and right-click; the web's Delete; chart ⋯ / ⓘ; the help popover and its text by device; the same gestures everywhere; row hover; the chart ⋯ / ⓘ and the row ⋯ as icon buttons (Python `tag(icon=True)`) | 13, 25, 27, F8, F9, 24, 56 | **done** — first part (Swift `b44c95a`, Python `152f1db`, web `95ce794`), checked 2026-10-20: 13 (one chart menu from ⋯ and right-click, built from the shared `chart-menu.json`, `test/chart-menu`), 25, 27 (the icon kind with a hover patch, `button-style.json`), 56 (the arrow over controls; Swift's cursors over the chart), F2's remainder. Second part (Swift `7ebe527`, Python `aab7f2b`, web `e3384d5`), checked 2026-10-21: F8 (the help by device, `chart-help.json`, `test/chart-help`), F9, 24, and the Quick Start text in all three editions and the manual's chapters 6, 8 and 9 |
-| 7 | UI added or removed | 11, 12, 15, 16, 17, 18, 29, 30, 53, 54 | — |
+| 7 | UI added or removed | 11, 12, 15, 16, 17, 18, 29, 30, 53, 54, 57 | **done** — Swift `deb5125`, Python `5e6a16e`, web `11f41c8`, checked by the owner 2026-10-21 (run-review 1–16): the placeholders and the overlays gone; the empty states and the empty-range words as Swift's; the web's reset buttons and warning icon; the bars as Swift's; the tap count before its stepper everywhere, Swift's sizes; style guide S1c |
 | 8 | Symbols and weight: "⚠" with U+FE0E everywhere, the shared cases included; one icon set on the web; Cross/Long bold | 40, S6, F7 | — |
 | 9 | Verification: full suites on the owner's go; the export regression baselines re-minted where a change is intended, each listed first; run-review by platform | all | — |
 
@@ -88,14 +88,14 @@ The type inventory (style guide S4) is separate work, not part of #32; only F7 t
 | 9 | Comparison / multi-tap table cells with a frequency | `textPrimary` (`ComparisonResultsView.swift:99`; `MultiTapComparisonResultsView.swift:132`) | no foreground — platform colour (`comparison_results_view.py:174–177`; `multi_tap_comparison_results_view.py:150–176`) | primary | **done** — step 5: Python `4bebd21`, web `1701c8d`. Decided — toward Swift (`text.primary`) |
 | 10 | Metrics sheet: processing time / CPU values by load | `metric.good/fair/high/overload` (`FFTAnalysisMetricsView.swift:94–189`) | same (`fft_analysis_metrics_view.py:236–317`) | default (`MetricsPanel.tsx:111–121`); roles exist, unused (M5) | **done** — step 5: Python `4bebd21`, web `1701c8d`. Decided — toward Swift (the web uses `metric.*`) |
 | **B** | **the item (and so its colour) is missing** | | | | |
-| 11 | Plate placeholders "Select peaks above to calculate properties" / "Select a longitudinal (L) peak" / "Select a cross-grain (C) peak"; brace "Select the fL (L) peak above to calculate properties" — shown only when a completed plate or brace lacks its L/C peak or its dimensions, which a capture never produces (the properties show only once complete, and every phase completes with its peak); there is no UI to select a material peak | `TapAnalysisResultsView.swift:792–806`, 938–944 | brace placeholder (1322); plate "Select peaks above…" only (1398) | none | decided — remove the placeholders from Swift and Python; the web needs nothing |
-| 12 | "No peaks detected in visible range" | `textSecondary` (`TapAnalysisResultsView.swift:511–512`) | absent | "No peaks above Peak Min." (App.tsx 1239) | decided — Python adds it; the web uses Swift's words |
+| 11 | Plate placeholders "Select peaks above to calculate properties" / "Select a longitudinal (L) peak" / "Select a cross-grain (C) peak"; brace "Select the fL (L) peak above to calculate properties" — shown only when a completed plate or brace lacks its L/C peak or its dimensions, which a capture never produces (the properties show only once complete, and every phase completes with its peak); there is no UI to select a material peak | `TapAnalysisResultsView.swift:792–806`, 938–944 | brace placeholder (1322); plate "Select peaks above…" only (1398) | none | **done** — step 7, checked by the owner 2026-10-21: Swift `deb5125`, Python `5e6a16e`. Decided — remove the placeholders from Swift and Python; the web needs nothing |
+| 12 | "No peaks detected in visible range" | `textSecondary` (`TapAnalysisResultsView.swift:511–512`) | absent | "No peaks above Peak Min." (App.tsx 1239) | **done** — step 7, checked by the owner 2026-10-21: Python `5e6a16e`, web `11f41c8`. Decided — Python adds it; the web uses Swift's words |
 | 13 | Chart Options section headers | `textSecondary` (`SpectrumView.swift:1291–1294`) | absent (QMenu, separators only; `fft_canvas.py:1397–1409`) | secondary, uppercase (`SpectrumChart.tsx:609, 614`) | **done** — step 6, checked by the owner 2026-10-20: Swift `b44c95a`, Python `152f1db`, web `95ce794`. Decided — F5: one plain platform menu from ⋯ and right-click, everywhere |
 | 14 | Status bar "Starting..." / "Audio input unavailable" when not running | `textSecondary` (Controls 575–577) | as Swift, `text.secondary` (2457–2466) | `status.peakReadout` (App.tsx 1361–1365; 2184) | **done** — step 5: Python `4bebd21`, web `1701c8d`. Decided — toward Swift (the web in `text.secondary`) |
-| 15 | Loaded-settings banner icon | separate `statusWarning` icon, pulsing (Controls 477–480, compact 381–384) | same (`mdi.alert`, 1949–2000) | "⚠" glyph in the text, no pulse (App.tsx 1290) | decided — S6: an icon in every edition (the web gains the pulsing `status.warning` icon) |
-| 16 | Measurements empty state | icon secondary, title semibold in the system default, message secondary (`EmptyStateView.swift:24–34`) | one secondary label, no icon (`measurements_list_view.py:93–98`) | one secondary paragraph, no icon (`MeasurementsPanel.tsx:415`) | decided — Python and the web add the icon and title |
-| 17 | Slider reset buttons | `textSecondary` (Controls 618–620, 633–635) | same (1015–1016) | absent | decided — the web adds them |
-| 18 | Loading overlay | shown from the Export click through the save panel (`TapToneAnalysisView+Actions.swift:306–329`; `Layouts.swift:292–304`); "Saving measurement with chart image…" never shows (flag set and cleared in one call, `Actions.swift:148, 164`) | after the file is chosen, while writing (`tap_tone_analysis_view.py:4718–4727`, 4764); "Starting audio…" at start-up (715) | none; export buttons disabled while one runs | decided — F5: no export overlay in any edition; Python's start-up overlay removed |
+| 15 | Loaded-settings banner icon | separate `statusWarning` icon, pulsing (Controls 477–480, compact 381–384) | same (`mdi.alert`, 1949–2000) | "⚠" glyph in the text, no pulse (App.tsx 1290) | **done** — step 7, checked by the owner 2026-10-21: web `11f41c8`. Decided — S6: an icon in every edition (the web gains the pulsing `status.warning` icon) |
+| 16 | Measurements empty state | icon secondary, title semibold in the system default, message secondary (`EmptyStateView.swift:24–34`) | one secondary label, no icon (`measurements_list_view.py:93–98`) | one secondary paragraph, no icon (`MeasurementsPanel.tsx:415`) | **done** — step 7, checked by the owner 2026-10-21: Python `5e6a16e`, web `11f41c8`. Decided — Python and the web add the icon and title |
+| 17 | Slider reset buttons | `textSecondary` (Controls 618–620, 633–635) | same (1015–1016) | absent | **done** — step 7, checked by the owner 2026-10-21: Python `5e6a16e`, web `11f41c8`. Decided — the web adds them |
+| 18 | Loading overlay | shown from the Export click through the save panel (`TapToneAnalysisView+Actions.swift:306–329`; `Layouts.swift:292–304`); "Saving measurement with chart image…" never shows (flag set and cleared in one call, `Actions.swift:148, 164`) | after the file is chosen, while writing (`tap_tone_analysis_view.py:4718–4727`, 4764); "Starting audio…" at start-up (715) | none; export buttons disabled while one runs | **done** — step 7, checked by the owner 2026-10-21: Swift `deb5125`, Python `5e6a16e`. Decided — F5: no export overlay in any edition; Python's start-up overlay removed |
 | **C** | **an edition names a role where Swift uses the system default — decide which way** | | | | |
 | 19 | Header icon buttons (Re-analyze, Select None, wand) | `.tintedBordered`, no tint (`TapAnalysisResultsView.swift:221, 252, 264`) | secondary icon on `background.subtle` (1174–1221) | same as Python (App.tsx 1152–1197; 1897–1908); neither has Swift's hover wash | **done** — step 3: Swift `3126559`, Python `672c866`, web `310d538`. Decided — S1: app-drawn buttons in the style guide's look |
 | 20 | Export Spectrum / Export PDF | `.tintedBordered`, no tint (`TapAnalysisResultsView.swift:373, 384`) | native button, primary icon, text untagged (1765–1777) | `background.picker` fill + 10 % accent hover (1761–1772) | **done** — step 3: Swift `3126559`, Python `672c866`, web `310d538`. Decided — S1: app-drawn buttons in the style guide's look |
@@ -107,8 +107,8 @@ The type inventory (style guide S4) is separate work, not part of #32; only F7 t
 | 26 | Cancel / Redo | label in `statusWarning` / `toolbarInactive`, platform `.bordered` fill, accent hover wash (Controls 757–759, 920–925, 1059–1061; Layouts 700–703) | 5 % fill in the role, hover 15 % (1098–1101, 3182–3200) | same as Python (App.tsx 1038–1046; 237–269) | **done** — step 3: Swift `3126559`, Python `672c866`, web `310d538`. Decided — S1: app-drawn buttons in the style guide's look |
 | 27 | Chart ⋯ / ⓘ buttons | secondary, `.plain` (`SpectrumView.swift:470–493`) | secondary, hover primary (`fft_canvas.py:592–608, 690–696`) | + separator border and readout-background circle, hover primary + accent border; help glyph "?" (`SpectrumChart.tsx:540–555`; 1524–1570) | **done** — step 6, checked by the owner 2026-10-20: Swift `b44c95a`, Python `152f1db`, web `95ce794`. Decided — as Swift: plain secondary icons, no border, no hover colour |
 | **D** | **surfaces** | | | | |
-| 29 | Tap-controls bar | `background.subtle`, radius 8 (Controls 797–799; narrow 764–766) | separator bottom border only (947–952) | panel + border, radius 10 (App.tsx 929; 36–45) | decided — as Swift: `background.subtle`, radius 8, no border |
-| 30 | App button row | none (Controls 40–102) | separator bottom border (862–869) | panel + border (App.tsx 794; 36–50) | decided — as Swift: no surface |
+| 29 | Tap-controls bar | `background.subtle`, radius 8 (Controls 797–799; narrow 764–766) | separator bottom border only (947–952) | panel + border, radius 10 (App.tsx 929; 36–45) | **done** — step 7, checked by the owner 2026-10-21: Python `5e6a16e`, web `11f41c8`. Decided — as Swift: `background.subtle`, radius 8, no border |
+| 30 | App button row | none (Controls 40–102) | separator bottom border (862–869) | panel + border (App.tsx 794; 36–50) | **done** — step 7, checked by the owner 2026-10-21: Python `5e6a16e`, web `11f41c8`. Decided — as Swift: no surface |
 | 31 | Settings / Measurement Details window background | Settings `backgroundPanel` (`TapSettingsView.swift:205`); Measurement Details the system window background (`MeasurementDetailView.swift:72`, a plain `NSWindow`) | window background, both | panel, both (853–855) | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided — S2: Swift names its window backgrounds; the others match |
 | 32 | Measurement Details footer | panel + system `Divider()` (`MeasurementDetailView.swift:43, 52`) | none (`measurement_detail_view.py:201–209`) | panel + separator (921–927) | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided — S2: `separator` for the divider, panel surface; the others match |
 | 33 | Sheet title bar (Save / Play File / Saved Measurements) | panel + system `Divider()` (`SheetTitle.swift:21–23`) | native title only | panel + separator (893–899) | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided — Swift and the web draw a title bar (panel + `separator`); Python's windows have the operating system's, which shows the same title, so none is added (owner, 2026-10-20) |
@@ -131,10 +131,11 @@ The type inventory (style guide S4) is separate work, not part of #32; only F7 t
 | 50 | Native control tint | Slider and Stepper with no tint — the platform accent (Controls 666, 789, 832, 916, 960; Layouts 590, 640); the Notes `TextEditor`'s own background covers its `backgroundControl` (`EditMeasurementView.swift:106`) | — | Peak Min range `accent-color: accent.text` (842) | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided — `accent` everywhere: `.tint(accent)` on Swift's sliders and steppers, the web's Peak Min slider `accent`; the editor's own background hidden (item 8) |
 | 51 | Plate body stiffness picker | `Picker` | a plain `QComboBox` (`plate_body_dimensions_editor.py:57`) where every other picker is `MenuPicker` | `<select>` with no colour, fill or border (`MaterialResults.tsx:68`; 443–449) | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided — Python `MenuPicker`, the web `.menu-picker`, as every other picker |
 | 52 | Web: unstyled controls and the first paint | — | — | the Edit sheet's name field matches no rule (`EditMeasurementSheet.tsx:55`; no `.set-field input`); the phase icon fills from `var()` in an SVG attribute (`MaterialInstructionPanel.tsx:63`), which not every browser resolves; `palette.apply` runs after the first render (App.tsx 238), so the first frame has no roles | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided — the Edit sheet laid out as the Save sheet (`.form-field`: the title above each field, the notes hint under its box), as Swift's two sheets; `fill="currentColor"` (its `span` sets the colour, 165); `apply` before `render` in `main.tsx` |
-| 53 | Edit Measurement's title on macOS | a centred `title2` "Edit Measurement" (`EditMeasurementView.swift:91`), where Save and Play File use the sheet title bar (`sheetTitle`) | the window's title | the sheet head, as Save | decided — Swift's Edit uses `sheetTitle`, as Save and Play File |
-| 54 | Quick Start window's Close button | none: the window's own close | a Close button (`help_view.py:829`) | none | decided — Python's Close removed |
+| 53 | Edit Measurement's title on macOS | a centred `title2` "Edit Measurement" (`EditMeasurementView.swift:91`), where Save and Play File use the sheet title bar (`sheetTitle`) | the window's title | the sheet head, as Save | **done** — step 7, checked by the owner 2026-10-21: Swift `deb5125`. Decided — Swift's Edit uses `sheetTitle`, as Save and Play File |
+| 54 | Quick Start window's Close button | macOS: none, the window's own close; iOS: Done, the sheet's | a Close button (`help_view.py:829`) | Done in the panel's head, as Swift's iOS sheet | **done** — step 7, checked by the owner 2026-10-21: Python `5e6a16e`. Decided — Python's Close removed; the rest is S1c (a window closes with its own close, a sheet or panel with Done) |
 | 55 | Assign Mode on iOS, and a menu that snapped back on the iPhone | a sheet on iOS ("Menu is height-limited"), the platform menu on macOS; the platform menu on the iPhone snapped back to its top while scrolled, so Custom… could not be tapped — every live frame redrew the main view, and with it the results rows and their menus | — | — | **done** — step 4: Swift `bdbcb76`, Python `a025b72`, web `3f91dac`. Decided (owner, 2026-10-20) — the platform menu on every device; a live frame announced on its own object, `LiveFrame` (the engine's `frame`), heard only by what draws a frame (chart, status-bar readouts, Metrics) and the analyzer, as #28's `InputLevel` — Swift `FrameReader`, Python `mic.frame.frameChanged` (its analyzer no longer announces each frame), the web `FrameReader`; tested by `test/live-frame` (LF1). iPhone confirmed by the owner, 2026-10-20 |
 | 56 | The pointer over a control | the arrow over every control; the pointing hand only over a saved-measurement row (`MeasurementsListView.swift:237`) | the hand over ⋯, ⓘ, the menu pickers, Settings' help rows and the row ⋯ | the hand over 14 kinds of control | **done** — step 6, checked by the owner 2026-10-20: Swift `b44c95a`, Python `152f1db`, web `95ce794`. Decided (owner, 2026-10-20) — as Swift: every platform's guidelines give the hand to links only; the arrow over controls, the hand only over a saved-measurement row (style guide §5) |
+| 57 | The tap-controls bar: the Taps control, the sizes | `Taps:`, the count as a label (caption, medium, `textPrimary`), then the stepper — on macOS and iPad stacked ⌃⌄; on the iPhone − + with the count as the stepper's own label in portrait and after it in landscape; caption 10 pt (macOS), 12 pt (iOS); meter 160, Peak Min slider 80 (`TapToneAnalysisView+Controls.swift`, `+Layouts.swift`) | an editable spin box; caption 11 pt | − and + buttons around the count; no colons on the labels; 13 px text; meter 220 px, slider 130 px | **done** — step 7, checked by the owner 2026-10-21: Swift `deb5125`, Python `5e6a16e`, web `11f41c8`. Decided (owner, 2026-10-21) — the count before its stepper in every layout and rotation, not editable; stacked ⌃⌄ in a rounded outline 22 tall on desktop, − + on a phone (Swift iPhone); caption 10 pt in every edition (12 on iOS and the web's phone layout); Swift's widths on the web; colons on the web's labels |
 
 ## Decisions
 
@@ -184,8 +185,58 @@ The type inventory (style guide S4) is separate work, not part of #32; only F7 t
   with a mouse or trackpad gets scroll zoom and pan, as macOS; Python's ⌘ + Scroll zooms around the cursor; Python
   gains trackpad pinch on macOS, by region (Qt's native zoom gesture — on Windows and Linux a trackpad pinch already
   arrives as Ctrl + Scroll); the web's trackpad pinch picks the axis by region, and Safari's pinch is checked.
+- **57** — decided (owner, 2026-10-21): as written in the item.
 - **41–56** — decided (owner, 2026-10-20): as written in each item. No shared test for surfaces: what a surface does is painting, checked on screen; the source checks refuse literal colours.
 - **Colour items** — decided (owner, 2026-10-20): where Swift names a role and another edition does not (2, 3, 4, 6,
   8, 9, 10, 14, 38), the others follow Swift; the items under a style-guide rule (1, 5, 15, 19–23, 26, 31–33, 39, 40)
   follow the rule. Item 24: a row highlight on hover in every edition (Swift gains it). Item 27 and the bars (29, 30):
   as Swift.
+
+## Run-review
+
+Step 7, on a fresh build of each edition; light and dark where a colour is named. Steps 1–6 were checked by the
+owner as each was done (each item's status says so); step 9's full run-review by platform is added here.
+
+1. Python and the web: open Saved Measurements with no measurements saved. → An inbox icon, "No Saved
+   Measurements" in bold, then the message in grey, all centred, as Swift's.
+   *Passed 2026-10-21.*
+2. Python and the web: in a guitar measurement, zoom the chart to a range with no peaks. → The results list reads
+   "No peaks detected in visible range", centred.
+   *Passed 2026-10-21.*
+3. The web: load a measurement whose settings differ from the current ones. → The "Settings from loaded
+   measurement" banner starts with a warning icon that pulses.
+   *Passed 2026-10-21.*
+4. The web: move Threshold, then click its ↺. → It returns to −40 dB. Move Peak Min, then click its ↺. → It
+   returns to −60 dB.
+   *Passed 2026-10-21.*
+5. The web: switch to Plate. → Peak Min's ↺ is faded with its row and does nothing when clicked.
+   *Passed 2026-10-21.*
+6. Python: hover Threshold's ↺, then Peak Min's ↺. → Each tooltip reads "Reset to default", with no value.
+   *Passed 2026-10-21.*
+7. Swift (macOS, iPad), Python: Export Spectrum, then Export PDF, from the main window. → No dimmed
+   "Exporting…" / "Generating PDF report…" screen at any point.
+   *Passed 2026-10-21.*
+8. Swift (macOS, iPad), Python: the same from Saved Measurements' row ⋯ and its Export All. → No dimmed screen.
+   *Passed 2026-10-21.*
+9. Python: launch the app. → No "Starting audio…" screen; the chart appears with the window.
+   *Passed 2026-10-21.*
+10. Swift (macOS, iPad), Python: finish a plate, then a brace measurement. → The results show the plate's and the
+    brace's properties, with no "Select…" placeholder text.
+    *Passed 2026-10-21.*
+11. Python and the web, light and dark: look at the top of the window. → The row of app buttons (Play File… …
+    Settings) has no line or box under it; the Taps / Threshold / Peak Min bar is a rounded grey box with no
+    border, inset from the window's edges, as macOS Swift's.
+    *Passed 2026-10-21.*
+12. Swift (macOS): Saved Measurements → a row's ⋯ → Edit. → "Edit Measurement" at the top left with a line under
+    it, as the Save sheet; no large centred title.
+    *Passed 2026-10-21.*
+13. Python: Help → Quick Start Guide. → No Close button at the bottom; the window's close button and Esc close it.
+    *Passed 2026-10-21.*
+14. Swift (macOS, iPad), Python, the web: look at Taps. → "Taps:", the count, then ⌃⌄ stacked in a rounded outline;
+    the count cannot be typed into; ⌃ greys at 10 and ⌄ at 1.
+    *Passed 2026-10-21.*
+15. Swift (iPhone), the web on a phone: look at Taps in portrait, then landscape. → The count before − + in both.
+    *Passed 2026-10-21.*
+16. Swift (macOS), Python, the web: compare the tap-controls bars. → The same text size; the Threshold meter and
+    the Peak Min slider the same widths; the web's labels end in colons.
+    *Passed 2026-10-21.*
