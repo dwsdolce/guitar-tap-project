@@ -45,6 +45,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/export-filename` | `GuitarTap/Models/ExportFilename.swift` | `src/guitar_tap/models/export_filename.py` | `src/measurement/exportFilename.ts` | tests |
 | `model/guitar-mode-classify` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/classify.ts`<br>`src/presentation/modeColors.ts` | tests |
 | `model/input-level` | `GuitarTap/Models/InputLevel.swift` | `src/guitar_tap/models/input_level.py` | `src/audio/inputLevel.ts` | tests |
+| `model/live-frame` | `GuitarTap/Models/LiveFrame.swift`<br>`GuitarTap/Views/Utilities/FrameReader.swift` | `src/guitar_tap/models/live_frame.py` | `src/audio/liveFrame.ts`<br>`src/components/FrameReader.tsx` | tests |
 | `model/material-measurement-inputs` | `GuitarTap/Models/MaterialMeasurementInputs.swift`<br>`GuitarTap/Models/PlateStiffnessPreset.swift` | `src/guitar_tap/models/material_measurement_inputs.py`<br>`src/guitar_tap/models/plate_stiffness_preset.py` | `src/measurement/materialMeasurementInputs.ts` | tests |
 | `model/material-selection` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts` | tests |
 | `model/measurement-amend` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/amend.ts` | tests |
@@ -95,6 +96,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/guitar-capture-window` | `GuitarTapTests/GuitarCaptureWindowTests.swift` | `tests/test_guitar_capture_window.py` | `test/guitar-capture-window.test.ts` | test suite |
 | `test/import-persistence` | `GuitarTapTests/ImportPersistenceTests.swift` | `tests/test_import_persistence.py` | `test/import-persistence.test.ts` | test suite |
 | `test/input-level` | `GuitarTapTests/InputLevelTests.swift` | `tests/test_input_level.py` | `test/input-level.test.ts` | test suite |
+| `test/live-frame` | `GuitarTapTests/LiveFrameTests.swift` | `tests/test_live_frame.py` | `test/live-frame.test.ts` | test suite |
 | `test/material-measurement-inputs` | `GuitarTapTests/MaterialMeasurementInputsTests.swift` | `tests/test_material_measurement_inputs.py` | `test/material-measurement-inputs.test.ts` | test suite |
 | `test/material-selection` | `GuitarTapTests/MaterialSelectionTests.swift` | `tests/test_material_selection.py` | `test/material-selection.test.ts` | test suite |
 | `test/measurement-amend` | `GuitarTapTests/MeasurementAmendTests.swift` | `tests/test_measurement_amend.py` | `test/measurement-amend.test.ts` | test suite |

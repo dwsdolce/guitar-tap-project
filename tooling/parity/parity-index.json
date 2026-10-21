@@ -447,6 +447,24 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/live-frame",
+      "swift": [
+        "GuitarTap/Models/LiveFrame.swift",
+        "GuitarTap/Views/Utilities/FrameReader.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/live_frame.py"
+      ],
+      "web": [
+        "src/audio/liveFrame.ts",
+        "src/components/FrameReader.tsx"
+      ],
+      "tests": [
+        "test/live-frame"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/material-measurement-inputs",
       "swift": [
         "GuitarTap/Models/MaterialMeasurementInputs.swift",
@@ -1220,6 +1238,20 @@
       ],
       "web": [
         "test/input-level.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/live-frame",
+      "swift": [
+        "GuitarTapTests/LiveFrameTests.swift"
+      ],
+      "python": [
+        "tests/test_live_frame.py"
+      ],
+      "web": [
+        "test/live-frame.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"

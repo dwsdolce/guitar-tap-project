@@ -13,7 +13,7 @@ A change to how the app looks starts here. Work tracked as an Issue applies the 
 How the UI's interaction translates to each platform (gestures, menus, layouts) is in
 [`WEB-UI-GUIDELINES.md`](WEB-UI-GUIDELINES.md) and [`ANDROID-UI-GUIDELINES.md`](ANDROID-UI-GUIDELINES.md).
 
-Status: **agreed** (S1–S7 decided by the owner, 2026-10-20), except the text styles themselves (S4 needs an inventory
+Status: **agreed** (S1–S7 and S1a, S1b decided by the owner, 2026-10-20), except the text styles themselves (S4 needs an inventory
 first). Where an edition does not yet follow a rule, the section says what it does today; #32
 brings them in line.
 
@@ -30,8 +30,8 @@ are tied to the system. The only colors we have to define are the app specific c
 
 | Drawn by the platform, in the app's scheme | Drawn by the app, pinned |
 |---|---|
-| standard controls: checkboxes, sliders, text fields, steppers, pickers, scroll bars | **buttons**, in every state (section 1.3) |
-| | the chart: background, grid, axes, curves, crosshair, peak labels, mode bands |
+| standard controls: checkboxes, sliders, text fields, steppers, pickers, scroll bars | **buttons** in the content, in every state (section 1.3) |
+| the buttons that close or confirm a sheet or dialog (S1b, section 1.3) | the chart: background, grid, axes, curves, crosshair, peak labels, mode bands |
 | window frames, title bars, the chrome of sheets and popovers | peak lists and cards, results and material panels, badges |
 | focus rings, text selection | status messages and dots, banners, the threshold meter |
 | native list and table chrome | measurement rows, comparison and multi-tap tables |
@@ -51,8 +51,9 @@ the app has chosen*. Each edition passes that scheme down:
 the exact color is really irrelevant — we just want it consistent." Platform colours differ between platforms and
 OS releases, and change with accessibility settings. So the app never uses one for anything it draws itself.
 
-**Deciding for a new element.** If it shows data, a state or a status, or it is a button, the app draws it, in a
-role. Any other standard control is the platform's.
+**Deciding for a new element.** If it shows data, a state or a status, or it is a button in the content, the app
+draws it, in a role. Any other standard control is the platform's, and so is a button that closes or confirms a sheet
+or dialog.
 
 ### 1.2 Accepted platform differences
 
@@ -71,7 +72,7 @@ What must match is what shows with the window active: the roles, the layout, and
 
 ### 1.3 Buttons and menus
 
-**Buttons are drawn by the app in every edition** (S1): fill, label and border in roles, every state (section 5) at
+**Buttons in the content are drawn by the app in every edition** (S1): fill, label and border in roles, every state (section 5) at
 the opacities of section 3, and one shape — corner radius 6, padding 3 × 8 points (a prominent button 4 × 10), shared
 in `theme.json` (`button`). Four kinds:
 
@@ -79,7 +80,7 @@ in `theme.json` (`button`). Four kinds:
 |---|---|---|
 | plain | an action with no particular meaning (Export Spectrum) | `text.primary` on `background.control`, a `separator` border; an accent wash at `button.plainHover` under the pointer |
 | tinted | a role names its colour (Cancel in `status.warning`, an accent action) | the label in the role on the role at `button.tintFill`; `button.tintHover`, `button.tintPressed`, `button.tintOn`, `button.tintOnHover` |
-| prominent | the main action of a sheet (Save, New Tap) | filled with its role, the label in `text.onColor`; the fill at `button.prominentHover` under the pointer |
+| prominent | the main action in the content (New Tap); the web's confirming dialog button | filled with its role, the label in `text.onColor`; the fill at `button.prominentHover` under the pointer |
 | icon | an icon with no frame (the chart's ⋯ and ⓘ, the row ⋯) | the icon in its role, no fill |
 
 A toggle drawn as a button (Auto dB, Taps, Crosshair) is a tinted button with an on state. A button that cannot act is
@@ -88,8 +89,29 @@ set of rules per edition, tested against `button-style.json` (`test/button-style
 (`AppButtonLook.of`), Python `palette.button_look` (the stylesheet's button rules are made from it), the web's
 `.btn` rules in `App.css`.
 
-**Toolbar and title-bar buttons are the platform's** (owner, 2026-10-20): a sheet's Save / Cancel / Done in its title
-bar, the iPhone navigation bar's icons. They are window chrome (section 1.1); only their colour roles are the app's.
+**The buttons that close or confirm a sheet or dialog are the platform's** (S1b): Cancel, Save, Play, Done, and the
+other buttons in a sheet's button row (Saved Measurements' Compare…, Import, Export All, Delete All). Each platform
+draws a dialog's buttons its own way, and its users know that way from every other app:
+
+- every button neutral except the default one — the one Return presses — which is marked (on macOS, filled with the
+  accent; grey while it cannot act); a dialog with no default action has none, so all its buttons are neutral;
+- Return presses the default button and Esc presses Cancel;
+- the same place in every dialog (on macOS, bottom right, Cancel before the confirming button; on iOS, the sheet's
+  navigation bar);
+- the system's own adaptations: Increase Contrast, Button Shapes, the keyboard focus ring, each release's restyle.
+
+The same in every edition: which buttons a dialog has, their order, which one is the default, and the keys. Only their
+drawing is the platform's:
+
+- **Swift:** toolbar placements (`.cancellationAction`, `.confirmationAction`, `.primaryAction`) — push buttons at the
+  bottom of a macOS sheet, the navigation bar on iOS — or a button with no style and its
+  `.keyboardShortcut(.defaultAction / .cancelAction)`.
+- **Python:** Qt's native `QPushButton`, untagged, the confirming one `setDefault(True)`.
+- **The web**, which has no native dialog button: app-drawn in the same pattern — the confirming button prominent
+  (plain and dimmed while it cannot act), the others plain.
+
+Toolbar and title-bar buttons are the platform's too: the iPhone navigation bar's icons. They are window chrome
+(section 1.1); only their colour roles are the app's.
 
 **Menus are the platform's, and their items carry no colour of their own** (S1a). An item's meaning is marked
 semantically, never by a colour the app sets: destructive (Swift `role: .destructive`), disabled, separators and
@@ -172,8 +194,8 @@ Known difference: the plate Cross/Long values are bold in Swift, regular in Pyth
 **Each state has one mechanism, the same in every edition** (S5). "Cannot act now" and "does not apply" are each an
 opacity on the whole group — label, control and value — with the values from section 3; in Python this is a helper,
 as Swift's `.disabledDimmed`, not a stylesheet rule. A button's states follow section 1.3. **A prominent button that
-cannot act shows as a plain button, dimmed**; it takes its fill when it can act (a sheet's Save before there is
-anything to save). **A list row shows `background.subtle` while the pointer is over it**, in every edition.
+cannot act shows as a plain button, dimmed**; it takes its fill when it can act (the web's Save before there is anything
+to save — in Swift and Python a dialog's default button is the platform's, section 1.3). **A list row shows `background.subtle` while the pointer is over it**, in every edition.
 
 | State | Meaning | How |
 |---|---|---|
@@ -221,8 +243,9 @@ Today:
 
 | | Decision | |
 |---|---|---|
-| S1 | Buttons are drawn by the app in every edition | owner, 2026-10-20 |
+| S1 | Buttons in the content are drawn by the app in every edition | owner, 2026-10-20 |
 | S1a | Menus are the platform's; their items carry no colour of their own, meaning marked semantically | owner, 2026-10-20 |
+| S1b | The buttons that close or confirm a sheet or dialog are the platform's; app-drawn in the same pattern on the web | owner, 2026-10-20 |
 | S2 | A colour left unset is a platform colour | owner, 2026-10-20 |
 | S3 | Every opacity is a named opacity in `theme.json` | owner, 2026-10-20 |
 | S4 | Named text styles by purpose, defined after an inventory | owner, 2026-10-20 |
