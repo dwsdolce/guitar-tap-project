@@ -13,6 +13,7 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
+- [#38](https://github.com/dwsdolce/guitar-tap-project/issues/38) · [`TAP-DETECTION-THREADING.md`](TAP-DETECTION-THREADING.md) — tap detection and capture in one per-chunk sequence in Swift and Python, as on the web
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37) · [`PYTHON-NO-AUDIO-SYSTEM.md`](PYTHON-NO-AUDIO-SYSTEM.md) — Python crashes at start when PortAudio cannot start (no sound server), instead of reporting the input unavailable
 - [#36](https://github.com/dwsdolce/guitar-tap-project/issues/36) · [`SWIFT-RUNTIME-WARNINGS.md`](SWIFT-RUNTIME-WARNINGS.md) — Swift runtime warnings: the audio session activated on the main thread (iOS); the microphone-warning alert publishing during a view update
