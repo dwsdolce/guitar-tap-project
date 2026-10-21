@@ -959,6 +959,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/chart-menu",
+      "swift": [
+        "GuitarTapTests/ChartMenuTests.swift"
+      ],
+      "python": [
+        "tests/test_chart_menu.py"
+      ],
+      "web": [
+        "test/chart-menu.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/chart-style",
       "swift": [
         "GuitarTapTests/ChartStyleTests.swift"
@@ -1966,6 +1980,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "view/chart-menu",
+      "swift": [
+        "GuitarTap/Views/ChartMenu.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/chart_menu.py"
+      ],
+      "web": [
+        "src/presentation/chartMenu.ts"
+      ],
+      "tests": [
+        "test/chart-menu"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/chart-style",
       "swift": [
         "GuitarTap/Views/Utilities/ChartStyle.swift"
@@ -2431,6 +2461,10 @@
     {
       "repo": "python",
       "path": "tests/test_wasapi_raw_open.py"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTap/Views/Utilities/SecondaryClickMenu.swift"
     },
     {
       "repo": "swift",

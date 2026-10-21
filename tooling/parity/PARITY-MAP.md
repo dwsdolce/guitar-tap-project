@@ -76,6 +76,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/button-enablement` | `GuitarTapTests/ButtonEnablementTests.swift` | `tests/test_button_enablement.py` | `test/button-enablement.test.ts` | test suite |
 | `test/button-style` | `GuitarTapTests/ButtonStyleTests.swift` | `tests/test_button_style.py` | `test/button-style.test.ts` | test suite |
 | `test/calibration` | `GuitarTapTests/CalibrationTests.swift` | `tests/test_calibration.py` | `test/calibration.test.ts` | test suite |
+| `test/chart-menu` | `GuitarTapTests/ChartMenuTests.swift` | `tests/test_chart_menu.py` | `test/chart-menu.test.ts` | test suite |
 | `test/chart-style` | `GuitarTapTests/ChartStyleTests.swift` | `tests/test_chart_style.py` | `test/chart-style.test.ts` | test suite |
 | `test/classify` | `GuitarTapTests/ClassifyCasesTests.swift` | `tests/test_classify_cases.py` | `test/classify-cases.test.ts`<br>`test/classify.test.ts` | test suite |
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_annotation_guard.py`<br>`tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
@@ -148,6 +149,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/analysis-metrics` | `GuitarTap/Views/FFTAnalysisMetricsView.swift` | `src/guitar_tap/views/fft_analysis_metrics_view.py` | `src/components/MetricsPanel.tsx` | review only |
 | `view/axis-ticks` | `GuitarTap/Views/Utilities/AxixTickGenerator.swift` | `src/guitar_tap/views/utilities/axis_tick_generator.py` | `src/presentation/axisTicks.ts` | tests |
 | `view/button-style` | `GuitarTap/Views/Utilities/AppButtonStyle.swift` | `src/guitar_tap/views/utilities/palette.py` | `src/App.css` | tests |
+| `view/chart-menu` | `GuitarTap/Views/ChartMenu.swift` | `src/guitar_tap/views/chart_menu.py` | `src/presentation/chartMenu.ts` | tests |
 | `view/chart-style` | `GuitarTap/Views/Utilities/ChartStyle.swift` | `src/guitar_tap/views/utilities/chart_style.py` | `src/presentation/chartStyle.ts` | tests |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
 | `view/dimming` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/App.css` | tests |
@@ -198,6 +200,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_threshold_sliders.py` | python |
 | `tests/test_update_checker.py` | python |
 | `tests/test_wasapi_raw_open.py` | python |
+| `GuitarTap/Views/Utilities/SecondaryClickMenu.swift` | swift |
 | `GuitarTapTests/GenerateParityOracle.swift` | swift |
 | `GuitarTapTests/SpectrumReplayProbeTests.swift` | swift |
 | `GuitarTapTests/SpectrumViewGestureTests.swift` | swift |

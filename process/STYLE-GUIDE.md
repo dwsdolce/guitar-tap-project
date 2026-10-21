@@ -73,7 +73,7 @@ What must match is what shows with the window active: the roles, the layout, and
 ### 1.3 Buttons and menus
 
 **Buttons in the content are drawn by the app in every edition** (S1): fill, label and border in roles, every state (section 5) at
-the opacities of section 3, and one shape — corner radius 6, padding 3 × 8 points (a prominent button 4 × 10), shared
+the opacities of section 3, and one shape — corner radius 6, padding 3 × 8 points (a prominent button 4 × 10, an icon button 3 × 3), shared
 in `theme.json` (`button`). Four kinds:
 
 | Kind | For | Look |
@@ -81,7 +81,7 @@ in `theme.json` (`button`). Four kinds:
 | plain | an action with no particular meaning (Export Spectrum) | `text.primary` on `background.control`, a `separator` border; an accent wash at `button.plainHover` under the pointer |
 | tinted | a role names its colour (Cancel in `status.warning`, an accent action) | the label in the role on the role at `button.tintFill`; `button.tintHover`, `button.tintPressed`, `button.tintOn`, `button.tintOnHover` |
 | prominent | the main action in the content (New Tap); the web's confirming dialog button | filled with its role, the label in `text.onColor`; the fill at `button.prominentHover` under the pointer |
-| icon | an icon with no frame (the chart's ⋯ and ⓘ, the row ⋯) | the icon in its role, no fill |
+| icon | an icon with no frame (the chart's ⋯ and ⓘ, the row ⋯) | the icon in its role, no frame and no fill; under the pointer the plain button's wash (`button.plainHover`) on a patch behind it, padded 3 × 3 (`button.iconPadding`) |
 
 A toggle drawn as a button (Auto dB, Taps, Crosshair) is a tinted button with an on state. A button that cannot act is
 drawn whole at `control.dimmed`; a prominent one, as a plain button, dimmed (section 5). The rule is one function or
@@ -118,9 +118,8 @@ semantically, never by a colour the app sets: destructive (Swift `role: .destruc
 headers. The web draws its menus itself; they follow the same rule — items in the normal item colour, the platform's
 look as nearly as a browser allows (panel surface, the accent highlight on hover).
 
-Today the web's row menu draws Delete in `status.error`, with a `status.error` fill on hover; Swift on iOS shows its
-destructive items in iOS's red (an accepted platform difference, section 1.2); Swift on macOS and Python show no
-colour.
+Swift on iOS shows its destructive items in iOS's red (an accepted platform difference, section 1.2); Swift on macOS,
+Python and the web show them as ordinary items. Each item has its icon in every edition (S6), in the item's own colour.
 
 ## 2. Colour
 
@@ -202,7 +201,7 @@ to save — in Swift and Python a dialog's default button is the platform's, sec
 | enabled | can be used | — |
 | cannot act now | disabled for the moment (Taps while a sequence runs) | the whole group disabled and at `control.dimmed` — Swift `.disabledDimmed`, Python `disabled_dimmed`, the web's `.field.is-disabled` (`test/dimming`); a button, at `control.dimmed` (`test/button-style`) |
 | does not apply | has no meaning for this measurement (Peak Min for a plate) | the whole group disabled and at `control.notApplicable` — Swift `.notApplicableDimmed`, Python `not_applicable_dimmed`, the web's `.field.is-faded` (`test/dimming`) |
-| hover | the pointer is over it | a button: section 1.3. A list row: `background.subtle` — to do in Swift and the web (#32 item 24) |
+| hover | the pointer is over it | a button: section 1.3. A list row: `background.subtle` — to do in Swift and the web (#32 item 24). The pointer stays the arrow over every control, as each platform's guidelines have it (the pointing hand means a link); only a saved-measurement row shows the hand, as Swift's |
 | pressed | held down | a tinted button: `button.tintPressed` |
 | on / selected | a toggle that is on; a selected row or peak | a toggle: `button.tintOn`. Selected peaks and rows: their own roles |
 | focused | has keyboard focus | the platform's focus ring |
