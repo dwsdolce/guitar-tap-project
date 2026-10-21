@@ -227,19 +227,19 @@ to save — in Swift and Python a dialog's default button is the platform's, sec
 colour. **Where one edition draws an icon, every edition does** (S6). Each icon is the nearest equivalent of Swift's
 SF Symbol.
 
-Today:
-
 - **Icons:**
   - Swift: SF Symbols.
-  - Python: the Material Design Icons font via qtawesome (`mdi.…`).
-  - Web: the same Material Design shapes as SVG paths (`tooling/parity/gen_web_icons.py`) where Python draws one;
-    line icons in the Lucide style (`components/icons.tsx`) elsewhere. Both take the colour of the surrounding text
-    (`currentColor`).
-
-  The web's two icon sets are to become one.
-- **Text symbols:** "⚠" appears in status messages and badges. Sometimes it is written plain and sometimes with U+FE0F
-  (the emoji form), and Windows draws it as an orange emoji. The loaded-settings banner is an icon in Swift and
-  Python but the symbol in the web's text (#32 M6, item 40).
+  - Python and the web: one set — the Material Design icons (Python through qtawesome, `mdi.…`; the web the same
+    shapes as SVG paths, `mdiPaths.ts`), and the app's own icons for the SF Symbols with no Material Design
+    equivalent. Each takes its colour from its role or the surrounding text (`currentColor`).
+  - The app's own icons are drawn once, as SVG in the hub's `tooling/parity/icons/` (24 × 24, stroked in
+    `currentColor`), and generated into both editions by `tooling/parity/gen_web_icons.py`: the web's
+    `customIcons.ts`, Python's `custom_icons.py` (drawn by `palette.icon` as `gt.<name>`). Today: `ring-mode`
+    (`circle.dashed`), `plus-viewfinder` and `dot-viewfinder` (the crosshair toggle — the pair drawn alike).
+    A new one is added there, never drawn in one edition's code.
+- **Text symbols:** "⚠" is followed by U+FE0E wherever it is text — the status-line warnings, the import alert, the
+  help text, and the shared cases — so Windows and the browsers draw it plain, in the text's
+  colour, not as an orange emoji. Log lines are not user-facing and are left as they are.
 
 ## 7. How each edition applies a role
 
