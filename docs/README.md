@@ -18,7 +18,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37) · [`PYTHON-NO-AUDIO-SYSTEM.md`](PYTHON-NO-AUDIO-SYSTEM.md) — Python crashes at start when PortAudio cannot start (no sound server), instead of reporting the input unavailable
 - [#36](https://github.com/dwsdolce/guitar-tap-project/issues/36) · [`SWIFT-RUNTIME-WARNINGS.md`](SWIFT-RUNTIME-WARNINGS.md) — Swift runtime warnings: the audio session activated on the main thread (iOS); the microphone-warning alert publishing during a view update
 - [#35](https://github.com/dwsdolce/guitar-tap-project/issues/35) · [`RESULTS-LIST-ON-RANGE-CHANGE.md`](RESULTS-LIST-ON-RANGE-CHANGE.md) — zoom and pan slow with many peaks: the results list rebuilt on every range change (Python, web)
-- [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32) · [`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md) — theme colours the inventories missed (an edition using a default colour where Swift uses a role), and the divergences in how colour is handled (M1–M6) and in function (F1–F7)
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
@@ -34,6 +33,13 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#32 (theme — the colours the inventories missed) is **closed**; its record is
+[`completed/THEME-MISSED-COLOURS.md`](completed/THEME-MISSED-COLOURS.md) — every colour in every edition a named
+role or the platform's by rule (style guide S1–S7, S1a–S1c); app-drawn buttons in four kinds; one dimming
+mechanism; one plain chart menu and the chart help by device; one icon set in Python and the web, with the app's
+own icons generated from the hub; "⚠" in its text form; and the defects found in its run-reviews, among them
+Settings' stack overflow on an iPhone.
 
 #34 (one unreadable measurement emptied the library) is **closed**; its record is
 [`completed/UNREADABLE-LIBRARY-ENTRY.md`](completed/UNREADABLE-LIBRARY-ENTRY.md) — one reader in every edition (a

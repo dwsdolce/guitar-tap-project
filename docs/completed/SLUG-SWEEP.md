@@ -8700,7 +8700,7 @@ colours. Fixed in both. Python's Taps, Threshold and Peak Min labels were in the
 each edition's colour literals, and an item drawn in the default colour has none, so it never appeared. The web's
 sliders still have no reset buttons (Swift and Python do): noted, not changed. New step 13, in all three. A sweep
 for more such misses (owner, 2026-10-15) found 39 across the three editions: filed as #32
-([`THEME-MISSED-COLOURS.md`](../THEME-MISSED-COLOURS.md)), to be fixed after this run-review. **All three editions passed steps 1–13 (owner, 2026-10-15). Run-review complete.**
+([`THEME-MISSED-COLOURS.md`](THEME-MISSED-COLOURS.md)), to be fixed after this run-review. **All three editions passed steps 1–13 (owner, 2026-10-15). Run-review complete.**
 
 ### Step 11 — scenario slugs
 

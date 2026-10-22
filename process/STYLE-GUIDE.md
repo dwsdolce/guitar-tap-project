@@ -14,8 +14,7 @@ How the UI's interaction translates to each platform (gestures, menus, layouts) 
 [`WEB-UI-GUIDELINES.md`](WEB-UI-GUIDELINES.md) and [`ANDROID-UI-GUIDELINES.md`](ANDROID-UI-GUIDELINES.md).
 
 Status: **agreed** (S1–S7 and S1a, S1b decided by the owner, 2026-10-20; S1c, 2026-10-21), except the text styles themselves (S4 needs an inventory
-first). Where an edition does not yet follow a rule, the section says what it does today; #32
-brings them in line.
+first). Where an edition does not yet follow a rule, the section says what it does today.
 
 ## 1. Platform or app: who draws what
 
@@ -147,8 +146,7 @@ Python and the web show them as ordinary items. Each item has its icon in every 
 2. **No platform colours** in anything the app draws: no SwiftUI system colours (`.secondary`, `.accentColor`,
    materials, `NSColor` / `UIColor` semantic colours), no Qt named colours or `palette(…)`, no CSS named colours.
    **A colour left unset is a platform colour too** (S2): text with no particular meaning is `text.primary`, a
-   dividing line is `separator`, a surface is `background.window` or `background.panel`. Today Swift leaves some
-   unset — text in places, `Divider()`, a default `GroupBox`, some window backgrounds (#32 M3).
+   dividing line is `separator`, a surface is `background.window` or `background.panel`.
 3. **Colour is presentation, not model.** `GuitarMode` and `WoodQuality` carry no colour; their colours are roles.
 4. **The table is shared data.** `tooling/parity/cases/theme.json` holds every role's light and dark value. Each
    edition's palette test checks its table against it.
@@ -199,8 +197,6 @@ Today each edition sizes and weights text in its own way:
 - **Python:** point sizes relative to the application font (a caption is the app size − 2), with explicit weights.
 - **The web:** `rem` sizes, weights 500 and 600.
 
-Known difference: the plate Cross/Long values are bold in Swift, regular in Python and semibold on the web (#32 F7).
-
 ## 5. Control states
 
 **Each state has one mechanism, the same in every edition** (S5). "Cannot act now" and "does not apply" are each an
@@ -214,7 +210,7 @@ to save — in Swift and Python a dialog's default button is the platform's, sec
 | enabled | can be used | — |
 | cannot act now | disabled for the moment (Taps while a sequence runs) | the whole group disabled and at `control.dimmed` — Swift `.disabledDimmed`, Python `disabled_dimmed`, the web's `.field.is-disabled` (`test/dimming`); a button, at `control.dimmed` (`test/button-style`) |
 | does not apply | has no meaning for this measurement (Peak Min for a plate) | the whole group disabled and at `control.notApplicable` — Swift `.notApplicableDimmed`, Python `not_applicable_dimmed`, the web's `.field.is-faded` (`test/dimming`) |
-| hover | the pointer is over it | a button: section 1.3. A list row: `background.subtle` — to do in Swift and the web (#32 item 24). The pointer stays the arrow over every control, as each platform's guidelines have it (the pointing hand means a link); only a saved-measurement row shows the hand, as Swift's |
+| hover | the pointer is over it | a button: section 1.3. A list row: `background.subtle`. The pointer stays the arrow over every control, as each platform's guidelines have it (the pointing hand means a link); only a saved-measurement row shows the hand, as Swift's |
 | pressed | held down | a tinted button: `button.tintPressed` |
 | on / selected | a toggle that is on; a selected row or peak | a toggle: `button.tintOn`. Selected peaks and rows: their own roles |
 | focused | has keyboard focus | the platform's focus ring |

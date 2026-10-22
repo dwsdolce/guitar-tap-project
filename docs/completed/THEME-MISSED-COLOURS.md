@@ -2,9 +2,9 @@
 
 **Issue:** [#32](https://github.com/dwsdolce/guitar-tap-project/issues/32)
 
-Status: **OPEN — every item decided (owner, 2026-10-20); plan agreed; steps 0–8 done.**
+Status: **✅ COMPLETE — 2026-10-21.** Every item decided (owner, 2026-10-20); steps 0–9 done.
 
-Colour differences between the editions that #2 ([`completed/THEME-SPEC.md`](completed/THEME-SPEC.md)) did not
+Colour differences between the editions that #2 ([`THEME-SPEC.md`](THEME-SPEC.md)) did not
 cover: where one edition draws an item in the default colour and another names a role, or where the item is missing,
 plus how each edition handles colour (M) and the functional differences found with them (F). PDF/PNG exports are not
 included.
@@ -16,7 +16,7 @@ label, and the platform's colour only for other widgets (table cells, buttons, f
 rules for tinted and prominent buttons only, so `setEnabled(False)` alone does not change a label's colour; a label
 dims only where the code puts an opacity effect on it or its group (Peak Min, the peak threshold, a measurement row).
 
-**Decisions M1–M6 are made in the style guide** ([`../process/STYLE-GUIDE.md`](../process/STYLE-GUIDE.md), S1–S6); this
+**Decisions M1–M6 are made in the style guide** ([`../../process/STYLE-GUIDE.md`](../../process/STYLE-GUIDE.md), S1–S6); this
 doc applies them.
 
 **References** are to Swift `1a93221`, Python `26d0939`, web `d863ef7`. "Controls" / "Layouts" are Swift's
@@ -40,7 +40,7 @@ targeted tests; the full suites and a run-review on every platform at the end.
 | 6 | Menus and the chart: one plain chart menu from ⋯ and right-click; the web's Delete; chart ⋯ / ⓘ; the help popover and its text by device; the same gestures everywhere; row hover; the chart ⋯ / ⓘ and the row ⋯ as icon buttons (Python `tag(icon=True)`) | 13, 25, 27, F8, F9, 24, 56 | **done** — first part (Swift `b44c95a`, Python `152f1db`, web `95ce794`), checked 2026-10-20: 13 (one chart menu from ⋯ and right-click, built from the shared `chart-menu.json`, `test/chart-menu`), 25, 27 (the icon kind with a hover patch, `button-style.json`), 56 (the arrow over controls; Swift's cursors over the chart), F2's remainder. Second part (Swift `7ebe527`, Python `aab7f2b`, web `e3384d5`), checked 2026-10-21: F8 (the help by device, `chart-help.json`, `test/chart-help`), F9, 24, and the Quick Start text in all three editions and the manual's chapters 6, 8 and 9 |
 | 7 | UI added or removed | 11, 12, 15, 16, 17, 18, 29, 30, 53, 54, 57 | **done** — Swift `deb5125`, Python `5e6a16e`, web `11f41c8`, checked by the owner 2026-10-21 (run-review 1–16): the placeholders and the overlays gone; the empty states and the empty-range words as Swift's; the web's reset buttons and warning icon; the bars as Swift's; the tap count before its stepper everywhere, Swift's sizes; style guide S1c |
 | 8 | Symbols and weight: "⚠" with U+FE0E everywhere, the shared cases included; one icon set on the web; Cross/Long bold | 40, S6, F7, 58, 59 | **done** — Swift `e17603e`, Python `5cd3010`, web `6fd19f6`, checked by the owner 2026-10-21 (run-review 1–7): "⚠" in its text form everywhere; one icon set in Python and the web, the app's own icons from `tooling/parity/icons/`; Cross/Long bold; the range mark the ✓ only; the Quick Start's shortcuts by platform and its layout as Swift's |
-| 9 | Verification: full suites on the owner's go; the export regression baselines re-minted where a change is intended, each listed first; run-review by platform | all | **in progress** — full suites passed 2026-10-21 at Swift `e17603e`, Python `5cd3010`, web `6fd19f6`: Python 1516 passed (1 skipped, the capture probe), its export check 20/20; the web 1402 passed (1 skipped, the same), its export check 20/20; Swift 291 on macOS, 256 each on the iPhone and iPad simulators (3 skipped: the oracle and baseline writers, the capture probe), the export UI tests 20/20 on macOS, iPhone and iPad. No export changed: nothing to re-mint. Run-review: the step 9 regression list and the Windows / Linux list, below |
+| 9 | Verification: full suites on the owner's go; the export regression baselines re-minted where a change is intended, each listed first; run-review by platform | all | **done** — full suites passed 2026-10-21 at Swift `e17603e`, Python `5cd3010`, web `6fd19f6`: Python 1516 passed (1 skipped, the capture probe), its export check 20/20; the web 1402 passed (1 skipped, the same), its export check 20/20; Swift 291 on macOS, 256 each on the iPhone and iPad simulators (3 skipped: the oracle and baseline writers, the capture probe), the export UI tests 20/20 on macOS, iPhone and iPad. No export changed: nothing to re-mint. Run-review passed 2026-10-21: the regression list on macOS, iPad and iPhone, the Windows / Linux list; items 60–64 found and fixed in it (Swift `e45aa6f`, Python `225e72e`, `bef9fdd`) |
 
 **Step 1 — the named opacities** (owner, 2026-10-20): `control.dimmed` 0.45 (cannot act now; also the disabled menu
 picker, 0.5 today in Python and the web, and the web's disabled menu items, 0.4); `control.notApplicable` 0.4;
@@ -139,8 +139,10 @@ The type inventory (style guide S4) is separate work, not part of #32; only F7 t
 | 58 | The peak's range mark | a ✓ for a classified peak; an orange `exclamationmark.triangle` for one outside its mode's range (`CombinedPeakModeRowView.swift`) — never shown: a peak is classified only inside its mode's range, and the mark follows the automatic mode, not an assigned one | the same, the ⚠ as text | the same, the ⚠ as text | **done** — step 8, checked by the owner 2026-10-21: Swift `e17603e`, Python `5cd3010`, web `6fd19f6`. Decided (owner, 2026-10-21) — the ⚠ branch removed in every edition, the mark simply the ✓ for a classified peak; the `peak.outOfRange` role removed |
 | 59 | Quick Start: the shortcuts, the plate-and-brace note, the layout | Apple's symbols (⌘⌥O, ⇧⌘E, ⇧ ⌥ ⌘/⌃ Scroll); the note its own plain paragraph (`HelpView.swift`) | "Ctrl+…" on every platform, three lines with both forms, "Cmd/Ctrl+Scroll"; the note run on and its first sentence bold (`help_view.py`) | no menu shortcuts; the note as Swift's | **done** — step 8, checked by the owner 2026-10-21: Python `5cd3010`, web `6fd19f6`. Decided (owner, 2026-10-21) — keys by platform, as F8's chart help: Apple's symbols on macOS, "Ctrl / Alt / Shift" on Windows and Linux; the Quick-Start PDF, one build for every desktop platform, both forms as the user manual writes them ("⌘⌥O on macOS; Ctrl+Alt+O on Windows / Linux"); the note as Swift's; the web's "Reading the Results" Swift's bullet list, and its Pause / Resume, Cancel / Redo and Compare entries Swift's paragraph breaks |
 | 60 | Settings crashed on opening on an iPhone | `body`'s type nested 51 levels (its sections from level 25); decoding it overflowed the main thread's stack — about 1 MB on an iPhone, 8 MB on the Mac and in the simulators, so no test run could see it (`EXC_BAD_ACCESS`, `TapSettingsView.swift`). Saved Measurements at 41 | — | — | **done** — step 9: Swift `e45aa6f`, Settings checked on the iPhone by the owner 2026-10-21. Decided (owner, 2026-10-21) — each Settings section and the Saved Measurements list behind `AnyView`, which ends its type there (Settings 27 levels, Saved Measurements 29); `ViewTypeDepthTests` fails above 36 and failed at 51 before the fix |
-| 61 | Edit Measurement in iPhone landscape | the form in a sidebar column with the rest empty: the sheet's `NavigationView` split; the sheets presented from the main window inherited its `.navigationViewStyle(.stack)`, Edit (presented from Saved Measurements) did not | — | — | **done** — step 9: Swift `e45aa6f`. Decided (owner, 2026-10-21) — `NavigationStack` for every sheet and the main window, which never splits |
+| 61 | Edit Measurement in iPhone landscape | the form in a sidebar column with the rest empty: the sheet's `NavigationView` split; the sheets presented from the main window inherited its `.navigationViewStyle(.stack)`, Edit (presented from Saved Measurements) did not | — | — | **done** — step 9: Swift `e45aa6f`, checked on the iPhone by the owner 2026-10-21. Decided (owner, 2026-10-21) — `NavigationStack` for every sheet and the main window, which never splits |
 | 62 | View Details on iOS: no Done | the sheet had no navigation container, so its title and Done (toolbar items) were not shown | — | — | **done** — step 9: Swift `e45aa6f`, checked on the iPhone by the owner 2026-10-21. Decided (owner, 2026-10-21) — the sheet in a `NavigationStack`, as every other |
+| 63 | "⚠" on Windows | — | a colour emoji: Qt ignores U+FE0E, and Segoe UI has no ⚠, so Qt fell back to the colour Segoe UI Emoji | — | **done** — step 9: Python `225e72e`, checked on Windows by the owner 2026-10-21. Decided (owner, 2026-10-21) — on Windows, Segoe UI Symbol (a single-colour ⚠) listed after the app font, so it is found first |
+| 64 | Saved Measurements: a clicked row stayed highlighted on Linux | nothing shown on a click | the row passed its clicks to the list, which made it the current item; Cinnamon painted that in its green highlight | — | **done** — step 9: Python `bef9fdd`, checked on Linux by the owner 2026-10-21. Decided (owner, 2026-10-21) — a row keeps its left clicks; the list takes no focus |
 
 ## Decisions
 
@@ -193,7 +195,7 @@ The type inventory (style guide S4) is separate work, not part of #32; only F7 t
 - **57** — decided (owner, 2026-10-21): as written in the item.
 - **58** — decided (owner, 2026-10-21): as written in the item.
 - **59** — decided (owner, 2026-10-21): as written in the item.
-- **60–62** — decided (owner, 2026-10-21): as written in each item; found in step 9's run-review.
+- **60–64** — decided (owner, 2026-10-21): as written in each item; found in step 9's run-review.
 - **41–56** — decided (owner, 2026-10-20): as written in each item. No shared test for surfaces: what a surface does is painting, checked on screen; the source checks refuse literal colours.
 - **Colour items** — decided (owner, 2026-10-20): where Swift names a role and another edition does not (2, 3, 4, 6,
   8, 9, 10, 14, 38), the others follow Swift; the items under a style-guide rule (1, 5, 15, 19–23, 26, 31–33, 39, 40)
@@ -281,32 +283,47 @@ Step 9 — regressions, where a later step reached back into earlier work (macOS
 1. Python: right-click the chart and move down the menu. → Each item's icon turns white with its highlight and back
    as the highlight leaves; a disabled item's icon is grey with its text (step 6's menu icons, drawn since step 8
    through `palette.icon`).
+   *Passed 2026-10-21.*
 2. Python: with no measurement taken. → Save, Export Spectrum and Export PDF are dimmed whole, icon and text alike
    (step 4's dimmed icons, drawn since step 8 through `palette.icon`).
+   *Passed 2026-10-21.*
 3. Python: Settings → the microphone picker. → Its ⌃⌄ chevron shows at the right, in the text's colour (the picker's
    chevron, drawn since step 8 through `palette.icon`).
+   *Passed 2026-10-21.*
 4. Python: Help → Quick Start Guide. → Every section heading and control row shows its icon (the help's icons,
    drawn since step 8 through `palette.icon`).
+   *Passed 2026-10-21.*
 5. Python and the web: New Tap, then watch the tap-controls bar through a tap. → New Tap blue and filled, then
    dimmed; Pause and Cancel tinted and then enabled, as Swift's — readable on the bar's grey in both light and dark
    (step 3's buttons on step 7's bar).
+   *Passed 2026-10-21.*
 6. Swift (macOS, iPad, iPhone): a full guitar measurement, Save, then Saved Measurements. → Nothing looks different
    from the step reviews: the bar, the buttons, the Edit sheet's title, the empty state once the list is emptied.
+   *Passed 2026-10-21, with items 60–62's fixes on the iPhone.*
 
 Step 9 — Python on Windows and Linux (from source, light and dark where the system offers both):
 
 1. Help → Quick Start Guide → Menu Bar. → Every shortcut written "Ctrl+…", "Alt", "Shift", F1 for the guide; no ⌘
    anywhere.
+   *Passed 2026-10-21, on Windows and Linux.*
 2. Help → Quick Start Guide → Play Audio File's plate-and-brace note. → Its ⚠ a plain outline in the text's colour,
    not a yellow or orange emoji.
+   *Passed 2026-10-21, on Windows and Linux.*
 3. A sound loud enough that the Threshold meter's right end turns red. → "⚠ Input clipping — reduce mic gain" at the
    right of the status bar, the ⚠ plain as in check 2.
+   *Passed 2026-10-21, on Windows and Linux.*
 4. The chart's ⓘ. → Scroll and drag lines, and "Ctrl + Scroll" for zooming both axes; no pinch lines.
+   *Passed 2026-10-21, on Windows and Linux.*
 5. Assign a peak to Ring Mode. → A dashed circle as its icon (the app's own icon, drawn from SVG).
+   *Passed 2026-10-21, on Windows and Linux.*
 6. Save Measurement: type a name, press Enter; open it again and press Esc. → Enter saves; Esc cancels; the dialog's
    buttons are the system's own (S1b).
+   *Passed 2026-10-21, on Windows and Linux.*
 7. Right-click the chart. → The system's menu; each item's icon follows its highlight, as check 1 above.
+   *Passed 2026-10-21, on Windows and Linux.*
 8. Saved Measurements with a few rows. → The scroll bar is the system's, not an outline; with no measurements, the
    inbox icon, title and message centred.
+   *Passed 2026-10-21, on Windows and Linux.*
 9. Switch the system between light and dark with the app open. → The app follows: window, panels, tap-controls bar,
    Quick Start.
+   *Passed 2026-10-21, on Windows and Linux.*
