@@ -252,17 +252,133 @@ Each step is a commit in each edition it touches, then the hub with the hashes.
    `frozen-peak-recalc`, the one existing case using `liveAudio`, passes in all three. Full suites at those commits:
    Swift (macOS) 295 tests and 1 XCTest, 4 known issues (T15–T17); Python 1561 passed, 1 skipped, 3 xfailed; the web
    1423 passed, 1 skipped, lint and typecheck clean.
-2. **Swift**: the one hop and `processAudioFrame`; delete what goes; the synchronous test helpers (`runAnalyzerStep`,
-   `advanceAudio`) call `processAudioFrame`, as the app does. Unit tests, file-playback regression, capture
-   alignment (`GuitarCaptureWindowTests`), the export UI tests.
-3. **Python**: the same, through one queued signal; the processing thread and the file-playback thread both hand
-   chunks to it. The same test set, and `TestPipelineDeliversOnceAndExact` updated for the one hop.
+2. **Swift**: the one hop and `processAudioFrame`; delete what goes. Done: Swift `68ad541`, with the findings below. The audio queue keeps each chunk's level, clipping, dead-input
+   stamp and audio time, and hands the chunk to the main thread once (`RealtimeFFTAnalyzer.handOver`, carrying
+   `(samples, levelDB, audioTime)`); there, in order, the FFT's input and the FFT (`takeChunk`), then
+   `TapToneAnalyzer.processAudioFrame`: the pre-roll, the session recording and the capture filling — a filled
+   capture finished there and then — then the clock, due actions and detection (`onChunkLevel`). A chunk from a
+   source since replaced (mic chunks queued when a file starts, a stopped file's) is dropped by its playback
+   generation; on the main thread itself a chunk is taken at once, so a pump or a test run there keeps its order.
+   The end-of-file partial FFT frame is flushed on the main thread, ahead of the capture flush. Gone: the
+   fast-start (`levelCrossingHandler`, `levelCrossingArmed`, `levelCrossingThreshold`, the confirmation counter,
+   `previousLevelDB`, their arming in `detectionState` and syncing in `tapDetectionThreshold`), the deferred
+   pre-roll (`pendingLevelCrossingPreRoll`, the file re-arm), `lastLevelCrossingCaptureID`, `mpmLock`,
+   `bufferAccessQueue`, `rawSampleHandler`, `rmsLevelHandler`. `startGatedCapture` / `startGuitarGatedCapture` /
+   `accumulateGatedSamples` are the web's: a capture already filling absorbs the tap; the window seeds from the
+   pre-roll. `levelCrossingConfirmationChunks` stays, the detector's confirmation.
+
+   Test changes: `AudioChunkingTests` listens on `audioFrameHandler` (the hooks it used are gone; its assertions
+   unchanged); `TapDetectionTests` back to its plain form, T15–T17 passing. Results: the unit suite (macOS) 295
+   tests in 90 suites, no known issues — file playback, capture alignment, self-regression included; the export UI
+   tests 20 exports checked, 0 failing.
+3. **Python**: the same, through one queued signal. Done: Python `06a13db`, with the findings below; the web's
+   share of the findings `ea42687`. The processing thread and the
+   file-playback thread keep each chunk's level, clipping, peak hold and audio time, and hand the chunk to the main
+   thread once (`RealtimeFFTAnalyzer.hand_over`, the processing thread object's queued `chunkHandedOver`, carrying
+   `(samples, level_db, audio_time, playback generation)`); there, in order, the FFT's input and the FFT
+   (`take_chunk`), then `TapToneAnalyzer.process_audio_frame` — the pre-roll, the session recording and the capture
+   filling, a filled capture finished there and then — then the clock, due actions and detection
+   (`_on_chunk_level`). Stale chunks are dropped by their playback generation; on the main thread a chunk is taken
+   at once. The end-of-file partial FFT frame is flushed in the main-thread end step, ahead of the capture flush.
+   Gone: the fast-start (`_level_crossing_handler` and its state on the mic, the arming in `detection_state`, the
+   sync in `tap_detection_threshold`), the deferred pre-roll and the `"_deferred_"` phase sentinel,
+   `_last_level_crossing_capture_id`, `_gated_lock`, `raw_sample_handler`, `rms_level_handler`, `_rmsLevelOnMain`
+   and `gatedCaptureComplete` (a capture is finished where it fills, and the safety timeouts finish theirs
+   directly, as Swift's). The post-engine-stop step clears the pre-roll only, as Swift's.
+
+   Test changes: `test_tap_detection.py` without the known-failure marks (T15–T17 pass) and its delivery tests'
+   docstrings naming the new hand-over; `analyzer_steps.py`'s `liveAudio` note. Results: the full suite 1564
+   passed, 1 skipped (the capture probe, off) — file playback, self-regression and the peak fixtures included.
+
+   **Finding, found testing step 2 (owner, 2026-10-22): New Tap left disabled after a microphone change.** With all
+   three apps sharing the input, a microphone change in Swift ended with the measurement complete, the status dot
+   green and New Tap disabled for good, though audio kept coming. The device change starts a settle that disables
+   New Tap and ends after 3 s of audio and the next frame; at its due time it checked that the engine was running
+   and, if not, gave up — for good. A start that fails after a device switch (more likely with the input shared:
+   the console's `-10877` and `HALC … error 35`) is retried with a stop and a start, and the settle falling due
+   between them was never scheduled again. The same in all three editions; not caused by this issue's change.
+   Fixed in all three (owner, 2026-10-22): a settle that falls due while the engine is stopped waits another 3 s of
+   audio, from the restarted engine, and checks again — on the audio clock, so with no audio it waits rather than
+   spins (Swift `scheduleRouteChangeSettleEnd`, Python's `_settled`, the web's `settled`). Shared case N22 in
+   `notification.json` (a new shared step, `engineRunning`, stops and starts the engine as a retry does): passes in
+   all three, and fails in all three with the old guard.
+
+   **Finding, found in the macOS run-review (owner, 2026-10-22): grid lines drawn over the labels in Python.** The
+   spectrum's grid showed through the peak annotations' labels and leaders. pyqtgraph draws the grid with the axes
+   (z 0.5), above the plot's view box (z −100) and so above everything plotted in it. Not caused by this issue's
+   change. Fixed (owner, 2026-10-22): the axes are placed beneath the view box, on the live spectrum
+   (`views/fft_canvas.py`) and the exported chart (`views/exportable_spectrum_chart.py`), so the grid is beneath the
+   curves and the annotations, as in Swift; verified on screen (owner, 2026-10-22). The export images change with
+   it: checked in step 4.
+
+   **Finding, found in the macOS run-review (owner, 2026-10-22): Settings slow to open in Swift, and the calibration
+   not shown as selected.** In a Debug build, Settings took about 2 s to open, and the calibration picker did not
+   show the calibration just chosen. Opening Settings applied the selected calibration again, and every applying
+   recomputed the corrections for all 32,768 bins, each by a linear search of the calibration's points: about 1 s
+   unoptimised (6 ms optimised). Not caused by this issue's change. Fixed (owner, 2026-10-22): the picker and the
+   engine apply a calibration only when it differs from the one active (`TapSettingsView+Sections.swift`,
+   `RealtimeFFTAnalyzer.activeCalibration`); the corrections are one pass over the ascending bins and the points
+   together (`MicrophoneCalibration.corrections(for:)`, 3.8 ms unoptimised, 0.07 ms optimised), any other order
+   falling back to `correction(at:)` per frequency. The three editions computed the corrections three ways — Swift
+   the linear search, the web a binary search per bin, Python `np.interp`; now one (owner, 2026-10-22): the web's
+   `interpolateToBins` is the same one pass, with `correctionAt` as its fallback; Python keeps `np.interp`, which is
+   that pass inside numpy (as a Python loop it is 27 times slower), and gains `correction_at`. A new test in all three
+   (Swift `correctionsForAllBins_areEachBinsCorrection`, Python `test_corrections_for_all_bins_are_each_bins_correction`,
+   the web's in `calibration.test.ts`): the corrections for all bins at once are each bin's own, exactly, at 48 kHz and
+   44.1 kHz and for unsorted frequencies; the shared CAL1–CAL3 unchanged and passing. Settings opens at once in a
+   Debug build, the calibration shown as selected: verified (owner, 2026-10-22).
+
 4. **Verification**:
    - the full suites in all three editions (on the owner's go);
    - the export and self-regression baselines — any shift listed with its cause before anything is re-minted;
    - **Python's display under load measured**: the live spectrum's frame interval and the main thread's per-chunk
-     time while a tap sequence runs, before and after;
+     time while a tap sequence runs, before and after. Done (Mac, 2026-10-22, the slack probe; after: the real window
+     offscreen, files played as Play File plays them; the start-up window left out):
+
+     | Python, Mac | Lag p99 | Lag max | Latency p95 | Main busy | FFT |
+     |---|---|---|---|---|---|
+     | before — #35 item 3, tapping, the FFT's cost simulated on main | 13–28 ms | 65–408 ms | 2–142 ms | 1–8 % | ~10 ms |
+     | after — guitar, `5 tap test.wav` | 5–9 ms | 14–30 ms | 0.3–0.6 ms | 1.1–1.3 % | 9–11 ms, on main |
+     | after — plate, `plate-umik-1-swift-mac-1778816330.wav` | 6–13 ms | 21–212 ms | 0.5–1.1 ms | 1.4–2.4 % | 9–12 ms, on main |
+
+     The live spectrum's frame interval is unchanged, 1.6 s; the chunk on which a capture finishes holds the main
+     thread 23–35 ms at most. The before is a live microphone, the after file playback: the same conclusion, not
+     the same conditions;
    - a run-review by platform, the physical iPhone and iPad included (a capture on a real tap; the warm-up and
      clipping cases that produced this issue; file playback of each type).
 5. **Close-out**: comments and docs that describe the old mechanism (the fast-start in DocC, docstrings, the
    INVENTORY), the record, the Issue.
+
+## Run-review
+
+Steps 2 and 3 and the findings' fixes, on a fresh build of each edition: Swift on macOS, the iPhone and the iPad;
+Python on macOS, Windows and Linux; the web (its settle and calibration fixes) on macOS. Threshold at its default
+(−40 dB) unless a step says otherwise.
+
+Steps 1 and 2 are on macOS only (owner, 2026-10-22): elsewhere a sound within half a second of New Tap is hard to
+make by hand — on the iPad, lifting the finger from the button takes most of it (the log and session recordings of
+four tries: one tap within the warm-up, ignored; three at 0.62–0.78 s, past it, captured). The shared cases T15–T17
+check the warm-up on every platform, through each edition's microphone path, in the suites.
+
+| Platform | Result |
+|---|---|
+| macOS — Swift, Python, the web | passed, steps 1–8 (owner, 2026-10-22) |
+| iPhone, iPad — Swift | passed, steps 3–8 (owner, 2026-10-22) |
+| Windows, Linux — Python | to do |
+
+1. macOS — Swift, Python, the web: Brace, Taps 1, New Tap, and within half a second make a sharp sound (a tap on
+   the bench, a clap). → Nothing is captured; the status dot stays green, the message reads as listening, Pause
+   stays enabled. A real tap on the brace after that is captured and completes the measurement.
+2. macOS — Swift, Python, the web: the same, with a clipping tap (hard enough for the clipping warning) straight
+   after New Tap. → As step 1: nothing captured until a real tap after the warm-up.
+3. Brace, Taps 1, New Tap, wait a second, then tap the brace once. → One capture; the measurement completes; the
+   dot is no longer green, Pause is disabled.
+4. Plate, measuring fLC on, New Tap, then the three phases with a real tap each, accepting each. → fL, fC and fLC
+   captured from their own taps; results as before this change.
+5. Guitar, Taps 3, New Tap, three taps on the top. → Three captures, the averaged result; afterwards the dot is no
+   longer green and Pause is disabled.
+6. Guitar, Taps 1: tap hard enough to clip. → The clipping warning shows; the tap is captured and the measurement
+   completes.
+7. Play File: `5 tap test.wav` as a guitar, then a plate recording, then a brace recording. → Each plays through to
+   its results, as before this change; the plate's three phases advance by themselves.
+8. While a guitar sequence listens, open Settings and close it, then tap. → The tap is captured as usual.
