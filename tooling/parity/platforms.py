@@ -38,7 +38,7 @@ class Platform:
     canonical: bool = False        # Swift is the reference the others mirror
     doc_root: str = ""             # subdirectory doc_coverage.py scans, "" = repo root
     fixtures: str = ""             # where this edition keeps the shared test fixtures
-    code_dirs: tuple[str, ...] = ()  # model/state/audio/dsp directories whose every file is in a group or `@parity none`
+    code_dirs: tuple[str, ...] = ()  # source directories whose every file is in a group or `@parity none`
     test_dirs: tuple[str, ...] = ()  # test directories whose every file is in a group or `@parity none`
 
     @property
@@ -56,14 +56,14 @@ class Platform:
 PLATFORMS: tuple[Platform, ...] = (
     Platform("swift", "Swift", "GuitarTap", "PARITY_SWIFT", frozenset({".swift", ".py"}),
              "docc", "swift", canonical=True, fixtures="GuitarTapTests",
-             code_dirs=("GuitarTap/Models",), test_dirs=("GuitarTapTests", "GuitarTapUITests")),
+             code_dirs=("GuitarTap",), test_dirs=("GuitarTapTests", "GuitarTapUITests")),
     Platform("python", "Python", "guitar_tap", "PARITY_PYTHON", frozenset({".py"}),
              "docstring", "python", fixtures="tests",
-             code_dirs=("src/guitar_tap/models",), test_dirs=("tests",)),
+             code_dirs=("src/guitar_tap",), test_dirs=("tests",)),
     Platform("web", "Web", "GuitarTapWeb", "PARITY_WEB",
              frozenset({".ts", ".tsx", ".js", ".css"}), "tsdoc", "web", doc_root="src",
              fixtures="test/fixtures",
-             code_dirs=("src/state", "src/audio", "src/measurement", "src/dsp"), test_dirs=("test", "e2e")),
+             code_dirs=("src",), test_dirs=("test", "e2e")),
     # Declared ahead of its first tagged file — see "Active vs declared" above.
     Platform("android", "Android", "GuitarTapAndroid", "PARITY_ANDROID",
              frozenset({".kt", ".kts"}), "kdoc", "android",

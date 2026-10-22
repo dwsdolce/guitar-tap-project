@@ -2,7 +2,7 @@
 
 **Issue:** [#38](https://github.com/dwsdolce/guitar-tap-project/issues/38)
 
-Status: **OPEN — plan written; measuring the slack on every edition and platform before the decisions.**
+Status: **OPEN — plan written; decided: one per-chunk sequence on the main thread in every edition, the FFT included; waits on #35, then Python's measurements.**
 
 Swift and Python run tap detection on a different thread from the audio it judges. The web takes every chunk in
 order on one thread. The difference is the source of a recurring class of bugs in Swift and Python; this issue
@@ -88,6 +88,11 @@ a Mac and 15 ms on a slow iPhone: about 1 % of the main thread, and a single pau
 - **After #32** (owner, 2026-10-21).
 - **No interim fix** (owner, 2026-10-21). Counting only captures the detector confirmed would stop the defect, but
   it would be a Swift-and-Python-only change this issue deletes; the defect stands until this issue lands.
+- **One per-chunk sequence on the main thread in every edition, the FFT included — exactly as on the web** (owner,
+  2026-10-21), from the measurements under "Measuring the slack": the slowest Apple device measured, the iPad mini 5, has the room. Python's
+  own measurements confirm it for Python once #35 is done — today its main thread rebuilds the peak list and labels
+  on every FFT frame (about 115 ms), which hides everything else.
+- **#35 first** (owner, 2026-10-21).
 
 ## The target: one per-chunk sequence
 
@@ -101,9 +106,9 @@ thread, for each chunk, in this order:
    `handleTapDetection`, which sets detection idle and opens the capture from the pre-roll. The pre-roll already holds
    this chunk, so the capture lines up with the tap by construction.
 
-Swift and Python keep their audio thread for what is heavy or must not wait — taking delivery, cutting 1,024-sample
-chunks, the level, clipping, the dead-input stamp, and (see decision 1) the FFT — and hand each chunk to the main
-thread in **one hop** carrying `(samples, levelDB, audioTime)`. The main thread runs the sequence above. Order replaces
+Swift and Python keep their audio thread for what must not wait — taking delivery, cutting 1,024-sample chunks, the
+level, clipping, the dead-input stamp — and hand each chunk to the main thread in **one hop** carrying
+`(samples, levelDB, audioTime)`. The FFT runs in the sequence on the main thread, as on the web (decided below). The main thread runs the sequence above. Order replaces
 timing: the main queue (Swift) and the queued signal (Python) deliver chunks in order, so nothing can start a capture
 the detector did not confirm, and a capture can never fall out of step with detection.
 
@@ -170,6 +175,56 @@ Debug, since the Debug build's timings are slower.
 main busy ~0 %. Python — FFT 9–17 ms, but **the main thread's work on each FFT frame 128–145 ms**, lag max 230 ms,
 latency p95 120–130 ms, main busy 6–11 %: Python's main thread already falls a few chunks behind at every frame.
 
+**Mac runs, Swift and the web (2026-10-21).** Four scenarios of 30 s each — idle listening, a guitar file played through
+to its results, New Tap then zoom and pan over the chart, Saved Measurements open — driven by a temporary UI test
+(Swift, Debug build) and a temporary Playwright script (the web, a visible Chromium window); the live microphone in
+both. Per phase: the median of the 5 s windows' 99th-percentile lag and its worst case; the same for the latency's
+95th percentile; the main thread's busy share from the probed work; the FFT's time.
+
+| Edition | Phase | Lag p99 (median / worst), ms | Latency p95 (median / worst), ms | Main busy | FFT, ms |
+|---|---|---|---|---|---|
+| Swift | idle | 7 / 540 | 0.1 / 150 | 0.2 % | 17 |
+| Swift | playback | 10 / 985 | 7 / 975 | 0.1 % | 15 |
+| Swift | zoom and pan | **145 / 267** | **172 / 252** | 0.1 % | 12 |
+| Swift | Saved Measurements | 7 / 355 | 13 / 350 | 0.1 % | 18 |
+| Swift, FFT's cost on main | idle | 8 / 480 | 9 / 95 | 2.7 % | 18 |
+| Swift, FFT's cost on main | playback | 11 / 906 | 19 / 841 | 2.4 % | 15 |
+| Swift, FFT's cost on main | zoom and pan | 131 / 334 | 157 / 252 | 1.6 % | 10 |
+| Swift, FFT's cost on main | Saved Measurements | 8 / 494 | 85 / 466 | 2.5 % | 16 |
+| Web | idle | 4 / 289 | 2.7 / 269 | 0.3 % | 7 |
+| Web | playback | 3.5 / 50 | 2.7 / 45 | 0.3 % | 6.5 |
+| Web | zoom and pan | 3.6 / 18 | 2.7 / 8 | 0.3 % | 5 |
+| Web | Saved Measurements | 4 / 10.5 | 2.7 / 2.7 | 0.3 % | 6 |
+
+What they say:
+
+- **The per-chunk work is negligible everywhere it was measured**: Swift's main-thread chunk work and capture filling
+  under 0.2 %, the web's (all of it on its main thread) 0.3 %.
+- **The FFT on Swift's main thread costs about 2.5 % and leaves the typical lag unchanged** (p99 7–11 ms either way).
+- **Swift's main thread stalls for other reasons**: 130–330 ms through zoom and pan, and single stalls of 0.4–1 s as a
+  phase begins (a sheet or the open panel appearing). They come from drawing, not from the probed work, and they are
+  there whether or not anything moves. Under the one-sequence design a stall delays chunks — they wait in order and
+  are taken after it — but cannot reorder them, so a capture still lines up with its tap. Part of the zoom-and-pan
+  cost may be the UI test's own (each scroll it sends makes the app answer accessibility queries): to be repeated by
+  hand, and on a Release build.
+- **The web has slack to spare**: lag p99 about 4 ms, latency one render quantum (2.7 ms), its FFT 5–7 ms.
+
+**By hand, Release builds (2026-10-21).** Swift on the Mac: zoom and pan holds the main thread 100–200 ms at a time
+(lag p99 167–204 ms, latency p95 111–162 ms) with the probed work at 0.0 % — the chart's drawing, for #31, not this
+issue; the FFT about 1 ms (the Debug build's 15–17 ms is the Debug build). Zoom and pan is not done while taps are
+captured (owner), so it does not decide this issue; what does is listening, a tap sequence, a plate's phases and a
+completion. On those:
+
+| Device | Per-chunk main work avg / worst | Capture filling worst | FFT | Main busy | Lag p99 / worst | Latency p95 / worst |
+|---|---|---|---|---|---|---|
+| iPad Pro 13" (M5) | 0.01–0.05 / 2.6–5.5 ms | 2 ms | 0.5–1 ms | 0.0–0.2 % | 10–18 / 95–152 ms | 3–27 / 417 ms |
+| iPad mini 5 (A12) | 0.02–0.21 / 6–11 ms | 8 ms | 1.4–4.3 ms | 0.1–1.0 % | 22–61 / 105–455 ms | 59–234 / 440 ms |
+
+The worst per-chunk work, on the slowest device, fits inside the 21.3 ms between chunks; the FFT on the main thread would
+add about 0.3 % of it. The long holds — up to 440 ms on the A12 — are drawing, and they hold detection today as well;
+in one sequence they delay a capture's chunks but cannot reorder them, so a slow device makes the screen later, not
+the measurement wrong.
+
 ## Steps
 
 Each step is a commit in each edition it touches, then the hub with the hashes.
@@ -193,11 +248,3 @@ Each step is a commit in each edition it touches, then the hub with the hashes.
      clipping cases that produced this issue; file playback of each type).
 5. **Close-out**: comments and docs that describe the old mechanism (the fast-start in DocC, docstrings, the
    INVENTORY), the record, the Issue.
-
-## Decisions to take
-
-1. **Where the FFT runs.** The web runs it on its one thread; Swift and Python could keep it on the audio thread and
-   publish its frame as today. What this issue fixes is detection and capture in one sequence; the FFT feeds the
-   display and the frame-based analysis, and nothing in the defect depends on where it runs. Keeping it off the main
-   thread spares Python's busier main thread its ~10 ms every 1.37 s.
-2. **The order of Swift and Python** — one after the other with a run-review between, or both before one.

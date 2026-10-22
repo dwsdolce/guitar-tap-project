@@ -1,6 +1,21 @@
 {
   "groups": [
     {
+      "slug": "app/entry",
+      "swift": [
+        "GuitarTap/GuitarTapApp.swift"
+      ],
+      "python": [
+        "src/guitar_tap/__main__.py"
+      ],
+      "web": [
+        "src/index.css",
+        "src/main.tsx"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "audio/buffer-watchdog",
       "swift": [
         "GuitarTap/Models/RealtimeFFTAnalyzer+Watchdog.swift"
@@ -116,6 +131,20 @@
         "test/tap-progress"
       ],
       "equivalence": "tests"
+    },
+    {
+      "slug": "diagnostics/slack-probe",
+      "swift": [
+        "GuitarTap/Utilities/SlackProbe.swift"
+      ],
+      "python": [
+        "src/guitar_tap/utilities/slack_probe.py"
+      ],
+      "web": [
+        "src/diagnostics/slackProbe.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
     },
     {
       "slug": "dsp/analysis-quality",
@@ -522,7 +551,8 @@
       ],
       "python": [
         "src/guitar_tap/models/spectrum_snapshot.py",
-        "src/guitar_tap/models/tap_tone_measurement.py"
+        "src/guitar_tap/models/tap_tone_measurement.py",
+        "src/guitar_tap/utilities/json_float.py"
       ],
       "web": [
         "src/measurement/base64.ts",
@@ -732,7 +762,8 @@
         "GuitarTap/Models/TapDisplaySettings.swift"
       ],
       "python": [
-        "src/guitar_tap/models/tap_display_settings.py"
+        "src/guitar_tap/models/tap_display_settings.py",
+        "src/guitar_tap/views/utilities/tap_settings_view.py"
       ],
       "web": [
         "src/settings.ts",
@@ -1595,6 +1626,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/snap-interpolation",
+      "swift": [
+        "GuitarTapTests/SnapInterpolationTests.swift"
+      ],
+      "python": [
+        "tests/test_snap_interpolation.py"
+      ],
+      "web": [
+        "test/snap-interpolation.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/spectrum-export",
       "swift": [
         "GuitarTapTests/SpectrumExportTests.swift"
@@ -1892,6 +1937,20 @@
       "equivalence": "review only"
     },
     {
+      "slug": "util/date-display",
+      "swift": [
+        "GuitarTap/Utilities/DateDisplay.swift"
+      ],
+      "python": [
+        "src/guitar_tap/utilities/date_format.py"
+      ],
+      "web": [
+        "src/format/date.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "util/field-precision",
       "swift": [
         "GuitarTap/Models/FieldPrecision.swift"
@@ -1906,6 +1965,18 @@
         "test/field-precision"
       ],
       "equivalence": "tests"
+    },
+    {
+      "slug": "util/logging",
+      "swift": [
+        "GuitarTap/Utilities/Logging.swift"
+      ],
+      "python": [
+        "src/guitar_tap/utilities/logging.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "review only"
     },
     {
       "slug": "util/new-id",
@@ -2104,6 +2175,20 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/empty-state",
+      "swift": [
+        "GuitarTap/Views/Shared/EmptyStateView.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/shared/empty_state_view.py"
+      ],
+      "web": [
+        "src/components/EmptyStateView.tsx"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "view/file-exporter",
       "swift": [
         "GuitarTap/Views/Utilities/MeasurementFileExporter.swift"
@@ -2111,7 +2196,9 @@
       "python": [
         "src/guitar_tap/views/utilities/measurement_file_exporter.py"
       ],
-      "web": [],
+      "web": [
+        "src/saveFile.ts"
+      ],
       "tests": [
         "test/export-directory"
       ],
@@ -2150,6 +2237,7 @@
     {
       "slug": "view/help",
       "swift": [
+        "GuitarTap/Utilities/DocumentationLinks.swift",
         "GuitarTap/Views/HelpView.swift"
       ],
       "python": [
@@ -2162,15 +2250,39 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/icons",
+      "swift": [],
+      "python": [
+        "src/guitar_tap/views/utilities/custom_icons.py"
+      ],
+      "web": [
+        "src/components/customIcons.ts",
+        "src/components/icons.tsx",
+        "src/components/mdiPaths.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "view/main",
       "swift": [
+        "GuitarTap/Views/TapToneAnalysisView+Actions.swift",
+        "GuitarTap/Views/TapToneAnalysisView+Controls.swift",
+        "GuitarTap/Views/TapToneAnalysisView+Export.swift",
+        "GuitarTap/Views/TapToneAnalysisView+Layouts.swift",
         "GuitarTap/Views/TapToneAnalysisView.swift"
       ],
       "python": [
-        "src/guitar_tap/views/tap_tone_analysis_view.py"
+        "src/guitar_tap/views/tap_tone_analysis_view.py",
+        "src/guitar_tap/views/tap_tone_analysis_view_actions.py",
+        "src/guitar_tap/views/tap_tone_analysis_view_controls.py",
+        "src/guitar_tap/views/tap_tone_analysis_view_export.py",
+        "src/guitar_tap/views/tap_tone_analysis_view_layouts.py"
       ],
       "web": [
-        "src/App.tsx"
+        "src/App.tsx",
+        "src/hooks/useAudioEngine.ts",
+        "src/hooks/useTapToneAnalyzer.ts"
       ],
       "tests": [],
       "equivalence": "review only"
@@ -2193,7 +2305,8 @@
         "GuitarTap/Views/TapToneAnalysisView+SpectrumViews.swift"
       ],
       "python": [
-        "src/guitar_tap/views/tap_tone_analysis_view.py"
+        "src/guitar_tap/views/tap_tone_analysis_view.py",
+        "src/guitar_tap/views/tap_tone_analysis_view_spectrum_views.py"
       ],
       "web": [
         "src/components/MaterialInstructionPanel.tsx"
@@ -2210,6 +2323,7 @@
         "src/guitar_tap/views/utilities/material_peak_role.py"
       ],
       "web": [
+        "src/components/MaterialPhaseBadge.tsx",
         "src/presentation/materialPeakRole.ts"
       ],
       "tests": [],
@@ -2254,7 +2368,20 @@
         "src/guitar_tap/views/measurements/measurements_list_view.py"
       ],
       "web": [
-        "src/components/MeasurementsPanel.tsx"
+        "src/components/MeasurementsPanel.tsx",
+        "src/components/menuPlacement.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "view/menu-picker",
+      "swift": [],
+      "python": [
+        "src/guitar_tap/views/utilities/menu_picker.py"
+      ],
+      "web": [
+        "src/components/MenuPicker.tsx"
       ],
       "tests": [],
       "equivalence": "review only"
@@ -2311,6 +2438,20 @@
       "equivalence": "tests"
     },
     {
+      "slug": "view/peak-annotations",
+      "swift": [
+        "GuitarTap/Views/PeakAnnotations.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/peak_annotations.py"
+      ],
+      "web": [
+        "src/presentation/spectrumRender.ts"
+      ],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
       "slug": "view/peak-card",
       "swift": [
         "GuitarTap/Views/Shared/CombinedPeakModeRowView.swift"
@@ -2320,6 +2461,7 @@
         "src/guitar_tap/views/shared/peak_card_widget.py"
       ],
       "web": [
+        "src/components/CustomLabelDialog.tsx",
         "src/components/PeakCard.tsx"
       ],
       "tests": [],
@@ -2334,6 +2476,32 @@
         "src/guitar_tap/views/plate_body_dimensions_editor.py"
       ],
       "web": [],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "view/platform-adapters",
+      "swift": [
+        "GuitarTap/Views/Utilities/PlatformAdapters.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/utilities/platform_adapters.py"
+      ],
+      "web": [],
+      "tests": [],
+      "equivalence": "review only"
+    },
+    {
+      "slug": "view/play-file-sheet",
+      "swift": [
+        "GuitarTap/Views/PlayFileSheet.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/tap_tone_analysis_view.py"
+      ],
+      "web": [
+        "src/components/PlayFileSheet.tsx"
+      ],
       "tests": [],
       "equivalence": "review only"
     },
@@ -2354,10 +2522,16 @@
     {
       "slug": "view/settings",
       "swift": [
+        "GuitarTap/Views/Utilities/TapSettingsView+Actions.swift",
+        "GuitarTap/Views/Utilities/TapSettingsView+LayoutHelpers.swift",
+        "GuitarTap/Views/Utilities/TapSettingsView+Sections.swift",
         "GuitarTap/Views/Utilities/TapSettingsView.swift"
       ],
       "python": [
-        "src/guitar_tap/views/tap_tone_analysis_view.py"
+        "src/guitar_tap/views/tap_tone_analysis_view.py",
+        "src/guitar_tap/views/utilities/tap_settings_view_actions.py",
+        "src/guitar_tap/views/utilities/tap_settings_view_layout_helpers.py",
+        "src/guitar_tap/views/utilities/tap_settings_view_sections.py"
       ],
       "web": [
         "src/components/SettingsPanel.tsx"
@@ -2368,16 +2542,28 @@
     {
       "slug": "view/spectrum-chart",
       "swift": [
+        "GuitarTap/Views/Shared/ChartAxisTitle.swift",
+        "GuitarTap/Views/SpectrumView+ChartContent.swift",
+        "GuitarTap/Views/SpectrumView+SnapInterpolation.swift",
         "GuitarTap/Views/SpectrumView.swift"
       ],
       "python": [
-        "src/guitar_tap/views/fft_canvas.py"
+        "src/guitar_tap/views/fft_canvas.py",
+        "src/guitar_tap/views/spectrum_view.py",
+        "src/guitar_tap/views/spectrum_view_snap_interpolation.py",
+        "src/guitar_tap/views/utilities/magnitude_axis.py"
       ],
       "web": [
-        "src/components/SpectrumChart.tsx"
+        "src/components/SpectrumChart.tsx",
+        "src/hooks/useChartView.ts",
+        "src/presentation/chartTypes.ts",
+        "src/presentation/snapInterpolation.ts",
+        "src/presentation/spectrumRender.ts"
       ],
-      "tests": [],
-      "equivalence": "review only"
+      "tests": [
+        "test/snap-interpolation"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "view/spectrum-export",
@@ -2400,6 +2586,7 @@
       "slug": "view/spectrum-gestures",
       "swift": [
         "GuitarTap/Views/ScrollInput.swift",
+        "GuitarTap/Views/SpectrumScrollWheel.swift",
         "GuitarTap/Views/SpectrumView+GestureHandlers.swift"
       ],
       "python": [
@@ -2447,7 +2634,35 @@
     },
     {
       "repo": "python",
+      "path": "src/guitar_tap/_colour_guard.py"
+    },
+    {
+      "repo": "python",
+      "path": "src/guitar_tap/_release_guard.py"
+    },
+    {
+      "repo": "python",
+      "path": "src/guitar_tap/_version.py"
+    },
+    {
+      "repo": "python",
       "path": "src/guitar_tap/models/update_checker.py"
+    },
+    {
+      "repo": "python",
+      "path": "src/guitar_tap/named_mutex.py"
+    },
+    {
+      "repo": "python",
+      "path": "src/guitar_tap/views/shared/peaks_model.py"
+    },
+    {
+      "repo": "python",
+      "path": "src/guitar_tap/views/shared/value_stepper.py"
+    },
+    {
+      "repo": "python",
+      "path": "src/guitar_tap/views/utilities/view_update.py"
     },
     {
       "repo": "python",
@@ -2463,11 +2678,19 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_material_peak_list.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_peak_card_identity.py"
     },
     {
       "repo": "python",
       "path": "tests/test_qtimer_slots.py"
+    },
+    {
+      "repo": "python",
+      "path": "tests/test_results_update_in_place.py"
     },
     {
       "repo": "python",
@@ -2491,6 +2714,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_view_update.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_wasapi_raw_open.py"
     },
     {
@@ -2499,7 +2726,15 @@
     },
     {
       "repo": "swift",
+      "path": "GuitarTap/Views/Utilities/ResultsWindowPresenter.swift"
+    },
+    {
+      "repo": "swift",
       "path": "GuitarTap/Views/Utilities/SecondaryClickMenu.swift"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTap/Views/Utilities/SheetTitle.swift"
     },
     {
       "repo": "swift",
@@ -2518,12 +2753,20 @@
       "path": "GuitarTapTests/TestRunner.swift"
     },
     {
+      "repo": "swift",
+      "path": "GuitarTapTests/ViewTypeDepthTests.swift"
+    },
+    {
       "repo": "web",
       "path": "e2e/app.ts"
     },
     {
       "repo": "web",
       "path": "e2e/smoke.spec.ts"
+    },
+    {
+      "repo": "web",
+      "path": "src/components/AlertModal.tsx"
     },
     {
       "repo": "web",
