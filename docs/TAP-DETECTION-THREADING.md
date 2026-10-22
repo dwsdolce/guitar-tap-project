@@ -229,11 +229,29 @@ the measurement wrong.
 
 Each step is a commit in each edition it touches, then the hub with the hashes.
 
-1. **The defect as a shared case, first.** A shared case file (`tap-capture-sequence.json`, `test/tap-capture-sequence`)
-   driving each analyzer through its real per-chunk entry point: a crossing in the warm-up, a crossing below the
-   relative threshold (plate, brace), a real tap — each with the expected outcome (no capture / no capture / one
-   capture, detection idle on completion). The web passes it today; Swift and Python fail the first two. Linked
-   under the code's parity group.
+1. **The defect as a shared case, first.** Done (test code only): Swift `58093e8`, Python `40f9265`, web `a6c0ae8`. In `tap-decisions.json`
+   (`test/tap-decisions`), with the detector's other decisions (owner, 2026-10-22), three cases fed through the
+   microphone's path — `liveAudio`, which in Swift and Python now sends each chunk through the engine's per-chunk
+   processing (`processRawSamples` / `process_raw_samples`, the fast-start included), the engine queueing each
+   chunk's main-thread part as the app's does, the main thread taking the queue after the step; the web's was the
+   real path already (`processAudioFrame`):
+   - **T15** (brace) — a sound in the warm-up: no capture, the measurement not complete, detection listening;
+   - **T16** (plate) — with the floor at −45 dB, a sound at −38 (above the −40 Threshold, below the detector's
+     −35): no capture, still Capturing Longitudinal, detection listening;
+   - **T17** (brace) — a real tap after the warm-up: the measurement complete, detection idle.
+
+   The web passes all three. Swift and Python fail all three, marked as known (Swift `withKnownIssue`, Python strict
+   `xfail`) until steps 2 and 3: T15 completes on the room's noise, T16 moves to Reviewing Longitudinal, and T17 —
+   the main thread a capture window behind the audio, as a 400 ms hold on a slow device or in Python makes it —
+   completes with detection still armed: the fast-start's capture finishes before the detector sees the tap
+   (owner: keep T17 as a known failure, 2026-10-22). A new shared check, `complete`.
+
+   Test changes: the shared steps' `liveAudio` (Swift `AnalyzerSteps.swift`, Python `analyzer_steps.py`) as above;
+   Swift `TapDetectionTests.decision` async, to let the main queue run after a `liveAudio` step (as
+   `FrozenPeakRecalculationTests` already did); `complete` and the known failures in the three `tap-decisions` tests.
+   `frozen-peak-recalc`, the one existing case using `liveAudio`, passes in all three. Full suites at those commits:
+   Swift (macOS) 295 tests and 1 XCTest, 4 known issues (T15–T17); Python 1561 passed, 1 skipped, 3 xfailed; the web
+   1423 passed, 1 skipped, lint and typecheck clean.
 2. **Swift**: the one hop and `processAudioFrame`; delete what goes; the synchronous test helpers (`runAnalyzerStep`,
    `advanceAudio`) call `processAudioFrame`, as the app does. Unit tests, file-playback regression, capture
    alignment (`GuitarCaptureWindowTests`), the export UI tests.
