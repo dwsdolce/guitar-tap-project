@@ -462,9 +462,9 @@ Legend — Platform: **iOS** = iPhone, **iPadOS** = iPad, **mac** = macOS
 
 ### 2.7 Known constraints and workarounds
 
-**`RealtimeFFTAnalyzer` dealloc crash.** Fixed by capturing `[weak self]` in the two async
-closures in `stop()` (`bufferAccessQueue.async` and `DispatchQueue.main.async`). The full test
-suite now runs in ~5 s.
+**`RealtimeFFTAnalyzer` dealloc crash.** The async closures in `stop()` (the main-thread clear
+of the FFT's input and the main-thread state reset) capture `[weak self]`, so a test's analyzer
+can be freed before they run.
 
 **`TapDisplaySettings` shared state.** `TapDisplaySettings` is backed by `UserDefaults.standard`.
 Mitigations:

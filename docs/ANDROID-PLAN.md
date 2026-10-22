@@ -251,8 +251,8 @@ Most of this pays off for all editions, not just Android.
     chart ⋯ menu, per-phase material multi-tap, or the silent warm-up.
   - Fold in the later specs: FILE-PATHS-AND-NAMES, MEASUREMENT-DIMENSIONS, NUMERIC-PRECISION, THEME-SPEC,
     WEB-PDF-MATERIAL-LAYOUT, CALIBRATION-DEVICE-STATE, STATUS-STATE-MACHINE.
-  - Add the audio-contract detail the web port had to discover: the 200 ms pre-roll, fast-start vs fallback
-    seeding, onset alignment (`max(10× noise RMS, 0.001)`, back 32 samples, window starts 100 ms before),
+  - Add the audio-contract detail the web port had to discover: the 200 ms pre-roll, the capture
+    seeded from it, onset alignment (`max(10× noise RMS, 0.001)`, back 32 samples, window starts 100 ms before),
     the gated FFT (Hann, next power of two, cap 32768), the watchdog constants.
 - **`ANDROID-UI-GUIDELINES.md`:** the Android counterpart of [WEB-UI-GUIDELINES](../process/WEB-UI-GUIDELINES.md).
   - Swift view → composable map; window-size-class rules.

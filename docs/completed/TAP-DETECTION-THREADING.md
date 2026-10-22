@@ -2,7 +2,7 @@
 
 **Issue:** [#38](https://github.com/dwsdolce/guitar-tap-project/issues/38)
 
-Status: **OPEN — plan written; decided: one per-chunk sequence on the main thread in every edition, the FFT included. #35 is closed; Python's measurements (Mac) show it has the room — recorded in #35's item 3.**
+Status: ✅ **CLOSED 2026-10-22** — steps 1–5 done: Swift `58093e8`, `68ad541`, `1009a04`; Python `40f9265`, `06a13db`, `a4442f9`; web `a6c0ae8`, `ea42687`, `cf74495`. Tap detection and capture are one per-chunk sequence on the main thread in every edition, the FFT included; the fast-start is gone. Three findings fixed on the way: New Tap left disabled after a microphone change, Python's grid over the labels, Swift's Settings slow to open (the calibration's corrections now one pass in all three). Full suites passed in all three; run-reviews passed on macOS, the iPhone and iPad, Windows and Linux (owner, 2026-10-22).
 
 Swift and Python run tap detection on a different thread from the audio it judges. The web takes every chunk in
 order on one thread. The difference is the source of a recurring class of bugs in Swift and Python; this issue
@@ -328,9 +328,15 @@ Each step is a commit in each edition it touches, then the hub with the hashes.
    44.1 kHz and for unsorted frequencies; the shared CAL1–CAL3 unchanged and passing. Settings opens at once in a
    Debug build, the calibration shown as selected: verified (owner, 2026-10-22).
 
-4. **Verification**:
-   - the full suites in all three editions (on the owner's go);
-   - the export and self-regression baselines — any shift listed with its cause before anything is re-minted;
+4. **Verification**. Done (2026-10-22):
+   - the full suites in all three editions, at Swift `68ad541`, Python `06a13db`, the web `ea42687`: Swift (macOS)
+     296 tests in 90 suites, no known issues; Python 1566 passed, 1 skipped (the capture probe, off); the web 1425
+     passed, 1 skipped, lint and typecheck clean;
+   - the export and self-regression baselines: Swift's export UI tests (macOS) 5 cases, 0 failing; the
+     self-regression cases pass in all three. Python's exported images change with the grid fix, and only there:
+     the three shared fixtures exported before and after differ in about 0.2 % of their pixels, all inside the
+     plot — the grid beneath the curve and the mode bands, the top border in the axis colour as in Swift's export.
+     Their size and pixels per inch, which the tests check, are unchanged; nothing re-minted;
    - **Python's display under load measured**: the live spectrum's frame interval and the main thread's per-chunk
      time while a tap sequence runs, before and after. Done (Mac, 2026-10-22, the slack probe; after: the real window
      offscreen, files played as Play File plays them; the start-up window left out):
@@ -345,9 +351,23 @@ Each step is a commit in each edition it touches, then the hub with the hashes.
      thread 23–35 ms at most. The before is a live microphone, the after file playback: the same conclusion, not
      the same conditions;
    - a run-review by platform, the physical iPhone and iPad included (a capture on a real tap; the warm-up and
-     clipping cases that produced this issue; file playback of each type).
-5. **Close-out**: comments and docs that describe the old mechanism (the fast-start in DocC, docstrings, the
-   INVENTORY), the record, the Issue.
+     clipping cases that produced this issue; file playback of each type): passed on every platform (Run-review,
+     below).
+5. **Close-out**. Done: Swift `1009a04`, Python `a4442f9`, web `cf74495`.
+   - Comments and docstrings describe the one sequence: Python's notes on Swift's names no longer name
+     `rawSampleHandler` or `bufferAccessQueue`; Swift's `performFFT` runs on the main thread; the web's capture
+     filling no longer mentions Swift's fast-start. Swift has no DocC catalogue in its source tree; its doc comments
+     are the DocC.
+   - **Finding (owner, 2026-10-22): FFT frame counters.** Swift counted FFT frames and the samples they consumed,
+     and its capture-complete debug line reported that count as the file position; Python had the same two fields
+     and never advanced them, reporting a per-chunk counter instead; the web has neither. Removed from Swift and
+     Python; the debug line reports the analyzer's audio clock, which every edition carries.
+   - The shared case files `button-style`, `chart-help`, `chart-menu` and the oracle carry no issue numbers or
+     project history (owner, 2026-10-22: test code and data refer to no project document; `tooling/` and
+     `process/` are permanent and may be cited).
+   - Hub: `INVENTORY.md`'s tap detection is the one sequence, and it cites no memory files; `TEST-PLAN.md` and
+     `ANDROID-PLAN.md` without the removed queue and fast-start.
+   - Targeted tests in all three; the parity check and the fixture check clean.
 
 ## Run-review
 
@@ -364,7 +384,7 @@ check the warm-up on every platform, through each edition's microphone path, in 
 |---|---|
 | macOS — Swift, Python, the web | passed, steps 1–8 (owner, 2026-10-22) |
 | iPhone, iPad — Swift | passed, steps 3–8 (owner, 2026-10-22) |
-| Windows, Linux — Python | to do |
+| Windows, Linux — Python | passed, steps 3–8 (owner, 2026-10-22) |
 
 1. macOS — Swift, Python, the web: Brace, Taps 1, New Tap, and within half a second make a sharp sound (a tap on
    the bench, a clap). → Nothing is captured; the status dot stays green, the message reads as listening, Pause

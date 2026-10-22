@@ -13,7 +13,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
-- [#38](https://github.com/dwsdolce/guitar-tap-project/issues/38) · [`TAP-DETECTION-THREADING.md`](TAP-DETECTION-THREADING.md) — tap detection and capture in one per-chunk sequence in Swift and Python, as on the web
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37) · [`PYTHON-NO-AUDIO-SYSTEM.md`](PYTHON-NO-AUDIO-SYSTEM.md) — Python crashes at start when PortAudio cannot start (no sound server), instead of reporting the input unavailable
 - [#36](https://github.com/dwsdolce/guitar-tap-project/issues/36) · [`SWIFT-RUNTIME-WARNINGS.md`](SWIFT-RUNTIME-WARNINGS.md) — Swift runtime warnings: the audio session activated on the main thread (iOS); the microphone-warning alert publishing during a view update
@@ -32,6 +31,10 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#38 (tap detection threading) is **closed**; its record is
+[`completed/TAP-DETECTION-THREADING.md`](completed/TAP-DETECTION-THREADING.md) — tap detection and capture are one
+per-chunk sequence on the main thread in every edition, as on the web; the fast-start is gone.
 
 #35 (zoom and pan slow with many peaks — Python's view updating) is **closed**; its record is
 [`completed/RESULTS-LIST-ON-RANGE-CHANGE.md`](completed/RESULTS-LIST-ON-RANGE-CHANGE.md) — Python's views update as

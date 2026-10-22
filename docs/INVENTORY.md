@@ -56,7 +56,7 @@ its counterpart in each edition.
   `requestedBufferSize = min(fftSize, 1024)` → 1024
   (`…+EngineControl.swift`, `installTap(bufferSize:)` at `:388`).
   ≈21 ms/chunk at 48 kHz (≈23 ms at 44.1 kHz). This 1024-sample granularity
-  drives RMS/level metering and the level-crossing detector. Python uses
+  drives RMS/level metering and the tap detector. Python uses
   PortAudio `blocksize=1024` for the live stream
   (`realtime_fft_analyzer_device_management.py`).
 - **[x] Hop size between FFT analysis frames — equals fftSize (65536), 0%
@@ -66,8 +66,8 @@ its counterpart in each edition.
   audio-callback hop used for metering.
 - **[x] Pre-processing — NONE.** No high-pass, no DC removal, no normalization.
   Samples flow raw into the FFT buffer (`…+FFTProcessing.swift`); the
-  only per-chunk math is RMS metering (`vDSP_rmsqv`), peak-abs clip detection,
-  and level-crossing. Mic-calibration corrections are added in the **dB domain
+  only per-chunk math is RMS metering (`vDSP_rmsqv`) and peak-abs clip
+  detection. Mic-calibration corrections are added in the **dB domain
   after** the FFT, not as pre-processing (`…+FFTProcessing.swift`).
 - **[x] Input format — Float32, non-interleaved.** Tap format
   `.pcmFormatFloat32, interleaved: false` (`…+EngineControl.swift`);
@@ -78,28 +78,27 @@ its counterpart in each edition.
 
 ## Tap Detection State Machine
 
-Two parallel rising-edge detectors run per audio chunk (~43 Hz). They apply
-identical confirmation logic but **do not share cleanup state**.
+One rising-edge detector runs per audio chunk (~47 Hz at 48 kHz), on the main
+thread, in one per-chunk sequence — the same in all three editions.
 
-- **Path 1 — audio-queue level-crossing** (on `audioProcessingQueue` inside
-  `RealtimeFFTAnalyzer.processRawSamples`). Snapshots pre-roll and seeds/starts
-  the gated capture *immediately* at the crossing, removing the Combine dispatch
-  delay; auto-disarms after firing, re-armed by `TapToneAnalyzer`
-  (`RealtimeFFTAnalyzer+FFTProcessing.swift`).
-- **Path 2 — main-thread RMS** (`onRmsLevelChanged` → `detectTap` →
-  `handleTapDetection`, driven by `$inputLevelDB`). Runs the hysteresis state
-  machine, fires the tap event, drives status/decay/sequence logic
-  (`TapToneAnalyzer+TapDetection.swift`).
-- **Shared capture state** (`gatedCaptureActive`, `gatedAccumBuffer`,
-  `lastLevelCrossingCaptureID`, clearing `isDetecting`) is reconciled in
-  `finishGuitarGatedCapture`, **not** `handleTapDetection`
-  (`TapToneAnalyzer+SpectrumCapture.swift`). The audio-queue path never
-  touches `isDetecting`. (Matches memory `project_two_path_tap_detection.md`.)
+- **The audio side** (`audioProcessingQueue` in Swift, the processing thread in
+  Python, the AudioWorklet on the web) takes each 1024-sample chunk's level,
+  clipping, dead-input stamp and audio time, and hands the chunk to the main
+  thread once (`RealtimeFFTAnalyzer.handOver`, Python `hand_over`). A chunk
+  from a source since replaced is dropped by its playback generation.
+- **The main thread**, per chunk, in order: the FFT's input and the FFT
+  (`takeChunk`), then `TapToneAnalyzer.processAudioFrame` — the pre-roll, the
+  session recording and the capture filling (`accumulateGatedSamples`; a
+  filled capture is finished there and then), then the audio clock, due
+  actions and detection (`onRmsLevelChanged` → `detectTap` →
+  `handleTapDetection`) (`RealtimeFFTAnalyzer+FFTProcessing.swift`;
+  `TapToneAnalyzer+TapDetection.swift`; `TapToneAnalyzer+SpectrumCapture.swift`).
+- **A confirmed tap starts the gated capture** (`startGatedCapture` /
+  `startGuitarGatedCapture`), seeded from the pre-roll; a capture already
+  filling absorbs the tap. Clearing `isDetecting` and the sequence's capture
+  state happen in `finishGuitarGatedCapture`, not `handleTapDetection`.
 
 - **[x] Threshold values (dBFS):**
-  - Level-crossing threshold `levelCrossingThreshold = -40`, kept synced to
-    `tapDetectionThreshold` (`RealtimeFFTAnalyzer.swift`; sync at
-    `TapToneAnalyzer.swift`).
   - User-adjustable detection threshold default `-40.0`, range −80…−20
     (`TapDisplaySettings.swift`).
   - **Guitar (absolute):** rising = `tapDetectionThreshold`; falling =
@@ -114,11 +113,8 @@ identical confirmation logic but **do not share cleanup state**.
   (`RealtimeFFTAnalyzer.swift`); chunk = 1024 samples ≈ 21 ms at 48 kHz, so
   2 chunks ≈ 43 ms. Code comment: the brace fixture's real tap drops below
   threshold by chunk 3, so requiring 3 would reject it; the plate noise bump is
-  single-chunk so 2 still rejects it. Both paths use this constant
-  (`…+FFTProcessing.swift`; `…+TapDetection.swift`).
+  single-chunk so 2 still rejects it (`…+TapDetection.swift`).
   Confirmed by `GuitarTapTests/TapDetectionTests.swift`.
-  > ⚠ **Memory was wrong:** `project_level_crossing_confirmation.md` said
-  > "3 consecutive (~64 ms)". Corrected to 2 (~43 ms).
 - **[x] Warm-up — 0.5 s** after start/resume; detection suppressed
   (`TapToneAnalyzer.swift`; `…+TapDetection.swift`). First frame
   after warm-up re-anchors `noiseFloorEstimate` and returns without detecting
@@ -140,8 +136,7 @@ identical confirmation logic but **do not share cleanup state**.
      `TapToneAnalyzer.swift`); zero-pad as needed. If no onset found, return
      the buffer unchanged.
   This makes the FFT input invariant to chunk-boundary alignment — which is why
-  the 2-chunk trigger delay is invisible downstream (matches memory
-  `project_level_crossing_confirmation.md`'s re-alignment claim).
+  the 2-chunk trigger delay is invisible downstream.
 - **[x] Hysteresis state machine (`detectTap`, `…+TapDetection.swift`):**
   latched `isAboveThreshold`. Below→ requires `>= confirmTarget` consecutive
   above-rising to fire (sets `tapDetected`, `lastTapTime`, `tapPeakLevel`, calls
@@ -172,8 +167,6 @@ gated capture (full `fftSize`).
   `gatedFFTWindowDuration = 0.400` (`TapToneAnalyzer.swift`);
   `fftWindowSize = Int(sampleRate × 0.400)` → 19200 @ 48 kHz
   (`…+SpectrumCapture.swift`). This is the actual input to `computeGatedFFT`.
-  (Matches memory `project_gated_fft_algorithm_change.md`: 500 ms buffer /
-  400 ms aligned window, current since 2026-05-14.)
 - **[x] Pre-roll ring buffer — 200 ms.** `preRollDuration = 0.200`
   (`TapToneAnalyzer.swift`) → 9600 @ 48 kHz; seeds the capture so the tap
   attack (which precedes the trigger) is included
@@ -361,8 +354,8 @@ Swift `Pitch.swift`; Python `pitch.py` (`Pitch(a4=440.0)`,
   (`TapToneAnalyzer.swift`). This is a **tap-detection** parameter (not
   peak-picking): after a tap, level must fall ≥3 dB below the threshold before
   re-triggering. Code comment: "Hardcoded constant — no longer user-configurable."
-  > Clarifies memory: the `=3` "hysteresis" is the **dB falling margin**, not a
-  > peak count. Don't conflate with `levelCrossingConfirmationChunks = 2`.
+  The `3` is the **dB falling margin**, not a count; not to be confused with
+  `levelCrossingConfirmationChunks = 2`.
 - **[x] Max peaks = all (no limit)** — `findPeaks` appends all remaining
   candidates by descending magnitude with no cap
   (`…+PeakAnalysis.swift`).
@@ -425,9 +418,8 @@ Swift `Pitch.swift`; Python `pitch.py` (`Pitch(a4=440.0)`,
   > (REG-G1/G2 guitar, REG-B1 brace, REG-P1 plate) **pass in both Swift (Xcode)
   > and Python** against the same hardcoded constants, which reproduce to ~4 dp —
   > so Swift ↔ Python agree and the plate pipeline is deterministic. The earlier
-  > "bogus" label was (a) in-flux-era caution recorded in
-  > `feedback_plate_regression_tests.md`, and (b) an app-vs-test discrepancy that
-  > turned out to be **calibration**: the tests play the WAV with the UMIK-1
+  > "bogus" label was (a) caution from while the pipeline was changing, and (b) an
+  > app-vs-test discrepancy that turned out to be **calibration**: the tests play the WAV with the UMIK-1
   > profile (`7108913.txt`) applied, so an *uncalibrated* live app run shows
   > per-frequency magnitude offsets (and a ~1-bin fLC shift). The feared
   > gated-FFT staleness did **not** materialize — constants match current output
@@ -804,8 +796,8 @@ identical across Swift/Python.
   the entire app-vs-test discrepancy. The web port must apply the same `.txt`
   calibration in the dB domain to match.
 - **If the gated algorithm changes again**, regenerate + re-sync constants in
-  BOTH `FilePlaybackRegressionTests.swift` and `test_file_playback_regression.py`
-  (memory `project_gated_fft_algorithm_change.md`); the WAV samples are unchanged,
+  BOTH `FilePlaybackRegressionTests.swift` and `test_file_playback_regression.py`;
+  the WAV samples are unchanged,
   only derived freq/mag/Q.
 
 ---
@@ -843,7 +835,7 @@ The three harnesses the web port must plug into:
   illegal; I2 `isDetectionPaused && isMeasurementComplete` illegal; I3
   `capturedTaps.count ≤ numberOfTaps`; I4 guitar `currentTapCount ==
   capturedTaps.count`; I5 `tapProgress ∈ [0,1]`; I6 during plate/brace review
-  `isDetecting` must be false. (Matches memory `project_parity_test_suite.md`.)
+  `isDetecting` must be false.
 
 **[x] Known divergences before adding a third implementation:**
 - ~~Loose-vs-tight FFT assertions~~ — fixed; Python now pins Swift's exact dB.
