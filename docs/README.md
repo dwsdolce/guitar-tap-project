@@ -17,7 +17,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37) · [`PYTHON-NO-AUDIO-SYSTEM.md`](PYTHON-NO-AUDIO-SYSTEM.md) — Python crashes at start when PortAudio cannot start (no sound server), instead of reporting the input unavailable
 - [#36](https://github.com/dwsdolce/guitar-tap-project/issues/36) · [`SWIFT-RUNTIME-WARNINGS.md`](SWIFT-RUNTIME-WARNINGS.md) — Swift runtime warnings: the audio session activated on the main thread (iOS); the microphone-warning alert publishing during a view update
-- [#35](https://github.com/dwsdolce/guitar-tap-project/issues/35) · [`RESULTS-LIST-ON-RANGE-CHANGE.md`](RESULTS-LIST-ON-RANGE-CHANGE.md) — zoom and pan slow with many peaks: the results list rebuilt on every range change (Python, web)
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
@@ -33,6 +32,12 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#35 (zoom and pan slow with many peaks — Python's view updating) is **closed**; its record is
+[`completed/RESULTS-LIST-ON-RANGE-CHANGE.md`](completed/RESULTS-LIST-ON-RANGE-CHANGE.md) — Python's views update as
+Swift's do, through a shared layer (one refresh per event-loop turn, lists and labels updated in place, styles set
+only on change); the spectrum drawn for its visible range only, unantialiased; every source file in the parity map;
+the crosshair read as Swift's; Python's tap bar laid out as Swift's.
 
 #32 (theme — the colours the inventories missed) is **closed**; its record is
 [`completed/THEME-MISSED-COLOURS.md`](completed/THEME-MISSED-COLOURS.md) — every colour in every edition a named

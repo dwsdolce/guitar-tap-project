@@ -2,7 +2,7 @@
 
 **Issue:** [#38](https://github.com/dwsdolce/guitar-tap-project/issues/38)
 
-Status: **OPEN — plan written; decided: one per-chunk sequence on the main thread in every edition, the FFT included; waits on #35, then Python's measurements.**
+Status: **OPEN — plan written; decided: one per-chunk sequence on the main thread in every edition, the FFT included. #35 is closed; Python's measurements (Mac) show it has the room — recorded in #35's item 3.**
 
 Swift and Python run tap detection on a different thread from the audio it judges. The web takes every chunk in
 order on one thread. The difference is the source of a recurring class of bugs in Swift and Python; this issue

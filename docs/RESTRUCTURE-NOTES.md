@@ -219,7 +219,7 @@ worth expecting:
 what it shows from the model's state, once per event-loop turn; lists and chart labels go through a shared keyed-update
 helper; styling through roles, applied only on change — to fix its rebuild-everything slowness. The views moved onto
 it in #35 and after are views this restructure need not reshape again. Detail:
-[`RESULTS-LIST-ON-RANGE-CHANGE.md`](RESULTS-LIST-ON-RANGE-CHANGE.md).
+[`completed/RESULTS-LIST-ON-RANGE-CHANGE.md`](completed/RESULTS-LIST-ON-RANGE-CHANGE.md).
 
 ## Open questions for the spec (later)
 - Which fan-outs earn their keep vs. should consolidate? (case-by-case, not a blanket rule)

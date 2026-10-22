@@ -2,7 +2,7 @@
 
 **Issue:** [#35](https://github.com/dwsdolce/guitar-tap-project/issues/35)
 
-Status: **OPEN — items 1–3 done (Python `7e2a718`): the shared layer, the results list and the chart's labels on it; a pan step 373 → 30 ms, the main thread's work per live frame about 130 → 10 ms. Item 4 done (Python `ec604b3`): a guitar tap's completion 167 → 35 ms. Item 5 done (the web needs no change). Items 6 and 7 done (Python `ec604b3`, Swift `4d6184e`, web `e1a7afb`): every source file in the parity map; the crosshair read as Swift's. Full suites passed in all three; on-screen check on the Mac passed (owner). Item 8 (Python's tap bar laid out as Swift's) done (Python `6119e62`). Left: the live review of Python on Windows and Linux.**
+Status: ✅ **CLOSED 2026-10-22** — items 1–8 done: Python `7e2a718`, `ec604b3`, `6119e62`; Swift `43ef145`, `4d6184e`; web `ad3d88e`, `e1a7afb`. A pan step at Peak Min −100 dB 373 → 30 ms; the main thread's work per live frame about 130 → 10 ms; a guitar tap's completion 167 → 35 ms; the web needs no change; every source file in the parity map; the crosshair read as Swift's; Python's tap bar laid out as Swift's. Full suites passed in all three; run-reviews passed on the Mac, Windows and Linux (owner, 2026-10-22).
 
 With a low Peak Min, so that many peaks are listed, zooming and panning the chart is unusable in Python and slow on
 the web. Swift stays smooth (owner, 2026-10-20).
