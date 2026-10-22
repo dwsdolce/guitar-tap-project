@@ -2,7 +2,7 @@
 
 **Issue:** [#35](https://github.com/dwsdolce/guitar-tap-project/issues/35)
 
-Status: **OPEN — items 1–3 done (Python `7e2a718`): the shared layer, the results list and the chart's labels on it; a pan step 373 → 30 ms, the main thread's work per live frame about 130 → 10 ms. Item 4 done (Python `ec604b3`): a guitar tap's completion 167 → 35 ms. Item 5 done (the web needs no change). Items 6 and 7 done (Python `ec604b3`, Swift `4d6184e`, web `e1a7afb`): every source file in the parity map; the crosshair read as Swift's. Full suites passed in all three; on-screen check on the Mac passed (owner). Left: the live review of Python on Windows and Linux.**
+Status: **OPEN — items 1–3 done (Python `7e2a718`): the shared layer, the results list and the chart's labels on it; a pan step 373 → 30 ms, the main thread's work per live frame about 130 → 10 ms. Item 4 done (Python `ec604b3`): a guitar tap's completion 167 → 35 ms. Item 5 done (the web needs no change). Items 6 and 7 done (Python `ec604b3`, Swift `4d6184e`, web `e1a7afb`): every source file in the parity map; the crosshair read as Swift's. Full suites passed in all three; on-screen check on the Mac passed (owner). Item 8 (Python's tap bar laid out as Swift's) done (Python `6119e62`). Left: the live review of Python on Windows and Linux.**
 
 With a low Peak Min, so that many peaks are listed, zooming and panning the chart is unusable in Python and slow on
 the web. Swift stays smooth (owner, 2026-10-20).
@@ -88,6 +88,7 @@ frame is within budget.
 | 5 | The web: measured the same way — a pan step, and the slack probe while listening; the same treatment only if it shows the cost | done — no change needed |
 | 6 | Every source file in the parity map: the check covers each edition's whole source tree, not only its model folders; each untagged file read against its counterparts and put in a group, or `@parity none` with its platform reason; tests linked with `tests=` | done — Python `ec604b3`, Swift `4d6184e`, web `e1a7afb` |
 | 7 | The crosshair on a held spectrum, plate / brace phases or a comparison read as Swift's: the curve interpolated between the bins either side of the pointer, and the curve followed kept until another is 12 pt nearer | done — Python `ec604b3`, Swift `4d6184e`, web `e1a7afb` |
+| 8 | Python's tap bar laid out as Swift's: its fields grouped on the left at their own widths, the buttons on the right, the spare width between | done — Python `6119e62` |
 
 ### 1 — the shared layer
 
@@ -247,6 +248,19 @@ arrays; the gravity rule at and around 12, ties, no candidates), Swift's values:
 Python `tests/test_snap_interpolation.py`, the web `test/snap-interpolation.test.ts`, all passing. In Python's window
 (offscreen): a held guitar measurement, the pointer between bins at 185.815 Hz, reads 185.8 Hz −49.5 dB (the nearest
 bin read 186.04 Hz); a plate's three phase spectra, the readout on the nearest.
+
+### 8 — Python's tap bar laid out as Swift's
+
+Found by the owner (2026-10-22, Windows): Swift keeps the tap bar's fields — Taps, Threshold, Peak Min — together on
+the left and puts the spare width between them and New Tap; Python spread them across the bar, each field's label,
+slider, value and reset pulled apart. Cause: a Qt slider's default horizontal policy is to expand, even at a fixed
+width, so each field took a share of the bar's spare width (a Peak Min field 288 px wide was given 746 in a 1600 px
+bar), and its slider, unable to grow, left the share between the label, value and reset.
+
+**Done** (Python `6119e62`). Each field is no wider than its own width (`QSizePolicy.Maximum`), so the spare width goes to
+the stretch before New Tap; a narrow window still shrinks the fields. In the window (offscreen), 1900 px wide, the
+Threshold and Peak Min fields were 501 and 500 px; they keep their own 289 and 204 px at 1900 and at 1100 px wide;
+the window's minimum width is 891 px before and after.
 
 ## Rules
 
