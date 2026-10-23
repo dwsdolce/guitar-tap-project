@@ -12,7 +12,7 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [`PLAN.md`](PLAN.md) — overall migration plan & parity bar.
 
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
-- [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
+- [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison

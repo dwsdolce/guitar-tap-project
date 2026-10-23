@@ -201,12 +201,11 @@ Android changes none of that, and is not blocked by it:
   [Architecture Decisions 1–2](#architecture-decisions-decided-up-front--each-is-a-lesson-the-web-port-paid-for);
   if they are not held to, Android will diverge exactly as the web did, and no framework choice
   will prevent it.
-- **On the one item that is really a model question, Swift is already the target.** P3 in
-  [RESTRUCTURE-NOTES](RESTRUCTURE-NOTES.md) moves peak-selection and annotation ownership onto
-  the analyzer *with Swift's by-frequency preservation* — because `TapToneAnalyzer` already owns
-  that subsystem in Swift and the web keeps it view-side. Android mirroring Swift lands on the
-  target by construction. When P3 ships, the two parked test suites go from 3-way to 4-way, with
-  Android needing no rework.
+- **On the one item that is really a model question, Swift is already the target.** Peak
+  selection and annotation state are `TapToneAnalyzer`'s in all three editions, with Swift's
+  by-frequency preservation, and the `annotation-state` and `frozen-peak-recalc` suites run against
+  the analyzer in each. Android mirroring Swift lands on the same design, and joins those suites
+  as a fourth edition with no rework.
 - **Expect asymmetry in the map, and do not read it as a defect.** Once Android matches Swift's
   view structure, some `view/*` groups will pair Swift and Android neatly while Python's
   counterpart is shaped differently. That is the pre-existing Qt/legacy divergence becoming
