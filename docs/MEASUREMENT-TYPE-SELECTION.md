@@ -1,8 +1,34 @@
-# Measurement-type selection — where it lives, and what New Tap means
+# Measurement-type selection — a convenient place to change it, and what New Tap means
 
 **Issue:** [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18)
 
-Status: **ANALYSIS — no decision, nothing implemented.** Parked 2026-09-22 to be picked up later.
+Status: **DONE in all three — run-reviewed by the owner on every edition (2026-10-23); release notes to
+follow.** One of the two issues that caused the owner small grief in daily use (with #9).
+
+## The decision
+
+- **A type button beside New Tap**, on the main screen in every layout: `[New Tap] [Classical ⌄]`. It shows the
+  current type's short name (`shortName`: Generic, Acoustic, Classical, Flamenco, Plate, Brace); its menu lists
+  the six types under Guitar and Material, the current one ticked. Same style as its neighbours (Pause's).
+- **Choosing a type** makes it the measurement type, moves the chart to that type's saved range and starts a new
+  tap of it — the same change as the Settings picker, without the sheet.
+- **Enabled whenever the Settings picker would act** — at launch and during a sequence too (New Tap is
+  disabled then, because the app arms a sequence itself; that is why the type cannot ride on New Tap). Changing
+  type mid-sequence **restarts the sequence, just as in Settings — no confirmation**. Disabled only during a file
+  playback, which Cancel stops first.
+- **Settings keeps its Type picker.** The two show the same value.
+- **Comparisons are not on it:** a comparison is made in Saved Measurements, from the list of measurements.
+- **New Tap keeps reading A**, now without its objection: in a comparison it starts a new tap of the type the
+  type button shows, so the change of type is visible, not silent. Readings B and C are not needed.
+
+**Built:** the button rule's `typeMenuEnabled` output (false only during a file playback), pinned by the shared
+`button-enablement` cases (B2, B5, B7, B9, B10, B14–B16); the type button beside New Tap in every layout — Swift a
+`Menu` styled as Pause, Python a tinted `QPushButton` with a menu, the web a tinted button over the browser's own
+list; one hint, "Measurement type: choose one to start a new tap of it"; the manual (§2.5, §3.2, §9.5) and each
+Quick Start Guide. The run-review passed on macOS, iPad, iPhone, Windows, Linux and the web, including the iPhone
+on the device.
+
+The analysis that led here follows.
 Cross-platform: any change here lands on Swift + Python + web together (and is inherited by the
 Android port), per the standing "improvements go to all three" rule.
 
@@ -84,11 +110,17 @@ one to settle first. C is the current front-runner, but it is not a decision.
 ## The type selector
 
 Today: a `Picker` inside the Settings sheet, applied by an explicit **Apply** that validates
-everything and dismisses (`TapSettingsView+Sections.swift:36`, `TapSettingsView+Actions.swift:158`).
-Changing what you are about to measure costs a sheet, a pick, and an Apply.
+everything and dismisses (`TapSettingsView+Sections.swift`, `measurementTypeSection`;
+`TapSettingsView+Actions.swift`). Changing what you are about to measure costs a sheet, a pick, and an
+Apply.
 
 The objection is that this is not a setting. A setting is something you set once and forget; this is
 a choice of what action you are about to perform, changed as part of the work.
+
+**What is wanted (owner, 2026-10-23):** not to move the type out of Settings, but to **add a second,
+more convenient place to change it**. Settings keeps its picker. The new place must be **on the main
+screen on every device** — so not in the Analysis Results, which on the iPhone are not on the main
+screen.
 
 ### What is a type, and what is a parameter
 
@@ -134,20 +166,17 @@ Sketch:
   missing piece B and C both need.
 - Selecting acts immediately — the same work `onApply(measurementChanged:)` does today, minus the
   sheet.
-- **Remove the Type picker from Settings.** One place, not two.
+- **Settings keeps its Type picker** (owner, 2026-10-23): the new control is a quicker way to the same
+  choice, not its only home. The two show the same value — changing either changes both.
 
-## Open questions
+## The questions, answered
 
-1. **Plate or Brace picked with no dimensions set** — arm anyway and let Results show blanks, or
-   route to the dimensions first? The only case where "this type needs information" has a UX
-   consequence.
-2. **Switching type mid-sequence** — today Apply discards an in-flight sequence silently, and a
-   one-tap menu makes that much easier to hit by accident. Confirm when `currentTapCount > 0`, or
-   keep current behaviour?
-3. **Which reading of New Tap** — A, B or C — once the selector is visible. C is the front-runner.
-4. **Whether Compare should broaden** beyond guitar to any set of same-type measurements. The owner
-   raised it as something under consideration; it makes C more valuable and makes "which type do I
-   return to" answerable, since a comparison's underlying tap type would be known.
+1. **Plate or Brace dimensions** — not a question: they always have values, the saved ones or the defaults
+   (e.g. plate length 500 mm, brace length 300 mm, `TapDisplaySettings`), exactly as when Plate or Brace is
+   chosen in Settings. The user changes them in the Analysis Results as needed.
+2. **Switching type mid-sequence** — restarts the sequence, as Settings does; no confirmation.
+3. **New Tap** — reading A, with the type visible beside it.
+4. **Broadening Compare** — not part of this; comparisons stay in Saved Measurements.
 
 ## Related
 
@@ -158,5 +187,5 @@ Sketch:
   architectural-parity restructure, which touches the same view layer.
 - `WEB-UI-GUIDELINES.md`, `ANDROID-UI-GUIDELINES.md` — the per-platform UI translation rules any
   control change has to satisfy.
-- Manual and Quick-Start on all four surfaces: "go to Settings to choose a measurement type" stops
-  being true, so the docs change with the control.
+- Manual and Quick-Start on all four surfaces: they gain the main-screen control beside "choose a
+  measurement type in Settings", which stays true.
