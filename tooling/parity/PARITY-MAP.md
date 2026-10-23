@@ -204,6 +204,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `src/guitar_tap/_colour_guard.py` | python |
 | `src/guitar_tap/_release_guard.py` | python |
 | `src/guitar_tap/_version.py` | python |
+| `src/guitar_tap/models/audio_backend.py` | python |
 | `src/guitar_tap/models/update_checker.py` | python |
 | `src/guitar_tap/named_mutex.py` | python |
 | `src/guitar_tap/views/shared/peaks_model.py` | python |
@@ -213,6 +214,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_capture_opens_no_window.py` | python |
 | `tests/test_import_identity.py` | python |
 | `tests/test_material_peak_list.py` | python |
+| `tests/test_no_audio_system.py` | python |
 | `tests/test_peak_card_identity.py` | python |
 | `tests/test_qtimer_slots.py` | python |
 | `tests/test_results_update_in_place.py` | python |
