@@ -116,7 +116,7 @@ vendoring, drift-checking and consuming all run anywhere.
 |---|---|---|
 | Mint (rare — only on an intentional algorithm change) | Swift / macOS | `GENERATE_PARITY_ORACLE=1 xcodebuild test -only-testing:GuitarTapTests/GenerateParityOracle` |
 | Publish to the hub | Swift repo | `ORACLE_SRC=<hub> ./tooling/sync-oracle.sh --publish`, then commit the hub |
-| Vendor into a consumer | any repo, any OS | `ORACLE_SRC=<hub> ./tooling/sync-oracle.sh` (or `ORACLE_URL=` once the hub is public — #11) |
+| Vendor into a consumer | any repo, any OS | `./tooling/sync-oracle.sh` — from the hub beside the repo, else the hub's published copy; `ORACLE_SRC=<hub>` names another |
 | Drift gate | any repo, any OS | `./tooling/sync-oracle.sh --check` |
 
 `sync-oracle.sh` is one file copied verbatim into each repo; the repo's own vendored path lives beside it in
