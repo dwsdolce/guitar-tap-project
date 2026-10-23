@@ -14,7 +14,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37) · [`PYTHON-NO-AUDIO-SYSTEM.md`](PYTHON-NO-AUDIO-SYSTEM.md) — Python crashes at start when PortAudio cannot start (no sound server), instead of reporting the input unavailable
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
@@ -30,6 +29,10 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#37 (Python crashed at start when PortAudio could not start) is **closed**; its record is
+[`completed/PYTHON-NO-AUDIO-SYSTEM.md`](completed/PYTHON-NO-AUDIO-SYSTEM.md) — `sounddevice` loaded once, kept
+when only PortAudio's start fails; the app starts and reports "Audio input unavailable".
 
 #36 (Swift runtime warnings) is **closed**; its record is
 [`completed/SWIFT-RUNTIME-WARNINGS.md`](completed/SWIFT-RUNTIME-WARNINGS.md) — the alert bindings no longer publish

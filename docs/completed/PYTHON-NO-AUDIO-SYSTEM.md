@@ -2,7 +2,7 @@
 
 **Issue:** [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37)
 
-Status: **OPEN — item 1 fixed (Python `7a7fe98`); the check on Linux with no sound server to do.**
+Status: ✅ **CLOSED 2026-10-22** — item 1 done: Python `7a7fe98`. The app starts when PortAudio cannot and reports "Audio input unavailable", as Swift and the web do; checked on Ubuntu 26.04 with no sound server (GitHub's runner) and on Linux Mint 22.3.
 
 ## What happens
 
@@ -36,7 +36,7 @@ unlikely to meet it; a headless or minimal system would.
 
 | # | Item | Status |
 |---|---|---|
-| 1 | The app starts when PortAudio cannot, and reports the input unavailable as Swift and the web do | fixed (Python `7a7fe98`); Linux check to do |
+| 1 | The app starts when PortAudio cannot, and reports the input unavailable as Swift and the web do | done |
 
 **1. The app starts when PortAudio cannot** (owner, 2026-10-22).
 - *Cause:* `sounddevice` starts PortAudio (`_initialize()`) in the last statement of its module; two of the app's
@@ -56,7 +56,14 @@ unlikely to meet it; a headless or minimal system would.
   start raises `PortAudioError` and the input reads "Audio input unavailable"; once PortAudio can start, the next
   listing starts it. Before the fix, the analyzer's module cannot be imported under the same simulation. The
   device, restart and export tests pass (76); on the Mac PortAudio starts and lists its inputs as before.
-- *To do:* the check on Linux with the sound server stopped (`systemctl --user stop pipewire pipewire-pulse`):
-  the app starts and reads "Audio input unavailable"; with the server started again, a relaunch has the input
-  (a failed start is not retried by itself — New Tap keeps the running processing thread — as in Swift, where
-  a device change or a relaunch starts it again).
+- *Checked (2026-10-22):*
+  - Linux Mint 22.3 (Ubuntu 24.04), the sound server stopped (its sockets too: `systemctl --user stop
+    pipewire.socket pipewire-pulse.socket`, then the services) (owner): the app runs and has audio — this
+    PortAudio reaches the sound card through ALSA without a server, so the failure cannot occur there.
+  - GitHub's `ubuntu-latest` (Ubuntu 26.04.1), no sound server — a one-off workflow, removed after its run
+    (Python `9e66ad4`, `db138ca`; run 39897796254): a plain `import sounddevice` fails with
+    `PaErrorCode -9999 … 'PulseAudio_Initialize: Can't connect to server'`; the app's modules load with
+    PortAudio not started, a start raises that error and the analyzer reads "Audio input unavailable"; the app
+    itself, launched off-screen, is still running after 15 s.
+  - A failed start is not retried by itself — New Tap keeps the running processing thread — as in Swift: a
+    relaunch, or a device change, starts it again.
