@@ -1,6 +1,12 @@
 # Swift: each spectrum update rebuilds the whole window
 
-Issue #31. Follow-on to #28 (`docs/completed/SWIFT-VIEW-UPDATE-COST.md`). Found 2026-10-14 while measuring why the Swift
+**Issue:** [#31](https://github.com/dwsdolce/guitar-tap-project/issues/31)
+
+Status: ✅ **CLOSED 2026-10-22** — item 1 done: Swift `d6b6297`. Item 2 done by the live frame on its own object
+(Swift `bdbcb76`): measured again, the main thread is busy 8.7 % while listening (34 % before item 1, 22 % after),
+and a spectrum update no longer rebuilds the window.
+
+Follow-on to #28 (`docs/completed/SWIFT-VIEW-UPDATE-COST.md`). Found 2026-10-14 while measuring why the Swift
 Settings window opened slowly.
 
 ## What the owner saw
@@ -34,7 +40,7 @@ size of the sheet, and the optimizer removes most of it. Not pursued.
 | # | item | status |
 |---|---|---|
 | 1 | The threshold meter redrew itself 20 times a second from its own timer | done |
-| 2 | Each spectrum update rebuilds the whole window | open |
+| 2 | Each spectrum update rebuilds the whole window | done |
 
 **1. The threshold meter's own timer** (Swift only). `ThresholdSlider` ran
 `Timer.publish(every: 0.05)` to keep the peak-hold dot decaying, and each tick wrote `@State` (a new
@@ -48,7 +54,22 @@ every audio buffer while listening.
 
 **2. Each spectrum update rebuilds the whole window.** The engine publishes the spectrum about twice a second;
 the main view observes the engine, so every spectrum re-evaluates the whole window, not only the chart. #28
-measured the same rate (≈ 1.5 / s) and left it. The likely fix is #28's pattern: the spectrum in its own small
-observed object, read by the chart alone. Before deciding: what else reads the spectrum (peak readouts, status),
-and whether Python and the web rebuild more than their chart on a spectrum update. Not urgent — measurements run
-on other threads, and Release is responsive.
+measured the same rate (≈ 1.5 / s) and left it.
+- *Done* by the live frame on its own object (`LiveFrame`, Swift `bdbcb76`): the spectrum, its peak and the
+  readout level are published there, observed by the chart, the status bar's readout and the metrics panel alone;
+  `test/live-frame` checks, in all three editions, that a frame is announced on the live frame alone.
+- *Measured (2026-10-22)* as above: the Mac app, Release, generic guitar, Taps 1, listening, nothing touched, a live
+  peak at 120 Hz from the room; factory settings (Peak Min −60 dB, so one peak listed). Swift `9bd34be`.
+
+  | | before item 1 | after item 1 | now |
+  |---|---|---|---|
+  | Main thread busy (Time Profiler, 20 s) | 34 % | 22 % | 8.7 % (1.78 s of 20.5 s) |
+  | `TapToneAnalysisView.body` | — | ≈ 1.4 / s, ≈ 100 ms each, most of the window rebuilt | ≈ 0.7 / s, ≈ 1 ms each, nothing beneath it rebuilt |
+  | SwiftUI update time (SwiftUI template) | — | ≈ 157 ms a second | ≈ 54 ms a second |
+
+  The main window's body still runs once per FFT frame (≈ 0.73 / s at 48 kHz): the live peaks re-found on each frame
+  are published on the analyzer, which the window observes. SwiftUI reuses everything beneath it — the results rows
+  do not update — so it costs about 1 ms; moving the live peaks to an object of their own would save little. The
+  largest remaining cost is the chart drawing each new spectrum, about 5–10 ms a frame. The threshold meter updates
+  about 10 times a second, a few ms a second in all; the toolbar's buttons about 20 times a second, SwiftUI's own
+  button internals, about 0.3 ms a second.

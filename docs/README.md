@@ -32,6 +32,10 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
 
+#31 (Swift: each spectrum update rebuilt the whole window) is **closed**; its record is
+[`completed/SWIFT-SPECTRUM-WINDOW-REBUILD.md`](completed/SWIFT-SPECTRUM-WINDOW-REBUILD.md) — the threshold meter's
+own timer gone, and the live frame on its own object; listening, the main thread busy 34 % → 8.7 %.
+
 #38 (tap detection threading) is **closed**; its record is
 [`completed/TAP-DETECTION-THREADING.md`](completed/TAP-DETECTION-THREADING.md) — tap detection and capture are one
 per-chunk sequence on the main thread in every edition, as on the web; the fast-start is gone.
