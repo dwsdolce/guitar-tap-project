@@ -18,16 +18,18 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
-- [#15](https://github.com/dwsdolce/guitar-tap-project/issues/15) · [`guitar_tap-manual-seo-handoff.md`](guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/` indexed as "Page with redirect"
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
   - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
   - [`PHASE1-PORT-PREP.md`](PHASE1-PORT-PREP.md) — Phase 1 record: INVENTORY audit, parity-tooling generalisation, fixture drift check
   - Both are records of finished phases; they move to [`completed/`](completed/) with the plan when the port concludes.
 
-One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guitar-tap-project/issues/11)
-(open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
-Deliberate — the design history really is finished — but an archive doing live duty is worth
-re-checking whenever that Issue moves.
+#15 (the manual's address indexed as "Page with redirect") is **closed**; its record is
+[`completed/guitar_tap-manual-seo-handoff.md`](completed/guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/`
+is the manual itself, and every copy names it as canonical.
+
+#11 (open-sourcing) is **closed**, with no detail doc of its own: the hub is public, every edition has a
+bug-report form, and the oracle comes from the hub's published copy. Its background is
+[`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 
 #25 (where an untouched peak label sits, how it behaves under zoom, how labels are clipped) is **closed**; its
 record is [`completed/ANNOTATION-DEFAULT-POSITION.md`](completed/ANNOTATION-DEFAULT-POSITION.md) — a peak label is

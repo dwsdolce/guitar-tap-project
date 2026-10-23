@@ -7,6 +7,9 @@ the **marketing website** repo, and the **central PM** repo.
 Prepared from a session that had read access only to the website repo and
 `GuitarTap/Documentation/Manual/`. **No changes were made to any repo.**
 
+**Closed 2026-10-23** ([#15](https://github.com/dwsdolce/guitar-tap-project/issues/15)): the site is fixed and
+checked live; Search Console's report clears when Google re-crawls `/guitar_tap/manual/`.
+
 ## Decisions and what is done (owner, 2026-10-23)
 
 1. **Canonical target: Option B** — `/guitar_tap/manual/` is a real page, and every copy of the manual names it
@@ -21,9 +24,11 @@ Prepared from a session that had read access only to the website repo and
 5. All three editions link only the version-numbered file (Swift `DocumentationLinks.swift`, Python
    `_open_user_manual`, web `App.tsx`) — checked.
 
-**Still to do:** the owner's cPanel upload of the five manual files and the homepage; check the live files carry
-the canonical and `/manual/` is the manual; request re-indexing in Search Console and watch the report clear;
-then #15 closed.
+**Deployed and checked (2026-10-23):** the owner uploaded the five manual files and the homepage; each live file is
+byte-for-byte the repo's, and `/guitar_tap/manual/` answers 200 with the manual and its canonical. Re-indexing was
+requested in Search Console (its live test failed with Google's generic error; the sitemap lists `/manual/`, so
+the next crawl picks it up). Search Console now has URL-prefix properties for `/guitar_tap/`, `/palmas/` and
+`/Music/`, so `/guitar_tap/` is watched apart from the rest of the site.
 
 ---
 
