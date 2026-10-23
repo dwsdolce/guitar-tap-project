@@ -87,10 +87,15 @@ redeploying the release you just cut still works.
 - [ ] Build installers (each on its own OS):
   - [ ] macOS: `./packaging/build_mac` → `Guitar_Tap_VX.Y.Z.dmg` **plus** the stamped Quick-Start + release-notes PDFs, in one step *(codesign + notarize + staple; needs `notarytool-profile`, `create-dmg`, pandoc + LaTeX, WeasyPrint + Pango)*. Validate the PDFs first if you like — `./packaging/generate_release_notes.sh` and `./packaging/generate_guide.sh` run standalone.
   - [ ] Windows: `packaging\build_win.bat` → `Guitar_Tap_VX.Y.Z.exe`  *(Inno Setup 6)*
-  - [ ] Linux: `./packaging/build_linux` → `guitar-tap-X.Y.Z-<arch>.AppImage`  *(`appimagetool`; build on old-glibc box)*
+  - Linux: none by hand — publishing the release runs `guitar_tap`'s **Linux AppImage** workflow
+    (`.github/workflows/release-linux.yml`), which builds `guitar-tap-X.Y.Z.<build>-x86_64.AppImage` from the tag on
+    Ubuntu 22.04 (the oldest supported LTS, glibc 2.35), checks it, and attaches it to the release. To try it before
+    a release: Actions → Linux AppImage → Run workflow, on `main`, without attaching — the AppImage is the run's
+    artifact.
 - [ ] Create the GitHub release: **tag = bare `X.Y.Z`** (no `v`, no build number — the in-app updater compares the tag to the `version` file). **Generate the notes before tagging** — `generate_release_notes.sh` derives "since" from the latest tag and refuses to run once the current version is tagged.
-- [ ] Attach 6 assets: `.dmg`, `.exe`, `.AppImage`, `ReleaseNotes-X.Y.Z-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf`.
+- [ ] Attach 5 assets: `.dmg`, `.exe`, `ReleaseNotes-X.Y.Z-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf`.
 - [ ] **Publish as a full release** (not draft / pre-release) or `/releases/latest` and the updater ignore it.
+- [ ] Check the **Linux AppImage** run that publishing started passed, and the `.AppImage` is attached (the sixth asset).
 
 ## 3. Web app → `…/guitar_tap/guitar_tap_web/`  *(`GuitarTapWeb`)*
 - [ ] `version` in `package.json` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
@@ -145,7 +150,7 @@ all three now, in one sitting:
 - **Stale service worker (web):** `autoUpdate` means a returning visitor may need one reload before the new build takes; always hard-reload to verify a deploy, don't conclude from a first load.
 - **One-time tooling per build machine:**
   - Swift docs: pango + WeasyPrint venv, pandoc, basictex.
-  - Python (Mac build machine): `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows: Inno Setup 6. Linux: `appimagetool` (+ `libfuse2`).
+  - Python (Mac build machine): `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows: Inno Setup 6. Linux: none for a release (the workflow builds it); for a local build, the current `appimagetool` (github.com/AppImage/appimagetool) and `libportaudio2`.
   - Web: Node.
 - **Automation candidate (future):** this process is heavily manual — three separate version bumps,
   ad-hoc PDF exports, per-platform installer builds, hand-assembled GitHub assets, and cPanel uploads

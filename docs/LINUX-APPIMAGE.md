@@ -2,7 +2,7 @@
 
 **Issue:** [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23)
 
-Status: **ANALYSIS — no decision, nothing changed.** Python edition only (Linux packaging); the Mac and
+Status: **IN PROGRESS — the AppImage built and checked in GitHub Actions; to ship with the next release, then the catalog retest.** Python edition only (Linux packaging); the Mac and
 Windows builds are unaffected.
 
 ## How this came up
@@ -55,3 +55,45 @@ Two separate problems. Only the first stops the app from starting.
 - **Release:** decide whether to rebuild and replace the 1.0.2 asset or ship the fix with 1.0.3.
 - **Verify:** run the new AppImage on a 22.04 system without `libfuse2`.
 - **Afterwards (optional):** comment on AppImage/appimage.github.io#5378 asking for a retest, if the catalog listing is wanted.
+
+## Decisions (owner, 2026-10-22)
+
+1. **Build in GitHub Actions** on `ubuntu-22.04`, and attach the AppImage to the GitHub release from there once a
+   release is published. A workflow on `release: published` (and on demand for a named tag): check out the tag
+   with its history (the build number is the commit count), a portable Python 3.14, `packaging/build_linux` with
+   the current `appimagetool`, a start test on that system without `libfuse2`, then `gh release upload`. The
+   other five release assets stay as they are made now.
+2. **Ship with the next release** (1.0.3 or 1.1, not yet decided); the 1.0.2 asset is not replaced.
+3. **List GuitarTap in the AppImage catalog:** once a fixed AppImage is on a release, ask for a retest on
+   AppImage/appimage.github.io#5378.
+
+## Done (2026-10-22/23; owner's go for the night's commits and runs)
+
+**The workflow** — `guitar_tap` `.github/workflows/release-linux.yml` (`4d540fb`, `dc23dc8`, `861fdce`, `4702f60`,
+`14aa6f6`): on a published release, or by hand for a tag or branch, on `ubuntu-22.04` — setup-python 3.14 (built
+for 22.04), `appimagetool` 1.9.1 (static runtime), `packaging/build_linux`; then checks: no bundled library needs
+glibc newer than 2.35, the runtime links no `libfuse`, ALSA's library is not bundled, and the app, started
+off-screen with no sound server and `libportaudio2` removed, stays up with no error and loads the bundled PortAudio
+(`GT_AUDIO_BACKEND_REPORT=1`); then keeps the AppImage as the run's artifact and attaches it to the release. Runs on
+`main` (not attached): run 39977356882 passed — glibc 2.35, the bundled PortAudio loaded and started. The Tests
+workflow passed on Linux, Windows and macOS for every commit.
+
+**Found on the way:**
+1. **#37's loader dropped `sounddevice` from every packaged build** (macOS, Windows, Linux): PyInstaller bundles
+   what the code imports, and `audio_backend` loads `sounddevice` by name. The spec names it as a hidden import
+   (`861fdce`). Not shipped — no release since #37.
+2. **The AppImage relied on the user's `libportaudio2`**, which a clean Ubuntu does not have; without it the audio
+   code could not load and the app was broken (the 1.0.2 AppImage too, behind its glibc failure). Now the spec
+   bundles the build machine's `libportaudio.so.2` and `audio_backend` points `sounddevice` at it; JACK's client
+   library comes with it, ALSA's is left to the system (it must match the system's ALSA configuration and plugins,
+   as the AppImage exclusion list has it). A PortAudio that cannot be found or loaded now gives "Audio input
+   unavailable" rather than a broken app — also from source (`4702f60`, `14aa6f6`; test `test_no_audio_system`,
+   both failures).
+
+**Docs:** `guitar_tap` README — the AppImage built by the workflow, the current `appimagetool`, `libportaudio2` to
+build locally (`4702f60`); `process/RELEASE-CHECKLIST.md` — the workflow attaches the AppImage, five assets by hand,
+check the run; the tooling line. The release notes' "requires no system package installation" is now true. No
+`.deb` or `.rpm` is built — Linux ships as the AppImage only.
+
+**Still to do:** the owner's own try of the run's AppImage on the Mint VM (Ubuntu 24.04; sound through PipeWire);
+the next release (1.0.3 or 1.1) carries it; then a retest on AppImage/appimage.github.io#5378, and #23 closed.
