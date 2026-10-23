@@ -174,10 +174,8 @@ See [`completed/SLUG-SWEEP.md`](completed/SLUG-SWEEP.md).
   longer needs to resolve either, though its 1024 re-chunking and its ability to force a silenced
   stream (background the app, which Android silences and reports through `isClientSilenced`) remain
   useful if they recur.
-- **#12 TEST-PLAN.md rewrite** — stale and Swift-centric; rewrite it once as a four-edition
-  document instead of doing tri-platform now and redoing it. **Check it against #17 before
-  starting either** — a tri-platform test definition and a sweep of every test slug may cover
-  the same ground.
+- **Test definition** — no separate test plan to extend: TEST-PLAN.md is retired (#12). Android joins
+  the shared case files and PARITY-MAP as a fourth edition, and is run-reviewed per change like the others.
 - **#9 Saved Measurements sort**, **#11 open-source the repos** — orthogonal. #9 is additive:
   before Android it is three implementations, after it is four.
 

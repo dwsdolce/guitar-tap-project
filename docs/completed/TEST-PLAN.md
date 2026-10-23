@@ -1,5 +1,16 @@
 # GuitarTap Test Plan
 
+> **Retired 2026-10-23** ([#12](https://github.com/dwsdolce/guitar-tap-project/issues/12)), kept as a record; it
+> is not maintained. It was written against Swift and stopped being the definition of what is tested:
+>
+> - **Automated tests** are defined by the shared case files that all three editions run
+>   (`tooling/parity/cases/`), traced to the code by `tooling/parity/PARITY-MAP.md`, and described in
+>   `tooling/TEST-COVERAGE.md`.
+> - **Manual testing** is a run-review written for each change, on the platforms that change affects; the
+>   standing manual procedures below (Part 3) are not used.
+> - The three regression sub-plans deleted with the move to the hub (`File-Playback-Regression-Test-Plan.md`,
+>   `OBrien_Regression_Test_Plan.md`, `Play-File-Calibration-Plan.md`, Swift `d1161c1`) are superseded likewise.
+
 ---
 
 ## Part 1 — Test Plan
