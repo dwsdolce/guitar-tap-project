@@ -152,8 +152,10 @@ A diagnostic in every edition (Swift `edac1c8`, Python `5ef7e8c`, web `77c003a`)
 - **latency** — from the audio thread handing a chunk over to the main thread taking it (the web: on the audio clock,
   from the worklet's post).
 - **main/chunk** — the main thread's per-chunk work; **accumulate** — the pre-roll, session recording and capture
-  filling (on the audio thread in Swift and Python, within main/chunk on the web); **fft** — the FFT, wherever it runs;
-  **frame** — the main thread's work on each FFT frame.
+  filling, within main/chunk; **fft** — the FFT; **frame** — the main thread's work on each FFT frame. **main busy**
+  is main/chunk, fft and frame — everything the probe times on the main thread (Swift `9bd34be`, Python `ff09985`,
+  web `c5b4105`). The readings below were taken when
+  main busy left out the FFT; their FFT column gives its time.
 
 **Switching it on:**
 
@@ -163,8 +165,9 @@ A diagnostic in every edition (Swift `edac1c8`, Python `5ef7e8c`, web `77c003a`)
 | Python | `GT_SLACK_PROBE=1 python -m guitar_tap`; the line goes to the terminal |
 | Web | `?slackprobe` on the page's URL; the line goes to the browser console (on an iPhone, Safari's Web Inspector from the Mac) |
 
-**The deciding test:** Swift and Python with `GT_SLACK_PROBE_FFT_ON_MAIN=1` as well — after each FFT frame the main
-thread spins for the FFT's measured duration, the cost it would carry if the FFT ran there.
+**The deciding test** (the rows "FFT's cost on main" below): before the FFT moved to the main thread, Swift and
+Python had a switch that made the main thread spin, after each FFT frame, for the FFT's measured duration — the cost
+it would carry if the FFT ran there. With the FFT on the main thread, the switch was removed (Swift `9bd34be`, Python `ff09985`).
 
 **Scenarios**, each for about 30 s, on every edition and platform (Swift: Mac, iPhone, iPad; Python: Mac, Windows,
 Linux; the web: desktop and iPhone): idle listening; a guitar tap through to the results; a plate through all three
