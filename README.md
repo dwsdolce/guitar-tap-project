@@ -4,9 +4,9 @@ The home for everything about the **Guitar Tap** project that isn't the code its
 documents, the shared specifications, the parity system, the release runbook, and cross-repo bug tracking.
 
 Guitar Tap is tap-tone analysis for luthiers, built as **one design implemented across several editions**
-(Swift is canonical; Python and web mirror it), plus a marketing site. A fourth, Android, is proposed —
-see `docs/ANDROID-PLAN.md`. The editions are declared for the tooling in
-`tooling/parity/platforms.py`.
+(Swift is canonical; Python and web mirror it), plus a marketing site. A fourth, Android, is proposed
+([#14](https://github.com/dwsdolce/guitar-tap-project/issues/14), `docs/ANDROID-PLAN.md`); its feasibility
+phase is done. The editions are declared for the tooling in `tooling/parity/platforms.py`.
 
 ## Repositories
 
@@ -16,7 +16,7 @@ see `docs/ANDROID-PLAN.md`. The editions are declared for the tooling in
 | [guitar_tap](https://github.com/dwsdolce/guitar_tap) | Python — Windows / macOS / Linux |
 | [GuitarTapWeb](https://github.com/dwsdolce/GuitarTapWeb) | Web app (PWA) |
 | [GuitarTapAndroid](https://github.com/dwsdolce/GuitarTapAndroid) | Android — Kotlin/Compose (**proposed**; private, holds the Phase 0 spike) |
-| [guitar_tap_website](https://github.com/dwsdolce/guitar_tap_website) | Marketing site |
+| [guitar_tap_website](https://github.com/dwsdolce/guitar_tap_website) | Marketing site (private) |
 | **guitar-tap-project** (this repo) | Project docs, roadmap, parity, cross-repo issues |
 
 ## Setting up on a new machine
@@ -49,12 +49,14 @@ headers say — they need its qtawesome and its modules.
 - **Parity system** — [`tooling/parity/`](tooling/parity/) (the parity map, the oracle, the per-configuration
   baselines and their generators), [`tooling/TEST-COVERAGE.md`](tooling/TEST-COVERAGE.md), and the shared export
   checker [`tooling/export-check/`](tooling/export-check/).
-- **Process** — [`process/`](process/): the release runbook (`RELEASE-CHECKLIST.md`), bug tracking, the
-  developer-documentation standard, where a document belongs (`DOC-PLACEMENT.md`), how every edition looks
-  (`STYLE-GUIDE.md`), and how the UI translates to the web and to Android (`WEB-UI-GUIDELINES.md`,
-  `ANDROID-UI-GUIDELINES.md`).
-- **Shared material** — third-party references (`references/`) and the manual-test corpus of recordings and
-  measurements from every edition (`Tests/`).
+- **Process** — [`process/`](process/): the release runbook (`RELEASE-CHECKLIST.md`), bug tracking
+  (`BUG-TRACKING.md`), the developer-documentation standard (`DEV-DOC-STANDARD.md`), where a document belongs
+  (`DOC-PLACEMENT.md`), how every edition looks (`STYLE-GUIDE.md`), how the UI translates to the web and to
+  Android (`WEB-UI-GUIDELINES.md`, `ANDROID-UI-GUIDELINES.md`), what makes a paired parity test worth having
+  (`PARITY-TEST-METHOD.md`), and how to find why two editions disagree (`CROSS-EDITION-INVESTIGATION.md`).
+- **Shared material** — reference material behind the apps' DSP and material model (`references/`: published
+  papers, and notes on the methods the apps implement, each marked with who wrote it) and the manual-test corpus
+  of recordings and measurements from every edition (`Tests/`).
 
 Docs specific to one codebase (architecture, coding conventions, how to build, test and run it) stay in that
 codebase's repo. The rule ([`process/DOC-PLACEMENT.md`](process/DOC-PLACEMENT.md)): **is it project work — tracked
@@ -63,6 +65,10 @@ developer reference for one codebase? → that repo.**
 
 ## Reporting a bug
 
-File it wherever is easiest — an Issue on the relevant platform repo, or email support@dolcesfogato.com.
-Reports are consolidated here on a project board for tracking, and you'll get a reply on whichever channel
-you used.
+File it wherever is easiest — an Issue on the relevant edition's repo (each has a bug-report form), or email
+support@dolcesfogato.com. Reports are consolidated here on a project board for tracking, and you'll get a reply
+on whichever channel you used.
+
+## License
+
+GNU General Public License v3.0, as for the editions — see [`LICENSE`](LICENSE).

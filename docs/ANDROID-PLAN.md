@@ -1,6 +1,6 @@
 # GuitarTap Android — Port Plan
 
-**Status:** draft for review (2026-09-16). No Issue yet. **Phase 0 is complete**: audio capture yes, USB
+**Status:** draft for review (2026-09-16); Issue [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14). **Phase 0 is complete**: audio capture yes, USB
 measurement mic yes — a Blue Snowball attaches directly, a UMIK-1 needs any USB 2.0 hub in between
 (powered or not; the cause is unknown and two explanations have already been refuted, see
 ANDROID-FEASIBILITY §3). The hardware does the job; what remains is
