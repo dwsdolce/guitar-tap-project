@@ -15,7 +15,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural-parity restructure (view layer)
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#37](https://github.com/dwsdolce/guitar-tap-project/issues/37) · [`PYTHON-NO-AUDIO-SYSTEM.md`](PYTHON-NO-AUDIO-SYSTEM.md) — Python crashes at start when PortAudio cannot start (no sound server), instead of reporting the input unavailable
-- [#36](https://github.com/dwsdolce/guitar-tap-project/issues/36) · [`SWIFT-RUNTIME-WARNINGS.md`](SWIFT-RUNTIME-WARNINGS.md) — Swift runtime warnings: the audio session activated on the main thread (iOS); the microphone-warning alert publishing during a view update
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
@@ -31,6 +30,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#36 (Swift runtime warnings) is **closed**; its record is
+[`completed/SWIFT-RUNTIME-WARNINGS.md`](completed/SWIFT-RUNTIME-WARNINGS.md) — the alert bindings no longer publish
+within a view update; the audio session set up once per start with one category; the activation on the main thread
+accepted, as every edition starts its input synchronously.
 
 #31 (Swift: each spectrum update rebuilt the whole window) is **closed**; its record is
 [`completed/SWIFT-SPECTRUM-WINDOW-REBUILD.md`](completed/SWIFT-SPECTRUM-WINDOW-REBUILD.md) — the threshold meter's
