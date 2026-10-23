@@ -5634,7 +5634,7 @@ same. The web's `MaterialResults` always listed the slots in fL, fC, fLC order.
 
 **Moved out: the annotation default position** (found at the run-review, owner, 2026-10-01). The three editions place
 an untouched label differently, and its behaviour under zoom differs from a dragged label's. Not a display-range
-question, and more to settle than this finding can: hub Issue #25, `docs/ANNOTATION-DEFAULT-POSITION.md`.
+question, and more to settle than this finding can: hub Issue #25, `docs/completed/ANNOTATION-DEFAULT-POSITION.md`.
 
 *Done — items 1–14 (2026-10-01):*
 - **1.** The web store takes Swift's shape: `defaultMinFrequency` / `defaultMaxFrequency`, `minFrequency` /

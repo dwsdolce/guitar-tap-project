@@ -17,7 +17,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9) · [`SAVED-MEASUREMENTS-ORDERING.md`](SAVED-MEASUREMENTS-ORDERING.md) — Saved Measurements sort / reorder
 - [#12](https://github.com/dwsdolce/guitar-tap-project/issues/12) · [`TEST-PLAN.md`](TEST-PLAN.md) — the tri-platform test definition — currently Swift-centric and stale
 - [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18) · [`MEASUREMENT-TYPE-SELECTION.md`](MEASUREMENT-TYPE-SELECTION.md) — move measurement-type selection out of Settings; what New Tap means in a comparison
-- [#25](https://github.com/dwsdolce/guitar-tap-project/issues/25) · [`ANNOTATION-DEFAULT-POSITION.md`](ANNOTATION-DEFAULT-POSITION.md) — where an untouched peak label sits, how it behaves under zoom, and how labels are clipped
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#15](https://github.com/dwsdolce/guitar-tap-project/issues/15) · [`guitar_tap-manual-seo-handoff.md`](guitar_tap-manual-seo-handoff.md) — `/guitar_tap/manual/` indexed as "Page with redirect"
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
@@ -29,6 +28,11 @@ One open Issue has no detail doc at all: [#11](https://github.com/dwsdolce/guita
 (open-sourcing) points at the archived [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 Deliberate — the design history really is finished — but an archive doing live duty is worth
 re-checking whenever that Issue moves.
+
+#25 (where an untouched peak label sits, how it behaves under zoom, how labels are clipped) is **closed**; its
+record is [`completed/ANNOTATION-DEFAULT-POSITION.md`](completed/ANNOTATION-DEFAULT-POSITION.md) — a peak label is
+a point in chart units, at its peak + 14 dB unless dragged, drawn whatever the range and cut at the plot's edges,
+the same in all three; Python's labels follow the analyzer, as Swift's.
 
 #37 (Python crashed at start when PortAudio could not start) is **closed**; its record is
 [`completed/PYTHON-NO-AUDIO-SYSTEM.md`](completed/PYTHON-NO-AUDIO-SYSTEM.md) — `sounddevice` loaded once, kept
