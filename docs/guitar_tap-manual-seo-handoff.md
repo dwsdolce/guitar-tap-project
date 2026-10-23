@@ -7,6 +7,24 @@ the **marketing website** repo, and the **central PM** repo.
 Prepared from a session that had read access only to the website repo and
 `GuitarTap/Documentation/Manual/`. **No changes were made to any repo.**
 
+## Decisions and what is done (owner, 2026-10-23)
+
+1. **Canonical target: Option B** — `/guitar_tap/manual/` is a real page, and every copy of the manual names it
+   as canonical.
+2. **Generator** (`generate-manual.sh`): the manual's `<head>` carries
+   `<link rel="canonical" href="https://www.dolcesfogato.com/guitar_tap/manual/">`, and `index.html` is a copy of
+   the manual instead of the redirect stub.
+3. **Already-deployed versions edited directly**, not regenerated (the manual sources now hold 1.0.3 material):
+   the canonical line added to `GuitarTap-User-Manual-1.0.html`, `-1.0.1.html`, `-1.0.2.html` and the unversioned
+   copy; `manual/index.html` is the 1.0.2 manual. No `.htaccess`.
+4. **Website:** the homepage links `manual/`, not `manual/index.html`.
+5. All three editions link only the version-numbered file (Swift `DocumentationLinks.swift`, Python
+   `_open_user_manual`, web `App.tsx`) — checked.
+
+**Still to do:** the owner's cPanel upload of the five manual files and the homepage; check the live files carry
+the canonical and `/manual/` is the manual; request re-indexing in Search Console and watch the report clear;
+then #15 closed.
+
 ---
 
 ## The trigger

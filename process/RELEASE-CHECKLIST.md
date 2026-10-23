@@ -113,7 +113,7 @@ redeploying the release you just cut still works.
 - [ ] Overwrite the two **stable-named** release-notes PDFs (the links never change, the contents do):
   - [ ] `releases/GuitarTap-Swift-Release-Notes.pdf` ← latest Swift cumulative PDF (GuitarTap repo)
   - [ ] `releases/GuitarTap-Python-Release-Notes.pdf` ← latest Python cumulative PDF (guitar_tap repo)
-- [ ] Copy the regenerated **self-contained** manual into `manual/` — the versioned + `…-User-Manual.html/.pdf` "latest" (from GuitarTap's `generate-manual.sh`, which embeds all images into the HTML). Confirm `manual/index.html` targets `…-X.Y.Z.html`. **Do NOT deploy or overwrite `manual/images/`** — new manuals are self-contained; that folder is frozen, serving only the legacy 1.0/1.0.1 external-image HTML.
+- [ ] Copy the regenerated **self-contained** manual into `manual/` — the versioned + `…-User-Manual.html/.pdf` "latest" (from GuitarTap's `generate-manual.sh`, which embeds all images into the HTML). `manual/index.html` is the manual itself (a copy of `…-X.Y.Z.html`, not a redirect), so `…/manual/` is a real page; every copy names it as canonical. **Do NOT deploy or overwrite `manual/images/`** — new manuals are self-contained; that folder is frozen, serving only the legacy 1.0/1.0.1 external-image HTML.
 - [ ] Refresh `GuitarTap-Quick-Start-Guide.pdf` if changed; screenshots only if the UI changed.
 - [ ] Commit + push the repo, then **upload the changed files** to `…/guitar_tap/` via **cPanel File Manager** (banner, the two release-notes PDFs, `manual/`).
 - [ ] *No edits needed:* App Store URL (`id6759410596`), GitHub-releases download link, web-app link — all stable.
