@@ -2,8 +2,8 @@
 
 **Issue:** [#18](https://github.com/dwsdolce/guitar-tap-project/issues/18)
 
-Status: **DONE in all three — run-reviewed by the owner on every edition (2026-10-23); release notes to
-follow.** One of the two issues that caused the owner small grief in daily use (with #9).
+Status: **CLOSED 2026-10-23 — done in all three, run-reviewed by the owner on every edition; in the 1.0.3
+release notes (Swift 39fa6d0, Python 479dce3, web e37fd55).** One of the two issues that caused the owner small grief in daily use (with #9).
 
 ## The decision
 
