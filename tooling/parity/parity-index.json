@@ -623,6 +623,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/saved-measurements-order",
+      "swift": [
+        "GuitarTap/Models/SavedMeasurementsOrder.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/saved_measurements_order.py"
+      ],
+      "web": [
+        "src/measurement/savedMeasurementsOrder.ts"
+      ],
+      "tests": [
+        "test/saved-measurements-order"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/wall-clock",
       "swift": [
         "GuitarTap/Models/WallClock.swift"
@@ -1567,6 +1583,20 @@
       ],
       "web": [
         "test/quality-colors.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/saved-measurements-order",
+      "swift": [
+        "GuitarTapTests/SavedMeasurementsOrderTests.swift"
+      ],
+      "python": [
+        "tests/test_saved_measurements_order.py"
+      ],
+      "web": [
+        "test/saved-measurements-order.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"

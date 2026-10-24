@@ -1,0 +1,45 @@
+# The analyzer holds the library and copies of settings
+
+**Issue:** [#40](https://github.com/dwsdolce/guitar-tap-project/issues/40)
+
+Status: **OPEN — found 2026-10-23, nothing changed yet.** An architectural fix, not an alignment of the editions:
+all three share the flaw, and all three will share the fix.
+
+## The problem
+
+The analyzer (`TapToneAnalyzer` / `tap_tone_analyzer.py` / `tapToneAnalyzer.ts`) analyses the sound. It also holds
+two things that are not analysis:
+
+1. **The saved-measurements library** — the list, its storage, import, export, delete and duplicates.
+2. **Copies of settings** — Peak Min, the tap-detection threshold, the annotation visibility and (Swift, Python) the
+   analysis frequency range live in the settings store *and* on the analyzer, kept in step by hand: read from
+   settings at startup, written back when they change. Loading a measurement also writes its Show Unknown Modes, guitar type, measurement
+   type and annotation visibility into settings from inside the analyzer.
+
+## Why it matters
+
+- **Views redraw at FFT rate.** In Swift the analyzer is one `ObservableObject`; it announces a change for any of its
+  ~50 published values, never for one. A view that watches it for a value that rarely changes — the library, a setting
+  — redraws many times a second during a measurement. #28 fixed the same fault for the input level by moving it into
+  its own object (`InputLevel`).
+- **One value, two places.** A setting held on the analyzer and in the settings store can disagree; every change
+  has to remember to update both.
+- **Responsibilities blur.** Storage, import/export and settings policy sit in the class that does the analysis.
+
+## Where it is
+
+| | Library | Setting copies | Settings written from the analyzer |
+|---|---|---|---|
+| Swift | `TapToneAnalyzer.swift:379` (`savedMeasurements`); `TapToneAnalyzer+MeasurementManagement.swift` | `TapToneAnalyzer.swift:115, 129, 132, 285, 655`; restored at `:1505–1510` | `TapToneAnalyzer.swift:117, 287, 811`; `+MeasurementManagement.swift:776–785, 920` |
+| Python | `models/tap_tone_analyzer.py:337, 1583`; `tap_tone_analyzer_measurement_management.py` | `tap_tone_analyzer.py:308–313, 379` | `tap_tone_analyzer.py:1335, 1405, 1999` |
+| Web | `state/tapToneAnalyzer.ts:1990` | `tapToneAnalyzer.ts:676, 1724, 2495` (the range, `:770–771`, is a constant) | `tapToneAnalyzer.ts:682, 1203, 1240, 1730, 2207, 2212, 2501` |
+
+## The direction (to be decided)
+
+- **The library in its own object** — a measurements library holding the list, its storage, import, export, delete
+  and duplicates; Saved Measurements and the analyzer's save and load use it.
+- **Settings read from the settings store, no copies** — the analyzer and the views read the store; nothing mirrors
+  it. Who carries out "a loaded measurement's settings become the app's" is to be decided (whatever owns loading).
+- **Swift's observation** — whether the split objects stay `ObservableObject` or the model moves to `@Observable`
+  (per-property tracking; the deployment targets allow it, `GuitarTapApp.swift` already uses it) is to be decided;
+  the shape of the split is the same in all three either way.

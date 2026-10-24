@@ -55,6 +55,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/measurement-management` | `GuitarTap/Models/TapToneAnalyzer+MeasurementManagement.swift` | `src/guitar_tap/models/tap_tone_analyzer_measurement_management.py` | `src/measurement/store.ts`<br>`src/state/tapToneAnalyzer.ts` | tests |
 | `model/measurement-name` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/measurementName.ts` | tests |
 | `model/measurement-type` | `GuitarTap/Models/MeasurementType.swift`<br>`GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/measurement_type.py`<br>`src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts`<br>`src/settings.ts` | tests |
+| `model/saved-measurements-order` | `GuitarTap/Models/SavedMeasurementsOrder.swift` | `src/guitar_tap/models/saved_measurements_order.py` | `src/measurement/savedMeasurementsOrder.ts` | tests |
 | `model/wall-clock` | `GuitarTap/Models/WallClock.swift` | `src/guitar_tap/models/wall_clock.py` | `src/state/wallClock.ts` | tests |
 | `model/wav-dump-folder` | `GuitarTap/Models/WavDumpFolder.swift` | `src/guitar_tap/models/wav_dump_folder.py` | — | tests |
 | `presentation/display-range` | `GuitarTap/Models/DisplayRange.swift` | `src/guitar_tap/models/display_range.py` | `src/presentation/displayRange.ts` | tests |
@@ -119,6 +120,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/pitch` | `GuitarTapTests/PitchTests.swift` | `tests/test_pitch.py` | `test/pitch.test.ts` | test suite |
 | `test/plate` | `GuitarTapTests/PlatePropertiesTests.swift` | `tests/test_plate.py` | `test/plate.test.ts` | test suite |
 | `test/quality-colors` | `GuitarTapTests/QualityColorsTests.swift` | `tests/test_quality_colors.py` | `test/quality-colors.test.ts` | test suite |
+| `test/saved-measurements-order` | `GuitarTapTests/SavedMeasurementsOrderTests.swift` | `tests/test_saved_measurements_order.py` | `test/saved-measurements-order.test.ts` | test suite |
 | `test/scenario-trace` | `GuitarTapTests/ScenarioStateTraceTests.swift` | `tests/test_scenario_state_trace.py` | `test/scenario-trace.test.ts` | test suite |
 | `test/self-regression` | — | `tests/test_self_regression.py` | `test/self-regression.test.ts` | test suite |
 | `test/session-pre-roll` | `GuitarTapTests/SessionPreRollTests.swift` | `tests/test_session_pre_roll.py` | `test/session-pre-roll.test.ts` | test suite |

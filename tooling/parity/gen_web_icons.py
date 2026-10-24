@@ -81,6 +81,7 @@ ICONS = {
     "filePlus": "file-plus-outline",
     "trashCan": "trash-can-outline",
     "chevronDown": "chevron-down",
+    "filterVariant": "filter-variant",
     "chevronUp": "chevron-up",
     "chevronRight": "chevron-right",
     "openInNew": "open-in-new",

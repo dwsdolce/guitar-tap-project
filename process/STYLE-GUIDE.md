@@ -133,6 +133,12 @@ look as nearly as a browser allows (panel surface, the accent highlight on hover
 Swift on iOS shows its destructive items in iOS's red (an accepted platform difference, section 1.2); Swift on macOS,
 Python and the web show them as ordinary items. Each item has its icon in every edition (S6), in the item's own colour.
 
+### 1.4 Lists
+
+**A list scrolls only its items** (S8). The scrolling area holds the items — the measurements, the peaks, the
+calibrations — and nothing else. Everything that is not an item sits fixed above or below it and never scrolls: a
+total or a filter's count ("Showing 12 of 48 · Plate"), a notice or warning, the actions. The same in every edition.
+
 ## 2. Colour
 
 1. **Every colour is a role.** A role names what the colour is for (the fL curve, secondary text, the Peak Min line)
@@ -261,3 +267,4 @@ SF Symbol.
 | S5 | One mechanism per state; "cannot act now" and "does not apply" as opacity on the whole group | owner, 2026-10-20 |
 | S6 | Text symbols in the text form; an icon in every edition wherever one has it | owner, 2026-10-20 |
 | S7 | This guide lives in `process/` | owner, 2026-10-20 |
+| S8 | A list scrolls only its items; totals, notices and actions sit fixed above or below it | owner, 2026-10-23 |
