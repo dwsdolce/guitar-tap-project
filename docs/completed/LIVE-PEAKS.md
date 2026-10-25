@@ -2,8 +2,8 @@
 
 **Issue:** [#41](https://github.com/dwsdolce/guitar-tap-project/issues/41)
 
-Status: **OPEN — built in all three editions (2026-10-24): Swift `f8aabd6`, Python `61a28ea`, web `b89644e`.**
-Run-review passed on macOS and iOS in every edition (owner, 2026-10-24); Windows and Linux to run-review.
+Status: **✅ COMPLETE (2026-10-24).** Swift `f8aabd6`, Python `61a28ea`, web `b89644e`; run-review passed in every
+edition on macOS, iOS, Windows and Linux (owner).
 
 ## The problem
 
