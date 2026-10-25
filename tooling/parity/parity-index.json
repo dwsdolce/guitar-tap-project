@@ -1620,6 +1620,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/saved-measurement-menu",
+      "swift": [
+        "GuitarTapTests/SavedMeasurementMenuTests.swift"
+      ],
+      "python": [
+        "tests/test_saved_measurement_menu.py"
+      ],
+      "web": [
+        "test/saved-measurement-menu.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/saved-measurements-order",
       "swift": [
         "GuitarTapTests/SavedMeasurementsOrderTests.swift"
@@ -2579,6 +2593,22 @@
       ],
       "tests": [],
       "equivalence": "review only"
+    },
+    {
+      "slug": "view/saved-measurement-menu",
+      "swift": [
+        "GuitarTap/Views/Measurements/SavedMeasurementMenu.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/measurements/saved_measurement_menu.py"
+      ],
+      "web": [
+        "src/presentation/savedMeasurementMenu.ts"
+      ],
+      "tests": [
+        "test/saved-measurement-menu"
+      ],
+      "equivalence": "tests"
     },
     {
       "slug": "view/settings",

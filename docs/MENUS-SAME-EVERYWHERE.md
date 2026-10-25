@@ -2,26 +2,92 @@
 
 **Issue:** [#44](https://github.com/dwsdolce/guitar-tap-project/issues/44)
 
-Status: **OPEN — found 2026-10-24, nothing changed yet.**
+Status: **OPEN — built in all three (2026-10-24): Swift `0cb435c`, Python `0e021a2`, web `c277003`; run-review
+passed in every edition (owner); no release-notes entry (owner). To close once CI is green.**
 
-## The problem
+## Findings
 
-1. **The saved-measurement row menu differs on the web.** Swift and Python: Load into View · separator · View
-   Details · Edit Name & Notes · Export Measurement · Export Spectrum · Export PDF Report · separator · Delete. The
-   web puts **View Details above the separator**, beside Load into View, and gives it an **ⓘ** icon where Swift has
-   an eye (`eye`) and Python `mdi.eye-outline` (`components/MeasurementsPanel.tsx:735–775`).
-2. **Swift on macOS shows no icons in its menus.** The row menu's items are written with icons
-   (`Label("View Details", systemImage: "eye")`, `MeasurementsListView.swift:651–`) and show them on iPad and iPhone
-   (iPadOS 27, iOS 27), but not on the Mac (macOS 27). The same is seen in the Delete and ⋯ menus on the Mac — likely
-   every Swift menu with icons. A report says macOS 27 hides symbol images in SwiftUI menu items by default and that
-   `.labelStyle(.titleAndIcon)` on the items shows them; to confirm. Style guide S6: menu items have icons.
-3. **Nothing checks the row menu across the editions.** The chart's menu has a shared case file (`chart-menu.json`)
-   checking its items, order, separators and icons in all three; the row menu has none, so the web's could drift.
+| # | Finding | Swift | Python | Web | Status |
+|---|---|---|---|---|---|
+| 1 | A saved measurement's menu (its ⋯ or a right-click in Saved Measurements): where View Details sits, and its icon | below the separator, eye | below the separator, eye | **above** the separator, **ⓘ** | decided: the web matches Swift and Python |
+| 2 | Menu icons on the Mac | **hidden** on macOS (shown on iPad and iPhone) | shown | shown | decided: shown on the Mac too — only in the menus whose icons show elsewhere |
+| 3 | A shared check of a saved measurement's menu | — | — | — | decided: a shared case file, as `chart-menu.json` |
+| 4 | A peak's mode menu | a menu | a menu | **a drop-down list**: lists and ticks the custom name, an "Extended modes" heading, "Reset to Auto (…)", italic | decided: the web becomes a menu like Swift's and Python's |
+| 5 | Icons on the mode menu's Reset to Auto-Detected and Custom… | **icons** (iPad, iPhone) | none | none | decided: Swift's removed |
+
+## The items
+
+1. **A saved measurement's menu** — from its ⋯ or a right-click in Saved Measurements. Swift (`Views/Measurements/MeasurementsListView.swift:643–`) and Python
+   (`views/measurements/measurements_list_view.py:520`): Load into View · separator · View Details · Edit Name &
+   Notes · Export Measurement · Export Spectrum · Export PDF Report · separator · Delete. The web
+   (`components/MeasurementsPanel.tsx:735–775`) has Load into View · View Details · separator · …, and View Details'
+   icon is an ⓘ, not an eye. **Decision:** the web's order and icon as Swift's and Python's.
+2. **Swift on macOS.** Swift's menus give their items icons (`Label(…, systemImage:)`); on the Mac (macOS 27) SwiftUI
+   does not draw them. **Confirmed** on the owner's Mac: with `.labelStyle(.titleAndIcon)` on a saved measurement's
+   right-click menu its icons show; its ⋯ menu, unchanged, shows none (a test line is in the working tree,
+   `MeasurementsListView.swift:257`, marked DIAG). **Decision:** only where Swift's icons are missing on the Mac and
+   shown elsewhere — a small macOS-only helper on the contents of those 11 menus: the chart's ⋯ and right-click
+   (`SpectrumView.swift:686, 1237`), a peak label's right-click (`PeakAnnotations.swift:360`), the type menu
+   (`TapToneAnalysisView+Controls.swift:565`), a saved measurement's ⋯ and right-click (`MeasurementRowView.swift:32`,
+   `MeasurementsListView.swift:257`), Export All (`MeasurementsListView.swift:435`), Sort & Filter, More, Delete and
+   its submenu (`MeasurementsListView.swift:815–916`).
+   Not the mode menu (item 5). Style guide S6.
+3. **A shared check.** The chart's menu is checked in all three against `chart-menu.json`; a saved measurement's menu is
+   checked nowhere, which is how item 1 drifted. **Decision:** a shared case file for it — items, order, separators, icons —
+   run by all three. Swift's **Save Measurement to Disk…** is the Mac's only (a recorded platform difference).
+4. **The mode menu.** Swift (`Views/Shared/CombinedPeakModeRowView.swift:227`) and Python
+   (`views/shared/peak_card_widget.py:370–`): Reset to Auto-Detected (…) · separator · the seven modes · separator ·
+   the seven extended modes · separator · Custom…, in upright text. The web (`components/PeakCard.tsx:192`) uses a
+   native `<select>`, which lists and ticks the current value (so the custom name appears), heads its groups instead
+   of separating them, and takes the peak label's italic. **Decision:** a menu built like Swift's and Python's.
+5. **The mode menu's icons.** Swift gives Reset to Auto-Detected (↺) and Custom… (pencil) icons, shown on iPad and
+   iPhone; Python's and the web's have none. **Decision:** remove Swift's — they do not help.
 
 ## Plan
 
-1. Confirm the macOS cause with one build; list every Swift menu it affects.
-2. A shared case file for the row menu, as `chart-menu.json` — items, separators, icons — run by all three. Swift's
-   **Save Measurement to Disk…** is the Mac's only (a recorded platform difference).
-3. Fix the web's row menu (order and icon) and Swift's icons on macOS.
+1. The shared case file for a saved measurement's menu (item 3).
+2. Swift: the macOS helper on the 11 menus (item 2; the test line replaced), the mode menu's icons removed (item 5).
+3. Web: a saved measurement's menu — order and icon (item 1), the mode menu as a menu (item 4).
 4. Run-review.
+
+## Built
+
+- **Item 3:** the shared case file `saved-measurement-menu.json` (SM1–SM8; SM5, Save Measurement to Disk…, marked
+  `macOSOnly`), with a definition of the menu in each edition — Swift `Views/Measurements/SavedMeasurementMenu.swift`,
+  Python `views/measurements/saved_measurement_menu.py`, web `src/presentation/savedMeasurementMenu.ts` — and a test
+  of it in each. Each edition builds the menu from its definition.
+- **Item 1:** the web's menu from that definition: View Details below the separator, and the Material Design icons
+  Python draws (eye, pencil, …), generated by `gen_web_icons.py` as the chart menu's are.
+- **Item 2:** Swift's `menuIcons()` (`Views/Utilities/Extensions.swift`) — the icon style on the Mac, nothing
+  elsewhere — on the chart's ⋯ and right-click menus, a peak label's right-click, the type menu, a saved
+  measurement's ⋯ and right-click, Export All and Delete; Sort & Filter's items carry no icons, and More (⋯) is iPad and iPhone
+  only. The shared right-click adapter (`platformContextMenu`), which nothing used, is removed (owner). The test line is gone.
+- **Item 4:** the web's mode label opens a menu (`components/PeakCard.tsx`), built as its other menus: Reset to
+  Auto-Detected (…) while overridden, the seven modes, the seven extended modes, Custom…, separators between them.
+- **Item 5:** Swift's Reset to Auto-Detected and Custom… are plain items.
+
+## Run-review
+
+1. Mac (Swift), each Swift menu with icons — open it. → Every item shows its icon:
+   1. The chart's ⋯ (top right of the chart): Reset Both / Frequency / Magnitude Axis to Saved, … to Defaults, Reset
+      Labels.
+   2. A right-click on the chart: the same menu.
+   3. With a comparison measurement loaded, the chart's ⋯: Reset Both / Frequency / Magnitude Axis to Comparison
+      Range.
+   4. A right-click on a peak label: Reset Position.
+   5. The type menu beside New Tap: the tick beside the current type.
+   6. In Saved Measurements, a measurement's ⋯: Load into View … Delete.
+   7. A right-click on a saved measurement: the same menu.
+   8. Saved Measurements' Export All: Export All… (Share / AirDrop), Save All to Disk….
+   9. Saved Measurements' Delete: All…, Duplicates…, Selected….
+2. Every edition and device: open a saved measurement's ⋯ menu. → Load into View · separator · View Details (eye) ·
+   Edit Name & Notes · Export Measurement · (Mac only: Save Measurement to Disk…) · Export Spectrum · Export PDF
+   Report · separator · Delete — with the same icons in Python and the web.
+3. Every edition: open a peak's mode menu in Analysis Results; then rename a peak (Custom…) and open its menu again.
+   → Reset to Auto-Detected (…) (only after a rename) · separator · Air (Helmholtz) … Unknown · separator ·
+   Helmholtz T(1,1)_1 … Cross Tripole T(3,1) · separator · Custom…; upright text, no icons, the custom name not
+   listed.
+4. Web: choose a mode from the menu, then Reset to Auto-Detected, then Custom… → Each acts as before; a click outside
+   closes the menu without highlighting the peak.
+5. iPad and iPhone (Swift): open the mode menu. → Reset to Auto-Detected and Custom… have no icons.
+

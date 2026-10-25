@@ -91,6 +91,10 @@ ICONS = {
     "uploadOutline": "upload-outline",
     "bookClosed": "book-outline",
     "circleOutline": "checkbox-blank-circle-outline",
+    "fileDownload": "file-download-outline",
+    "pencil": "pencil-outline",
+    "fileExport": "file-export-outline",
+    "filePdf": "file-pdf-box",
 }
 
 # The app's own icons: the web's name → the SVG in tooling/parity/icons/ (Python names it "gt.<file stem>").
