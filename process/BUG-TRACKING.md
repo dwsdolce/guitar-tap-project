@@ -4,7 +4,9 @@
 in one place; talk to each user where they reached you.
 
 ## Intake channels (where a report is born)
-- **Developer-found** — the bulk; filed straight as a hub Issue.
+- **Developer-found** — the bulk. A **project** — work of several steps, decisions or sessions — is filed as a hub
+  Issue. A **simple bug fix** is just fixed, in every edition the same way, with its tests and run-review, and
+  committed; it gets no Issue and no detail doc (owner, 2026-10-25). When it is unclear which it is, ask.
 - **Platform GitHub Issue** — a user files on `GuitarTap` / `guitar_tap` / `GuitarTapWeb`. Low-traffic
   community intake, kept (not redirected) so users can file where the code is.
 - **Email** — `support@dolcesfogato.com`.
@@ -35,7 +37,8 @@ in one place; talk to each user where they reached you.
 - **`needs-verification`** encodes the standing rule that nothing is done until the user has *run* it.
 - Commits in any repo reference the item cross-repo: `refs dwsdolce/guitar-tap-project#N`.
 - The Issue is the **addressable index**; the meaty analysis is a detail doc in the hub (`docs/`), linked from
-  the Issue — even for a single-platform bug. See [the lifecycle](#issue-lifecycle--the-detail-doc) below.
+  the Issue — for every tracked item, single-platform ones included. See
+  [the lifecycle](#issue-lifecycle--the-detail-doc) below.
 
 ## Issue lifecycle — the detail doc
 This holds on every machine and in every session. Session memory is local to one machine and invisible to the
