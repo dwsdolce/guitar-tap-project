@@ -2,8 +2,9 @@
 
 **Issue:** [#44](https://github.com/dwsdolce/guitar-tap-project/issues/44)
 
-Status: **OPEN — built in all three (2026-10-24): Swift `0cb435c`, Python `0e021a2`, web `c277003`; run-review
-passed in every edition (owner); no release-notes entry (owner). To close once CI is green.**
+Status: **✅ COMPLETE (2026-10-24).** Swift `0cb435c`, Python `0e021a2`, web `c277003`; run-review passed in every
+edition (owner); no release-notes entry (owner). Closed by the owner before CI finished; a CI failure would be fixed
+as found.
 
 ## Findings
 
