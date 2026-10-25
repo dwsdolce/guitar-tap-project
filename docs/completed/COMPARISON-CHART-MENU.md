@@ -2,9 +2,8 @@
 
 **Issue:** [#42](https://github.com/dwsdolce/guitar-tap-project/issues/42)
 
-Status: **OPEN — built in all three editions (2026-10-24): Swift `0f33f1a` (notes `48b3964`), Python `b6bd987`
-(notes `2e33ec8`), web `184f3cc` (notes `7f6798f`); run-review passed in every edition and on the iPhone (owner).**
-To close once CI is green.
+Status: **✅ COMPLETE (2026-10-24).** Swift `0f33f1a` (notes `48b3964`), Python `b6bd987` (notes `2e33ec8`), web
+`184f3cc` (notes `7f6798f`); run-review passed in every edition and on the iPhone (owner); CI green.
 
 ## The problem
 
