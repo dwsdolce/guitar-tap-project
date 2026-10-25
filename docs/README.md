@@ -14,7 +14,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#43](https://github.com/dwsdolce/guitar-tap-project/issues/43) · [`COMPARISON-LEGEND.md`](COMPARISON-LEGEND.md) — the chart legend when a comparison has many measurements: decisions to make
 - [#45](https://github.com/dwsdolce/guitar-tap-project/issues/45) · [`OVERLAY-CURVE-POINTS.md`](OVERLAY-CURVE-POINTS.md) — Python draws every point of each overlaid curve, so a large comparison resizes slowly
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
@@ -25,6 +24,11 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 #40 (the analyzer holds the library and copies of settings) is **closed, not needed**; its record is
 [`completed/ANALYZER-RESPONSIBILITIES.md`](completed/ANALYZER-RESPONSIBILITIES.md) — its main reason was the live
 peaks, fixed by #41; the rest is known and left as it is.
+
+#43 (the chart legend with many measurements) is **closed**; its record is
+[`completed/COMPARISON-LEGEND.md`](completed/COMPARISON-LEGEND.md) — one legend in every edition, laid out in the
+plot's frame and drawn over it, wrapping onto right-aligned lines, on screen and in the exported image (no
+"Measurements:" row); a chart has one range and every export uses it.
 
 #44 (menus the same in every edition) is **closed**; its record is
 [`completed/MENUS-SAME-EVERYWHERE.md`](completed/MENUS-SAME-EVERYWHERE.md) — a saved measurement's menu built from a

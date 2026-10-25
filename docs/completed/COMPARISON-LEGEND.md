@@ -2,7 +2,7 @@
 
 **Issue:** [#43](https://github.com/dwsdolce/guitar-tap-project/issues/43)
 
-Status: **OPEN — built in all three editions (Swift `80b458e`, Python `b8943c6`, web `e64f9f4`); run-review passed in every edition; the export check passes in every edition; release notes in each; CI to check.**
+Status: **✅ COMPLETE (2026-10-25).** Swift `80b458e` (and `624b262`, the iOS PDF image height), Python `b8943c6`, web `e64f9f4`; run-review passed in every edition (owner); the export check passes in every edition; CI green in all three.
 
 ## The problem
 
@@ -92,6 +92,9 @@ taps and the average fit.
   nothing to lay out) in Swift `ChartLegendTests`, Python `test_chart_legend.py` and the web's
   `chart-legend.test.ts`, linked from each legend file (`tests=test/chart-legend`). Mutation: a line breaking when
   the next entry exactly fits (`>=`) fails CL2 and CL7 in all three.
+- **The PDF's chart image height** (Swift `624b262`, found by CI): the report gives the image its height from its
+  pixel size, rounded once (`reportImageHeight`), so iOS lays out every line below it as macOS does; left to
+  SwiftUI, the shorter plate, brace and comparison images' fractional heights rounded a point apart on iOS.
 - **Plate and brace** use the same legend for Longitudinal, Cross-grain and Diagonal, so their screen and exported
   image change the same way.
 - **The PDF fixtures move:** every comparison, multi-tap, plate and brace fixture's lines sit higher (the image is
