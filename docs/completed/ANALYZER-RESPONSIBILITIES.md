@@ -2,8 +2,11 @@
 
 **Issue:** [#40](https://github.com/dwsdolce/guitar-tap-project/issues/40)
 
-Status: **OPEN — found 2026-10-23, nothing changed yet.** An architectural fix, not an alignment of the editions:
-all three share the flaw, and all three will share the fix.
+Status: **CLOSED, NOT NEEDED (owner, 2026-10-24).** The first reason below was the live peaks, published on the
+analyzer every frame — fixed by #41 (`completed/LIVE-PEAKS.md`); with them gone the analyzer announces nothing per
+frame (`test/detected-peaks`). The other two are known and judged not worth a restructure on their own: each setting
+copy has one writer (the analyzer's setter saves it) and none has been found disagreeing with the store. Reopen if one
+does, or if the library has to change for another reason.
 
 ## The problem
 
@@ -19,9 +22,9 @@ two things that are not analysis:
 ## Why it matters
 
 - **Views redraw at FFT rate.** In Swift the analyzer is one `ObservableObject`; it announces a change for any of its
-  ~50 published values, never for one. A view that watches it for a value that rarely changes — the library, a setting
-  — redraws many times a second during a measurement. #28 fixed the same fault for the input level by moving it into
-  its own object (`InputLevel`).
+  ~50 published values, never for one, so a view watching it for a rarely-changing value redraws whenever anything
+  on it changes. The only values that changed per frame were the live peaks, now their own object (#41); the library
+  and the setting copies change only on the user's action.
 - **One value, two places.** A setting held on the analyzer and in the settings store can disagree; every change
   has to remember to update both.
 - **Responsibilities blur.** Storage, import/export and settings policy sit in the class that does the analysis.
