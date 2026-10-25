@@ -2,7 +2,9 @@
 
 **Issue:** [#39](https://github.com/dwsdolce/guitar-tap-project/issues/39)
 
-Status: **OPEN — found 2026-10-23, nothing changed yet.** To be worked after #9 (sort, filter and delete).
+Status: **OPEN — every item decided (owner, 2026-10-24); items 1, 2 and 4 built: Swift `21f94aa`, web `571c91d`
+(Python already did them); run-review passed (owner, 2026-10-24); no release-notes entry (owner).** Style guide S8
+extended (headings, empty messages, scrolled pages). To close once CI is green.
 
 ## The rule
 
@@ -15,15 +17,15 @@ items below. Where the editions differ, Python is right on items 1, 2 and 4.
 
 | # | Where | Swift | Python | Web | Status |
 |---|---|---|---|---|---|
-| 1 | Comparison results: the column-header row (Spectrum / Air / Top / Back) | scrolls | fixed | scrolls | open |
-| 2 | Multi-tap comparison: the column-header row | scrolls | fixed | scrolls | open |
-| 3 | Multi-tap comparison: the "Averaged" row (a total, not a tap) | scrolls | scrolls | scrolls | open — decide whether it is a total |
-| 4 | Analysis Results: "No peaks detected in visible range" | in the scroll | fixed above the list | in the scroll | open |
-| 5 | Plate / brace results: peaks share one scroll with the dimension editors, Gore, the properties and the Measurement Process instructions | scrolls | scrolls | scrolls | open — decide: a results page, or a list with fixed sections |
-| 6 | Measurement Details: the whole page scrolls (Measurement Info, section titles, "No identified peaks"); only Done is fixed | scrolls | scrolls | scrolls | open — decide |
-| 7 | The chart's ⓘ help: its title scrolls with the lines | scrolls | scrolls | scrolls | open — decide whether it is a list |
-| 8 | Web, a window ≤ 820 px wide (not a phone): the Analysis Results panel stops scrolling internally, so header, peaks and footer scroll together | — | — | S8 lost at that width | open |
-| 9 | Swift, phone landscape: hides the mic / Re-analyze row and the Ring-Out / Tap Ratio box; the other editions have no equivalent | differs | — | — | open — decide |
+| 1 | Comparison results: the column-header row (Spectrum / Air / Top / Back) | scrolls | fixed | scrolls | decided: fixed — only the rows scroll (owner, 2026-10-24) |
+| 2 | Multi-tap comparison: the column-header row | scrolls | fixed | scrolls | decided: fixed — only the rows scroll (owner, 2026-10-24) |
+| 3 | Multi-tap comparison: the "Averaged" row | scrolls | scrolls | scrolls | decided: scrolls with the taps — it is a row of the same kind (owner, 2026-10-24); no change |
+| 4 | Analysis Results: "No peaks detected in visible range" | in the scroll | fixed above the list | in the scroll | decided: fixed above the list, as Python — it is not an item (owner, 2026-10-24); Swift and the web change |
+| 5 | Plate / brace results: the peaks (2 or 3) share one scroll with the dimension editors, Gore, the properties and the Measurement Process instructions | scrolls | scrolls | scrolls | decided: no change — a scrolled page, not a scrollable list, so S8 does not apply (owner, 2026-10-24) |
+| 6 | Measurement Details: the whole page scrolls (Measurement Info, notes, the identified peaks or the compared spectra); only Done is fixed | scrolls | scrolls | scrolls | decided: no change — a report, a scrolled page like 5, not a list of items to select; the same on every device (owner, 2026-10-24) |
+| 7 | The chart's ⓘ help: its title scrolls with the lines | scrolls | scrolls | scrolls | decided: no change — it fits even on an iPhone in landscape, and would scroll as a whole only on a shorter screen (owner, 2026-10-24) |
+| 8 | Web, a narrow window: the panel loses its internal scroll | — | — | see status | not a #39 finding (owner, 2026-10-24): the Results panel works as decided wherever the layout fits; below roughly 900–1,060 px the web's page does not fit the window (clipped on the right; stacked and overlapping under 820 px) — a web layout problem |
+| 9 | Swift, phone landscape: hides the mic / Re-analyze row and the Ring-Out / Tap Ratio box | differs | — | — | not a #39 finding (owner, 2026-10-24): a deliberate design decision for the phone's landscape layout, not a question of scrolling |
 
 ### Where each is
 
@@ -48,3 +50,24 @@ items below. Where the editions differ, Python is right on items 1, 2 and 4.
 Not lists, so outside the rule: Settings' device and calibration choices (menu pickers in all three); Settings and
 FFT Metrics (forms); the Quick Start Guide and release notes (documents — the web's and Swift's section titles stay
 pinned; Python's, in a text browser, scroll).
+
+## Built
+
+Swift: `ComparisonResultsView` and `MultiTapComparisonResultsView` draw their heading and rows apart
+(`ComparisonTablePart`); the Results panel puts the heading, or "No peaks detected in visible range", in a fixed
+strip above its scroll (`fixedAboveList`). Measurement Details and exports draw the whole table, as before. Web: the
+same (`part` on both tables; a fixed strip in `App` above `.results-scroll`). Python unchanged — it already did this.
+
+## Run-review
+
+On Swift (Mac, iPad, iPhone) and the web (computer, phone or tablet); Python for comparison.
+
+1. Load a comparison measurement of many measurements, so its table overflows the Results panel; scroll the table.
+   → The Spectrum / Air / Top / Back heading stays put; only the rows move.
+2. Load a multi-tap guitar measurement and show its table of taps (Taps); make the panel short enough to scroll
+   (an iPhone, or a short window); scroll. → The Tap / Air / Top / Back heading stays put; the taps and the
+   Averaged row move.
+3. Narrow the chart's range until no peak is in it. → "No peaks detected in visible range" sits just under the
+   panel's header, as in Python.
+4. Open Measurement Details for the same comparison. → The page scrolls as a whole, as before.
+

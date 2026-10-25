@@ -139,6 +139,12 @@ Python and the web show them as ordinary items. Each item has its icon in every 
 calibrations — and nothing else. Everything that is not an item sits fixed above or below it and never scrolls: a
 total or a filter's count ("Showing 12 of 48 · Plate"), a notice or warning, the actions. The same in every edition.
 
+A table's column headings are not items: they stay fixed while its rows scroll. A list's empty message ("No peaks
+detected in visible range") is not an item either, and sits fixed above where the items would be.
+
+**A scrolled page is not a list.** A report or results page — Measurement Details, a plate's or brace's results —
+holds inputs, results and text rather than items to select, and scrolls as a whole.
+
 ## 2. Colour
 
 1. **Every colour is a role.** A role names what the colour is for (the fL curve, secondary text, the Peak Min line)
@@ -267,4 +273,4 @@ SF Symbol.
 | S5 | One mechanism per state; "cannot act now" and "does not apply" as opacity on the whole group | owner, 2026-10-20 |
 | S6 | Text symbols in the text form; an icon in every edition wherever one has it | owner, 2026-10-20 |
 | S7 | This guide lives in `process/` | owner, 2026-10-20 |
-| S8 | A list scrolls only its items; totals, notices and actions sit fixed above or below it | owner, 2026-10-23 |
+| S8 | A list scrolls only its items; totals, notices, headings, empty messages and actions sit fixed above or below it; a scrolled page (a report, a results page) is not a list and scrolls as a whole | owner, 2026-10-23; 2026-10-24 |
