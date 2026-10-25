@@ -1038,6 +1038,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/chart-legend",
+      "swift": [
+        "GuitarTapTests/ChartLegendTests.swift"
+      ],
+      "python": [
+        "tests/test_chart_legend.py"
+      ],
+      "web": [
+        "test/chart-legend.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/chart-menu",
       "swift": [
         "GuitarTapTests/ChartMenuTests.swift"
@@ -2633,12 +2647,14 @@
     {
       "slug": "view/spectrum-chart",
       "swift": [
+        "GuitarTap/Views/ChartLegend.swift",
         "GuitarTap/Views/Shared/ChartAxisTitle.swift",
         "GuitarTap/Views/SpectrumView+ChartContent.swift",
         "GuitarTap/Views/SpectrumView+SnapInterpolation.swift",
         "GuitarTap/Views/SpectrumView.swift"
       ],
       "python": [
+        "src/guitar_tap/views/chart_legend.py",
         "src/guitar_tap/views/fft_canvas.py",
         "src/guitar_tap/views/spectrum_view.py",
         "src/guitar_tap/views/spectrum_view_snap_interpolation.py",
@@ -2647,11 +2663,13 @@
       "web": [
         "src/components/SpectrumChart.tsx",
         "src/hooks/useChartView.ts",
+        "src/presentation/chartLegend.ts",
         "src/presentation/chartTypes.ts",
         "src/presentation/snapInterpolation.ts",
         "src/presentation/spectrumRender.ts"
       ],
       "tests": [
+        "test/chart-legend",
         "test/snap-interpolation"
       ],
       "equivalence": "tests"
