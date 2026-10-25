@@ -2,9 +2,9 @@
 
 **Issue:** [#39](https://github.com/dwsdolce/guitar-tap-project/issues/39)
 
-Status: **OPEN — every item decided (owner, 2026-10-24); items 1, 2 and 4 built: Swift `21f94aa`, web `571c91d`
-(Python already did them); run-review passed (owner, 2026-10-24); no release-notes entry (owner).** Style guide S8
-extended (headings, empty messages, scrolled pages). To close once CI is green.
+Status: **✅ COMPLETE (2026-10-24).** Items 1, 2 and 4 built: Swift `21f94aa`, web `571c91d` (Python already did
+them); the rest decided as no change or outside #39; run-review passed (owner); no release-notes entry (owner); CI
+green. Style guide S8 extended (headings, empty messages, scrolled pages).
 
 ## The rule
 
