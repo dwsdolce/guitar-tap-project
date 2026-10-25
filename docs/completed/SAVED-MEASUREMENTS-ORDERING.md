@@ -3,7 +3,8 @@
 **Issue:** [#9](https://github.com/dwsdolce/guitar-tap-project/issues/9)
 
 Status: **✅ COMPLETE (2026-10-24).** Decided by the owner; run-review complete. Swift `8b7ef17` (notes `b593370`),
-Python `088f14b` (notes `473941c`), web `0426a39` (notes `e49b478`). Finding 1 continues as #41.
+Python `088f14b` (notes `473941c`), web `0426a39` (notes `e49b478`); Swift `7eefb1b` puts the list's rows behind
+`AnyView`, keeping the view's type within the iPhone depth limit (`ViewTypeDepthTests`). Finding 1 continues as #41.
 
 ## What it does
 

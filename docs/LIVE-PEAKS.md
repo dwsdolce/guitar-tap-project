@@ -2,8 +2,8 @@
 
 **Issue:** [#41](https://github.com/dwsdolce/guitar-tap-project/issues/41)
 
-Status: **OPEN — found 2026-10-24 (#9's run-review), nothing changed yet.** Decided by the owner: the live peaks get
-an object of their own, in all three editions (option B below).
+Status: **OPEN — built in all three editions (2026-10-24): Swift `f8aabd6`, Python `61a28ea`, web `b89644e`.**
+Run-review passed on macOS and iOS in every edition (owner, 2026-10-24); Windows and Linux to run-review.
 
 ## The problem
 
@@ -59,13 +59,75 @@ open `NSMenu` is not rebuilt by SwiftUI's redraws), but the redraws still cost t
   live peaks (the graph's labels, the Results list); the main view stops redrawing at the frame rate. All three
   editions, the same mechanism (the owner, 2026-10-24).
 
+## Survey (2026-10-24)
+
+The values assigned every frame — and only these — are the **detected peaks**: `allPeaks`, its Peak Min projection
+`peaksAbovePeakMin`, `identifiedModes` and `selectedPeakIDs`. They are the live peaks while waiting for a tap and the
+measurement's peaks once it completes (selection, labels, saving, loading, export, re-analyze). The other peak state —
+`highlightedPeakID`, `peakModeOverrides`, `peakAnnotationOffsets` — changes on the user's action, not per frame.
+
+| | Where the values live | How views are told | Who reads them for display |
+|---|---|---|---|
+| Swift | `@Published` on `TapToneAnalyzer` | the whole analyzer announces a change (`ObservableObject`) | the main view's body (the chart's `peaks`/`annotationPeaks`/`peakModes`, `SpectrumViews.swift:219–268`; five buttons' "no peaks → disabled", `Layouts.swift:390, 527, 834`, `Controls.swift:61, 163`), the Results panel (`TapAnalysisResultsView.swift:252, 410, 523`), exports and the PDF (on demand) |
+| Python | attributes on the analyzer | the analyzer's own `peaksChanged` signal — already peak-specific | the chart's scatter and labels (`fft_canvas.py`, `peak_annotations.py`), the Results panel, the main view's buttons |
+| Web | fields on the analyzer | `analyzer.notify()` — every subscriber re-renders (`App` via `useTapToneAnalyzer`) | `App.tsx` (6 reads of `peaksAbovePeakMin`), the chart, the Results panel |
+
+No Combine subscription in Swift reads these values; nothing else on the analyzer is assigned per frame (with the
+spectrum frozen, the main view redrew once in 29 s).
+
+## Design (decided by the owner, 2026-10-24 — to be refined as it is built)
+
+1. **One home for the detected peaks, at all times** — a `DetectedPeaks` object (slug `model/detected-peaks`) holding
+   `allPeaks`, `peaksAbovePeakMin`, `identifiedModes` and `selectedPeakIDs`, live and completed alike. Not a
+   live-only object copied onto the analyzer at completion: that would keep the same values in two places.
+2. **The analyzer keeps its API** — `analyzer.allPeaks` etc. read and write through to `analyzer.peaks`, so the model
+   code is unchanged; only who is told changes: **the peaks' observers, not the analyzer's**.
+3. **The views that show peaks observe `DetectedPeaks`** —
+   - Swift: the chart is built inside a `PeaksReader` (as `FrameReader` reads `LiveFrame`), the Results panel
+     observes `analyzer.peaks`, and the five buttons' "has peaks" goes through `PeaksReader` too — so the main view's
+     body reads no peaks;
+   - Python: `peaksChanged` moves to `DetectedPeaks` (the views connect to `analyzer.peaks.peaksChanged`) — the same
+     behaviour, the same structure as the others;
+   - web: a small store with its own `subscribe` (as `inputLevel.ts`); `analyzeMagnitudes` notifies it instead of the
+     analyzer; the chart, Results panel and buttons read it through a hook.
+4. **The user-driven peak state stays on the analyzer** (`highlightedPeakID`, overrides, label positions) — it does
+   not change per frame. Moving it too would be consistent but is not needed for this fault.
+5. **Test of who is told** (shared case, as `test/input-level`): while waiting for a tap, a frame's new peaks tell
+   the peaks' observers and **not** the analyzer's; after completion nothing is told per frame.
+
 ## Plan
 
-1. **Survey and design** — `allPeaks` / `selectedPeakIDs` / `identifiedModes` are also the completed measurement's
-   peaks (selection, labels, save, load), so: what the new object holds (only the per-frame live values, or the
-   peak state at all times) and who reads it, in each edition. Written here for the owner's decision.
+1. **Design** — decided by the owner (2026-10-24), to be refined as it is built.
 2. **Test first** — a shared *who is told* case, as `test/input-level` / `test/live-frame`: while waiting for a tap,
    a frame's new peaks do not tell the analyzer's observers.
-3. **Implement** — Swift, then Python, then the web; parity tags and the case file.
-4. **Run-review** — iPad and iPhone: menus (highlight, Delete submenu) and a row's swipe during a live spectrum;
+3. **Implement Swift, then test it on the iPad and iPhone** — the menus (highlight, the Delete submenu) and a row's
+   swipe during a live spectrum. Only once Swift is shown to fix it: Python, then the web; parity tags.
+4. **Run-review** (below) — iPad and iPhone: menus (highlight, Delete submenu) and a row's swipe during a live spectrum;
    the live peaks and labels as before on every edition.
+
+## Built
+
+| | Model | Views |
+|---|---|---|
+| Swift | `Models/DetectedPeaks.swift`; the analyzer's four values read and write through `peaks` | `Views/Utilities/PeaksReader.swift` (`PeaksReader`, `DisabledByPeaks`): the chart, the five annotation-visibility buttons, the Results panel (behind `AnyView`) |
+| Python | `models/detected_peaks.py` (`peaksChanged` moved here); the analyzer's four values are properties onto `peaks` | every `peaksChanged` emit and connect through `analyzer.peaks` |
+| Web | `state/detectedPeaks.ts` (`analyzer.detectedPeaks` — `analyzer.peaks` is the web's name for every peak); the four fields read and write through it; out of the analyzer's snapshot | `components/PeaksReader.tsx`; `App`'s peak chain is one function (`peakDisplay`) read inside the readers around the chart, the annotation button, the selection buttons, the Results list and the ratio |
+
+Tests: `test/detected-peaks` (DP1, DP2) in all three; the live-frame tests' note corrected. Found on the way: #9's
+Saved Measurements view had grown past the iPhone type-depth limit (38 of 36) — its rows now behind `AnyView`.
+
+## Run-review
+
+On each edition: Python on Windows, macOS and Linux; the web on a computer and on a phone or tablet; Swift on the Mac.
+
+1. Start a guitar tap sequence and do not tap. → The spectrum and its peaks update live; peak labels appear and move;
+   the Results list and the Tap Ratio follow them.
+2. Zoom or pan the chart while waiting. → The Results list follows the visible range, as before.
+3. Press the annotation-visibility button. → Enabled while there are peaks; it cycles All → Selected → None.
+4. Tap once. → The measurement completes; peaks, labels, the Results list and the ratio hold still.
+5. Deselect a peak in the Results list, then Deselect All, then Reset to Auto. → The chart's labels and the ratio
+   follow each.
+6. Rename a peak's mode, then drag its label. → Both show at once, and survive a Peak Min move.
+7. Start a plate measurement and go through its phases. → The L / C / FLC peaks and labels show as before.
+8. Load a saved measurement. → Its peaks, selection and labels show as saved.
+

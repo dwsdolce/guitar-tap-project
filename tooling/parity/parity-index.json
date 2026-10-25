@@ -424,6 +424,24 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/detected-peaks",
+      "swift": [
+        "GuitarTap/Models/DetectedPeaks.swift",
+        "GuitarTap/Views/Utilities/PeaksReader.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/detected_peaks.py"
+      ],
+      "web": [
+        "src/components/PeaksReader.tsx",
+        "src/state/detectedPeaks.ts"
+      ],
+      "tests": [
+        "test/detected-peaks"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/export-filename",
       "swift": [
         "GuitarTap/Models/ExportFilename.swift"
@@ -1101,6 +1119,20 @@
       ],
       "web": [
         "test/decay-tracking.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/detected-peaks",
+      "swift": [
+        "GuitarTapTests/DetectedPeaksTests.swift"
+      ],
+      "python": [
+        "tests/test_detected_peaks.py"
+      ],
+      "web": [
+        "test/detected-peaks.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -2183,7 +2215,6 @@
         "tests/test_dot_layer.py"
       ],
       "web": [
-        "src/App.tsx",
         "src/dsp/guitarModes.ts",
         "test/dot-layer.test.ts"
       ],

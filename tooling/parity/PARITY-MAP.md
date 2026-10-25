@@ -44,6 +44,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `dsp/spectrum-average` | `GuitarTap/Models/TapToneAnalyzer+SpectrumCapture.swift` | `src/guitar_tap/models/tap_tone_analyzer_spectrum_capture.py` | `src/state/tapToneAnalyzer.ts` | tests |
 | `dsp/wav` | `GuitarTap/Models/RealtimeFFTAnalyzer+FFTProcessing.swift` | `src/guitar_tap/models/realtime_fft_analyzer_engine_control.py` | `src/dsp/wav.ts` | tests |
 | `model/appearance` | `GuitarTap/Models/Appearance.swift` | `src/guitar_tap/models/appearance.py` | `src/presentation/appearance.ts` | tests |
+| `model/detected-peaks` | `GuitarTap/Models/DetectedPeaks.swift`<br>`GuitarTap/Views/Utilities/PeaksReader.swift` | `src/guitar_tap/models/detected_peaks.py` | `src/components/PeaksReader.tsx`<br>`src/state/detectedPeaks.ts` | tests |
 | `model/export-filename` | `GuitarTap/Models/ExportFilename.swift` | `src/guitar_tap/models/export_filename.py` | `src/measurement/exportFilename.ts` | tests |
 | `model/guitar-mode-classify` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/classify.ts`<br>`src/presentation/modeColors.ts` | tests |
 | `model/input-level` | `GuitarTap/Models/InputLevel.swift` | `src/guitar_tap/models/input_level.py` | `src/audio/inputLevel.ts` | tests |
@@ -86,6 +87,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/comparison` | `GuitarTapTests/ComparisonModeTests.swift` | `tests/test_comparison_annotation_guard.py`<br>`tests/test_comparison_mode.py` | `test/comparison.test.ts` | test suite |
 | `test/dead-input-threshold` | `GuitarTapTests/DeadInputThresholdTests.swift` | `tests/test_dead_input_threshold.py` | `test/dead-input-threshold.test.ts` | test suite |
 | `test/decay-tracking` | `GuitarTapTests/DecayTrackingTests.swift` | `tests/test_decay_tracking.py` | `test/decay-tracking.test.ts` | test suite |
+| `test/detected-peaks` | `GuitarTapTests/DetectedPeaksTests.swift` | `tests/test_detected_peaks.py` | `test/detected-peaks.test.ts` | test suite |
 | `test/dimming` | `GuitarTapTests/DimmingTests.swift` | `tests/test_dimming.py` | `test/dimming.test.ts` | test suite |
 | `test/display-range` | `GuitarTapTests/DisplayRangeExpansionTests.swift`<br>`GuitarTapTests/DisplayRangeScenarioTests.swift` | `tests/test_display_range_expansion.py`<br>`tests/test_display_range_scenarios.py` | `test/display-range-scenarios.test.ts`<br>`test/display-range.test.ts` | test suite |
 | `test/dsp` | `GuitarTapTests/DSPTests.swift` | `tests/test_dsp.py` | `test/dsp.test.ts` | test suite |
@@ -162,7 +164,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/chart-style` | `GuitarTap/Views/Utilities/ChartStyle.swift` | `src/guitar_tap/views/utilities/chart_style.py` | `src/presentation/chartStyle.ts` | tests |
 | `view/comparison-results` | `GuitarTap/Views/ComparisonResultsView.swift` | `src/guitar_tap/views/comparison_results_view.py` | `src/components/ComparisonResultsView.tsx` | review only |
 | `view/dimming` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/App.css` | tests |
-| `view/dot-layer` | `GuitarTap/Views/SpectrumView.swift`<br>`GuitarTapTests/DotLayerTests.swift` | `src/guitar_tap/views/fft_canvas.py`<br>`tests/test_dot_layer.py` | `src/App.tsx`<br>`src/dsp/guitarModes.ts`<br>`test/dot-layer.test.ts` | review only |
+| `view/dot-layer` | `GuitarTap/Views/SpectrumView.swift`<br>`GuitarTapTests/DotLayerTests.swift` | `src/guitar_tap/views/fft_canvas.py`<br>`tests/test_dot_layer.py` | `src/dsp/guitarModes.ts`<br>`test/dot-layer.test.ts` | review only |
 | `view/edit-sheet` | `GuitarTap/Views/Measurements/EditMeasurementView.swift` | `src/guitar_tap/views/measurements/edit_measurement_view.py` | `src/components/EditMeasurementSheet.tsx` | review only |
 | `view/empty-state` | `GuitarTap/Views/Shared/EmptyStateView.swift` | `src/guitar_tap/views/shared/empty_state_view.py` | `src/components/EmptyStateView.tsx` | review only |
 | `view/file-exporter` | `GuitarTap/Views/Utilities/MeasurementFileExporter.swift` | `src/guitar_tap/views/utilities/measurement_file_exporter.py` | `src/saveFile.ts` | tests |
