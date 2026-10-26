@@ -26,8 +26,10 @@ Swift ships through App Store Connect and has no GitHub release; it is not part 
 | Web | `guitar-tap-web-<version>.<build>.zip` — `dist/`, the whole app: static, about 1.6 MB, runs from any folder over HTTPS (Vite `base: './'`), its Help linking to the manual on dolcesfogato.com. What Lutherie Academy installs and what is uploaded to dolcesfogato.com. | on GitHub |
 | Python | `guitar-tap-<version>.<build>-x86_64.AppImage` | on GitHub (Ubuntu 22.04) |
 | Python | `Guitar_Tap_V<version>.exe` | on GitHub (Windows, Inno Setup; unsigned, as now) |
+| Python | `guitar-tap-<version>.<build>-x86_64.deb`, `guitar-tap-<version>.<build>-x86_64.rpm` | on GitHub (Ubuntu 22.04, from the AppImage's built app; unsigned) |
 | Python | `Guitar_Tap_V<version>.dmg` | by hand: signing and notarising need the owner's Apple credentials |
 | Python | `ReleaseNotes-<version>-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf` | by hand, with the `.dmg` (`build_mac`; the manual from GuitarTap) |
+| Both | `SHA256SUMS` — each attached file's SHA-256 | on GitHub, by the workflow |
 
 ## The process
 
@@ -64,6 +66,15 @@ public, and Python's update check reads only published releases.
    the owner has reviewed it and publishes.
 5. **One process for Python and the web**, documented in `process/RELEASE-CHECKLIST.md`.
 6. **Python's Windows installer is built on GitHub**; it is not signed, as now.
+7. **Python's 1.0.2 is not rebuilt.** Its tag predates the packaging the workflow uses (the requirement groups,
+   `849c4de`; the bash Windows build; the AppImage, #23) — run on the tag, both jobs stop at the missing
+   `requirements-packaging.txt`. A release tag's build is proved by the web's 1.0.2 and, for Python, by 1.1.0's draft,
+   checked before it is published.
+8. **Python ships a `.deb` and an `.rpm` too**, unsigned: installed with the system's own tools, in the applications
+   menu, removed cleanly. A signed `.deb`/`.rpm` checks nothing on its own (`dpkg` and `apt` do not check a single
+   `.deb`'s signature; `dnf` does not check a downloaded `.rpm` by default); signing pays off only with a package
+   repository — its own Issue, if Linux users ask.
+9. **Every release carries `SHA256SUMS`** (Python and the web): a download can be checked against it.
 
 ## Built
 
@@ -106,18 +117,24 @@ public, and Python's update check reads only published releases.
 2. **Python's workflow** (guitar_tap `release.yml`, in place of `release-linux.yml`): the Linux AppImage and the
    Windows installer, checked, as artifacts or on the draft, as the web's.
 3. **A test run of both**, before anything relies on them: each workflow for `main` into the draft `release-test-1`;
-   a stand-in uploaded for the files built by hand, test notes written; the owner looks over each draft on GitHub,
-   downloads its files (the web zip runs from a plain folder; the Windows installer and the AppImage start); then
-   each draft is deleted, never published — and no tag is left in either repo.
-4. **The web's 1.0.2:** the workflow for `1.0.2`, keeping the zip as an artifact; check it — it reports 1.0.2 (213),
-   runs from a plain folder (`python3 -m http.server`), and its files match what is live at
-   dolcesfogato.com/guitar_tap/guitar_tap_web/. Then the draft: the zip attached, its marketing notes (the owner
-   reviews them); the owner publishes.
-5. **Python on its `1.0.2` tag**, artifacts only (its release exists): both build from a release tag.
-6. **Linux users told to make the AppImage executable:** the User Manual's §2.1 (ch02) names the file as it is
-   (`guitar-tap-<version>.<build>-x86_64.AppImage`), gives the file manager's way (right-click → Properties →
-   Executable as Program) beside `chmod +x`, and says what a double-click shows before then; and every Python GitHub
-   release's notes carry a standing line saying so, under its downloads.
+   the owner looks over each draft and its files; each draft deleted, never published, no tag left.
+4. **The web's 1.0.2:** built from the tag, checked against what is live, the draft with its marketing notes, published
+   by the owner.
+5. **Python's `.deb` and `.rpm`**, made as the owner's other Python apps make them (pdfarranger-qt):
+   `packaging/make_linux_package` (copied from pdfarranger-qt, its names changed) packs the PyInstaller bundle as it
+   stands — under `/opt/guitar-tap`, a wrapper in `/usr/bin`, `packaging/guitar-tap.desktop`, the icon and the
+   copyright — the `.deb` with `dpkg-deb` and its dependencies from `dpkg-shlibdeps` (only what the system must
+   supply), the `.rpm` with `rpmbuild` and `AutoReqProv: no` (the bundled Qt not advertised); `packaging/build_linux`
+   takes `[app|appimage|deb|rpm]` (default all three), a missing `dpkg-deb` or `rpmbuild` reported and that format
+   skipped. In the release workflow's Linux job (Ubuntu 22.04, `dpkg-dev` and `rpm` installed): each checked (its name
+   carries `<version>.<build>`; the `.deb` installs and the app starts; the `.rpm` installs in a Fedora container and
+   the app starts) and attached beside the AppImage. **And `SHA256SUMS`** on every draft, Python's and the web's,
+   listing each file the workflow attaches. Tested as in step 3: a test draft, the owner installs each package on
+   Linux, the draft deleted.
+6. **Linux users told how to start the AppImage:** the User Manual's §2.1 (ch02) names the file as it is, gives the
+   file manager's way (right-click → Properties → Executable as Program) beside `chmod +x`, says what a double-click
+   shows before then, and gives the `.deb` and `.rpm`; every Python release's notes carry a standing line under its
+   downloads.
 7. **The release checklist:** §2 (Python) and §3 (the web) become the process above, the same steps in both; the
    Windows script named as it is (`packaging/build_win`, not `build_win.bat`).
 8. **1.1.0** is released this way in both editions.
