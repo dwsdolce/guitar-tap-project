@@ -2,7 +2,7 @@
 
 **Issue:** [#45](https://github.com/dwsdolce/guitar-tap-project/issues/45)
 
-Status: **OPEN — committed: Swift `90be580`, Python `b3a98dd`, web `66165e0` (release notes `84639e9`, `15adc05`, `515ac92`); run-review passed in every edition (owner); Swift's tests pass; the export check passes in every edition; CI pending.**
+Status: **✅ COMPLETE (2026-10-26).** Swift `90be580`, Python `b3a98dd`, web `66165e0` (release notes `84639e9`, `15adc05`, `515ac92`); run-review passed in every edition (owner); Swift's tests pass; the export check passes in every edition; CI green in all three.
 
 ## The problem
 

@@ -14,7 +14,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#45](https://github.com/dwsdolce/guitar-tap-project/issues/45) · [`OVERLAY-CURVE-POINTS.md`](OVERLAY-CURVE-POINTS.md) — Python draws every point of each overlaid curve, so a large comparison resizes slowly
 - [#26](https://github.com/dwsdolce/guitar-tap-project/issues/26) · [`MANUAL-SCREENSHOTS.md`](MANUAL-SCREENSHOTS.md) — the screenshots and images to recapture for the 1.1.0 release: the manual, the App Store, the website
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
@@ -30,6 +29,12 @@ peaks, fixed by #41; the rest is known and left as it is.
 [`completed/COMPARISON-LEGEND.md`](completed/COMPARISON-LEGEND.md) — one legend in every edition, laid out in the
 plot's frame and drawn over it, wrapping onto right-aligned lines, on screen and in the exported image (no
 "Measurements:" row); a chart has one range and every export uses it.
+
+#45 (overlaid curves, and exports of the measurement) is **closed**; its record is
+[`completed/OVERLAY-CURVE-POINTS.md`](completed/OVERLAY-CURVE-POINTS.md) — Python draws its overlaid curves for the range
+in view; every export from the main window is the measurement, as Saved Measurements exports it; an export shows the
+peaks at or above Peak Min, its Selected Peaks summary and table, and a guitar's detected peaks in view; one name,
+overlay spectra.
 
 #44 (menus the same in every edition) is **closed**; its record is
 [`completed/MENUS-SAME-EVERYWHERE.md`](completed/MENUS-SAME-EVERYWHERE.md) — a saved measurement's menu built from a
