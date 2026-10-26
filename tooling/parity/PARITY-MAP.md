@@ -46,6 +46,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `model/appearance` | `GuitarTap/Models/Appearance.swift` | `src/guitar_tap/models/appearance.py` | `src/presentation/appearance.ts` | tests |
 | `model/detected-peaks` | `GuitarTap/Models/DetectedPeaks.swift`<br>`GuitarTap/Views/Utilities/PeaksReader.swift` | `src/guitar_tap/models/detected_peaks.py` | `src/components/PeaksReader.tsx`<br>`src/state/detectedPeaks.ts` | tests |
 | `model/export-filename` | `GuitarTap/Models/ExportFilename.swift` | `src/guitar_tap/models/export_filename.py` | `src/measurement/exportFilename.ts` | tests |
+| `model/export-peaks` | `GuitarTap/Models/TapToneMeasurement.swift` | `src/guitar_tap/models/tap_tone_measurement.py` | `src/measurement/types.ts` | tests |
 | `model/guitar-mode-classify` | `GuitarTap/Models/GuitarMode.swift` | `src/guitar_tap/models/guitar_mode.py` | `src/dsp/classify.ts`<br>`src/presentation/modeColors.ts` | tests |
 | `model/input-level` | `GuitarTap/Models/InputLevel.swift` | `src/guitar_tap/models/input_level.py` | `src/audio/inputLevel.ts` | tests |
 | `model/live-frame` | `GuitarTap/Models/LiveFrame.swift`<br>`GuitarTap/Views/Utilities/FrameReader.swift` | `src/guitar_tap/models/live_frame.py` | `src/audio/liveFrame.ts`<br>`src/components/FrameReader.tsx` | tests |
@@ -96,6 +97,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/export-directory` | `GuitarTapTests/ExportDirectoryTests.swift` | `tests/test_export_directory.py` | — | test suite |
 | `test/export-e2e` | `GuitarTapUITests/GuitarTapUITests.swift` | `tests/test_export_e2e.py` | `e2e/export.spec.ts` | test suite |
 | `test/export-filename` | `GuitarTapTests/ExportFilenameTests.swift` | `tests/test_export_filename.py` | `test/export-filename.test.ts` | test suite |
+| `test/export-peaks` | `GuitarTapTests/ExportPeaksTests.swift` | `tests/test_export_peaks.py` | `test/export-peaks.test.ts` | test suite |
 | `test/field-precision` | `GuitarTapTests/FieldPrecisionTests.swift` | `tests/test_field_precision.py` | `test/field-precision.test.ts` | test suite |
 | `test/file-playback` | `GuitarTapTests/FilePlaybackRegressionTests.swift` | `tests/test_file_playback_regression.py` | `test/file-playback.test.ts`<br>`test/wav-decode.test.ts` | test suite |
 | `test/frequency-format` | `GuitarTapTests/FrequencyFormatTests.swift` | `tests/test_frequency_format.py` | `test/frequency-format.test.ts` | test suite |
@@ -222,8 +224,10 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_import_identity.py` | python |
 | `tests/test_material_peak_list.py` | python |
 | `tests/test_no_audio_system.py` | python |
+| `tests/test_overlay_curves.py` | python |
 | `tests/test_peak_card_identity.py` | python |
 | `tests/test_qtimer_slots.py` | python |
+| `tests/test_results_panel_lists.py` | python |
 | `tests/test_results_update_in_place.py` | python |
 | `tests/test_settings_calibration_details.py` | python |
 | `tests/test_stream_restart_coordination.py` | python |

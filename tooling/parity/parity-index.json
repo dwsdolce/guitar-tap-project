@@ -458,6 +458,22 @@
       "equivalence": "tests"
     },
     {
+      "slug": "model/export-peaks",
+      "swift": [
+        "GuitarTap/Models/TapToneMeasurement.swift"
+      ],
+      "python": [
+        "src/guitar_tap/models/tap_tone_measurement.py"
+      ],
+      "web": [
+        "src/measurement/types.ts"
+      ],
+      "tests": [
+        "test/export-peaks"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "model/guitar-mode-classify",
       "swift": [
         "GuitarTap/Models/GuitarMode.swift"
@@ -1246,6 +1262,20 @@
       ],
       "web": [
         "test/export-filename.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
+      "slug": "test/export-peaks",
+      "swift": [
+        "GuitarTapTests/ExportPeaksTests.swift"
+      ],
+      "python": [
+        "tests/test_export_peaks.py"
+      ],
+      "web": [
+        "test/export-peaks.test.ts"
       ],
       "tests": [],
       "equivalence": "test suite"
@@ -2799,11 +2829,19 @@
     },
     {
       "repo": "python",
+      "path": "tests/test_overlay_curves.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_peak_card_identity.py"
     },
     {
       "repo": "python",
       "path": "tests/test_qtimer_slots.py"
+    },
+    {
+      "repo": "python",
+      "path": "tests/test_results_panel_lists.py"
     },
     {
       "repo": "python",
