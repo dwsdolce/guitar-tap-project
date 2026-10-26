@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — plan agreed; the web workflow is being written.**
+Status: **OPEN — both workflows built and their test run passed (owner); next: the web's 1.0.2.**
 
 ## The problem
 
@@ -65,6 +65,32 @@ public, and Python's update check reads only published releases.
 5. **One process for Python and the web**, documented in `process/RELEASE-CHECKLIST.md`.
 6. **Python's Windows installer is built on GitHub**; it is not signed, as now.
 
+## Built
+
+- **The web's workflow** — GuitarTapWeb `.github/workflows/release.yml` (`a58b419`): run by hand with a tag, branch or
+  commit (`ref`), a draft name (`release`; blank for the tag's own) and `draft`. Node from the built commit's `.nvmrc`
+  (else `main`'s); `npm ci`, `npm run build`; checks a tag builds its own version and the bundle reports the version
+  and the commit count; zips `dist/` with the app's files at the top; keeps it as an artifact or puts it on the draft
+  (a new draft at the built commit; an existing draft gets the file; a published release is refused).
+- **Python's workflow** — guitar_tap `.github/workflows/release.yml` (`df68914`), in place of `release-linux.yml`:
+  the same inputs; a `linux` job (the AppImage, with every check the old workflow had), a `windows` job (PyInstaller and
+  Inno Setup through `packaging/build_win`, unsigned, and a start test), each checked by `packaging/check_release_build`
+  (a tag builds its own version; the build number is the commit count; the file's name carries `<version>.<build>`);
+  a `draft` job attaching both. `README.md` and `packaging/build_linux` name it; #23's record too.
+- **Found by the test run:** `packaging/build_win` passed ISCC a bare `/F`, which Git Bash turns into a path, so ISCC
+  saw two scripts — unnoticed since the Windows build became a bash script (`849c4de`), with no Python release since.
+  The `/F` is gone (`adb503a`); the installer's name comes from the `.iss`.
+
+## Test run (step 3)
+
+- **Web: passed** (owner, 2026-10-26) — draft `release-test-1` with `guitar-tap-web-1.1.0.390.zip`; the zip run from a
+  plain folder reports 1.1.0 (390).
+- **Python: passed** (owner, 2026-10-26) — draft `release-test-1` with `guitar-tap-1.1.0.693-x86_64.AppImage` and
+  `Guitar_Tap_V1.1.0.693.exe`, both built, checked and started on GitHub; the installer installs and runs on Windows;
+  the AppImage runs on Ubuntu once made executable — a downloaded AppImage is not, and a double-click on it says
+  "There is no application installed for 'AppImage application bundle' files" (plan step 6).
+- Both drafts deleted, never published; no `release-test-1` tag in either repo, and both repos' releases as before.
+
 ## Plan
 
 1. **The web's workflow** (GuitarTapWeb `release.yml`): build, check, the zip as artifact or on the draft.
@@ -79,6 +105,10 @@ public, and Python's update check reads only published releases.
    dolcesfogato.com/guitar_tap/guitar_tap_web/. Then the draft: the zip attached, its marketing notes (the owner
    reviews them); the owner publishes.
 5. **Python on its `1.0.2` tag**, artifacts only (its release exists): both build from a release tag.
-6. **The release checklist:** §2 (Python) and §3 (the web) become the process above, the same steps in both; the
+6. **Linux users told to make the AppImage executable:** the User Manual's §2.1 (ch02) names the file as it is
+   (`guitar-tap-<version>.<build>-x86_64.AppImage`), gives the file manager's way (right-click → Properties →
+   Executable as Program) beside `chmod +x`, and says what a double-click shows before then; and every Python GitHub
+   release's notes carry a standing line saying so, under its downloads.
+7. **The release checklist:** §2 (Python) and §3 (the web) become the process above, the same steps in both; the
    Windows script named as it is (`packaging/build_win`, not `build_win.bat`).
-7. **1.1.0** is released this way in both editions.
+8. **1.1.0** is released this way in both editions.
