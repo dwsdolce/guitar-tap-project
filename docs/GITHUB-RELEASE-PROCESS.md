@@ -29,7 +29,7 @@ Swift ships through App Store Connect and has no GitHub release; it is not part 
 | Python | `guitar-tap-<version>.<build>-x86_64.deb`, `guitar-tap-<version>.<build>-x86_64.rpm` | on GitHub (Ubuntu 22.04, from the AppImage's built app; unsigned) |
 | Python | `Guitar_Tap_V<version>.dmg` | by hand: signing and notarising need the owner's Apple credentials |
 | Python | `ReleaseNotes-<version>-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf` | by hand, with the `.dmg` (`build_mac`; the manual from GuitarTap) |
-| Both | `SHA256SUMS` — each attached file's SHA-256 | on GitHub, by the workflow |
+| Both | `SHA256SUMS` — the SHA-256 of each file the workflow attaches (not the `.dmg` or PDFs, uploaded by hand after it) | on GitHub, by the workflow |
 
 ## The process
 
@@ -91,6 +91,11 @@ public, and Python's update check reads only published releases.
 - **Found by the test run:** `packaging/build_win` passed ISCC a bare `/F`, which Git Bash turns into a path, so ISCC
   saw two scripts — unnoticed since the Windows build became a bash script (`849c4de`), with no Python release since.
   The `/F` is gone (`adb503a`); the installer's name comes from the `.iss`.
+- **The `.deb`, `.rpm` and `SHA256SUMS`** — guitar_tap `c52cdfd`: `packaging/make_linux_package` (pdfarranger-qt's, its
+  names changed; licence `GPL-3.0`, as the repo's), `packaging/build_linux [app|appimage|deb|rpm]`; the `linux` job
+  installs `dpkg-dev` and `rpm`, checks all three names, installs the `.deb` with apt and starts it (the bundled
+  PortAudio loaded), removes it (nothing left in `/opt`), and does the same for the `.rpm` with dnf in a
+  `fedora:latest` container; the `draft` job attaches `SHA256SUMS`. GuitarTapWeb `889a0b0`: `SHA256SUMS` with the zip.
 
 ## Test run (step 3)
 
@@ -110,6 +115,8 @@ public, and Python's update check reads only published releases.
   marketing notes (the owner approved them).
 - **Published by the owner** (2026-10-26): https://github.com/dwsdolce/GuitarTapWeb/releases/tag/1.0.2 — the web
   edition's Latest release; the `1.0.2` tag unchanged (`1ae80f6`).
+- **Its `SHA256SUMS`**, attached by hand to the published release (owner's go, 2026-10-26): the sum of the zip already
+  on it, which GitHub's own digest of the zip matches.
 
 ## Plan
 
