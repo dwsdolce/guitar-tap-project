@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — both workflows built and their test run passed (owner); next: the web's 1.0.2.**
+Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; next: Python on its `1.0.2` tag.**
 
 ## The problem
 
@@ -90,6 +90,15 @@ public, and Python's update check reads only published releases.
   the AppImage runs on Ubuntu once made executable — a downloaded AppImage is not, and a double-click on it says
   "There is no application installed for 'AppImage application bundle' files" (plan step 6).
 - Both drafts deleted, never published; no `release-test-1` tag in either repo, and both repos' releases as before.
+
+## The web's 1.0.2 (step 4)
+
+- **Built from the tag** (run 40398568758): `guitar-tap-web-1.0.2.213.zip`; it reports 1.0.2 (213). Its 16 files are
+  byte-identical to what is live at dolcesfogato.com/guitar_tap/guitar_tap_web/ — 1.0.2 as shipped.
+- **The draft** (run 40398957756): the zip attached (downloaded from the draft and compared again — identical), the
+  marketing notes (the owner approved them).
+- **Published by the owner** (2026-10-26): https://github.com/dwsdolce/GuitarTapWeb/releases/tag/1.0.2 — the web
+  edition's Latest release; the `1.0.2` tag unchanged (`1ae80f6`).
 
 ## Plan
 
