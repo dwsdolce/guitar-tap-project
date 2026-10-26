@@ -69,8 +69,9 @@ Two separate problems. Only the first stops the app from starting.
 
 ## Done (2026-10-22/23; owner's go for the night's commits and runs)
 
-**The workflow** — `guitar_tap` `.github/workflows/release-linux.yml` (`4d540fb`, `dc23dc8`, `861fdce`, `4702f60`,
-`14aa6f6`, `a9bbb19`, `1119104`): on a published release, or by hand for a tag or branch, on `ubuntu-22.04` — setup-python 3.14 (built
+**The workflow** — `guitar_tap` `.github/workflows/release.yml`, its `linux` job (built as `release-linux.yml`:
+`4d540fb`, `dc23dc8`, `861fdce`, `4702f60`, `14aa6f6`, `a9bbb19`, `1119104`; part of the release workflow since
+`df68914`, #46 — run by hand for a tag, into a draft release): on `ubuntu-22.04` — setup-python 3.14 (built
 for 22.04), `appimagetool` 1.9.1 (static runtime), `packaging/build_linux`; then checks: no bundled library needs
 glibc newer than 2.35, the runtime links no `libfuse`, none of the libraries that must be the system's is bundled
 (item 4), the icons and fonts are where the app reads them, and the app, started
