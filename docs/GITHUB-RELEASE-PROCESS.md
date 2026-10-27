@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; users told how to install (manual §2.1); the release checklist rewritten; next: step 8, 1.1.0 — when the owner is ready (a rehearsal on `main` first, if wanted).**
+Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; users told how to install (manual §2.1); the release checklist rewritten; the release rehearsed (Python and the web); every step done — to close.**
 
 ## The problem
 
@@ -164,4 +164,11 @@ public, and Python's update check reads only published releases.
    names the files and points to §2.1. **Done** — GuitarTap `9932b83`, guitar_tap `86de6f7`.
 7. **The release checklist:** §2 (Python) and §3 (the web) become the process above, the same steps in both; the
    Windows script named as it is (`packaging/build_win`, not `build_win.bat`). **Done** — hub `c93d5d4`.
-8. **1.1.0** is released this way in both editions.
+8. **A rehearsal of the release, Python and the web** (`release-test-3`, built from `main`): the release checklist's §2
+   and §3 followed up to Publish — Release run for each edition, Python's hand-built files (the `.dmg`, the release
+   notes, the Quick Start Guide, the User Manual, all build 696) uploaded to its draft, both drafts reviewed by the
+   owner — then the drafts deleted. 1.1.0 itself is released by the checklist when the owner is ready; Swift's
+   App Store process is separate and unchanged. **Done** (2026-10-26): Python's draft with the AppImage, `.deb`, `.rpm`, `.exe`
+   and `SHA256SUMS` (the workflow) and the `.dmg` (notarised and stapled), release notes, Quick Start Guide and User
+   Manual (the owner's Mac), all 1.1.0 build 696 from `86de6f7`; the web's with `guitar-tap-web-1.1.0.391.zip` and
+   `SHA256SUMS`. Both reviewed (owner: "all looks good") and deleted; no `release-test-3` tag in either repo.
