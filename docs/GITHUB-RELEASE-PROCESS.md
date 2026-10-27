@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; next: Python on its `1.0.2` tag.**
+Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; next: step 6, telling Linux users how to install.**
 
 ## The problem
 
@@ -117,6 +117,25 @@ public, and Python's update check reads only published releases.
   edition's Latest release; the `1.0.2` tag unchanged (`1ae80f6`).
 - **Its `SHA256SUMS`**, attached by hand to the published release (owner's go, 2026-10-26): the sum of the zip already
   on it, which GitHub's own digest of the zip matches.
+
+## Test run of the `.deb`, `.rpm` and `SHA256SUMS` (step 5)
+
+- **Both drafts built** (2026-10-26), `release-test-2`: Python's with `guitar-tap-1.1.0.694-x86_64.AppImage`, `.deb`,
+  `.rpm`, `Guitar_Tap_V1.1.0.694.exe` and `SHA256SUMS`; the web's with `guitar-tap-web-1.1.0.391.zip` and
+  `SHA256SUMS`.
+- **On GitHub:** the `.deb` installed with apt on Ubuntu 22.04, and the `.rpm` with dnf in a Fedora container; each
+  started with the bundled PortAudio and removed with nothing left in `/opt`.
+- **The `.deb`: passed** (owner, 2026-10-26) — installs on Ubuntu with `sudo apt install ./<file>.deb`; a double-click
+  opens it in the archive manager (plan step 6). The `.rpm` has GitHub's Fedora test only: the owner has no Fedora.
+- **Found by it: the app crashed on quit** (the owner, Ubuntu, after opening the metrics panel, Settings and Saved
+  Measurements; Ubuntu's crash dialog). At quit, `qapp.shutdown()` deleted every object PySide counted as Python's, in
+  no set order — among them widgets built without a parent and then put in a layout, which Qt had given a parent in the
+  window; deleted after the window, such a widget was deleted twice (SIGSEGV or SIGABRT). On Linux about seven quits in
+  ten crashed after Saved Measurements or Settings had been opened, none after a start and quit; on macOS about one in
+  eight. Not in a release: `shutdown()` came after 1.0.2 (`3892bf2`). **Fixed** — guitar_tap `57e08b1`: the main window
+  is deleted first, as one tree (0 crashes in 160 quits on Linux, 30 on macOS); `tests/test_quit.py` runs the session
+  five times and expects a clean exit (it failed without the fix); the `.deb` and `.rpm` tests quit as a user does.
+- Both drafts deleted, never published; no `release-test-2` tag in either repo.
 
 ## Plan
 
