@@ -2,7 +2,7 @@
 
 **Issue:** [#47](https://github.com/dwsdolce/guitar-tap-project/issues/47)
 
-Status: **OPEN — built in all three editions and committed (GuitarTap `4d2b978`, guitar_tap `cde1f9a`, GuitarTapWeb `30008c8`; release-note markers moved: `d59609e`, `82a15c6`, `d6d3581`); run-review passed (owner, 2026-10-27) on macOS — Swift, Python, web — and on iPad and iPhone, the iPad's menu bar (steps 16–18) included; Windows and Linux after the commit; full suites and export UI tests green (Swift unit 309, Python 1641, web 1479; exports 24/24 on Mac, iPad, iPhone, Python, web); next: CI, then Windows and Linux.**
+Status: **✅ COMPLETE (2026-10-27)** — built in all three editions (GuitarTap `4d2b978`, guitar_tap `cde1f9a`, GuitarTapWeb `30008c8`; release-note markers `d59609e`, `82a15c6`, `d6d3581`); run-review passed (owner) on macOS — Swift, Python, web — on iPad (its menu bar included) and iPhone, and Python on Windows and Linux; full suites, export UI tests and CI green in all three. On Windows one run lost its window, with no error, when VS Code re-activated the venv in the same terminal; not reproduced without it, cause unknown.
 
 ## The request (owner, 2026-10-26)
 
