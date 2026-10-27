@@ -97,6 +97,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `test/export-directory` | `GuitarTapTests/ExportDirectoryTests.swift` | `tests/test_export_directory.py` | — | test suite |
 | `test/export-e2e` | `GuitarTapUITests/GuitarTapUITests.swift` | `tests/test_export_e2e.py` | `e2e/export.spec.ts` | test suite |
 | `test/export-filename` | `GuitarTapTests/ExportFilenameTests.swift` | `tests/test_export_filename.py` | `test/export-filename.test.ts` | test suite |
+| `test/export-menus` | `GuitarTapTests/ExportMenusTests.swift` | `tests/test_export_menus.py` | `test/export-menus.test.ts` | test suite |
 | `test/export-peaks` | `GuitarTapTests/ExportPeaksTests.swift` | `tests/test_export_peaks.py` | `test/export-peaks.test.ts` | test suite |
 | `test/field-precision` | `GuitarTapTests/FieldPrecisionTests.swift` | `tests/test_field_precision.py` | `test/field-precision.test.ts` | test suite |
 | `test/file-playback` | `GuitarTapTests/FilePlaybackRegressionTests.swift` | `tests/test_file_playback_regression.py` | `test/file-playback.test.ts`<br>`test/wav-decode.test.ts` | test suite |
@@ -171,6 +172,7 @@ two), or use `tooling/parity/parity_lookup.py <substring>` for sorted/filtered b
 | `view/dot-layer` | `GuitarTap/Views/SpectrumView.swift`<br>`GuitarTapTests/DotLayerTests.swift` | `src/guitar_tap/views/fft_canvas.py`<br>`tests/test_dot_layer.py` | `src/dsp/guitarModes.ts`<br>`test/dot-layer.test.ts` | review only |
 | `view/edit-sheet` | `GuitarTap/Views/Measurements/EditMeasurementView.swift` | `src/guitar_tap/views/measurements/edit_measurement_view.py` | `src/components/EditMeasurementSheet.tsx` | review only |
 | `view/empty-state` | `GuitarTap/Views/Shared/EmptyStateView.swift` | `src/guitar_tap/views/shared/empty_state_view.py` | `src/components/EmptyStateView.tsx` | review only |
+| `view/export-menus` | `GuitarTap/Views/Utilities/ExportMenus.swift` | `src/guitar_tap/views/measurements/export_menus.py` | `src/components/ExportMenuButton.tsx`<br>`src/presentation/exportMenus.ts` | tests |
 | `view/file-exporter` | `GuitarTap/Views/Utilities/MeasurementFileExporter.swift` | `src/guitar_tap/views/utilities/measurement_file_exporter.py` | `src/saveFile.ts` | tests |
 | `view/frequency-format` | `GuitarTap/Views/Utilities/Extensions.swift` | `src/guitar_tap/views/utilities/extensions.py` | `src/presentation/frequencyFormat.ts` | tests |
 | `view/guitar-summary` | `GuitarTap/Views/TapAnalysisResultsView.swift` | `src/guitar_tap/views/tap_tone_analysis_view.py` | `src/components/AnalysisResults.tsx` | review only |
@@ -220,6 +222,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `src/guitar_tap/views/shared/value_stepper.py` | python |
 | `src/guitar_tap/views/utilities/view_update.py` | python |
 | `tests/conftest.py` | python |
+| `tests/quit_session.py` | python |
 | `tests/test_capture_opens_no_window.py` | python |
 | `tests/test_import_identity.py` | python |
 | `tests/test_material_peak_list.py` | python |
@@ -227,6 +230,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_overlay_curves.py` | python |
 | `tests/test_peak_card_identity.py` | python |
 | `tests/test_qtimer_slots.py` | python |
+| `tests/test_quit.py` | python |
 | `tests/test_results_panel_lists.py` | python |
 | `tests/test_results_update_in_place.py` | python |
 | `tests/test_settings_calibration_details.py` | python |
@@ -236,6 +240,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `tests/test_update_checker.py` | python |
 | `tests/test_view_update.py` | python |
 | `tests/test_wasapi_raw_open.py` | python |
+| `GuitarTap/Views/AboutView.swift` | swift |
 | `GuitarTap/Views/Utilities/PointerScroll.swift` | swift |
 | `GuitarTap/Views/Utilities/ResultsWindowPresenter.swift` | swift |
 | `GuitarTap/Views/Utilities/SecondaryClickMenu.swift` | swift |
@@ -256,6 +261,7 @@ A `—` is a legitimate group with no member in that platform (e.g. a Swift↔Py
 | `src/presentation/pngPixelsPerInch.ts` | web |
 | `test/engine-start.test.ts` | web |
 | `test/menu-placement.test.ts` | web |
+| `test/menuCases.ts` | web |
 | `test/png-pixels-per-inch.test.ts` | web |
 | `test/saveFromAnalyzer.ts` | web |
 | `test/setup.ts` | web |

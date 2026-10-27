@@ -138,7 +138,8 @@ something (a save dialog, a file to open, a name), the share picker, a select mo
 each platform's guidelines say (Export Measurement…, Import…, Share All…, Delete → Selected…). A confirmation counts
 too, so Delete All… and Duplicates… keep theirs (Microsoft's guidelines leave confirmations out; ours keep one rule).
 An item that acts at once, or opens a window only to look at (View Details, Settings), has none. On iOS and iPadOS,
-none, as in Apple's own menus (Share, Compare). The web follows the desktop rule. **Toolbar buttons are exempt**
+none, as in Apple's own menus (Share, Compare) — except the iPad's menu bar, which follows the Mac's, as Apple's own
+items there do (Settings…). The web follows the desktop rule. **Toolbar buttons are exempt**
 (Save, Play File): they are labelled icons, often shown as the icon alone, and the menu bar's items that do the same
 carry the "…" (Save Measurement…, Play Audio File…).
 
@@ -283,4 +284,4 @@ SF Symbol.
 | S6 | Text symbols in the text form; an icon in every edition wherever one has it | owner, 2026-10-20 |
 | S7 | This guide lives in `process/` | owner, 2026-10-20 |
 | S8 | A list scrolls only its items; totals, notices, headings, empty messages and actions sit fixed above or below it; a scrolled page (a report, a results page) is not a list and scrolls as a whole | owner, 2026-10-23; 2026-10-24 |
-| S9 | "…" on an item or button that needs more from the user before it is done (a dialog, the share picker, a select mode, a confirmation) on macOS, Windows, Linux and the web; none on iOS and iPadOS; toolbar buttons exempt | owner, 2026-10-26 |
+| S9 | "…" on an item or button that needs more from the user before it is done (a dialog, the share picker, a select mode, a confirmation) on macOS, Windows, Linux and the web; none on iOS and iPadOS, except the iPad's menu bar (as the Mac's); toolbar buttons exempt | owner, 2026-10-26; 2026-10-27 |

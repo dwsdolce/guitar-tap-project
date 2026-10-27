@@ -89,6 +89,7 @@ ICONS = {
     "pauseCircleFill": "pause-circle",
     "fileChart": "file-chart-outline",
     "uploadOutline": "upload-outline",
+    "contentCopy": "content-copy",
     "bookClosed": "book-outline",
     "circleOutline": "checkbox-blank-circle-outline",
     "fileDownload": "file-download-outline",

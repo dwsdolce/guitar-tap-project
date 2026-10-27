@@ -2,7 +2,7 @@
 
 **Issue:** [#47](https://github.com/dwsdolce/guitar-tap-project/issues/47)
 
-Status: **OPEN — design agreed with the owner; next, the plan.**
+Status: **OPEN — built in all three editions and committed (GuitarTap `4d2b978`, guitar_tap `cde1f9a`, GuitarTapWeb `30008c8`; release-note markers moved: `d59609e`, `82a15c6`, `d6d3581`); run-review passed (owner, 2026-10-27) on macOS — Swift, Python, web — and on iPad and iPhone, the iPad's menu bar (steps 16–18) included; Windows and Linux after the commit; full suites and export UI tests green (Swift unit 309, Python 1641, web 1479; exports 24/24 on Mac, iPad, iPhone, Python, web); next: CI, then Windows and Linux.**
 
 ## The request (owner, 2026-10-26)
 
@@ -27,19 +27,29 @@ both exist, both are offered; where saving *is* the share sheet (iOS and iPadOS,
 | | Mac (Swift) | iOS / iPadOS (Swift) | Python, web |
 |---|---|---|---|
 | **A measurement's menu** (its ⋯, right-click or long press) | Export… and Share… — for the measurement, its spectrum image and its PDF report | Share — for each of the three | Export… — for each of the three |
-| **The panel's menu** (Saved Measurements' toolbar) | **Export**: Share All…, Share Selected…, Export All…, Export Selected… | **Share**: Share All, Share Selected | **Export**: Export All…, Export Selected… |
+| **The panel's menu** (Saved Measurements' toolbar) | **Export**: Export All…, Export Selected…, Share All…, Share Selected… | **Share**: Share All, Share Selected | **Export**: Export All…, Export Selected… |
 | **Analysis Results** (the main window's results panel) | one **Export** button: Export Spectrum…, Export PDF Report…, Share Spectrum…, Share PDF Report… | one **Share** button: Share Spectrum, Share PDF Report | one **Export** button: Export Spectrum…, Export PDF Report… |
 
 **"…" follows the platforms' rule** (style guide S9): an item ends in "…" when it needs more from the user before it
 is done — a save dialog, the share picker, a select mode — on the Mac, Windows and Linux; on iOS and iPadOS, none, as
 Apple's own menus. So Export Measurement… and Share Spectrum… on the Mac, Export All… in Python, Share All on the iPad.
 
+**Order on the Mac: Export first, then Share**, in every menu that has both, as in Apple's menus (owner).
+
 **Selected** works as **Delete → Selected…** does today: tick any measurements, then **Share (N)** or **Export (N)**.
 All, or the selected ones, go into one `.guitartap` file.
 
 Analysis Results' two buttons (Export Spectrum, Export PDF) become one, whose menu has the same entries as a
 measurement's menu — so every place offers the same choices the same way, with no need for the Mac's menu bar. The
-menu bar's Export Spectrum Image… and Export PDF Report… stay as they are.
+Mac's File menu has Share Spectrum Image… and Share PDF Report… after its Export Spectrum Image… and Export PDF
+Report…, as everywhere on the Mac; Python's menu bar keeps its Export items.
+
+**The iPad's menu bar** (iPadOS's, with a keyboard or a pointer) gets Guitar Tap's menus, found missing while adding
+Share to the Mac's (owner): the application menu's **About Guitar Tap** (a sheet: the icon, the name, the version
+and build, Python's description, the copyright — iPadOS supplies none) and **Settings…** (⌘,), Guitar Tap's own in
+place of the system's Guitar Tap Settings…; **File** — Play Audio File…, Save Measurement…, Share Spectrum Image…,
+Share PDF Report… (no Export: no save dialog); **View** and **Help** as the Mac's; the Mac's shortcuts. Its items take
+"…" as the Mac's do, as Apple's own iPad menu bar items do (owner, S9).
 
 **Import takes several files at once.** If an import brings in exactly one measurement, it is loaded into the main
 view, as now; if it brings in several, none is loaded — the screen stays as it is, as importing an Export All file
@@ -106,6 +116,17 @@ Swift first, then Python and the web the same way. Each step's tests are written
 
 Screenshots of Analysis Results and of the measurement menu change: #26's list gets them.
 
+**Built (2026-10-26/27):** steps 1–8 in all three editions; each edition's menu, export-menu and import
+tests pass (the six multi-file cases IF1–IF6 among them), Swift builds for macOS and iOS, and the Python and web export
+end-to-end tests pass (the web's 24 exports match Swift's). One selected measurement is written under its own
+name, as its own Export or Share names it; two or more as `guitartap-measurements-<time>.guitartap` (all of them, as
+before, `guitartap-library-<time>.guitartap`). Found and
+fixed on the way: Swift had two save-or-share helpers (`FileExportHelper` for the main window's image,
+`MeasurementFileExporter` for the rest) — now one, `MeasurementFileExporter.deliver(_:filename:contentType:as:)`;
+Python's and the web's Delete menu had no icons, Swift's had (S6); the manual named a **File → Import Measurement**
+item and drag-and-drop import, neither of which exists, and called Settings' **Delete All Calibrations** "Clear All
+Calibrations".
+
 ## Run-review
 
 **Mac (Swift)**
@@ -114,32 +135,40 @@ Screenshots of Analysis Results and of the measurement menu change: #26's list g
    Share Measurement…, Share Spectrum…, Share PDF Report…; no Save Measurement to Disk….
 2. Choose Export Measurement…. → A save dialog; the file is written where chosen.
 3. Choose Share Spectrum…. → The share sheet, with the spectrum image.
-4. Click the panel's Export menu. → Share All…, Share Selected…, Export All…, Export Selected….
+4. Click the panel's Export menu. → Export All…, Export Selected…, Share All…, Share Selected….
 5. Choose Export Selected…, tick two measurements of different types, click Export (2). → A save dialog; the file
    holds those two (import it into an empty library to check).
-6. Choose Share Selected…, tick one, click Share (1). → The share sheet with one `.guitartap` file.
+6. Choose Share Selected…, tick one, click Share (1). → The share sheet with one `.guitartap` file, named as that
+   measurement's own Share Measurement… names it (two or more: `guitartap-measurements-<time>.guitartap`).
 7. With a measurement on screen, click Analysis Results' Export button. → Its menu: Export Spectrum…, Export PDF
    Report…, Share Spectrum…, Share PDF Report…; each does what it says.
+   Then File → Share Spectrum Image… and File → Share PDF Report…. → The share sheet, with the image, then the
+   report.
 8. Click Import…, choose three files, each holding one measurement. → All three in the list; one message counts 3
    measurements from 3 files; the main view unchanged.
 9. Click Import…, choose one file holding one measurement. → It is imported and loaded, as now.
-10. Click Import…, choose two files, one of them not a measurement file. → The good one imported (and, being the only
-    one, loaded); the message names the other file and why.
-11. In Settings → Audio Input, with a calibration stored, look at the delete button. → **Delete All Calibrations…**;
+10. In Settings → Audio Input, with a calibration stored, look at the delete button. → **Delete All Calibrations…**;
     clicking it asks first.
 
 **iPad and iPhone (Swift)**
 
-12. Open a measurement's menu. → Share Measurement, Share Spectrum, Share PDF Report.
-13. Open the toolbar's ⋯ menu. → A Share menu: Share All, Share Selected.
-14. Share Selected, tick two, Share (2). → The share sheet; Save to Files writes one `.guitartap` file.
-15. Analysis Results' Share button. → Share Spectrum, Share PDF Report.
-16. Import, choose three files in Files. → As step 8.
+11. Open a measurement's menu. → Share Measurement, Share Spectrum, Share PDF Report.
+12. Open the toolbar's More menu. → A Share menu: Share All, Share Selected.
+13. Share Selected, tick two, Share (2). → The share sheet; Save to Files writes one `.guitartap` file.
+14. Analysis Results' Share button. → Share Spectrum, Share PDF Report.
+15. Import, choose three files in Files. → As step 8.
+16. On the iPad with a keyboard or pointer, open the menu bar's Guitar Tap menu. → About Guitar Tap, then Settings…
+    (⌘,); choosing About shows the icon, Guitar Tap, the version and build, and the copyright; Settings opens Guitar
+    Tap's Settings.
+17. The menu bar's File menu, with a measurement on screen. → Play Audio File…, Save Measurement…, Share Spectrum
+    Image…, Share PDF Report… (no Export); each Share opens the share sheet.
+18. The View and Help menus, then hold ⌘. → View: Auto dB, Cycle Annotations, Show Metrics, Show Measurements;
+    Help: Quick Start Guide, User Manual; each does what it says; the shortcuts list shows the Mac's.
 
 **Python (macOS, Windows, Linux) and the web**
 
-17. A measurement's menu. → Export Measurement…, Export Spectrum…, Export PDF Report…; no Share.
-18. The panel's Export menu. → Export All…, Export Selected…; Export Selected… as step 5.
-19. Analysis Results' Export button. → Export Spectrum…, Export PDF Report….
-20. Click Import… and choose several files. → As steps 8–10.
-21. Settings' delete button for calibrations. → As step 11.
+19. A measurement's menu. → Export Measurement…, Export Spectrum…, Export PDF Report…; no Share.
+20. The panel's Export menu. → Export All…, Export Selected…; Export Selected… as step 5.
+21. Analysis Results' Export button. → Export Spectrum…, Export PDF Report….
+22. Click Import… and choose several files. → As steps 8–9.
+23. Settings' delete button for calibrations. → As step 10.

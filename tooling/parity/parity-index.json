@@ -1267,6 +1267,20 @@
       "equivalence": "test suite"
     },
     {
+      "slug": "test/export-menus",
+      "swift": [
+        "GuitarTapTests/ExportMenusTests.swift"
+      ],
+      "python": [
+        "tests/test_export_menus.py"
+      ],
+      "web": [
+        "test/export-menus.test.ts"
+      ],
+      "tests": [],
+      "equivalence": "test suite"
+    },
+    {
       "slug": "test/export-peaks",
       "swift": [
         "GuitarTapTests/ExportPeaksTests.swift"
@@ -2308,6 +2322,23 @@
       "equivalence": "review only"
     },
     {
+      "slug": "view/export-menus",
+      "swift": [
+        "GuitarTap/Views/Utilities/ExportMenus.swift"
+      ],
+      "python": [
+        "src/guitar_tap/views/measurements/export_menus.py"
+      ],
+      "web": [
+        "src/components/ExportMenuButton.tsx",
+        "src/presentation/exportMenus.ts"
+      ],
+      "tests": [
+        "test/export-menus"
+      ],
+      "equivalence": "tests"
+    },
+    {
       "slug": "view/file-exporter",
       "swift": [
         "GuitarTap/Views/Utilities/MeasurementFileExporter.swift"
@@ -2813,6 +2844,10 @@
     },
     {
       "repo": "python",
+      "path": "tests/quit_session.py"
+    },
+    {
+      "repo": "python",
       "path": "tests/test_capture_opens_no_window.py"
     },
     {
@@ -2838,6 +2873,10 @@
     {
       "repo": "python",
       "path": "tests/test_qtimer_slots.py"
+    },
+    {
+      "repo": "python",
+      "path": "tests/test_quit.py"
     },
     {
       "repo": "python",
@@ -2874,6 +2913,10 @@
     {
       "repo": "python",
       "path": "tests/test_wasapi_raw_open.py"
+    },
+    {
+      "repo": "swift",
+      "path": "GuitarTap/Views/AboutView.swift"
     },
     {
       "repo": "swift",
@@ -2954,6 +2997,10 @@
     {
       "repo": "web",
       "path": "test/menu-placement.test.ts"
+    },
+    {
+      "repo": "web",
+      "path": "test/menuCases.ts"
     },
     {
       "repo": "web",
