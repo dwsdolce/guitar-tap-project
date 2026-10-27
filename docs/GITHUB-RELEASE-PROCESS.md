@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; users told how to install (manual §2.1); next: step 7, the release checklist.**
+Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; users told how to install (manual §2.1); the release checklist rewritten; next: step 8, 1.1.0 — when the owner is ready (a rehearsal on `main` first, if wanted).**
 
 ## The problem
 
@@ -163,5 +163,5 @@ public, and Python's update check reads only published releases.
    unsigned installer (More info → Run anyway). Not in the release notes, Help or the Quick Start (owner). The README
    names the files and points to §2.1. **Done** — GuitarTap `9932b83`, guitar_tap `86de6f7`.
 7. **The release checklist:** §2 (Python) and §3 (the web) become the process above, the same steps in both; the
-   Windows script named as it is (`packaging/build_win`, not `build_win.bat`).
+   Windows script named as it is (`packaging/build_win`, not `build_win.bat`). **Done** — hub `c93d5d4`.
 8. **1.1.0** is released this way in both editions.
