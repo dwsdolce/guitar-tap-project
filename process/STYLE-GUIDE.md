@@ -133,6 +133,15 @@ look as nearly as a browser allows (panel surface, the accent highlight on hover
 Swift on iOS shows its destructive items in iOS's red (an accepted platform difference, section 1.2); Swift on macOS,
 Python and the web show them as ordinary items. Each item has its icon in every edition (S6), in the item's own colour.
 
+**An item or button ends in "…" when it needs more from the user before it is done** (S9) — a dialog that asks for
+something (a save dialog, a file to open, a name), the share picker, a select mode — on macOS, Windows and Linux, as
+each platform's guidelines say (Export Measurement…, Import…, Share All…, Delete → Selected…). A confirmation counts
+too, so Delete All… and Duplicates… keep theirs (Microsoft's guidelines leave confirmations out; ours keep one rule).
+An item that acts at once, or opens a window only to look at (View Details, Settings), has none. On iOS and iPadOS,
+none, as in Apple's own menus (Share, Compare). The web follows the desktop rule. **Toolbar buttons are exempt**
+(Save, Play File): they are labelled icons, often shown as the icon alone, and the menu bar's items that do the same
+carry the "…" (Save Measurement…, Play Audio File…).
+
 ### 1.4 Lists
 
 **A list scrolls only its items** (S8). The scrolling area holds the items — the measurements, the peaks, the
@@ -274,3 +283,4 @@ SF Symbol.
 | S6 | Text symbols in the text form; an icon in every edition wherever one has it | owner, 2026-10-20 |
 | S7 | This guide lives in `process/` | owner, 2026-10-20 |
 | S8 | A list scrolls only its items; totals, notices, headings, empty messages and actions sit fixed above or below it; a scrolled page (a report, a results page) is not a list and scrolls as a whole | owner, 2026-10-23; 2026-10-24 |
+| S9 | "…" on an item or button that needs more from the user before it is done (a dialog, the share picker, a select mode, a confirmation) on macOS, Windows, Linux and the web; none on iOS and iPadOS; toolbar buttons exempt | owner, 2026-10-26 |
