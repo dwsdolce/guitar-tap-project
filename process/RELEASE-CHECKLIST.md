@@ -1,12 +1,12 @@
 # GuitarTap Release Checklist
 
-The runbook for shipping a release. Four surfaces across three repos, all steps manual (no CI):
+The runbook for shipping a release. Four surfaces across four repos:
 
 | Surface | Repo | Destination |
 |---|---|---|
 | **Mac / iOS** | `GuitarTap` | App Store Connect |
 | **Python** | `guitar_tap` | GitHub `dwsdolce/guitar_tap` |
-| **Web app** | `GuitarTapWeb` | `dolcesfogato.com/guitar_tap/guitar_tap_web/` |
+| **Web app** | `GuitarTapWeb` | `dolcesfogato.com/guitar_tap/guitar_tap_web/`, and GitHub `dwsdolce/GuitarTapWeb` (its build, for other sites to host) |
 | **Marketing site** | `guitar_tap_website` | `dolcesfogato.com/guitar_tap/` |
 
 **The notes' "reviewed through" marker (read once):** each repo's current notes section carries one line —
@@ -43,9 +43,17 @@ section. Release day is about **filling in the prose**, not creating the section
 leaves an empty duplicate. Nothing fires at the tag itself, so rebuilding, re-notarising or
 redeploying the release you just cut still works.
 
-> **Uploads to both `dolcesfogato.com` paths are done by hand via cPanel's File Manager** (no script,
-> no CI). Tip: upload a **zip** of the folder and use File Manager → _Extract_ in place, so the swap is
-> effectively atomic; then delete stale hashed assets left from the previous build.
+**GitHub releases (Python and the web) — one process for both** (`docs/GITHUB-RELEASE-PROCESS.md` in the hub): a
+**Release** workflow, run by hand for the release's tag (Actions → Release → Run workflow; `ref` = the tag, `draft`
+on), builds what GitHub can build, checks each file reports the tag's version and build, and creates the tag's
+**draft** release with those files and their `SHA256SUMS`. The files built by hand are uploaded to the draft; you write
+its notes — a short, marketing summary of the release's enhancements, not the full release notes — review it, and
+publish. Publishing builds nothing. To try the workflow before a release: run it for `main` with `release` =
+`release-test-<n>` (a tag that does not exist — never create a real one), then delete the draft.
+
+> **Uploads to both `dolcesfogato.com` paths are done by hand via cPanel's File Manager.** Tip: upload a **zip** of
+> the folder and use File Manager → _Extract_ in place, so the swap is effectively atomic; then delete stale hashed
+> assets left from the previous build.
 
 ---
 
@@ -83,30 +91,29 @@ redeploying the release you just cut still works.
 ## 2. Python → GitHub  *(`guitar_tap`)*
 - [ ] `src/guitar_tap/version` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
 - [ ] Finish the **existing** top section of the single source `docs/ReleaseNotes.md`: the placeholder header (`## Version {{version}} · Build {{build}}` / `### What's New Since Build {{since}}`) is already there from §6 — replace the `TODO(X.Y.Z)` marker with this release's prose. **Do not add another section.** No build numbers are typed for the new release; they're stamped at build.
-- [ ] **Commit now** (version + notes source). Build number = commit count, so commit *before* building, and build all three installers from this **same commit** or their `.<build>` suffixes diverge. (Committing rolls the count forward — fine, nothing manual changes after.)
-- [ ] Build installers (each on its own OS):
-  - [ ] macOS: `./packaging/build_mac` → `Guitar_Tap_VX.Y.Z.dmg` **plus** the stamped Quick-Start + release-notes PDFs, in one step *(codesign + notarize + staple; needs `notarytool-profile`, `create-dmg`, pandoc + LaTeX, WeasyPrint + Pango)*. Validate the PDFs first if you like — `./packaging/generate_release_notes.sh` and `./packaging/generate_guide.sh` run standalone.
-  - [ ] Windows: `packaging\build_win.bat` → `Guitar_Tap_VX.Y.Z.exe`  *(Inno Setup 6)*
-  - Linux: none by hand — publishing the release runs `guitar_tap`'s **Linux AppImage** workflow
-    (`.github/workflows/release-linux.yml`), which builds `guitar-tap-X.Y.Z.<build>-x86_64.AppImage` from the tag on
-    Ubuntu 22.04 (the oldest supported LTS, glibc 2.35), checks it, and attaches it to the release. To try it before
-    a release: Actions → Linux AppImage → Run workflow, on `main`, without attaching — the AppImage is the run's
-    artifact.
-- [ ] Create the GitHub release: **tag = bare `X.Y.Z`** (no `v`, no build number — the in-app updater compares the tag to the `version` file). **Generate the notes before tagging** — `generate_release_notes.sh` derives "since" from the latest tag and refuses to run once the current version is tagged.
-- [ ] Attach 5 assets: `.dmg`, `.exe`, `ReleaseNotes-X.Y.Z-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf`.
-- [ ] **Publish as a full release** (not draft / pre-release) or `/releases/latest` and the updater ignore it.
-- [ ] Check the **Linux AppImage** run that publishing started passed, and the `.AppImage` is attached (the sixth asset).
+- [ ] **Commit and push** (version + notes source). Build number = commit count, so commit *before* building; every file of the release is built from this **same commit**, or their `.<build>` suffixes diverge.
+- [ ] macOS, by hand, on the Mac: `./packaging/build_mac` → `Guitar_Tap_VX.Y.Z.dmg` **plus** the stamped Quick-Start + release-notes PDFs, in one step *(codesign + notarize + staple; needs `notarytool-profile`, `create-dmg`, pandoc + LaTeX, WeasyPrint + Pango)*. Validate the PDFs first if you like — `./packaging/generate_release_notes.sh` and `./packaging/generate_guide.sh` run standalone. **Before tagging**: the release notes take "since" from the latest tag and refuse to generate once the current version is tagged.
+- [ ] Tag the commit and push the tag: `git tag X.Y.Z && git push origin X.Y.Z` — **bare `X.Y.Z`** (no `v`, no build number: the in-app updater compares the tag to the `version` file).
+- [ ] Run **Release** for the tag (`ref` = `X.Y.Z`, `release` blank, `draft` on). It builds, checks and attaches:
+  - Linux, on Ubuntu 22.04 (the oldest supported LTS, glibc 2.35): `guitar-tap-X.Y.Z.<build>-x86_64.AppImage`, `.deb` and `.rpm` (unsigned) — each started; the `.deb` and `.rpm` installed, started, quit and removed (the `.rpm` on Fedora).
+  - Windows: `Guitar_Tap_VX.Y.Z.<build>.exe` (`packaging/build_win`, Inno Setup; unsigned) — started.
+  - `SHA256SUMS` for those files.
+- [ ] Upload to the draft: the `.dmg`, `ReleaseNotes-X.Y.Z-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf`.
+- [ ] Write the draft's notes (the marketing summary); check every file is there — the AppImage, `.deb`, `.rpm`, `.exe`, `SHA256SUMS`, the `.dmg` and the three PDFs.
+- [ ] **Publish as a full release** (not pre-release) — `/releases/latest` and the in-app updater read only published releases.
 
 ## 3. Web app → `…/guitar_tap/guitar_tap_web/`  *(`GuitarTapWeb`)*
 - [ ] `version` in `package.json` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
 - [ ] Fill in the **existing** top entry of `RELEASES` in `src/components/ReleaseNotes.tsx` — it is already the `X.Y.Z` entry with `build: __APP_BUILD__` and empty `groups` from §6; write this release's groups/items and delete the `TODO(X.Y.Z)` marker. **Do not prepend another entry**, and leave the pinned literal builds on the older entries alone.
 - [ ] `npm run typecheck && npm test && npm run lint` — all green.
-- [ ] Commit. *(No build number to set by hand — the newest entry's `__APP_BUILD__` resolves at build time, so it is safe to roll the commit count forward right up to the deploy build.)*
-- [ ] `npm run build`; smoke-test with `npm run preview`.
-- [ ] **Upload the entire `dist/**`** (incl. `assets/` and `spectrum-processor.js`) to `…/guitar_tap/guitar_tap_web/` via **cPanel File Manager** (zip → Extract in place; delete stale old `assets/` hashes) — complete/atomic over HTTPS; a partial upload = blank page.
+- [ ] **Commit and push.** *(No build number to set by hand — the newest entry's `__APP_BUILD__` resolves at build time.)*
+- [ ] Tag the commit and push the tag: `git tag X.Y.Z && git push origin X.Y.Z` — bare marketing version. It marks exactly what goes live at `…/guitar_tap_web/`.
+- [ ] Run **Release** for the tag (`ref` = `X.Y.Z`, `release` blank, `draft` on). It builds with the Node the commit names (`.nvmrc`), checks the bundle reports the tag's version and build, and attaches `guitar-tap-web-X.Y.Z.<build>.zip` (the app's files at its top) and `SHA256SUMS`.
+- [ ] Smoke-test the zip from the draft: unzip it into an empty folder, serve it (`python3 -m http.server` there), open it — the footer and Settings show `X.Y.Z (<build>)`.
+- [ ] Deploy **that zip** — the file other sites host (Lutherie Academy) is the one live here: upload it to `…/guitar_tap/guitar_tap_web/` via **cPanel File Manager** and Extract in place; delete stale old `assets/` hashes. A partial upload = blank page.
 - [ ] Ensure the URL serves **with the trailing slash** (`base './'` requires it).
 - [ ] Confirm a matching `GuitarTap-User-Manual-X.Y.Z.html` exists on the server (the app links to it by version).
-- [ ] Tag the deployed commit and push: `git tag X.Y.Z && git push origin X.Y.Z` — bare marketing version, matching the existing `1.0.1` tag on `dwsdolce/GuitarTapWeb`. Provenance: marks exactly what is live at `…/guitar_tap_web/`.
+- [ ] Write the draft's notes (the marketing summary), check the zip and `SHA256SUMS` are there, and **publish**.
 
 ## 4. Marketing website → `…/guitar_tap/`  *(`guitar_tap_website` — its own repo `dwsdolce/guitar_tap_website`; see its `DEPLOY.md`)*
 - [ ] Edit the version banner: `index.html` (~line 122, `Guitar Tap X.Y.Z is now available`) — the only hand-edited version string.
@@ -150,8 +157,7 @@ all three now, in one sitting:
 - **Stale service worker (web):** `autoUpdate` means a returning visitor may need one reload before the new build takes; always hard-reload to verify a deploy, don't conclude from a first load.
 - **One-time tooling per build machine:**
   - Swift docs: pango + WeasyPrint venv, pandoc, basictex.
-  - Python (Mac build machine): `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows: Inno Setup 6. Linux: none for a release (the workflow builds it); for a local build, the current `appimagetool` (github.com/AppImage/appimagetool) and `libportaudio2`.
+  - Python (Mac build machine): `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows and Linux: none for a release (the Release workflow builds them). For a local build: Windows, Inno Setup 6; Linux, the current `appimagetool` (github.com/AppImage/appimagetool), `libportaudio2` and `libxcb-cursor0`, and `dpkg-dev` and `rpm` for the `.deb` and `.rpm`.
   - Web: Node.
-- **Automation candidate (future):** this process is heavily manual — three separate version bumps,
-  ad-hoc PDF exports, per-platform installer builds, hand-assembled GitHub assets, and cPanel uploads
-  to two paths. Consolidating/scripting it is a natural scope for the **project hub repo** (STATUS item 5).
+- **Still by hand:** the three version bumps, the macOS `.dmg` and the PDFs (Apple credentials), the App Store, and
+  the cPanel uploads to two paths. The Python and web files GitHub can build are built by the Release workflows.
