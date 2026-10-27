@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; next: step 6, telling Linux users how to install.**
+Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; users told how to install (manual §2.1); next: step 7, the release checklist.**
 
 ## The problem
 
@@ -157,10 +157,11 @@ public, and Python's update check reads only published releases.
    the app starts) and attached beside the AppImage. **And `SHA256SUMS`** on every draft, Python's and the web's,
    listing each file the workflow attaches. Tested as in step 3: a test draft, the owner installs each package on
    Linux, the draft deleted.
-6. **Linux users told how to start the AppImage:** the User Manual's §2.1 (ch02) names the file as it is, gives the
-   file manager's way (right-click → Properties → Executable as Program) beside `chmod +x`, says what a double-click
-   shows before then, and gives the `.deb` and `.rpm`; every Python release's notes carry a standing line under its
-   downloads.
+6. **Users told how to install:** in the User Manual's installation section, §2.1 (ch02) — the Linux `.deb`
+   (`sudo apt install ./<file>.deb`), `.rpm` (`sudo dnf install ./<file>.rpm`) and AppImage (made executable: the
+   file manager's way beside `chmod +x`, and what a double-click shows before then), how to remove each; Windows'
+   unsigned installer (More info → Run anyway). Not in the release notes, Help or the Quick Start (owner). The README
+   names the files and points to §2.1. **Done** — GuitarTap `9932b83`, guitar_tap `86de6f7`.
 7. **The release checklist:** §2 (Python) and §3 (the web) become the process above, the same steps in both; the
    Windows script named as it is (`packaging/build_win`, not `build_win.bat`).
 8. **1.1.0** is released this way in both editions.
