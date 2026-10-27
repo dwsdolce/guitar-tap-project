@@ -43,7 +43,7 @@ section. Release day is about **filling in the prose**, not creating the section
 leaves an empty duplicate. Nothing fires at the tag itself, so rebuilding, re-notarising or
 redeploying the release you just cut still works.
 
-**GitHub releases (Python and the web) — one process for both** (`docs/GITHUB-RELEASE-PROCESS.md` in the hub): a
+**GitHub releases (Python and the web) — one process for both** (`docs/completed/GITHUB-RELEASE-PROCESS.md` in the hub): a
 **Release** workflow, run by hand for the release's tag (Actions → Release → Run workflow; `ref` = the tag, `draft`
 on), builds what GitHub can build, checks each file reports the tag's version and build, and creates the tag's
 **draft** release with those files and their `SHA256SUMS`. The files built by hand are uploaded to the draft; you write

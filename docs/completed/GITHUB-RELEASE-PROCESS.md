@@ -2,7 +2,7 @@
 
 **Issue:** [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46)
 
-Status: **OPEN — both workflows built, tested (owner); the web's 1.0.2 released with its build; the `.deb`, `.rpm` and `SHA256SUMS` built and tested; users told how to install (manual §2.1); the release checklist rewritten; the release rehearsed (Python and the web); every step done — to close.**
+Status: **✅ COMPLETE (2026-10-26)** — one Release workflow per edition (GuitarTapWeb `a58b419`, `889a0b0`; guitar_tap `df68914`, `adb503a`, `c52cdfd`); the web's 1.0.2 released with its build; Python's `.deb`, `.rpm` and `SHA256SUMS`; the crash on quit it found, fixed (guitar_tap `57e08b1`); installing in the manual's §2.1 (GuitarTap `9932b83`); the release checklist rewritten (hub `c93d5d4`); the release rehearsed.
 
 ## The problem
 

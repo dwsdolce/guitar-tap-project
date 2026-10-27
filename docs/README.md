@@ -15,7 +15,7 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#26](https://github.com/dwsdolce/guitar-tap-project/issues/26) · [`MANUAL-SCREENSHOTS.md`](MANUAL-SCREENSHOTS.md) — the screenshots and images to recapture for the 1.1.0 release: the manual, the App Store, the website
-- [#46](https://github.com/dwsdolce/guitar-tap-project/issues/46) · [`GITHUB-RELEASE-PROCESS.md`](GITHUB-RELEASE-PROCESS.md) — one GitHub release process for Python and the web: a workflow builds a draft release with its files (the web zip Lutherie Academy hosts); the owner publishes
+- [#47](https://github.com/dwsdolce/guitar-tap-project/issues/47) · [`SAVED-MEASUREMENTS-EXPORT-IMPORT.md`](SAVED-MEASUREMENTS-EXPORT-IMPORT.md) — Saved Measurements: Export Selected, importing several files, and one meaning for Export, Save to Disk and Share (exploration)
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
   - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
@@ -30,6 +30,11 @@ peaks, fixed by #41; the rest is known and left as it is.
 [`completed/COMPARISON-LEGEND.md`](completed/COMPARISON-LEGEND.md) — one legend in every edition, laid out in the
 plot's frame and drawn over it, wrapping onto right-aligned lines, on screen and in the exported image (no
 "Measurements:" row); a chart has one range and every export uses it.
+
+#46 (one GitHub release process for Python and the web) is **closed**; its record is
+[`completed/GITHUB-RELEASE-PROCESS.md`](completed/GITHUB-RELEASE-PROCESS.md) — a Release workflow per edition, run by
+hand for the tag, builds what GitHub can build into a draft with `SHA256SUMS` (the web's zip, which Lutherie Academy
+hosts; Python's AppImage, `.deb`, `.rpm` and Windows installer); the owner adds the hand-built files and publishes.
 
 #45 (overlaid curves, and exports of the measurement) is **closed**; its record is
 [`completed/OVERLAY-CURVE-POINTS.md`](completed/OVERLAY-CURVE-POINTS.md) — Python draws its overlaid curves for the range
