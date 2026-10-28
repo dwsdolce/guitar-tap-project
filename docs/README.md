@@ -14,7 +14,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#26](https://github.com/dwsdolce/guitar-tap-project/issues/26) · [`MANUAL-SCREENSHOTS.md`](MANUAL-SCREENSHOTS.md) — the screenshots and images to recapture for the 1.1.0 release: the manual, the App Store, the website
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
   - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
@@ -29,6 +28,11 @@ peaks, fixed by #41; the rest is known and left as it is.
 [`completed/COMPARISON-LEGEND.md`](completed/COMPARISON-LEGEND.md) — one legend in every edition, laid out in the
 plot's frame and drawn over it, wrapping onto right-aligned lines, on screen and in the exported image (no
 "Measurements:" row); a chart has one range and every export uses it.
+
+#26 (screenshots and images for 1.1.0) is **closed**; its record is
+[`completed/MANUAL-SCREENSHOTS.md`](completed/MANUAL-SCREENSHOTS.md) — the manual's images recaptured, with the iPad's
+menu bar added; the App Store's and the website's marketing images kept; the website's example replaced by a newer
+three-tap measurement and its 1.1.0 exports.
 
 #48 (Tips & Technique) is **closed**; its record is
 [`completed/TIPS-AND-TECHNIQUE.md`](completed/TIPS-AND-TECHNIQUE.md) — the Quick Start and the manual give the same
