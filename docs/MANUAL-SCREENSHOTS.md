@@ -42,8 +42,9 @@ gone, moved or renamed in the app; colour differences alone are not counted.
 | 15 | `ch09-iphone-landscape.png` | ch09 | iPhone landscape: Tap Controls left, spectrum right | **Out of date:** no measurement-type button beside New Tap; the title reads "Guitar Tap 1.0 (325)" |
 | 16 | `ch09-ipad.png` | ch09 | iPad: toolbar, Tap Controls, spectrum and Analysis Results side by side | **Out of date:** no measurement-type button; the Select All button; the title reads "Guitar Tap 1.0 (325)" **#47 — check:** the Results panel's foot has one **Share** button on the iPad. |
 | 17 | `ch09-desktop.png` | ch09 | macOS with the File menu open, a plate loaded | **Out of date:** no measurement-type button; the Select All button; the plate's peaks and legend read L / C / FLC, now fL / fC / fLC **#47:** the File menu shown open has **Share Spectrum Image…** and **Share PDF Report…** after its Export items; the Results panel has one **Export** button. |
+| 17a | `ch09-ipad-menubar.png` (new) | ch09 §9.4 | The iPad with a keyboard or pointer, its menu bar's File menu open: Play Audio File…, Save Measurement…, Share Spectrum Image…, Share PDF Report… | **New (#47):** the iPad's menu bar has Guitar Tap's menus; the manual describes it in §9.4 without an image. Add a `SCREENSHOT:` note there |
 
-So: **out of date — 1, 4, 5, 11, 12, 13, 14, 15, 16, 17** (ten); **compare with the app — 2, 6, 8** (the Settings
+So: **out of date — 1, 4, 5, 11, 12, 13, 14, 15, 16, 17** (ten); **new — 17a**; **compare with the app — 2, 6, 8** (the Settings
 sheets); **minor — 3**; **current — 7, 9, 10**.
 
 Not screenshots — unchanged: `ch04-plate-hold-tap.png` and `ch05-brace-hold-tap.png` (drawings of where to hold and
