@@ -107,9 +107,10 @@ workflow passed on Linux, Windows and macOS for every commit.
    to run from source — the owner checked it on the Mint VM with only `libxcb-cursor0` installed.
 
 **Docs:** `guitar_tap` README — the AppImage built by the workflow, the current `appimagetool`, `libportaudio2` to
-build locally (`4702f60`); `process/RELEASE-CHECKLIST.md` — the workflow attaches the AppImage, five assets by hand,
-check the run; the tooling line. The release notes' "requires no system package installation" is now true. No
-`.deb` or `.rpm` is built — Linux ships as the AppImage only.
+build locally (`4702f60`); `process/RELEASE-CHECKLIST.md` §2 — the Release workflow builds and attaches the Linux
+and Windows files, the `.dmg` and the three PDFs are uploaded by hand; the tooling line. The release notes' "requires
+no system package installation" is now true. Linux ships as the AppImage, `.deb` and `.rpm`, all three packaging the
+one build (`packaging/make_linux_package`, #46); manual §2.1 says how to install each.
 
 **Owner's try (2026-10-23), build 671 on the Mint 22.3 VM (Ubuntu 24.04; sound through PipeWire): passes** — the
 bundled PortAudio loaded and started, sound works; no console errors; the window icon and splash show; the Play File
@@ -117,6 +118,15 @@ dialog shows Other Locations; the PDF's spectrum picture is drawn in Liberation 
 22.04 (minimal install, nothing added): under Wayland it opens, sound (PulseAudio) and taps work, Other Locations
 shows; under X11 it does not start (item 5). **Build 672 on the same clean Ubuntu 22.04: passes under Wayland and
 X11** — the window opens, sound and taps work.
+
+**Older systems — not in 1.1.0 (measured 2026-10-28, build 700).** Every Linux file (AppImage, `.deb`, `.rpm`)
+packages the same build, and it needs glibc 2.35: the bundled `libpython3.14.so` (setup-python's 3.14, built for
+22.04) uses `hypot@GLIBC_2.35`; 23 other bundled libraries, mostly the build machine's system libraries (`libsystemd`,
+`libkrb5`, `libjack`, `libselinux`, `liblzma`), need 2.34. So Rocky Linux and AlmaLinux 8 and 9 (glibc 2.28, 2.34),
+Debian 11 and openSUSE Leap 15 do not run it; manual §2.1 names what does (Ubuntu 22.04+, Mint 21+, Debian 12+,
+Fedora 36+, Rocky/Alma 10+). Supporting the older ones means building on an older base — an AlmaLinux 8 container
+(glibc 2.28) — with a Python built for it (a portable build such as `uv python install 3.14`), so `libpython` and the
+copied system libraries no longer set the floor; PySide6's wheels need 2.28. To decide after the release.
 
 **Still to do:** the next release (1.0.3 or 1.1) carries it; then a retest on AppImage/appimage.github.io#5378, and
 #23 closed.
