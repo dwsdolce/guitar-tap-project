@@ -15,7 +15,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
 - [#26](https://github.com/dwsdolce/guitar-tap-project/issues/26) · [`MANUAL-SCREENSHOTS.md`](MANUAL-SCREENSHOTS.md) — the screenshots and images to recapture for the 1.1.0 release: the manual, the App Store, the website
-- [#48](https://github.com/dwsdolce/guitar-tap-project/issues/48) · [`TIPS-AND-TECHNIQUE.md`](TIPS-AND-TECHNIQUE.md) — one set of tips in the Quick Start and the manual, and a luthier's answers on strings, dampers and where to tap
 - [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
   - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
@@ -30,6 +29,11 @@ peaks, fixed by #41; the rest is known and left as it is.
 [`completed/COMPARISON-LEGEND.md`](completed/COMPARISON-LEGEND.md) — one legend in every edition, laid out in the
 plot's frame and drawn over it, wrapping onto right-aligned lines, on screen and in the exported image (no
 "Measurements:" row); a chart has one range and every export uses it.
+
+#48 (Tips & Technique) is **closed**; its record is
+[`completed/TIPS-AND-TECHNIQUE.md`](completed/TIPS-AND-TECHNIQUE.md) — the Quick Start and the manual give the same
+advice; a luthier's answers on where to tap, strings, pins and dampers, and how many taps, in the chapters where each
+subject is first presented and in Tips & Technique.
 
 #47 (Saved Measurements: Export and Share, Export Selected, importing several files) is **closed**; its record is
 [`completed/SAVED-MEASUREMENTS-EXPORT-IMPORT.md`](completed/SAVED-MEASUREMENTS-EXPORT-IMPORT.md) — Export writes
