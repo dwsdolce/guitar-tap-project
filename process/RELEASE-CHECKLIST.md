@@ -46,7 +46,7 @@ redeploying the release you just cut still works.
 **GitHub releases (Python and the web) — one process for both** (`docs/completed/GITHUB-RELEASE-PROCESS.md` in the hub): a
 **Release** workflow, run by hand for the release's tag (Actions → Release → Run workflow; `ref` = the tag, `draft`
 on), builds what GitHub can build, checks each file reports the tag's version and build, and creates the tag's
-**draft** release with those files and their `SHA256SUMS`. The files built by hand are uploaded to the draft; you write
+**draft** release with those files and their `SHA256SUMS`. The files built by hand (the user manual's PDF, for Python) are uploaded to the draft; you write
 its notes — a short, marketing summary of the release's enhancements, not the full release notes — review it, and
 publish. Publishing builds nothing. To try the workflow before a release: run it for `main` with `release` =
 `release-test-<n>` (a tag that does not exist — never create a real one), then delete the draft.
@@ -92,13 +92,14 @@ publish. Publishing builds nothing. To try the workflow before a release: run it
 - [ ] `src/guitar_tap/version` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
 - [ ] Finish the **existing** top section of the single source `docs/ReleaseNotes.md`: the placeholder header (`## Version {{version}} · Build {{build}}` / `### What's New Since Build {{since}}`) is already there from §6 — replace the `TODO(X.Y.Z)` marker with this release's prose. **Do not add another section.** No build numbers are typed for the new release; they're stamped at build.
 - [ ] **Commit and push** (version + notes source). Build number = commit count, so commit *before* building; every file of the release is built from this **same commit**, or their `.<build>` suffixes diverge.
-- [ ] macOS, by hand, on the Mac: `./packaging/build_mac` → `Guitar_Tap_VX.Y.Z.dmg` **plus** the stamped Quick-Start + release-notes PDFs, in one step *(codesign + notarize + staple; needs `notarytool-profile`, `create-dmg`, pandoc + LaTeX, WeasyPrint + Pango)*. Validate the PDFs first if you like — `./packaging/generate_release_notes.sh` and `./packaging/generate_guide.sh` run standalone. **Before tagging**: the release notes take "since" from the latest tag and refuse to generate once the current version is tagged.
+- [ ] Validate the PDFs first if you like, on the Mac: `./packaging/generate_release_notes.sh` and `./packaging/generate_guide.sh` run standalone. "Since" is the previous release's build, before tagging and after.
 - [ ] Tag the commit and push the tag: `git tag X.Y.Z && git push origin X.Y.Z` — **bare `X.Y.Z`** (no `v`, no build number: the in-app updater compares the tag to the `version` file).
 - [ ] Run **Release** for the tag (`ref` = `X.Y.Z`, `release` blank, `draft` on). It builds, checks and attaches:
   - Linux, on Ubuntu 22.04 (the oldest supported LTS, glibc 2.35): `guitar-tap-X.Y.Z.<build>-x86_64.AppImage`, `.deb` and `.rpm` (unsigned) — each started; the `.deb` and `.rpm` installed, started, quit and removed (the `.rpm` on Fedora).
   - Windows: `Guitar_Tap_VX.Y.Z.<build>.exe` (`packaging/build_win`, Inno Setup; unsigned) — started.
+  - macOS: `Guitar_Tap_VX.Y.Z.<build>.dmg` with `ReleaseNotes-X.Y.Z-<build>.pdf` and `GuitarTap-Quick-Start-Guide.pdf` (`packaging/build_mac`) — signed with the Developer ID, notarised and stapled, checked by Gatekeeper, started. Its job uses the `macos-signing` environment's secrets, so the run **waits for your approval** (the run's page → Review deployments → Approve).
   - `SHA256SUMS` for those files.
-- [ ] Upload to the draft: the `.dmg`, `ReleaseNotes-X.Y.Z-<build>.pdf`, `GuitarTap-Quick-Start-Guide.pdf`, `GuitarTap-User-Manual.pdf`.
+- [ ] Upload to the draft: `GuitarTap-User-Manual.pdf` (built in `GuitarTap`, §1c).
 - [ ] Write the draft's notes (the marketing summary); check every file is there — the AppImage, `.deb`, `.rpm`, `.exe`, `SHA256SUMS`, the `.dmg` and the three PDFs.
 - [ ] **Publish as a full release** (not pre-release) — `/releases/latest` and the in-app updater read only published releases.
 
@@ -149,7 +150,7 @@ all three now, in one sitting:
 ## Gotchas / notes
 - **Per-repo build numbers** differ across surfaces — expected, not a bug.
 - **Python build number is fully automatic**: `version_build` is gitignored (build scripts regenerate it; `_version.py` resolves it live from git when run from source, so testing shows the right build with no script/wrapper). Release-notes build numbers are stamped by `generate_release_notes.sh` from the source `docs/ReleaseNotes.md` placeholders — never typed. The generated docs (`ReleaseNotes-*.md/.pdf`, the Quick-Start `.html/.pdf`) are gitignored too — regenerated each build, distributed on the website + GitHub releases — so `build_mac` leaves a clean `git status`. Only sources are tracked (`docs/ReleaseNotes.md`, `views/help_view.py`).
-- **Swift docs are automatic too** (mirrors Python): release notes stamp from `Documentation/ReleaseNotes.md` via `generate-release-notes.sh`, run from `generate-help.sh` on the macOS build (best-effort — skips if pandoc/tag missing or the version is already tagged; the release guard is the hard backstop, so a silent skip can no longer hide a stale version). Quick-Start, manual, and release-notes outputs are all gitignored; sources tracked are `Documentation/ReleaseNotes.md`, `GuitarTap/Views/HelpView.swift`, the manual `Documentation/Manual/ch*.md`.
+- **Swift docs are automatic too** (mirrors Python): release notes stamp from `Documentation/ReleaseNotes.md` via `generate-release-notes.sh`, run from `generate-help.sh` on the macOS build (best-effort — skips if pandoc or the previous release's tag is missing, or the version is tagged at another commit; the release guard is the hard backstop, so a silent skip can no longer hide a stale version). Quick-Start, manual, and release-notes outputs are all gitignored; sources tracked are `Documentation/ReleaseNotes.md`, `GuitarTap/Views/HelpView.swift`, the manual `Documentation/Manual/ch*.md`.
 - **Web release notes build auto-binds**: the newest `RELEASES` entry uses `build: __APP_BUILD__`, so it always equals the deployed About line — nothing to set by hand. When adding a NEWER version, give it `__APP_BUILD__` and freeze the prior top entry to its literal shipped build. The guard enforces exactly this: it blocks when the newest entry is still the shipped tag, and when more than one entry carries `build: __APP_BUILD__` (a shipped entry that still auto-binds silently re-labels itself every build).
 - **The guard skips what it cannot judge** — a frozen PyInstaller bundle, a tree with no git repository, or a repository with no tags. A released app can therefore never refuse to start over this, and a fresh clone still builds. It *does* cover git worktrees.
 - **Tests are deliberately unguarded** — the version means nothing to them. `pytest` and `npm test` run regardless. The exception is Swift: `xcodebuild test` builds the app target first, so it hits the guard anyway; there is no way to run Swift tests without building the app.
@@ -157,7 +158,13 @@ all three now, in one sitting:
 - **Stale service worker (web):** `autoUpdate` means a returning visitor may need one reload before the new build takes; always hard-reload to verify a deploy, don't conclude from a first load.
 - **One-time tooling per build machine:**
   - Swift docs: pango + WeasyPrint venv, pandoc, basictex.
-  - Python (Mac build machine): `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, Apple Developer ID certs + `notarytool-profile`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes). Windows and Linux: none for a release (the Release workflow builds them). For a local build: Windows, Inno Setup 6; Linux, the current `appimagetool` (github.com/AppImage/appimagetool), `libportaudio2` and `libxcb-cursor0`, and `dpkg-dev` and `rpm` for the `.deb` and `.rpm`.
+  - Python: none for a release (the Release workflow builds every file). For a local build: macOS, `.venv/bin/pip install -r requirements-packaging.txt`, `create-dmg`, the Developer ID certificate + a notarytool profile named in `~/.config/macsign.env`, WeasyPrint + Pango (guide), pandoc + LaTeX (release notes); Windows, Inno Setup 6; Linux, the current `appimagetool` (github.com/AppImage/appimagetool), `libportaudio2` and `libxcb-cursor0`, and `dpkg-dev` and `rpm` for the `.deb` and `.rpm`.
   - Web: Node.
-- **Still by hand:** the three version bumps, the macOS `.dmg` and the PDFs (Apple credentials), the App Store, and
-  the cPanel uploads to two paths. The Python and web files GitHub can build are built by the Release workflows.
+- **Still by hand:** the three version bumps, the user manual's PDF, the App Store, and the cPanel uploads to two
+  paths. Every Python and web release file is built by the Release workflows.
+- **The Developer ID Application certificate lasts a year** (Apple's G2 certificates; the current one expires
+  **2027-11-28**). Each October or November, before it expires: create a new one at developer.apple.com (G2 Sub-CA,
+  from a signing request made in Keychain Access), install it in the **login** keychain beside its private key,
+  put its fingerprint in `~/.config/macsign.env` (`CODESIGN_IDENTITY`), export it with its key as a `.p12`, and
+  replace the guitar_tap `macos-signing` secrets `MACOS_CERTIFICATE_P12` (base64 of the `.p12`) and
+  `MACOS_CERTIFICATE_PASSWORD`. Software already signed and notarised keeps working after a certificate expires.
