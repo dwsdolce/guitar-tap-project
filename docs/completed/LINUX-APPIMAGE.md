@@ -2,7 +2,7 @@
 
 **Issue:** [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23)
 
-Status: **IN PROGRESS — the AppImage built and checked in GitHub Actions and tried by the owner on Mint 22.3; to ship with the next release, then the catalog retest.** Python edition only (Linux packaging); the Mac and
+Status: **CLOSED (2026-11-07)** — shipped in 1.1.0 (guitar_tap `2b770f1`, build 704): the AppImage, `.deb` and `.rpm` are built on Ubuntu 22.04 with the current `appimagetool` and run on Ubuntu 22.04+, Mint, Debian 12+ and Fedora; the owner installed them on Mint, Ubuntu and Fedora. Older Linux is not supported unless users ask. The AppImage catalog listing is not pursued.
 Windows builds are unaffected.
 
 ## How this came up
@@ -126,7 +126,9 @@ packages the same build, and it needs glibc 2.35: the bundled `libpython3.14.so`
 Debian 11 and openSUSE Leap 15 do not run it; manual §2.1 names what does (Ubuntu 22.04+, Mint 21+, Debian 12+,
 Fedora 36+, Rocky/Alma 10+). Supporting the older ones means building on an older base — an AlmaLinux 8 container
 (glibc 2.28) — with a Python built for it (a portable build such as `uv python install 3.14`), so `libpython` and the
-copied system libraries no longer set the floor; PySide6's wheels need 2.28. To decide after the release.
+copied system libraries no longer set the floor; PySide6's wheels need 2.28. **Decision (owner, 2026-11-07):** not supported unless users ask; none has.
 
-**Still to do:** the next release (1.0.3 or 1.1) carries it; then a retest on AppImage/appimage.github.io#5378, and
-#23 closed.
+**The AppImage catalog (2026-11-07).** The retest of 1.1.0 on AppImage/appimage.github.io#5378 accepted the glibc
+2.35 floor but failed to start: the catalog's minimal Ubuntu 22.04 lacks `libxkbcommon-x11.so.0`, which Qt's X11
+platform plugin needs (a normal 22.04 desktop has it). Passing would mean bundling Qt's X11 libraries, as
+`libxcb-cursor0` already is. The owner chose not to pursue the listing; the pull request is left as it is.

@@ -14,7 +14,6 @@ with an Android edition proposed: [#14](https://github.com/dwsdolce/guitar-tap-p
 ## Open-item detail docs (each paired with its Issue — keep both directions live)
 - [#1](https://github.com/dwsdolce/guitar-tap-project/issues/1) · [`RESTRUCTURE-NOTES.md`](RESTRUCTURE-NOTES.md) — architectural consistency of all the code: where each edition stands, and the work in order
 - [#29](https://github.com/dwsdolce/guitar-tap-project/issues/29) · [`SAMPLE-BASED-TRIGGER.md`](SAMPLE-BASED-TRIGGER.md) — a sample-based tap trigger: analysis only, the input to a plan
-- [#23](https://github.com/dwsdolce/guitar-tap-project/issues/23) · [`LINUX-APPIMAGE.md`](LINUX-APPIMAGE.md) — the Linux AppImage does not start on older Linux (built on glibc 2.39; old runtime needs `libfuse2`)
 - [#14](https://github.com/dwsdolce/guitar-tap-project/issues/14) · [`ANDROID-PLAN.md`](ANDROID-PLAN.md) — native Android (Kotlin/Compose) edition: phased port plan and architecture decisions
   - [`ANDROID-FEASIBILITY.md`](ANDROID-FEASIBILITY.md) — Phase 0 record: the two yes/no checks, device matrix, source survey
   - [`PHASE1-PORT-PREP.md`](PHASE1-PORT-PREP.md) — Phase 1 record: INVENTORY audit, parity-tooling generalisation, fixture drift check
@@ -202,3 +201,8 @@ cause it uncovered is **not** finished and lives in
   - `sync-oracle.sh` vendors the oracle *out* to each repo; `collect-baselines.py` pulls each configuration's self-baseline *in* to `parity/baselines/`, and `parity-report.py` turns them into the edition-vs-platform numbers behind the parity tolerance ([`completed/PARITY-AND-REGRESSION-BASELINES.md`](completed/PARITY-AND-REGRESSION-BASELINES.md)). `compare-capture-probes.py` localises a cross-edition capture difference for [#7](https://github.com/dwsdolce/guitar-tap-project/issues/7).
 - [`../process/`](../process/) — how-to & conventions: `RELEASE-CHECKLIST.md`, `DEV-DOC-STANDARD.md`, `DOC-PLACEMENT.md` (where docs live), `BUG-TRACKING.md` (intake + tracking model), `CROSS-EDITION-INVESTIGATION.md` (how to find out why two editions disagree about a number), `STYLE-GUIDE.md` (how every edition looks: platform or app, colour, opacity, type, control states, icons), `WEB-UI-GUIDELINES.md` (how the desktop/mobile UI translates to the web), `ANDROID-UI-GUIDELINES.md` (how the Swift UI translates to Android, tablet-first). The hub's own standup record is archived in [`completed/PROJECT-HUB-REPO.md`](completed/PROJECT-HUB-REPO.md).
 - [`images/`](images/), [`playback-validation/`](playback-validation/) — screenshots + the playback-validation harness.
+
+#23 (the Linux AppImage on older Linux) is **closed**; its record is
+[`completed/LINUX-APPIMAGE.md`](completed/LINUX-APPIMAGE.md) — 1.1.0 builds the AppImage, `.deb` and `.rpm` on
+Ubuntu 22.04 with the current AppImage runtime; older Linux is supported only if users ask; the AppImage catalog
+listing is not pursued.
