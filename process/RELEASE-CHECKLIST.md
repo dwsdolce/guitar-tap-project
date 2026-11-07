@@ -102,6 +102,7 @@ publish. Publishing builds nothing. To try the workflow before a release: run it
 - [ ] Upload to the draft: `GuitarTap-User-Manual.pdf` (built in `GuitarTap`, §1c).
 - [ ] Write the draft's notes (the marketing summary); check every file is there — the AppImage, `.deb`, `.rpm`, `.exe`, `SHA256SUMS`, the `.dmg` and the three PDFs.
 - [ ] **Publish as a full release** (not pre-release) — `/releases/latest` and the in-app updater read only published releases.
+- *To ship the exact files you tested instead:* if a `release-test-<n>` draft was built from this same commit and validated, skip the tag and the Release run above and convert that draft — set its tag to `X.Y.Z` on that commit and its title to `Release X.Y.Z`, then upload the manual, write the notes and publish. Publishing creates the tag. The build number is the same either way.
 
 ## 3. Web app → `…/guitar_tap/guitar_tap_web/`  *(`GuitarTapWeb`)*
 - [ ] `version` in `package.json` should **already** read `X.Y.Z` — rolled at the start of this cycle (§6). Confirm it.
@@ -115,6 +116,7 @@ publish. Publishing builds nothing. To try the workflow before a release: run it
 - [ ] Ensure the URL serves **with the trailing slash** (`base './'` requires it).
 - [ ] Confirm a matching `GuitarTap-User-Manual-X.Y.Z.html` exists on the server (the app links to it by version).
 - [ ] Write the draft's notes (the marketing summary), check the zip and `SHA256SUMS` are there, and **publish**.
+- *To ship the exact zip you tested instead:* convert the validated `release-test-<n>` draft built from this commit, as in §2 — tag `X.Y.Z` on that commit, title `Guitar Tap (Web) X.Y.Z`. Publishing sends the release to Lutherie Academy's webhook.
 
 ## 4. Marketing website → `…/guitar_tap/`  *(`guitar_tap_website` — its own repo `dwsdolce/guitar_tap_website`; see its `DEPLOY.md`)*
 - [ ] Edit the version banner: `index.html` (~line 122, `Guitar Tap X.Y.Z is now available`) — the only hand-edited version string.
@@ -125,6 +127,7 @@ publish. Publishing builds nothing. To try the workflow before a release: run it
 - [ ] Refresh `GuitarTap-Quick-Start-Guide.pdf` if changed; screenshots only if the UI changed.
 - [ ] Commit + push the repo, then **upload the changed files** to `…/guitar_tap/` via **cPanel File Manager** (banner, the two release-notes PDFs, `manual/`).
 - [ ] *No edits needed:* App Store URL (`id6759410596`), GitHub-releases download link, web-app link — all stable.
+- [ ] Once the live site matches the repo, tag the commit that went live and push the tag: `git tag X.Y.Z && git push origin X.Y.Z`.
 
 ## 5. Post-release verification
 - [ ] **Web:** hard-reload / fresh session (defeat the stale service worker); footer + Settings show `X.Y.Z (build)`; manual link resolves.
